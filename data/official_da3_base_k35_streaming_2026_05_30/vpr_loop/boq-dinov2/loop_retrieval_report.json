@@ -1,0 +1,306 @@
+{
+  "schema_version": "aether_official_da3_k35_vpr_loop_retrieval_v1",
+  "backend": "boq-dinov2",
+  "license": "MIT (Bag-of-Queries repo) + DINOv2 weights/code license must stay documented",
+  "commercial_safe": true,
+  "official_route": [
+    "DA3-BASE K35@476x742 sequential chunks already exported",
+    "VPR loop retrieval backend proposes loop pairs",
+    "official process_loop_list maps loop pairs to chunk-local ranges",
+    "fixed K35 CoreML loop capture is generated for official loop chunk forward"
+  ],
+  "fixed_coreml_k35_note": "Official Python DA3 can forward variable loop chunks. The production CoreML model is fixed at K=35, so loopHalfWindow is capped so the two official ranges fit into one K35 loop chunk; any unused slots are explicit duplicate padding and excluded from Sim3 range metadata.",
+  "parameters": {
+    "top_k": 5,
+    "similarity_threshold": 0.85,
+    "min_frame_gap": 10,
+    "nms_threshold": 25,
+    "loop_half_window": 8,
+    "window_size": 35
+  },
+  "descriptor_meta": {
+    "backend": "boq-dinov2",
+    "device": "mps",
+    "frame_count": 414,
+    "descriptor_shape": [
+      414,
+      12288
+    ],
+    "descriptor_dtype": "float32",
+    "elapsed_s": 31.38
+  },
+  "frame_count": 414,
+  "base_window_count": 24,
+  "chunk_indices": [
+    [
+      0,
+      35
+    ],
+    [
+      17,
+      52
+    ],
+    [
+      34,
+      69
+    ],
+    [
+      51,
+      86
+    ],
+    [
+      68,
+      103
+    ],
+    [
+      85,
+      120
+    ],
+    [
+      102,
+      137
+    ],
+    [
+      119,
+      154
+    ],
+    [
+      136,
+      171
+    ],
+    [
+      153,
+      188
+    ],
+    [
+      170,
+      205
+    ],
+    [
+      187,
+      222
+    ],
+    [
+      204,
+      239
+    ],
+    [
+      221,
+      256
+    ],
+    [
+      238,
+      273
+    ],
+    [
+      255,
+      290
+    ],
+    [
+      272,
+      307
+    ],
+    [
+      289,
+      324
+    ],
+    [
+      306,
+      341
+    ],
+    [
+      323,
+      358
+    ],
+    [
+      340,
+      375
+    ],
+    [
+      357,
+      392
+    ],
+    [
+      374,
+      409
+    ],
+    [
+      379,
+      414
+    ]
+  ],
+  "raw_loop_pair_count": 99,
+  "loop_result_count": 79,
+  "loop_window_count": 79,
+  "threshold_sweep": [
+    {
+      "threshold": 0.7,
+      "raw_pair_count": 729,
+      "nms_pair_count": 311
+    },
+    {
+      "threshold": 0.75,
+      "raw_pair_count": 514,
+      "nms_pair_count": 275
+    },
+    {
+      "threshold": 0.8,
+      "raw_pair_count": 295,
+      "nms_pair_count": 207
+    },
+    {
+      "threshold": 0.85,
+      "raw_pair_count": 107,
+      "nms_pair_count": 99
+    },
+    {
+      "threshold": 0.9,
+      "raw_pair_count": 17,
+      "nms_pair_count": 16
+    }
+  ],
+  "top_loop_pairs": [
+    {
+      "later_index": 166,
+      "earlier_index": 138,
+      "similarity": 0.9333978891372681,
+      "later_frame_id": "cap-2148",
+      "earlier_frame_id": "cap-2142"
+    },
+    {
+      "later_index": 13,
+      "earlier_index": 0,
+      "similarity": 0.9305228590965271,
+      "later_frame_id": "cap-422",
+      "earlier_frame_id": "cap-420"
+    },
+    {
+      "later_index": 273,
+      "earlier_index": 157,
+      "similarity": 0.9302533268928528,
+      "later_frame_id": "cap-122",
+      "earlier_frame_id": "cap-118"
+    },
+    {
+      "later_index": 260,
+      "earlier_index": 58,
+      "similarity": 0.9259243011474609,
+      "later_frame_id": "cap-989",
+      "earlier_frame_id": "cap-996"
+    },
+    {
+      "later_index": 278,
+      "earlier_index": 238,
+      "similarity": 0.9207204580307007,
+      "later_frame_id": "cap-1459",
+      "earlier_frame_id": "cap-1457"
+    },
+    {
+      "later_index": 67,
+      "earlier_index": 47,
+      "similarity": 0.9126137495040894,
+      "later_frame_id": "cap-1453",
+      "earlier_frame_id": "cap-1455"
+    },
+    {
+      "later_index": 402,
+      "earlier_index": 252,
+      "similarity": 0.9110599160194397,
+      "later_frame_id": "cap-373",
+      "earlier_frame_id": "cap-371"
+    },
+    {
+      "later_index": 93,
+      "earlier_index": 35,
+      "similarity": 0.9110120534896851,
+      "later_frame_id": "cap-1258",
+      "earlier_frame_id": "cap-1260"
+    },
+    {
+      "later_index": 310,
+      "earlier_index": 53,
+      "similarity": 0.9101450443267822,
+      "later_frame_id": "cap-1809",
+      "earlier_frame_id": "cap-1813"
+    },
+    {
+      "later_index": 248,
+      "earlier_index": 206,
+      "similarity": 0.9097656607627869,
+      "later_frame_id": "cap-1492",
+      "earlier_frame_id": "cap-1488"
+    },
+    {
+      "later_index": 238,
+      "earlier_index": 47,
+      "similarity": 0.9080148935317993,
+      "later_frame_id": "cap-1457",
+      "earlier_frame_id": "cap-1455"
+    },
+    {
+      "later_index": 407,
+      "earlier_index": 104,
+      "similarity": 0.9067065119743347,
+      "later_frame_id": "cap-389",
+      "earlier_frame_id": "cap-387"
+    },
+    {
+      "later_index": 384,
+      "earlier_index": 5,
+      "similarity": 0.9063222408294678,
+      "later_frame_id": "cap-109",
+      "earlier_frame_id": "cap-107"
+    },
+    {
+      "later_index": 314,
+      "earlier_index": 273,
+      "similarity": 0.905591607093811,
+      "later_frame_id": "cap-124",
+      "earlier_frame_id": "cap-122"
+    },
+    {
+      "later_index": 238,
+      "earlier_index": 67,
+      "similarity": 0.9046499729156494,
+      "later_frame_id": "cap-1457",
+      "earlier_frame_id": "cap-1453"
+    },
+    {
+      "later_index": 375,
+      "earlier_index": 279,
+      "similarity": 0.9015735387802124,
+      "later_frame_id": "cap-1152",
+      "earlier_frame_id": "cap-1150"
+    },
+    {
+      "later_index": 314,
+      "earlier_index": 157,
+      "similarity": 0.8978254795074463,
+      "later_frame_id": "cap-124",
+      "earlier_frame_id": "cap-118"
+    },
+    {
+      "later_index": 240,
+      "earlier_index": 161,
+      "similarity": 0.8972741365432739,
+      "later_frame_id": "cap-1154",
+      "earlier_frame_id": "cap-1156"
+    },
+    {
+      "later_index": 200,
+      "earlier_index": 161,
+      "similarity": 0.8972567915916443,
+      "later_frame_id": "cap-1158",
+      "earlier_frame_id": "cap-1156"
+    },
+    {
+      "later_index": 125,
+      "earlier_index": 91,
+      "similarity": 0.8955928087234497,
+      "later_frame_id": "cap-138",
+      "earlier_frame_id": "cap-140"
+    }
+  ],
+  "loop_capture_dir": "data/official_da3_base_k35_streaming_2026_05_30/vpr_loop/boq-dinov2/loop_capture",
+  "elapsed_s": 0.35
+}
