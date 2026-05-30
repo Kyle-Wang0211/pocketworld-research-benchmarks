@@ -1,0 +1,374 @@
+{
+  "schema_version": "aether_official_da3_k35_vpr_loop_retrieval_v1",
+  "backend": "selavprpp",
+  "license": "MIT (SelaVPR++ repo) + DINOv2 weights/code license must stay documented",
+  "commercial_safe": true,
+  "official_route": [
+    "DA3-BASE K35@476x742 sequential chunks already exported",
+    "VPR loop retrieval backend proposes loop pairs",
+    "official process_loop_list maps loop pairs to chunk-local ranges",
+    "fixed K35 CoreML loop capture is generated for official loop chunk forward"
+  ],
+  "fixed_coreml_k35_note": "Official Python DA3 can forward variable loop chunks. The production CoreML model is fixed at K=35, so loopHalfWindow is capped so the two official ranges fit into one K35 loop chunk; any unused slots are explicit duplicate padding and excluded from Sim3 range metadata.",
+  "parameters": {
+    "top_k": 5,
+    "similarity_threshold": 0.85,
+    "min_frame_gap": 10,
+    "nms_threshold": 25,
+    "loop_half_window": 8,
+    "window_size": 35
+  },
+  "descriptor_meta": {
+    "backend": "selavprpp",
+    "device": "mps",
+    "frame_count": 700,
+    "descriptor_shape": [
+      700,
+      2048
+    ],
+    "descriptor_dtype": "float32",
+    "elapsed_s": 39.901
+  },
+  "frame_count": 700,
+  "base_window_count": 41,
+  "chunk_indices": [
+    [
+      0,
+      35
+    ],
+    [
+      17,
+      52
+    ],
+    [
+      34,
+      69
+    ],
+    [
+      51,
+      86
+    ],
+    [
+      68,
+      103
+    ],
+    [
+      85,
+      120
+    ],
+    [
+      102,
+      137
+    ],
+    [
+      119,
+      154
+    ],
+    [
+      136,
+      171
+    ],
+    [
+      153,
+      188
+    ],
+    [
+      170,
+      205
+    ],
+    [
+      187,
+      222
+    ],
+    [
+      204,
+      239
+    ],
+    [
+      221,
+      256
+    ],
+    [
+      238,
+      273
+    ],
+    [
+      255,
+      290
+    ],
+    [
+      272,
+      307
+    ],
+    [
+      289,
+      324
+    ],
+    [
+      306,
+      341
+    ],
+    [
+      323,
+      358
+    ],
+    [
+      340,
+      375
+    ],
+    [
+      357,
+      392
+    ],
+    [
+      374,
+      409
+    ],
+    [
+      391,
+      426
+    ],
+    [
+      408,
+      443
+    ],
+    [
+      425,
+      460
+    ],
+    [
+      442,
+      477
+    ],
+    [
+      459,
+      494
+    ],
+    [
+      476,
+      511
+    ],
+    [
+      493,
+      528
+    ],
+    [
+      510,
+      545
+    ],
+    [
+      527,
+      562
+    ],
+    [
+      544,
+      579
+    ],
+    [
+      561,
+      596
+    ],
+    [
+      578,
+      613
+    ],
+    [
+      595,
+      630
+    ],
+    [
+      612,
+      647
+    ],
+    [
+      629,
+      664
+    ],
+    [
+      646,
+      681
+    ],
+    [
+      663,
+      698
+    ],
+    [
+      665,
+      700
+    ]
+  ],
+  "raw_loop_pair_count": 111,
+  "loop_result_count": 22,
+  "loop_window_count": 22,
+  "threshold_sweep": [
+    {
+      "threshold": 0.7,
+      "raw_pair_count": 509,
+      "nms_pair_count": 470
+    },
+    {
+      "threshold": 0.75,
+      "raw_pair_count": 384,
+      "nms_pair_count": 364
+    },
+    {
+      "threshold": 0.8,
+      "raw_pair_count": 252,
+      "nms_pair_count": 244
+    },
+    {
+      "threshold": 0.85,
+      "raw_pair_count": 115,
+      "nms_pair_count": 111
+    },
+    {
+      "threshold": 0.9,
+      "raw_pair_count": 17,
+      "nms_pair_count": 17
+    }
+  ],
+  "top_loop_pairs": [
+    {
+      "later_index": 479,
+      "earlier_index": 129,
+      "similarity": 0.9302828907966614,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000243",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000065"
+    },
+    {
+      "later_index": 622,
+      "earlier_index": 602,
+      "similarity": 0.9256610870361328,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000316",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000306"
+    },
+    {
+      "later_index": 518,
+      "earlier_index": 86,
+      "similarity": 0.9238451719284058,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000263",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000043"
+    },
+    {
+      "later_index": 492,
+      "earlier_index": 115,
+      "similarity": 0.9215332269668579,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000250",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000058"
+    },
+    {
+      "later_index": 469,
+      "earlier_index": 141,
+      "similarity": 0.9193456172943115,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000238",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000071"
+    },
+    {
+      "later_index": 481,
+      "earlier_index": 127,
+      "similarity": 0.9121220707893372,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000244",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000064"
+    },
+    {
+      "later_index": 465,
+      "earlier_index": 145,
+      "similarity": 0.9096327424049377,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000236",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000073"
+    },
+    {
+      "later_index": 478,
+      "earlier_index": 128,
+      "similarity": 0.9094067215919495,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_left_000243",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_left_000065"
+    },
+    {
+      "later_index": 467,
+      "earlier_index": 143,
+      "similarity": 0.9080328345298767,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000237",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000072"
+    },
+    {
+      "later_index": 475,
+      "earlier_index": 135,
+      "similarity": 0.9069625735282898,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000241",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000068"
+    },
+    {
+      "later_index": 518,
+      "earlier_index": 84,
+      "similarity": 0.9050493240356445,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000263",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000042"
+    },
+    {
+      "later_index": 504,
+      "earlier_index": 99,
+      "similarity": 0.9042341113090515,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000256",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000050"
+    },
+    {
+      "later_index": 495,
+      "earlier_index": 110,
+      "similarity": 0.9036513566970825,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000252",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000056"
+    },
+    {
+      "later_index": 410,
+      "earlier_index": 130,
+      "similarity": 0.9026898145675659,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000208",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_left_000066"
+    },
+    {
+      "later_index": 379,
+      "earlier_index": 330,
+      "similarity": 0.9018556475639343,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000193",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000168"
+    },
+    {
+      "later_index": 475,
+      "earlier_index": 133,
+      "similarity": 0.9008468985557556,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000241",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000067"
+    },
+    {
+      "later_index": 490,
+      "earlier_index": 117,
+      "similarity": 0.9001419544219971,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000249",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_right_000059"
+    },
+    {
+      "later_index": 617,
+      "earlier_index": 605,
+      "similarity": 0.8990395665168762,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000314",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000308"
+    },
+    {
+      "later_index": 493,
+      "earlier_index": 112,
+      "similarity": 0.8973339200019836,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000251",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_front_000057"
+    },
+    {
+      "later_index": 477,
+      "earlier_index": 131,
+      "similarity": 0.8963119983673096,
+      "later_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000242",
+      "earlier_frame_id": "tg_House_omni_P0000_lcam_front-lcam_left-lcam_right-lcam_back_lcam_back_000066"
+    }
+  ],
+  "loop_capture_dir": "data/gt_official_sela_k35_2026_05_31/tartanground_house_omni/selavprpp/loop_capture",
+  "elapsed_s": 39.965
+}
