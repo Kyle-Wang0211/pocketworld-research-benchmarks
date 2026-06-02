@@ -1,0 +1,805 @@
+{
+  "schema_version": "pocketworld_da3_streaming_alignment_diagnostics_v1",
+  "route": "DA3-BASE K35@476x742 official sequential chunks + SelaVPR++ loop + official Sim3LoopOptimizer; point cloud diagnostics only",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict_official_postprocess",
+    "transforms_json": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_full_414/official_adjacent_sim3_report.json"
+  },
+  "windows": {
+    "count": 24,
+    "window_ids": [
+      "window_000",
+      "window_001",
+      "window_002",
+      "window_003",
+      "window_004",
+      "window_005",
+      "window_006",
+      "window_007",
+      "window_008",
+      "window_009",
+      "window_010",
+      "window_011",
+      "window_012",
+      "window_013",
+      "window_014",
+      "window_015",
+      "window_016",
+      "window_017",
+      "window_018",
+      "window_019",
+      "window_020",
+      "window_021",
+      "window_022",
+      "window_023"
+    ],
+    "chunk_size": 35,
+    "overlap": 18,
+    "step": 17
+  },
+  "outputs": {
+    "window_000_single_ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/window_000_single_rgb.ply",
+    "window_000_single_views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/window_000_single_views.png",
+    "window_000_001_shared_rgb_ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/window_000_001_shared_aligned_rgb.ply",
+    "window_000_001_shared_source_color_ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/window_000_001_shared_aligned_source_color.ply",
+    "window_000_001_shared_source_color_views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/window_000_001_shared_source_color_views.png",
+    "incremental": {
+      "first_01_windows": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_01_windows_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_01_windows_views.png"
+      },
+      "first_02_windows": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_02_windows_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_02_windows_views.png"
+      },
+      "first_04_windows": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_04_windows_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_04_windows_views.png"
+      },
+      "first_08_windows": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_08_windows_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_08_windows_views.png"
+      },
+      "first_24_windows": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_24_windows_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_alignment_clouds_full_414/first_24_windows_views.png"
+      }
+    }
+  },
+  "metrics": {
+    "window_000": {
+      "window_id": "window_000",
+      "frame_slot_count": 35,
+      "valid_point_count_before_sampling": 8763341,
+      "sampled_point_count": 26272,
+      "point_count": 26272,
+      "bbox_p01": [
+        1.4360291659832,
+        -1.1773429059982299,
+        0.6762433832883835
+      ],
+      "bbox_p99": [
+        3.522132823467255,
+        0.22560865163803112,
+        2.258559277057648
+      ],
+      "bbox_extent_p01_p99": [
+        2.086103657484055,
+        1.402951557636261,
+        1.5823158937692643
+      ],
+      "bbox_diag_p01_p99": 2.9704924053963153
+    },
+    "window_000_001_shared": {
+      "residual_status": "estimated",
+      "residual_point_count": 6357456,
+      "residual_rmse": 0.11051812022924423,
+      "residual_median": 0.05063236504793167,
+      "residual_p90": 0.18714478611946106,
+      "residual_p95": 0.2658543959259987,
+      "residual_max": 0.8645192384719849,
+      "residual_conf_threshold": 0.302734375,
+      "shared_frame_count": 18,
+      "shared_frame_ids": [
+        "cap-54",
+        "cap-56",
+        "cap-74",
+        "cap-78",
+        "cap-80",
+        "cap-96",
+        "cap-103",
+        "cap-105",
+        "cap-107",
+        "cap-109",
+        "cap-114",
+        "cap-116",
+        "cap-118",
+        "cap-122",
+        "cap-124",
+        "cap-126",
+        "cap-128",
+        "cap-131"
+      ],
+      "valid_point_count_before_sampling": 8849469,
+      "sampled_point_count": 53079,
+      "point_count": 53079,
+      "bbox_p01": [
+        1.6452915668487549,
+        -1.1745300531387328,
+        0.6211630272865295
+      ],
+      "bbox_p99": [
+        3.386490721702576,
+        0.15109452903270737,
+        2.1113762283325195
+      ],
+      "bbox_extent_p01_p99": [
+        1.7411991548538213,
+        1.3256245821714403,
+        1.4902132010459899
+      ],
+      "bbox_diag_p01_p99": 2.647600878964313
+    },
+    "incremental": {
+      "window_000": {
+        "window_id": "window_000",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 8763341,
+        "sampled_point_count": 26272,
+        "point_count": 26272,
+        "bbox_p01": [
+          1.4338191556930542,
+          -1.1763300144672393,
+          0.688869686126709
+        ],
+        "bbox_p99": [
+          3.5190317821502686,
+          0.20762495562434272,
+          2.2732171320915224
+        ],
+        "bbox_extent_p01_p99": [
+          2.0852126264572144,
+          1.383954970091582,
+          1.5843474459648135
+        ],
+        "bbox_diag_p01_p99": 2.962026314250603
+      },
+      "first_01_windows": {
+        "window_count": 1,
+        "sampled_point_count": 26272,
+        "point_count": 26272,
+        "bbox_p01": [
+          1.4338191556930542,
+          -1.1763300144672393,
+          0.688869686126709
+        ],
+        "bbox_p99": [
+          3.5190317821502686,
+          0.20762495562434272,
+          2.2732171320915224
+        ],
+        "bbox_extent_p01_p99": [
+          2.0852126264572144,
+          1.383954970091582,
+          1.5843474459648135
+        ],
+        "bbox_diag_p01_p99": 2.962026314250603
+      },
+      "window_001": {
+        "window_id": "window_001",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 8434449,
+        "sampled_point_count": 25284,
+        "point_count": 25284,
+        "bbox_p01": [
+          1.6410090482234956,
+          -1.1184724652767182,
+          0.5542639261484146
+        ],
+        "bbox_p99": [
+          3.206799232959747,
+          0.07434535056352451,
+          2.0934995722770684
+        ],
+        "bbox_extent_p01_p99": [
+          1.5657901847362512,
+          1.1928178158402427,
+          1.5392356461286538
+        ],
+        "bbox_diag_p01_p99": 2.4987516120485775
+      },
+      "first_02_windows": {
+        "window_count": 2,
+        "sampled_point_count": 51556,
+        "point_count": 51556,
+        "bbox_p01": [
+          1.4730169951915741,
+          -1.1639780759811402,
+          0.6131602197885513
+        ],
+        "bbox_p99": [
+          3.4623918414115895,
+          0.16105525046586947,
+          2.206257772445679
+        ],
+        "bbox_extent_p01_p99": [
+          1.9893748462200154,
+          1.3250333264470098,
+          1.5930975526571276
+        ],
+        "bbox_diag_p01_p99": 2.8725050752349017
+      },
+      "window_002": {
+        "window_id": "window_002",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7555121,
+        "sampled_point_count": 22647,
+        "point_count": 22647,
+        "bbox_p01": [
+          1.5841702651977538,
+          -1.1273873782157897,
+          0.4885910701751709
+        ],
+        "bbox_p99": [
+          2.774614987373352,
+          -0.2791011995077133,
+          2.0977890920639037
+        ],
+        "bbox_extent_p01_p99": [
+          1.1904447221755983,
+          0.8482861787080764,
+          1.6091980218887327
+        ],
+        "bbox_diag_p01_p99": 2.1739977808621376
+      },
+      "window_003": {
+        "window_id": "window_003",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7740501,
+        "sampled_point_count": 23204,
+        "point_count": 23204,
+        "bbox_p01": [
+          0.8575762605667114,
+          -1.1817612767219543,
+          0.8728843140602112
+        ],
+        "bbox_p99": [
+          2.7626786255836486,
+          -0.29031818300485607,
+          2.2230124521255514
+        ],
+        "bbox_extent_p01_p99": [
+          1.9051023650169372,
+          0.8914430937170983,
+          1.3501281380653403
+        ],
+        "bbox_diag_p01_p99": 2.4993862846156496
+      },
+      "first_04_windows": {
+        "window_count": 4,
+        "sampled_point_count": 97407,
+        "point_count": 97407,
+        "bbox_p01": [
+          1.1424736618995668,
+          -1.1654594707489014,
+          0.6002593851089477
+        ],
+        "bbox_p99": [
+          3.3995139932632448,
+          0.08242760524153729,
+          2.1872560119628908
+        ],
+        "bbox_extent_p01_p99": [
+          2.2570403313636778,
+          1.2478870759904388,
+          1.586996626853943
+        ],
+        "bbox_diag_p01_p99": 3.028202685665545
+      },
+      "window_004": {
+        "window_id": "window_004",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 8177949,
+        "sampled_point_count": 24517,
+        "point_count": 24517,
+        "bbox_p01": [
+          0.8852364349365235,
+          -1.1943256568908691,
+          0.7828924894332886
+        ],
+        "bbox_p99": [
+          2.784731330871582,
+          -0.30520241618156435,
+          2.345556879043579
+        ],
+        "bbox_extent_p01_p99": [
+          1.8994948959350584,
+          0.8891232407093048,
+          1.5626643896102905
+        ],
+        "bbox_diag_p01_p99": 2.6154427906969895
+      },
+      "window_005": {
+        "window_id": "window_005",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7639280,
+        "sampled_point_count": 22896,
+        "point_count": 22896,
+        "bbox_p01": [
+          1.2765970766544341,
+          -1.3345944166183472,
+          0.9273171484470367
+        ],
+        "bbox_p99": [
+          3.1018612504005425,
+          -0.29118358194828037,
+          2.2876900315284727
+        ],
+        "bbox_extent_p01_p99": [
+          1.8252641737461084,
+          1.0434108346700668,
+          1.360372883081436
+        ],
+        "bbox_diag_p01_p99": 2.5041784790408306
+      },
+      "window_006": {
+        "window_id": "window_006",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 6879335,
+        "sampled_point_count": 20623,
+        "point_count": 20623,
+        "bbox_p01": [
+          1.5420914745330812,
+          -1.2170970678329467,
+          1.0000310087203979
+        ],
+        "bbox_p99": [
+          2.6305294132232664,
+          -0.31157591104507454,
+          2.3848495531082152
+        ],
+        "bbox_extent_p01_p99": [
+          1.0884379386901852,
+          0.9055211567878722,
+          1.3848185443878174
+        ],
+        "bbox_diag_p01_p99": 1.9805019850156624
+      },
+      "window_007": {
+        "window_id": "window_007",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 6700664,
+        "sampled_point_count": 20085,
+        "point_count": 20085,
+        "bbox_p01": [
+          1.5248879718780517,
+          -1.25889102935791,
+          0.9829573702812194
+        ],
+        "bbox_p99": [
+          3.131770830154419,
+          -0.2721580147743225,
+          2.4811232471466065
+        ],
+        "bbox_extent_p01_p99": [
+          1.6068828582763672,
+          0.9867330145835875,
+          1.4981658768653872
+        ],
+        "bbox_diag_p01_p99": 2.4083636679072113
+      },
+      "first_08_windows": {
+        "window_count": 8,
+        "sampled_point_count": 185528,
+        "point_count": 185528,
+        "bbox_p01": [
+          1.1196052598953248,
+          -1.2178017103672027,
+          0.6975945675373078
+        ],
+        "bbox_p99": [
+          3.2162029314041156,
+          -0.008144585229456198,
+          2.2920385193824773
+        ],
+        "bbox_extent_p01_p99": [
+          2.096597671508791,
+          1.2096571251377466,
+          1.5944439518451694
+        ],
+        "bbox_diag_p01_p99": 2.8984898951261227
+      },
+      "window_008": {
+        "window_id": "window_008",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7372783,
+        "sampled_point_count": 22101,
+        "point_count": 22101,
+        "bbox_p01": [
+          1.4300456047058105,
+          -1.2516103982925415,
+          0.9724921584129333
+        ],
+        "bbox_p99": [
+          3.2726941108703613,
+          0.22929298877716064,
+          2.789926052093506
+        ],
+        "bbox_extent_p01_p99": [
+          1.8426485061645508,
+          1.4809033870697021,
+          1.8174338936805725
+        ],
+        "bbox_diag_p01_p99": 2.9818608815643786
+      },
+      "window_009": {
+        "window_id": "window_009",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7165431,
+        "sampled_point_count": 21481,
+        "point_count": 21481,
+        "bbox_p01": [
+          1.4442176580429078,
+          -1.21638081073761,
+          0.9008108973503113
+        ],
+        "bbox_p99": [
+          3.4925844192504885,
+          0.23424741029739493,
+          2.6089301586151126
+        ],
+        "bbox_extent_p01_p99": [
+          2.0483667612075807,
+          1.450628221035005,
+          1.7081192612648013
+        ],
+        "bbox_diag_p01_p99": 3.036083008546872
+      },
+      "window_010": {
+        "window_id": "window_010",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7509302,
+        "sampled_point_count": 22509,
+        "point_count": 22509,
+        "bbox_p01": [
+          1.555915584564209,
+          -1.230046772956848,
+          0.9063026881217957
+        ],
+        "bbox_p99": [
+          3.48766016960144,
+          0.5703612971305843,
+          2.5929697227478004
+        ],
+        "bbox_extent_p01_p99": [
+          1.931744585037231,
+          1.8004080700874323,
+          1.6866670346260046
+        ],
+        "bbox_diag_p01_p99": 3.133361142024758
+      },
+      "window_011": {
+        "window_id": "window_011",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7109652,
+        "sampled_point_count": 21314,
+        "point_count": 21314,
+        "bbox_p01": [
+          1.4822628915309906,
+          -1.2303279066085815,
+          0.8074854874610901
+        ],
+        "bbox_p99": [
+          3.380971133708954,
+          0.21505662336945425,
+          2.1861951375007624
+        ],
+        "bbox_extent_p01_p99": [
+          1.8987082421779633,
+          1.4453845299780357,
+          1.3787096500396725
+        ],
+        "bbox_diag_p01_p99": 2.7559154064533393
+      },
+      "window_012": {
+        "window_id": "window_012",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7713516,
+        "sampled_point_count": 23124,
+        "point_count": 23124,
+        "bbox_p01": [
+          1.437065818309784,
+          -1.2200596463680267,
+          0.8188518738746643
+        ],
+        "bbox_p99": [
+          3.3211894822120667,
+          0.09959584213793278,
+          2.0224576425552367
+        ],
+        "bbox_extent_p01_p99": [
+          1.8841236639022827,
+          1.3196554885059595,
+          1.2036057686805726
+        ],
+        "bbox_diag_p01_p99": 2.596166295833458
+      },
+      "window_013": {
+        "window_id": "window_013",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7341557,
+        "sampled_point_count": 22010,
+        "point_count": 22010,
+        "bbox_p01": [
+          1.7004893159866332,
+          -1.1886378383636476,
+          0.8511521428823471
+        ],
+        "bbox_p99": [
+          3.033653049468994,
+          -0.03240198414772749,
+          1.9437115859985352
+        ],
+        "bbox_extent_p01_p99": [
+          1.3331637334823607,
+          1.1562358542159201,
+          1.0925594431161882
+        ],
+        "bbox_diag_p01_p99": 2.075546440720949
+      },
+      "window_014": {
+        "window_id": "window_014",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 6552771,
+        "sampled_point_count": 19642,
+        "point_count": 19642,
+        "bbox_p01": [
+          1.6290999066829681,
+          -1.2282024753093719,
+          0.8607431340217591
+        ],
+        "bbox_p99": [
+          2.683661777973175,
+          -0.3735801270604133,
+          1.9150913226604462
+        ],
+        "bbox_extent_p01_p99": [
+          1.054561871290207,
+          0.8546223482489586,
+          1.0543481886386872
+        ],
+        "bbox_diag_p01_p99": 1.7187583312936545
+      },
+      "window_015": {
+        "window_id": "window_015",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 6530843,
+        "sampled_point_count": 19576,
+        "point_count": 19576,
+        "bbox_p01": [
+          1.544903576374054,
+          -1.2833581268787384,
+          0.8773094862699509
+        ],
+        "bbox_p99": [
+          2.6781424283981323,
+          -0.4141514152288437,
+          1.9559960663318634
+        ],
+        "bbox_extent_p01_p99": [
+          1.1332388520240784,
+          0.8692067116498947,
+          1.0786865800619125
+        ],
+        "bbox_diag_p01_p99": 1.789780808177286
+      },
+      "window_016": {
+        "window_id": "window_016",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 6571175,
+        "sampled_point_count": 19696,
+        "point_count": 19696,
+        "bbox_p01": [
+          1.3778086066246034,
+          -1.2993127346038817,
+          0.9478225320577621
+        ],
+        "bbox_p99": [
+          2.6994256138801576,
+          -0.35578301399946216,
+          2.0662941098213197
+        ],
+        "bbox_extent_p01_p99": [
+          1.3216170072555542,
+          0.9435297206044195,
+          1.1184715777635574
+        ],
+        "bbox_diag_p01_p99": 1.9717754734745747
+      },
+      "window_017": {
+        "window_id": "window_017",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7028466,
+        "sampled_point_count": 21067,
+        "point_count": 21067,
+        "bbox_p01": [
+          0.8397245335578919,
+          -1.3196761012077332,
+          0.8764267587661743
+        ],
+        "bbox_p99": [
+          2.7371825408935546,
+          -0.3586963707208633,
+          2.191818428039551
+        ],
+        "bbox_extent_p01_p99": [
+          1.8974580073356626,
+          0.9609797304868699,
+          1.3153916692733767
+        ],
+        "bbox_diag_p01_p99": 2.5008167017201886
+      },
+      "window_018": {
+        "window_id": "window_018",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7211484,
+        "sampled_point_count": 21616,
+        "point_count": 21616,
+        "bbox_p01": [
+          1.1569315671920777,
+          -1.4935810923576356,
+          0.8603520095348358
+        ],
+        "bbox_p99": [
+          2.868398094177246,
+          -0.3827912703156472,
+          2.7440077543258665
+        ],
+        "bbox_extent_p01_p99": [
+          1.7114665269851683,
+          1.1107898220419883,
+          1.8836557447910307
+        ],
+        "bbox_diag_p01_p99": 2.7768922677387033
+      },
+      "window_019": {
+        "window_id": "window_019",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7597152,
+        "sampled_point_count": 22775,
+        "point_count": 22775,
+        "bbox_p01": [
+          1.200859820842743,
+          -1.4821727585792541,
+          0.8997077977657318
+        ],
+        "bbox_p99": [
+          2.825287547111511,
+          -0.31502917945385184,
+          2.7908171653747553
+        ],
+        "bbox_extent_p01_p99": [
+          1.624427726268768,
+          1.1671435791254023,
+          1.8911093676090234
+        ],
+        "bbox_diag_p01_p99": 2.7526867261682675
+      },
+      "window_020": {
+        "window_id": "window_020",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7243907,
+        "sampled_point_count": 21710,
+        "point_count": 21710,
+        "bbox_p01": [
+          1.4926849734783172,
+          -1.4096478855609893,
+          0.8582856291532517
+        ],
+        "bbox_p99": [
+          3.1968472599983215,
+          -0.057533378154039666,
+          2.837267677783966
+        ],
+        "bbox_extent_p01_p99": [
+          1.7041622865200043,
+          1.3521145074069496,
+          1.9789820486307144
+        ],
+        "bbox_diag_p01_p99": 2.94087617704997
+      },
+      "window_021": {
+        "window_id": "window_021",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7397642,
+        "sampled_point_count": 22175,
+        "point_count": 22175,
+        "bbox_p01": [
+          0.9579666459560394,
+          -1.4000913524627685,
+          0.6010862278938294
+        ],
+        "bbox_p99": [
+          3.2385484504699695,
+          0.18429427891969466,
+          2.889382915496826
+        ],
+        "bbox_extent_p01_p99": [
+          2.28058180451393,
+          1.5843856313824631,
+          2.2882966876029966
+        ],
+        "bbox_diag_p01_p99": 3.598281940941547
+      },
+      "window_022": {
+        "window_id": "window_022",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7708945,
+        "sampled_point_count": 23109,
+        "point_count": 23109,
+        "bbox_p01": [
+          0.8734808373451233,
+          -1.3957925891876222,
+          0.6064832019805908
+        ],
+        "bbox_p99": [
+          2.824090795516968,
+          0.2359560108184812,
+          2.8508338165283202
+        ],
+        "bbox_extent_p01_p99": [
+          1.9506099581718446,
+          1.6317486000061034,
+          2.2443506145477294
+        ],
+        "bbox_diag_p01_p99": 3.391842033993006
+      },
+      "window_023": {
+        "window_id": "window_023",
+        "frame_slot_count": 35,
+        "valid_point_count_before_sampling": 7650867,
+        "sampled_point_count": 22936,
+        "point_count": 22936,
+        "bbox_p01": [
+          0.8908155769109726,
+          -1.3963120520114898,
+          0.6732813477516174
+        ],
+        "bbox_p99": [
+          2.8167838215827943,
+          0.3303869619965558,
+          2.8913569092750553
+        ],
+        "bbox_extent_p01_p99": [
+          1.9259682446718216,
+          1.7266990140080456,
+          2.2180755615234378
+        ],
+        "bbox_diag_p01_p99": 3.407448071664208
+      },
+      "first_24_windows": {
+        "window_count": 24,
+        "sampled_point_count": 532369,
+        "point_count": 532369,
+        "bbox_p01": [
+          1.1113337087631225,
+          -1.3879401540756227,
+          0.7036456227302551
+        ],
+        "bbox_p99": [
+          3.2949446678161602,
+          0.11087215691804772,
+          2.759989900588989
+        ],
+        "bbox_extent_p01_p99": [
+          2.1836109590530377,
+          1.4988123109936704,
+          2.056344277858734
+        ],
+        "bbox_diag_p01_p99": 3.353080218719062
+      }
+    }
+  },
+  "elapsed_s": 26.942
+}
