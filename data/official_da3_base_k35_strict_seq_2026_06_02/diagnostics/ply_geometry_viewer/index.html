@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DA3 PLY Geometry Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f1;
+      color: #1e2420;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #f3f4f1;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid #ccd1c8;
+      background: #fbfbf8;
+    }
+    h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+    label {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      white-space: nowrap;
+    }
+    select,
+    input[type="range"],
+    button {
+      font: inherit;
+    }
+    select,
+    button {
+      border: 1px solid #aeb7ad;
+      background: #fff;
+      color: #1e2420;
+      min-height: 28px;
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:hover {
+      background: #edf1ed;
+    }
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #ccd1c8;
+    }
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      background: #0e1110;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .hud {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      max-width: min(560px, calc(100% - 24px));
+      padding: 8px 10px;
+      border-radius: 7px;
+      background: rgba(248, 250, 247, 0.91);
+      color: #1e2420;
+      font-size: 12px;
+      line-height: 1.35;
+      pointer-events: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    }
+    .hud strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .status {
+      color: #526057;
+    }
+    .help {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      background: rgba(248, 250, 247, 0.88);
+      color: #2c342f;
+      font-size: 11px;
+      line-height: 1.35;
+      pointer-events: none;
+    }
+    @media (max-width: 900px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+      .controls {
+        justify-content: flex-start;
+      }
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DA3 PLY Geometry Viewer</h1>
+    <div class="controls">
+      <label>
+        Pair
+        <select id="pairSelect"></select>
+      </label>
+      <label>
+        Points
+        <select id="budgetSelect">
+          <option value="150000">150k</option>
+          <option value="350000" selected>350k</option>
+          <option value="700000">700k</option>
+          <option value="1000000">1M</option>
+        </select>
+      </label>
+      <label>
+        Size
+        <input id="pointSize" type="range" min="0.5" max="6" value="1.6" step="0.1" />
+      </label>
+      <label>
+        Alpha
+        <input id="alpha" type="range" min="0.12" max="1" value="0.82" step="0.02" />
+      </label>
+      <button id="frontBtn" type="button">Front</button>
+      <button id="topBtn" type="button">Top</button>
+      <button id="sideBtn" type="button">Side</button>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <canvas id="leftCanvas"></canvas>
+      <div class="hud" id="leftHud"></div>
+      <div class="help">Drag: rotate synced view. Wheel: zoom. Shift+drag: pan.</div>
+    </section>
+    <section class="panel">
+      <canvas id="rightCanvas"></canvas>
+      <div class="hud" id="rightHud"></div>
+      <div class="help">Use pair selector to switch highres/fixed-input PLYs.</div>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const REPO_ROOT = "";
+    const PAIRS = [
+      {
+        id: "highres_k05_742",
+        label: "Highres official PyTorch K5@742 vs fixed CoreML",
+        left: {
+          title: "CoreML fixed 742x476, K5",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_coreml_rgb.ply",
+          note: "official GLB-style PLY"
+        },
+        right: {
+          title: "Official PyTorch highres upper_bound_resize, K5@742",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_pytorch_rgb.ply",
+          note: "processed shape 420x742"
+        }
+      },
+      {
+        id: "highres_k10_476",
+        label: "Highres official PyTorch K10@476 vs fixed CoreML",
+        left: {
+          title: "CoreML fixed 742x476, first 10 slots",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k10_res476/highres_k10_res476_mps_coreml_rgb.ply",
+          note: "official GLB-style PLY"
+        },
+        right: {
+          title: "Official PyTorch highres upper_bound_resize, K10@476",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k10_res476/highres_k10_res476_mps_pytorch_rgb.ply",
+          note: "processed shape 266x476"
+        }
+      },
+      {
+        id: "fixed_k05_742",
+        label: "Fixed-input PyTorch K5@742 vs fixed CoreML",
+        left: {
+          title: "CoreML fixed 742x476, K5",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_k05/k05_res742_mps_coreml_rgb.ply",
+          note: "same photos_depth input"
+        },
+        right: {
+          title: "Official PyTorch on photos_depth fixed input, K5@742",
+          path: "/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_k05/k05_res742_mps_pytorch_rgb.ply",
+          note: "processed shape 476x742"
+        }
+      }
+    ];
+
+    const state = {
+      yaw: -0.68,
+      pitch: 0.2,
+      distance: 3.2,
+      panX: 0,
+      panY: 0,
+      pointSize: 1.6,
+      alpha: 0.82,
+      budget: 350000,
+      center: [0, 0, 0],
+      radius: 1,
+      mouseDown: false,
+      draggingPan: false,
+      lastX: 0,
+      lastY: 0
+    };
+
+    const cache = new Map();
+    const pairSelect = document.getElementById("pairSelect");
+    const budgetSelect = document.getElementById("budgetSelect");
+    const pointSize = document.getElementById("pointSize");
+    const alpha = document.getElementById("alpha");
+
+    for (const pair of PAIRS) {
+      const option = document.createElement("option");
+      option.value = pair.id;
+      option.textContent = pair.label;
+      pairSelect.appendChild(option);
+    }
+
+    const left = new Viewer(document.getElementById("leftCanvas"), document.getElementById("leftHud"));
+    const right = new Viewer(document.getElementById("rightCanvas"), document.getElementById("rightHud"));
+    attachControls(left.canvas);
+    attachControls(right.canvas);
+
+    pairSelect.addEventListener("change", () => loadCurrentPair());
+    budgetSelect.addEventListener("change", () => {
+      state.budget = Number(budgetSelect.value);
+      loadCurrentPair();
+    });
+    pointSize.addEventListener("input", () => {
+      state.pointSize = Number(pointSize.value);
+      renderAll();
+    });
+    alpha.addEventListener("input", () => {
+      state.alpha = Number(alpha.value);
+      renderAll();
+    });
+    document.getElementById("frontBtn").addEventListener("click", () => setView(0, 0));
+    document.getElementById("topBtn").addEventListener("click", () => setView(0, -Math.PI / 2 + 0.02));
+    document.getElementById("sideBtn").addEventListener("click", () => setView(Math.PI / 2, 0));
+    document.getElementById("resetBtn").addEventListener("click", resetView);
+    window.addEventListener("resize", renderAll);
+
+    loadCurrentPair();
+
+    async function loadCurrentPair() {
+      const pair = PAIRS.find((item) => item.id === pairSelect.value) || PAIRS[0];
+      left.setStatus(pair.left.title, "Loading " + pair.left.path);
+      right.setStatus(pair.right.title, "Loading " + pair.right.path);
+      try {
+        const [leftCloud, rightCloud] = await Promise.all([
+          loadPly(pair.left.path, state.budget),
+          loadPly(pair.right.path, state.budget)
+        ]);
+        left.setCloud(leftCloud, pair.left);
+        right.setCloud(rightCloud, pair.right);
+        fitCamera([leftCloud, rightCloud]);
+        renderAll();
+      } catch (error) {
+        left.setStatus(pair.left.title, "Error: " + error.message);
+        right.setStatus(pair.right.title, "Error: " + error.message);
+        console.error(error);
+      }
+    }
+
+    async function loadPly(path, maxPoints) {
+      const key = path + "::" + maxPoints;
+      if (cache.has(key)) {
+        return cache.get(key);
+      }
+      const response = await fetch(REPO_ROOT + path);
+      if (!response.ok) {
+        throw new Error(response.status + " " + response.statusText + " for " + path);
+      }
+      const buffer = await response.arrayBuffer();
+      const cloud = parseBinaryLittleEndianPly(buffer, maxPoints);
+      cloud.path = path;
+      cache.set(key, cloud);
+      return cloud;
+    }
+
+    function parseBinaryLittleEndianPly(buffer, maxPoints) {
+      const bytes = new Uint8Array(buffer);
+      const marker = new TextEncoder().encode("end_header\n");
+      let headerEnd = -1;
+      outer:
+      for (let i = 0; i <= bytes.length - marker.length; i += 1) {
+        for (let j = 0; j < marker.length; j += 1) {
+          if (bytes[i + j] !== marker[j]) {
+            continue outer;
+          }
+        }
+        headerEnd = i + marker.length;
+        break;
+      }
+      if (headerEnd < 0) {
+        throw new Error("PLY header not found");
+      }
+      const header = new TextDecoder("ascii").decode(bytes.slice(0, headerEnd));
+      if (!header.includes("format binary_little_endian 1.0")) {
+        throw new Error("Only binary_little_endian PLY is supported");
+      }
+      const match = header.match(/element vertex\s+(\d+)/);
+      if (!match) {
+        throw new Error("PLY vertex count not found");
+      }
+      const vertexCount = Number(match[1]);
+      const count = Math.min(vertexCount, maxPoints);
+      const stride = 15;
+      const data = new DataView(buffer, headerEnd);
+      const positions = new Float32Array(count * 3);
+      const colors = new Uint8Array(count * 3);
+      const sourceStep = vertexCount / count;
+      const bboxMin = [Infinity, Infinity, Infinity];
+      const bboxMax = [-Infinity, -Infinity, -Infinity];
+
+      for (let i = 0; i < count; i += 1) {
+        const sourceIndex = Math.min(vertexCount - 1, Math.floor(i * sourceStep));
+        const offset = sourceIndex * stride;
+        const x = data.getFloat32(offset, true);
+        const y = data.getFloat32(offset + 4, true);
+        const z = data.getFloat32(offset + 8, true);
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        colors[i * 3] = data.getUint8(offset + 12);
+        colors[i * 3 + 1] = data.getUint8(offset + 13);
+        colors[i * 3 + 2] = data.getUint8(offset + 14);
+        if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
+          bboxMin[0] = Math.min(bboxMin[0], x);
+          bboxMin[1] = Math.min(bboxMin[1], y);
+          bboxMin[2] = Math.min(bboxMin[2], z);
+          bboxMax[0] = Math.max(bboxMax[0], x);
+          bboxMax[1] = Math.max(bboxMax[1], y);
+          bboxMax[2] = Math.max(bboxMax[2], z);
+        }
+      }
+      return { positions, colors, count, vertexCount, bboxMin, bboxMax };
+    }
+
+    function fitCamera(clouds) {
+      const min = [Infinity, Infinity, Infinity];
+      const max = [-Infinity, -Infinity, -Infinity];
+      for (const cloud of clouds) {
+        for (let i = 0; i < 3; i += 1) {
+          min[i] = Math.min(min[i], cloud.bboxMin[i]);
+          max[i] = Math.max(max[i], cloud.bboxMax[i]);
+        }
+      }
+      state.center = [
+        (min[0] + max[0]) * 0.5,
+        (min[1] + max[1]) * 0.5,
+        (min[2] + max[2]) * 0.5
+      ];
+      const dx = max[0] - min[0];
+      const dy = max[1] - min[1];
+      const dz = max[2] - min[2];
+      state.radius = Math.max(0.001, Math.sqrt(dx * dx + dy * dy + dz * dz) * 0.5);
+      state.distance = state.radius * 2.55;
+      state.panX = 0;
+      state.panY = 0;
+    }
+
+    function resetView() {
+      state.yaw = -0.68;
+      state.pitch = 0.2;
+      state.distance = state.radius * 2.55;
+      state.panX = 0;
+      state.panY = 0;
+      renderAll();
+    }
+
+    function setView(yaw, pitch) {
+      state.yaw = yaw;
+      state.pitch = pitch;
+      state.distance = state.radius * 2.55;
+      state.panX = 0;
+      state.panY = 0;
+      renderAll();
+    }
+
+    function attachControls(canvas) {
+      canvas.addEventListener("mousedown", (event) => {
+        state.mouseDown = true;
+        state.draggingPan = event.shiftKey;
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+      });
+      window.addEventListener("mouseup", () => {
+        state.mouseDown = false;
+      });
+      canvas.addEventListener("mousemove", (event) => {
+        if (!state.mouseDown) {
+          return;
+        }
+        const dx = event.clientX - state.lastX;
+        const dy = event.clientY - state.lastY;
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+        if (state.draggingPan) {
+          state.panX -= dx * state.radius * 0.002;
+          state.panY += dy * state.radius * 0.002;
+        } else {
+          state.yaw += dx * 0.006;
+          state.pitch = clamp(state.pitch + dy * 0.006, -1.45, 1.45);
+        }
+        renderAll();
+      });
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const factor = Math.exp(event.deltaY * 0.001);
+        state.distance = clamp(state.distance * factor, state.radius * 0.08, state.radius * 20);
+        renderAll();
+      }, { passive: false });
+    }
+
+    function renderAll() {
+      left.render(state);
+      right.render(state);
+    }
+
+    function Viewer(canvas, hud) {
+      this.canvas = canvas;
+      this.hud = hud;
+      this.gl = canvas.getContext("webgl", { antialias: false, alpha: false });
+      if (!this.gl) {
+        throw new Error("WebGL is not available");
+      }
+      this.program = createProgram(this.gl);
+      this.positionBuffer = this.gl.createBuffer();
+      this.colorBuffer = this.gl.createBuffer();
+      this.cloud = null;
+      this.meta = null;
+    }
+
+    Viewer.prototype.setStatus = function(title, status) {
+      this.hud.innerHTML = "<strong>" + escapeHtml(title) + "</strong><span class=\"status\">" + escapeHtml(status) + "</span>";
+    };
+
+    Viewer.prototype.setCloud = function(cloud, meta) {
+      this.cloud = cloud;
+      this.meta = meta;
+      const gl = this.gl;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, cloud.positions, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, cloud.colors, gl.STATIC_DRAW);
+      this.setStatus(
+        meta.title,
+        formatCount(cloud.count) + " shown of " + formatCount(cloud.vertexCount) + " points<br>" +
+        escapeHtml(meta.note) + "<br><span class=\"status\">" + escapeHtml(meta.path) + "</span>"
+      );
+    };
+
+    Viewer.prototype.render = function(camera) {
+      const gl = this.gl;
+      resizeCanvasToDisplaySize(this.canvas);
+      gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+      gl.clearColor(0.055, 0.065, 0.06, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      if (!this.cloud) {
+        return;
+      }
+      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(this.program.program);
+      const aspect = this.canvas.width / Math.max(1, this.canvas.height);
+      const projection = perspective(Math.PI / 4, aspect, Math.max(0.001, camera.radius * 0.01), camera.radius * 60);
+      const view = viewMatrix(camera);
+      const model = identity4();
+      const mvp = multiply4(projection, multiply4(view, model));
+      gl.uniformMatrix4fv(this.program.uMvp, false, mvp);
+      gl.uniform1f(this.program.uPointSize, camera.pointSize * window.devicePixelRatio);
+      gl.uniform1f(this.program.uAlpha, camera.alpha);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+      gl.enableVertexAttribArray(this.program.aPosition);
+      gl.vertexAttribPointer(this.program.aPosition, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+      gl.enableVertexAttribArray(this.program.aColor);
+      gl.vertexAttribPointer(this.program.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+      gl.drawArrays(gl.POINTS, 0, this.cloud.count);
+    };
+
+    function createProgram(gl) {
+      const vertex = `
+        attribute vec3 aPosition;
+        attribute vec3 aColor;
+        uniform mat4 uMvp;
+        uniform float uPointSize;
+        varying vec3 vColor;
+        void main() {
+          gl_Position = uMvp * vec4(aPosition, 1.0);
+          gl_PointSize = uPointSize;
+          vColor = aColor;
+        }
+      `;
+      const fragment = `
+        precision mediump float;
+        uniform float uAlpha;
+        varying vec3 vColor;
+        void main() {
+          vec2 uv = gl_PointCoord * 2.0 - 1.0;
+          if (dot(uv, uv) > 1.0) discard;
+          gl_FragColor = vec4(vColor, uAlpha);
+        }
+      `;
+      const program = gl.createProgram();
+      gl.attachShader(program, compileShader(gl, gl.VERTEX_SHADER, vertex));
+      gl.attachShader(program, compileShader(gl, gl.FRAGMENT_SHADER, fragment));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program));
+      }
+      return {
+        program,
+        aPosition: gl.getAttribLocation(program, "aPosition"),
+        aColor: gl.getAttribLocation(program, "aColor"),
+        uMvp: gl.getUniformLocation(program, "uMvp"),
+        uPointSize: gl.getUniformLocation(program, "uPointSize"),
+        uAlpha: gl.getUniformLocation(program, "uAlpha")
+      };
+    }
+
+    function compileShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(shader));
+      }
+      return shader;
+    }
+
+    function resizeCanvasToDisplaySize(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+    }
+
+    function viewMatrix(camera) {
+      const cy = Math.cos(camera.yaw);
+      const sy = Math.sin(camera.yaw);
+      const cp = Math.cos(camera.pitch);
+      const sp = Math.sin(camera.pitch);
+      const eye = [
+        camera.center[0] + camera.distance * sy * cp,
+        camera.center[1] + camera.distance * sp,
+        camera.center[2] + camera.distance * cy * cp
+      ];
+      const target = [
+        camera.center[0] + camera.panX,
+        camera.center[1] + camera.panY,
+        camera.center[2]
+      ];
+      return lookAt(eye, target, [0, 1, 0]);
+    }
+
+    function perspective(fovy, aspect, near, far) {
+      const f = 1 / Math.tan(fovy / 2);
+      const nf = 1 / (near - far);
+      return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+      ]);
+    }
+
+    function lookAt(eye, target, up) {
+      const z = normalize(subtract(eye, target));
+      const x = normalize(cross(up, z));
+      const y = cross(z, x);
+      return new Float32Array([
+        x[0], y[0], z[0], 0,
+        x[1], y[1], z[1], 0,
+        x[2], y[2], z[2], 0,
+        -dot(x, eye), -dot(y, eye), -dot(z, eye), 1
+      ]);
+    }
+
+    function identity4() {
+      return new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ]);
+    }
+
+    function multiply4(a, b) {
+      const out = new Float32Array(16);
+      for (let col = 0; col < 4; col += 1) {
+        for (let row = 0; row < 4; row += 1) {
+          out[col * 4 + row] =
+            a[0 * 4 + row] * b[col * 4 + 0] +
+            a[1 * 4 + row] * b[col * 4 + 1] +
+            a[2 * 4 + row] * b[col * 4 + 2] +
+            a[3 * 4 + row] * b[col * 4 + 3];
+        }
+      }
+      return out;
+    }
+
+    function subtract(a, b) {
+      return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    }
+
+    function cross(a, b) {
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+    }
+
+    function dot(a, b) {
+      return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    function normalize(v) {
+      const len = Math.sqrt(dot(v, v)) || 1;
+      return [v[0] / len, v[1] / len, v[2] / len];
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function formatCount(value) {
+      return Number(value).toLocaleString("en-US");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+  </script>
+</body>
+</html>
