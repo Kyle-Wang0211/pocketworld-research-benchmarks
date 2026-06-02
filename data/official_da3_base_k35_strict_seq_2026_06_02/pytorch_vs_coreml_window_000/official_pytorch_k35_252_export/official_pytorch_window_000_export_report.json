@@ -1,0 +1,132 @@
+{
+  "schema_version": "pocketworld_official_pytorch_window_export_v1",
+  "note": "process_res may be lower than the CoreML 476x742 target; use this as a PyTorch API/contract diagnostic, not final quality parity.",
+  "inputs": {
+    "frames_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/strict_window_000_official_manifest.json",
+    "model_path": "/Users/kaidongwang/Developer/pocketworld/ios/Runner/Models/DA3-BASE",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src"
+  },
+  "parameters": {
+    "device": "mps",
+    "process_res": 252,
+    "process_res_method": "upper_bound_resize",
+    "sample_ratio": 0.006,
+    "conf_threshold_coef": 0.75
+  },
+  "runtime": {
+    "torch": "2.12.0",
+    "load_ms": 1031.5499160060426,
+    "run_ms": 3393.7234170007287,
+    "rss_before_mb": 1477.796875,
+    "rss_after_mb": 1477.796875,
+    "rss_delta_mb": 0.0
+  },
+  "official_alignment": {
+    "umeyama_scale": 0.5810421579768357,
+    "aligned_extrinsics_shape": [
+      35,
+      4,
+      4
+    ]
+  },
+  "outputs": {
+    "depth_npy": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/pytorch_depth.npy",
+    "conf_npy": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/pytorch_conf.npy",
+    "intrinsics_npy": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/pytorch_intrinsics.npy",
+    "extrinsics_npy": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/pytorch_extrinsics.npy",
+    "processed_images_npy": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/pytorch_processed_images.npy",
+    "single_ply": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/official_pytorch_k35_process_res_252_single_rgb.ply",
+    "single_views_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k35_252_export/official_pytorch_k35_process_res_252_single_views.png"
+  },
+  "metrics": {
+    "frame_count": 35,
+    "processed_shape_nhwc": [
+      35,
+      168,
+      252,
+      3
+    ],
+    "depth": {
+      "count": 1481760,
+      "min": 0.6369162201881409,
+      "max": 8.709918975830078,
+      "mean": 1.6796841071016548,
+      "median": 1.451472282409668,
+      "p05": 0.7668588250875473,
+      "p95": 4.351503992080689
+    },
+    "confidence": {
+      "count": 1481760,
+      "min": 1.0,
+      "max": 5.871526718139648,
+      "mean": 2.295000641882796,
+      "median": 2.298691511154175,
+      "p05": 1.0,
+      "p95": 3.8062367677688598
+    },
+    "pose": {
+      "count": 35,
+      "camera_center_min": [
+        1.0549665689468384,
+        -0.13231487572193146,
+        1.562304973602295
+      ],
+      "camera_center_max": [
+        2.136497974395752,
+        0.4194173812866211,
+        2.319125175476074
+      ],
+      "camera_center_extent": [
+        1.0815314054489136,
+        0.5517322421073914,
+        0.7568202018737793
+      ],
+      "camera_center_diag": 1.4306975603103638,
+      "center_radius_mean": 0.5054750442504883,
+      "center_radius_max": 0.7313054800033569
+    },
+    "pred_intrinsics": {
+      "fx": {
+        "count": 35,
+        "min": 167.80357360839844,
+        "max": 169.27243041992188,
+        "mean": 168.43593008858818,
+        "median": 168.07444763183594,
+        "p05": 167.85752868652344,
+        "p95": 169.20026092529298
+      },
+      "fy": {
+        "count": 35,
+        "min": 198.87831115722656,
+        "max": 200.61915588378906,
+        "mean": 199.62776794433594,
+        "median": 199.1993408203125,
+        "p05": 198.94225158691407,
+        "p95": 200.53363952636718
+      }
+    },
+    "point_cloud": {
+      "point_count": 5886,
+      "bbox_p01": [
+        1.41916424036026,
+        -1.0799809336662292,
+        0.7798153847455979
+      ],
+      "bbox_p99": [
+        3.365220546722412,
+        0.2790964946150779,
+        2.208680295944214
+      ],
+      "bbox_extent_p01_p99": [
+        1.946056306362152,
+        1.359077428281307,
+        1.428864911198616
+      ],
+      "bbox_diag_p01_p99": 2.770538131491834
+    },
+    "valid_point_count_before_sampling": 983967,
+    "sampled_point_count": 5886
+  },
+  "elapsed_s": 7.28
+}
