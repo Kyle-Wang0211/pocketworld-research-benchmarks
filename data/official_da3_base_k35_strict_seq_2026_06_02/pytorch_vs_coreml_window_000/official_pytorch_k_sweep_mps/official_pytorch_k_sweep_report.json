@@ -1,0 +1,665 @@
+{
+  "schema_version": "pocketworld_official_pytorch_k_sweep_v1",
+  "inputs": {
+    "frames_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/strict_window_000_official_manifest.json",
+    "model_path": "/Users/kaidongwang/Developer/pocketworld/ios/Runner/Models/DA3-BASE",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src"
+  },
+  "parameters": {
+    "device": "mps",
+    "process_res": [
+      476,
+      742
+    ],
+    "k_values": [
+      1,
+      2,
+      3,
+      5,
+      10,
+      35
+    ],
+    "process_res_method": "upper_bound_resize",
+    "ref_view_strategy": "saddle_balanced",
+    "save_arrays": true
+  },
+  "runtime": {
+    "python": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "platform": "macOS-26.1-arm64-arm-64bit",
+    "torch": "2.12.0",
+    "load_ms": 1557.079916994553
+  },
+  "attempts": [
+    {
+      "k": 1,
+      "process_res": 476,
+      "device": "mps",
+      "status": "failed",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k01_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "error_type": "GeometryException",
+      "error": "Degenerate covariance rank, Umeyama alignment is not possible",
+      "traceback_tail": [
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 179, in align_poses_umeyama",
+        "    r, t, s, pose_est_aligned = _umeyama_sim3_from_paths(pose_ref, pose_est)",
+        "                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 87, in _umeyama_sim3_from_paths",
+        "    r, t, s = path_est.align(path_ref, correct_scale=True)",
+        "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/trajectory.py\", line 273, in align",
+        "    r_a, t_a, s = geometry.umeyama_alignment(",
+        "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/geometry.py\", line 69, in umeyama_alignment",
+        "    raise GeometryException(",
+        "evo.core.geometry.GeometryException: Degenerate covariance rank, Umeyama alignment is not possible"
+      ],
+      "elapsed_ms": 1725.769541997579,
+      "rss_after_mb": 1416.328125
+    },
+    {
+      "k": 2,
+      "process_res": 476,
+      "device": "mps",
+      "status": "failed",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k02_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "error_type": "GeometryException",
+      "error": "Degenerate covariance rank, Umeyama alignment is not possible",
+      "traceback_tail": [
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 179, in align_poses_umeyama",
+        "    r, t, s, pose_est_aligned = _umeyama_sim3_from_paths(pose_ref, pose_est)",
+        "                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 87, in _umeyama_sim3_from_paths",
+        "    r, t, s = path_est.align(path_ref, correct_scale=True)",
+        "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/trajectory.py\", line 273, in align",
+        "    r_a, t_a, s = geometry.umeyama_alignment(",
+        "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/geometry.py\", line 69, in umeyama_alignment",
+        "    raise GeometryException(",
+        "evo.core.geometry.GeometryException: Degenerate covariance rank, Umeyama alignment is not possible"
+      ],
+      "elapsed_ms": 1324.541207999573,
+      "rss_after_mb": 1416.328125
+    },
+    {
+      "k": 3,
+      "process_res": 476,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "preprocess_ms": 10.048750002169982,
+      "forward_ms": 1083.6505419938476,
+      "elapsed_ms": 1234.9477500029025,
+      "rss_after_mb": 1416.328125,
+      "processed_shape_nchw": [
+        3,
+        3,
+        308,
+        476
+      ],
+      "output_shapes": {
+        "depth": [
+          3,
+          308,
+          476
+        ],
+        "conf": [
+          3,
+          308,
+          476
+        ],
+        "intrinsics": [
+          3,
+          3,
+          3
+        ],
+        "extrinsics": [
+          3,
+          3,
+          4
+        ],
+        "processed_images": [
+          3,
+          308,
+          476,
+          3
+        ],
+        "aligned_extrinsics": [
+          3,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.24751140402488564,
+        "ransac": false
+      },
+      "depth": {
+        "count": 439824,
+        "min": 2.2428297996520996,
+        "max": 8.46638298034668,
+        "mean": 3.961313558434572,
+        "median": 3.7531450986862183,
+        "p05": 2.473565459251404,
+        "p95": 5.849390029907227
+      },
+      "confidence": {
+        "count": 439824,
+        "min": 1.0,
+        "max": 7.111314296722412,
+        "mean": 3.2992835725167775,
+        "median": 2.836954355239868,
+        "p05": 1.000116229057312,
+        "p95": 5.638336992263794
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 3,
+          "min": 317.344970703125,
+          "max": 317.3520202636719,
+          "mean": 317.34874471028644,
+          "median": 317.3492431640625,
+          "p05": 317.34539794921875,
+          "p95": 317.35174255371095
+        },
+        "fy": {
+          "count": 3,
+          "min": 365.05047607421875,
+          "max": 365.05853271484375,
+          "mean": 365.0547688802083,
+          "median": 365.0552978515625,
+          "p05": 365.05095825195315,
+          "p95": 365.05820922851564
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res476_mps/pytorch_processed_images.npy"
+      }
+    },
+    {
+      "k": 5,
+      "process_res": 476,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "preprocess_ms": 18.614125001477078,
+      "forward_ms": 1489.0193340033875,
+      "elapsed_ms": 1641.747415997088,
+      "rss_after_mb": 1416.328125,
+      "processed_shape_nchw": [
+        5,
+        3,
+        308,
+        476
+      ],
+      "output_shapes": {
+        "depth": [
+          5,
+          308,
+          476
+        ],
+        "conf": [
+          5,
+          308,
+          476
+        ],
+        "intrinsics": [
+          5,
+          3,
+          3
+        ],
+        "extrinsics": [
+          5,
+          3,
+          4
+        ],
+        "processed_images": [
+          5,
+          308,
+          476,
+          3
+        ],
+        "aligned_extrinsics": [
+          5,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.6026370275886581,
+        "ransac": false
+      },
+      "depth": {
+        "count": 733040,
+        "min": 0.9494639039039612,
+        "max": 3.301694631576538,
+        "mean": 1.607525916131764,
+        "median": 1.5747405290603638,
+        "p05": 1.0619023978710174,
+        "p95": 2.21580216884613
+      },
+      "confidence": {
+        "count": 733040,
+        "min": 1.0,
+        "max": 11.706766128540039,
+        "mean": 5.7534273951224435,
+        "median": 5.473384618759155,
+        "p05": 1.033246248960495,
+        "p95": 10.00179672241211
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 5,
+          "min": 316.9622802734375,
+          "max": 317.3520202636719,
+          "mean": 317.2713989257812,
+          "median": 317.3484802246094,
+          "p05": 317.038818359375,
+          "p95": 317.35146484375
+        },
+        "fy": {
+          "count": 5,
+          "min": 364.6102294921875,
+          "max": 365.05853271484375,
+          "mean": 364.96580200195314,
+          "median": 365.0544738769531,
+          "p05": 364.6982788085937,
+          "p95": 365.0578857421875
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res476_mps/pytorch_processed_images.npy"
+      }
+    },
+    {
+      "k": 10,
+      "process_res": 476,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "preprocess_ms": 20.2618750045076,
+      "forward_ms": 3937.140875001205,
+      "elapsed_ms": 4129.224958000123,
+      "rss_after_mb": 1416.328125,
+      "processed_shape_nchw": [
+        10,
+        3,
+        308,
+        476
+      ],
+      "output_shapes": {
+        "depth": [
+          10,
+          308,
+          476
+        ],
+        "conf": [
+          10,
+          308,
+          476
+        ],
+        "intrinsics": [
+          10,
+          3,
+          3
+        ],
+        "extrinsics": [
+          10,
+          3,
+          4
+        ],
+        "processed_images": [
+          10,
+          308,
+          476,
+          3
+        ],
+        "aligned_extrinsics": [
+          10,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.5889990663744228,
+        "ransac": true
+      },
+      "depth": {
+        "count": 1466080,
+        "min": 0.9751450419425964,
+        "max": 3.640054941177368,
+        "mean": 1.647170420022484,
+        "median": 1.5964627861976624,
+        "p05": 1.1136453568935394,
+        "p95": 2.3056477785110476
+      },
+      "confidence": {
+        "count": 1466080,
+        "min": 1.0,
+        "max": 12.305031776428223,
+        "mean": 5.802142283521754,
+        "median": 5.7154600620269775,
+        "p05": 1.1994710505008697,
+        "p95": 10.068346691131593
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 10,
+          "min": 316.9622802734375,
+          "max": 317.4781799316406,
+          "mean": 317.34490661621095,
+          "median": 317.3506317138672,
+          "p05": 317.0767852783203,
+          "p95": 317.4762710571289
+        },
+        "fy": {
+          "count": 10,
+          "min": 364.6102294921875,
+          "max": 365.20367431640625,
+          "mean": 365.05035705566405,
+          "median": 365.0569152832031,
+          "p05": 364.74194183349607,
+          "p95": 365.20147705078125
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k10_res476_mps/pytorch_processed_images.npy"
+      }
+    },
+    {
+      "k": 35,
+      "process_res": 476,
+      "device": "mps",
+      "status": "failed",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k35_res476_mps",
+      "rss_before_mb": 1416.328125,
+      "error_type": "RuntimeError",
+      "error": "Invalid buffer size: 15.36 GiB",
+      "traceback_tail": [
+        "    return self.ls1(self.attn(self.norm1(x), pos=pos, attn_mask=attn_mask))",
+        "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1778, in _wrapped_call_impl",
+        "    return self._call_impl(*args, **kwargs)",
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1789, in _call_impl",
+        "    return forward_call(*args, **kwargs)",
+        "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/dinov2/layers/attention.py\", line 60, in forward",
+        "    x = F.scaled_dot_product_attention(",
+        "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "RuntimeError: Invalid buffer size: 15.36 GiB"
+      ],
+      "elapsed_ms": 1289.009874999465,
+      "rss_after_mb": 1416.328125
+    },
+    {
+      "k": 1,
+      "process_res": 742,
+      "device": "mps",
+      "status": "failed",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k01_res742_mps",
+      "rss_before_mb": 1416.328125,
+      "error_type": "GeometryException",
+      "error": "Degenerate covariance rank, Umeyama alignment is not possible",
+      "traceback_tail": [
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 179, in align_poses_umeyama",
+        "    r, t, s, pose_est_aligned = _umeyama_sim3_from_paths(pose_ref, pose_est)",
+        "                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 87, in _umeyama_sim3_from_paths",
+        "    r, t, s = path_est.align(path_ref, correct_scale=True)",
+        "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/trajectory.py\", line 273, in align",
+        "    r_a, t_a, s = geometry.umeyama_alignment(",
+        "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/geometry.py\", line 69, in umeyama_alignment",
+        "    raise GeometryException(",
+        "evo.core.geometry.GeometryException: Degenerate covariance rank, Umeyama alignment is not possible"
+      ],
+      "elapsed_ms": 479.9604170038947,
+      "rss_after_mb": 1416.328125
+    },
+    {
+      "k": 2,
+      "process_res": 742,
+      "device": "mps",
+      "status": "failed",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k02_res742_mps",
+      "rss_before_mb": 1416.328125,
+      "error_type": "GeometryException",
+      "error": "Degenerate covariance rank, Umeyama alignment is not possible",
+      "traceback_tail": [
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 179, in align_poses_umeyama",
+        "    r, t, s, pose_est_aligned = _umeyama_sim3_from_paths(pose_ref, pose_est)",
+        "                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/pose_align.py\", line 87, in _umeyama_sim3_from_paths",
+        "    r, t, s = path_est.align(path_ref, correct_scale=True)",
+        "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/trajectory.py\", line 273, in align",
+        "    r_a, t_a, s = geometry.umeyama_alignment(",
+        "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "  File \"/Users/kaidongwang/Developer/Aether3D-cross/.venv-da3/lib/python3.11/site-packages/evo/core/geometry.py\", line 69, in umeyama_alignment",
+        "    raise GeometryException(",
+        "evo.core.geometry.GeometryException: Degenerate covariance rank, Umeyama alignment is not possible"
+      ],
+      "elapsed_ms": 900.8684169966727,
+      "rss_after_mb": 1416.328125
+    },
+    {
+      "k": 3,
+      "process_res": 742,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps",
+      "rss_before_mb": 1416.328125,
+      "preprocess_ms": 7.371833999059163,
+      "forward_ms": 1455.5279579944909,
+      "elapsed_ms": 1766.7532920022495,
+      "rss_after_mb": 1416.328125,
+      "processed_shape_nchw": [
+        3,
+        3,
+        476,
+        742
+      ],
+      "output_shapes": {
+        "depth": [
+          3,
+          476,
+          742
+        ],
+        "conf": [
+          3,
+          476,
+          742
+        ],
+        "intrinsics": [
+          3,
+          3,
+          3
+        ],
+        "extrinsics": [
+          3,
+          3,
+          4
+        ],
+        "processed_images": [
+          3,
+          476,
+          742,
+          3
+        ],
+        "aligned_extrinsics": [
+          3,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.1940800183304662,
+        "ransac": false
+      },
+      "depth": {
+        "count": 1059576,
+        "min": 2.8592381477355957,
+        "max": 8.35733413696289,
+        "mean": 4.910220671001771,
+        "median": 4.605865716934204,
+        "p05": 3.1189653873443604,
+        "p95": 7.353386282920837
+      },
+      "confidence": {
+        "count": 1059576,
+        "min": 1.0002166032791138,
+        "max": 7.262182712554932,
+        "mean": 3.357712710575134,
+        "median": 2.991009831428528,
+        "p05": 1.0725143551826477,
+        "p95": 5.844336271286011
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 3,
+          "min": 494.6848449707031,
+          "max": 494.6958312988281,
+          "mean": 494.6907145182292,
+          "median": 494.69146728515625,
+          "p05": 494.6855072021484,
+          "p95": 494.6953948974609
+        },
+        "fy": {
+          "count": 3,
+          "min": 564.1688842773438,
+          "max": 564.181396484375,
+          "mean": 564.1755574544271,
+          "median": 564.1763916015625,
+          "p05": 564.1696350097657,
+          "p95": 564.1808959960938
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k03_res742_mps/pytorch_processed_images.npy"
+      }
+    },
+    {
+      "k": 5,
+      "process_res": 742,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps",
+      "rss_before_mb": 1416.328125,
+      "preprocess_ms": 9.55820800299989,
+      "forward_ms": 5282.356834002712,
+      "elapsed_ms": 6075.998249994882,
+      "rss_after_mb": 1416.328125,
+      "processed_shape_nchw": [
+        5,
+        3,
+        476,
+        742
+      ],
+      "output_shapes": {
+        "depth": [
+          5,
+          476,
+          742
+        ],
+        "conf": [
+          5,
+          476,
+          742
+        ],
+        "intrinsics": [
+          5,
+          3,
+          3
+        ],
+        "extrinsics": [
+          5,
+          3,
+          4
+        ],
+        "processed_images": [
+          5,
+          476,
+          742,
+          3
+        ],
+        "aligned_extrinsics": [
+          5,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.5764713575757547,
+        "ransac": false
+      },
+      "depth": {
+        "count": 1765960,
+        "min": 1.0174165964126587,
+        "max": 2.6300606727600098,
+        "mean": 1.6507745496857982,
+        "median": 1.6240071058273315,
+        "p05": 1.117793756723404,
+        "p95": 2.309224164485931
+      },
+      "confidence": {
+        "count": 1765960,
+        "min": 1.0007189512252808,
+        "max": 12.777765274047852,
+        "mean": 6.41030582851524,
+        "median": 6.015525817871094,
+        "p05": 2.3252174258232117,
+        "p95": 10.5768084526062
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 5,
+          "min": 494.0882873535156,
+          "max": 494.6958312988281,
+          "mean": 494.5701477050781,
+          "median": 494.6903076171875,
+          "p05": 494.2075988769531,
+          "p95": 494.69495849609376
+        },
+        "fy": {
+          "count": 5,
+          "min": 563.488525390625,
+          "max": 564.181396484375,
+          "mean": 564.0380615234375,
+          "median": 564.1751098632812,
+          "p05": 563.6245971679688,
+          "p95": 564.1803955078125
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_k_sweep_mps/k05_res742_mps/pytorch_processed_images.npy"
+      }
+    }
+  ]
+}
