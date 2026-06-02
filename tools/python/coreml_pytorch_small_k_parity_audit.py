@@ -34,6 +34,7 @@ def main() -> int:
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     frames = load_coreml_frames(args.coreml_dir, args.window_id)
+    coreml_context = read_coreml_context(args.coreml_dir)
 
     case_reports = []
     for case_name in args.cases:
@@ -62,6 +63,7 @@ def main() -> int:
         },
         "scope": {
             "coreml_context": "fixed N35 sealed CoreML window, using the first K slots",
+            "coreml_postprocess": coreml_context,
             "pytorch_context": "official PyTorch variable-K forward for each saved K",
             "hard_parity_cases": "same output HxW only, currently K=3/5 at process_res=742",
             "weak_cases": "shape mismatch cases use resized CoreML only as a diagnostic",
@@ -73,7 +75,7 @@ def main() -> int:
             "seed": args.seed,
         },
         "cases": case_reports,
-        "interpretation": interpret_report(case_reports),
+        "interpretation": interpret_report(case_reports, coreml_context),
     }
     write_json(args.out_dir / "coreml_pytorch_small_k_parity_report.json", report)
     write_markdown(args.out_dir / "coreml_pytorch_small_k_parity_report_zh.md", report)
@@ -87,6 +89,21 @@ def load_coreml_frames(coreml_dir: Path, window_id: str) -> list[dict[str, Any]]
     if window_id not in windows:
         raise KeyError(f"{window_id} not found in {coreml_dir / 'mac_da3_window_reports.json'}")
     return sorted(windows[window_id].get("frames", []), key=lambda row: int(row.get("windowSlot", 0)))
+
+
+def read_coreml_context(coreml_dir: Path) -> dict[str, Any]:
+    depth_index = maybe_read_json(coreml_dir / "depth_index.json")
+    official_postprocess = depth_index.get("official_postprocess")
+    if official_postprocess:
+        return {
+            "status": "official_postprocessed",
+            "algorithm": official_postprocess.get("algorithm"),
+            "source_raw_dir": official_postprocess.get("source_raw_dir"),
+        }
+    return {
+        "status": "raw_coreml_export",
+        "algorithm": "sealed CoreML outputs as exported by da3_mac_window_export.py",
+    }
 
 
 def audit_case(
@@ -480,7 +497,7 @@ def draw_image(axis: Any, values: np.ndarray, title: str) -> None:
     axis.axis("off")
 
 
-def interpret_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
+def interpret_report(cases: list[dict[str, Any]], coreml_context: dict[str, Any]) -> dict[str, Any]:
     compared = [case for case in cases if case.get("status") == "compared"]
     hard = [case for case in compared if case.get("direct_shape_match")]
     weak = [case for case in compared if not case.get("direct_shape_match")]
@@ -493,17 +510,26 @@ def interpret_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
             largest_depth_rel = max(largest_depth_rel or 0.0, float(depth_rel))
         if conf_mae is not None:
             largest_conf_mae = max(largest_conf_mae or 0.0, float(conf_mae))
+    if coreml_context.get("status") == "official_postprocessed":
+        summary = (
+            "主信号看 K=3/5@742。official postprocess 后，pose/intrinsics 已对齐到官方语义；"
+            "K=5@742 的 depth scale 从 raw 版明显偏离 1 收敛到接近 1，说明 Umeyama pose_scale "
+            "基本解释了绝对尺度差异。confidence 仍然差异偏大，K=3 因 PyTorch 小 K pose scale "
+            "退化/不稳定仍不应作为 full-window 结论。K=10@476 shape 不一致，只能作为弱参考。"
+        )
+    else:
+        summary = (
+            "主信号看 K=3/5@742。depth 结构高度相关，但需要明显全局 scale 才贴近 PyTorch；"
+            "confidence 差异偏大；pose/intrinsics 当前比较的是 CoreML raw-ish 输出和 PyTorch "
+            "official postprocess 后的值。下一步应优先把 CoreML 输出补齐官方 Umeyama / pose_scale / "
+            "intrinsics-extrinsics 回填，而不是继续调 bbox。K=10@476 shape 不一致，只能作为弱参考。"
+        )
     return {
         "hard_case_count": len(hard),
         "weak_case_count": len(weak),
         "largest_hard_depth_scale_aligned_median_relative": largest_depth_rel,
         "largest_hard_conf_raw_mae": largest_conf_mae,
-        "summary": (
-            "主信号看 K=3/5@742。depth 结构高度相关，但需要明显全局 scale 才贴近 PyTorch；"
-            "confidence 差异偏大；pose/intrinsics 当前比较的是 CoreML raw-ish 输出和 PyTorch "
-            "official postprocess 后的值。下一步应优先把 CoreML 输出补齐官方 Umeyama / pose_scale / "
-            "intrinsics-extrinsics 回填，而不是继续调 bbox。K=10@476 shape 不一致，只能作为弱参考。"
-        ),
+        "summary": summary,
     }
 
 
@@ -539,13 +565,19 @@ def read_json(path: Path) -> dict[str, Any]:
         return json.load(handle)
 
 
+def maybe_read_json(path: Path) -> dict[str, Any]:
+    return read_json(path) if path.exists() else {}
+
+
 def write_markdown(path: Path, report: dict[str, Any]) -> None:
+    coreml_status = report.get("scope", {}).get("coreml_postprocess", {}).get("status", "unknown")
     lines = [
         "# CoreML / Official PyTorch Small-K Parity Audit",
         "",
         "## 范围",
         "",
         "- CoreML：固定 N35 sealed model 的 `window_000`，取前 K 个 slot。",
+        f"- CoreML postprocess 状态：`{coreml_status}`。",
         "- PyTorch：官方 DA3 PyTorch variable-K forward 的小 K 输出。",
         "- 硬对比：只有输出 HxW 完全一致的 case，当前主要是 `K=3/5 @ process_res=742`。",
         "- 弱对比：shape 不一致时，把 CoreML resize 到 PyTorch shape，只作为诊断，不作为 parity 判定。",
