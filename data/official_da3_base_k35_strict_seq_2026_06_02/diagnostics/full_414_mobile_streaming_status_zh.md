@@ -208,3 +208,58 @@ SelaVPR++ 在当前默认阈值 0.85 下没有找到 loop, 所以官方 loop/Sim
 - 不自研新融合。
 - 不为了出现 loop 而降低阈值。
 - 只在官方一致性范围内做移动端可承载适配。
+
+## 2026-06-03 追加诊断
+
+### 最坏 adjacent Sim3 边 PLY
+
+新增输出目录:
+
+`data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_sim3_worst_edges_shared_ply`
+
+导出了 p90 最大的 4 条相邻边 shared source-color PLY:
+
+- `window_014 -> window_015`: adjacent p90 0.364880, root-aligned p90 0.386085
+- `window_015 -> window_016`: adjacent p90 0.352374, root-aligned p90 0.364461
+- `window_006 -> window_007`: adjacent p90 0.346300, root-aligned p90 0.401811
+- `window_016 -> window_017`: adjacent p90 0.313003, root-aligned p90 0.353280
+
+蓝色代表 parent window, 橙色代表 current window。这个结果说明最坏桥接边在 root frame 下仍然有 0.35-0.40m 量级的 p90 分层, 不是单纯 2D 预览错觉。
+
+### SelaVPR++ threshold=0.80 只读 loop 诊断
+
+新增输出目录:
+
+`data/official_da3_base_k35_strict_seq_2026_06_02/loop_vpr_full_414_threshold080_diagnostic/selavprpp`
+
+注意: 这是 diagnostic-only, 不是生产阈值修改。默认 0.85 仍然保持为 0 loop candidates。
+
+结果:
+
+- raw loop pairs: 12
+- official `process_loop_list` 后 loop windows: 5
+- CoreML K35 loop chunk forward: completed, 5 windows, 122 completed frames, elapsed_s 221.044, last RSS 3517.203 MB
+- official postprocess: completed
+- dense Sim3 loop constraints: 5
+- Sim3LoopOptimizer: completed
+- pre scale mean/std: 1.015046 / 0.049808
+- post scale mean/std: 1.011119 / 0.050996
+
+Loop window 几何残差:
+
+- `loop_window_000` chunks `17 -> 6`, gap 11, a_p90 0.170085, b_p90 0.108454, scale 0.881570
+- `loop_window_001` chunks `19 -> 4`, gap 15, a_p90 0.158118, b_p90 0.098355, scale 0.963947
+- `loop_window_002` chunks `2 -> 1`, gap 1, a_p90 0.098608, b_p90 0.113136, scale 0.988251; 这是近邻重复, 不是全局回环
+- `loop_window_003` chunks `20 -> 6`, gap 14, a_p90 0.063198, b_p90 0.155304, scale 0.935300
+- `loop_window_004` chunks `16 -> 6`, gap 10, a_p90 0.231772, b_p90 0.367188, scale 0.862199; 残差偏高, 作为约束有风险
+
+初步解释:
+
+0.80 能产生候选, 但当前证据仍不支持把 K35 厚层归因于缺 loop。原因是:
+
+- 至少一个 loop window 是近邻重复, 不能算全局 loop。
+- 一个长距离候选 b_p90 达到 0.367188, 几何约束风险较高。
+- optimizer 虽然完成, 但 scale std 从 0.049808 增到 0.050996, 没有显示出更稳定的尺度压缩。
+- K35 厚层已经能在单个 K35 window 或 adjacent shared frame 中观察到, loop 更像全局漂移约束, 不是当前最直接根因。
+
+因此 0.80 只能继续作为人工/几何诊断候选, 不能进入生产默认配置。
