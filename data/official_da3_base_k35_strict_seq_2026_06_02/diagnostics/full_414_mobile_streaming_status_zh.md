@@ -310,3 +310,43 @@ loop080 optimizer 对全局尺度和 bbox 有压缩效果, 也让一部分相邻
 - threshold=0.80 可以保留为 diagnostic-only 候选。
 - production 默认仍不应从 0.85 降到 0.80。
 - K35 厚层继续优先查 window 内部 depth/pose/scale 和 official fusion/export 一致性, 而不是直接归因给缺 loop。
+
+### Bad Windows Official Micro Audit
+
+新增输出目录:
+
+`data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_bad_windows_micro_audit_summary`
+
+对 `window_006/014/015/016` 追加了 official GLB export / DA3-Streaming NPZ pointcloud 规则的 micro audit, 并与 `window_000` baseline 一起汇总。每个窗口只读导出 slot 0、0+1、0+1+2、first5、first10、first35, 不改生产算法。
+
+compact summary:
+
+- `bad_windows_micro_audit_summary.json`
+- `bad_windows_micro_audit_summary_zh.md`
+- `bad_windows_first10_first35_contact_sheet.png`
+
+关键数值:
+
+- `window_006`: GLB first10 bbox 1.605227 -> first35 bbox 1.940905; NPZ first10 bbox 1.587128 -> first35 bbox 1.795190
+- `window_014`: GLB first10 bbox 1.908092 -> first35 bbox 2.154181; NPZ first10 bbox 1.430443 -> first35 bbox 1.602098
+- `window_015`: GLB first10 bbox 2.488748 -> first35 bbox 2.395815; NPZ first10 bbox 1.727919 -> first35 bbox 1.718531
+- `window_016`: GLB first10 bbox 1.710428 -> first35 bbox 2.198072; NPZ first10 bbox 1.270586 -> first35 bbox 1.598674, NPZ first35 出现 PCA minor jump
+
+解释:
+
+- 这些坏窗口没有出现 0+1 或 0+1+2 级别的瞬间崩坏。
+- 厚层/范围扩大更像随视角跨度和 slots 累计逐渐增长, 尤其 first35 相比 first10。
+- `window_016` 说明 streaming NPZ 官方保存规则下也能出现 first35 厚化。
+- `window_015` 说明不是简单“帧越多一定越坏”, 因为 GLB first10 达到高点后 first35 略回落。
+- 这个证据进一步支持: K35 厚层不是目前能直接靠 loop 解释的问题, 更应继续查 window 内 pose-depth-scale / confidence / official export-fusion 一致性。
+
+### VPR / Loop Replacement 判断
+
+SelaVPR++ 是当前商用安全路线, 默认阈值 0.85 没有 loop。这个结果不能被理解成“需要换一个更容易给 loop 的 VPR”。更稳妥的目标是:
+
+- 找真实 loop, 而不是找一定会输出 loop 的模型。
+- loop candidate 必须同时通过视觉相似、时间间隔、official process_loop_list、dense Sim3 residual 检查。
+- 如果一个新 VPR 只是多报候选, 但几何 residual 高, 它会把全局 pose graph 拉歪, 不能修 K35 厚层。
+- 当前 loop080 diagnostic 已显示: bbox 有整体压缩, adjacent p90 mean 只小幅下降 0.005362, 仍有 7 条相邻边变差; 这不是稳定修复厚层的证据。
+
+因此下一步不应优先“寻找有 loop 的同类算法”。除非我们能证明 414 张序列里确实存在可靠回环, 且 SelaVPR++ 默认阈值漏检了它。否则, 对 K35 厚层的官方一致性排查应继续放在 window 内 pose/depth/scale/confidence/export-fusion 上。
