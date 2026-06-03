@@ -263,3 +263,50 @@ Loop window 几何残差:
 - K35 厚层已经能在单个 K35 window 或 adjacent shared frame 中观察到, loop 更像全局漂移约束, 不是当前最直接根因。
 
 因此 0.80 只能继续作为人工/几何诊断候选, 不能进入生产默认配置。
+
+### Adjacent-only vs loop080 optimized aggregate PLY
+
+新增输出目录:
+
+`data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_loop080_vs_adjacent_aggregate_clouds`
+
+对照规则:
+
+- 使用同一批 full 414 / 24 windows 官方后处理输出
+- 使用相同 sample ratio: 0.002
+- 使用相同 confidence threshold coef: 0.75
+- 对同一 frame slot 使用稳定随机种子, 保证 adjacent-only 和 loop080 optimized 是 matched sampling
+- 只导出 PLY/PNG 和 residual report, 不做 graph patch, 不做新融合, 不做 Poisson/mesh
+
+输出:
+
+- `adjacent_only_matched_first24_rgb.ply`
+- `loop080_optimized_matched_first24_rgb.ply`
+- `loop080_vs_adjacent_source_color_overlay.ply`
+
+数值:
+
+- sampled points: 354765
+- adjacent-only shared edge p90 mean: 0.208001
+- loop080 optimized shared edge p90 mean: 0.202639
+- delta p90 mean: -0.005362
+- p90 improved / worsened edge count: 16 / 7
+- loop vs adjacent point displacement median / p90: 0.101634 / 0.190502
+- adjacent-only bbox diag: 3.350654
+- loop080 optimized bbox diag: 3.120153
+
+最坏 loop 后相邻边:
+
+- `window_006 -> window_007`: adjacent p90 0.401811 -> loop080 p90 0.407063, 变差
+- `window_015 -> window_016`: adjacent p90 0.364461 -> loop080 p90 0.361891, 轻微改善
+- `window_014 -> window_015`: adjacent p90 0.386085 -> loop080 p90 0.347699, 明显改善但仍偏厚
+
+解释:
+
+loop080 optimizer 对全局尺度和 bbox 有压缩效果, 也让一部分相邻边 residual 下降, 但幅度很小, 而且仍有 7 条 adjacent shared edges 变差。blue/orange overlay 显示 loop080 是整体全局变形/位移, 不是把厚层稳定压成单层。因此它仍不能作为 K35 厚层的生产修复。
+
+当前更稳妥的判断:
+
+- threshold=0.80 可以保留为 diagnostic-only 候选。
+- production 默认仍不应从 0.85 降到 0.80。
+- K35 厚层继续优先查 window 内部 depth/pose/scale 和 official fusion/export 一致性, 而不是直接归因给缺 loop。
