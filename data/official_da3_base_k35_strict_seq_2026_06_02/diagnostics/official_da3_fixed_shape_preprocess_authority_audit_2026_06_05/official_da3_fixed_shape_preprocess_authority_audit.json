@@ -1,0 +1,107 @@
+{
+  "schema_version": "aether_da3_fixed_shape_preprocess_authority_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "fixed_476x742_shape_not_exact_official_preprocess_for_16x9_sources",
+    "goal_complete": false,
+    "official_algorithm_blame_supported": false,
+    "fixed_shape_can_equal_official_aspect_preserving_resize": false,
+    "current_manifest_all_direct_stretch": true,
+    "fixed_shape_source": "local_coreml_quality_sweep_not_official_api_default",
+    "conclusion": "For this strict capture, the fixed 742x476 CoreML image tensor cannot be the exact output of official aspect-preserving upper_bound_resize for 16:9 source frames. Official long-side-742 resize lands at 742x420 after patch rounding, while the current manifest uses direct_stretch to 742x476. This keeps the product-selected fixed model shape runnable, but it is not an official preprocessing authority.",
+    "next_best_action": "Do not sweep more sizes. Treat DA3BASE_476x742_N35 as the product fixed-shape compatibility path, and isolate official-parity work around image-only cam_dec plus a clearly labeled official-style preprocess path."
+  },
+  "inputs": {
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "stage_scripts_dir": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage",
+    "manifest": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json"
+  },
+  "manifest": {
+    "frame_count": 414,
+    "input_size": "742x476",
+    "input_aspect": 1.5588235294117647,
+    "mode_counts": {
+      "direct_stretch": 414
+    },
+    "source_size_counts": {
+      "4224x2376": 396,
+      "3840x2160": 18
+    },
+    "median_y_over_x_stretch": 1.1404612159329142
+  },
+  "official_resize_examples": [
+    {
+      "source_size": "3840x2160",
+      "frame_count": 18,
+      "source_aspect": 1.7777777777777777,
+      "current_fixed_input": "742x476",
+      "current_fixed_aspect": 1.5588235294117647,
+      "official_upper_bound_process_res": 742,
+      "official_upper_bound_resize_shape": "742x420",
+      "official_long_side_needed_to_match_height": {
+        "process_res": 846,
+        "shape": "840x476"
+      },
+      "shape_can_be_exact_aspect_preserving_resize": false
+    },
+    {
+      "source_size": "4224x2376",
+      "frame_count": 396,
+      "source_aspect": 1.7777777777777777,
+      "current_fixed_input": "742x476",
+      "current_fixed_aspect": 1.5588235294117647,
+      "official_upper_bound_process_res": 742,
+      "official_upper_bound_resize_shape": "742x420",
+      "official_long_side_needed_to_match_height": {
+        "process_res": 846,
+        "shape": "840x476"
+      },
+      "shape_can_be_exact_aspect_preserving_resize": false
+    }
+  ],
+  "local_sweep_evidence": {
+    "files": [
+      {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage/export_da3_pose_coreml.py",
+        "hits": [
+          {
+            "needle": "--height",
+            "line": 272
+          },
+          {
+            "needle": "--width",
+            "line": 273
+          }
+        ]
+      },
+      {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage/run_476742_neighborhood_sweep_20260525.sh",
+        "hits": [
+          {
+            "needle": "--height",
+            "line": 38
+          },
+          {
+            "needle": "--width",
+            "line": 39
+          },
+          {
+            "needle": "K35_476x742",
+            "line": 61
+          },
+          {
+            "needle": "compare_coreml_quality_rectangular.py",
+            "line": 57
+          }
+        ]
+      }
+    ]
+  },
+  "plain_language": [
+    "476x742 是一个固定 CoreML 输入形状；它能跑，不等于它就是官方 API 的 preprocess 输出。",
+    "这批源图基本是 16:9，官方等比 upper_bound_resize 不会把 16:9 变成 742x476。",
+    "当前 Dart manifest 是 direct_stretch，所以 Y 方向相对 X 方向被额外拉伸；这是上游输入合同差异。",
+    "因此当前厚层仍不能证明官方原生 DA3 算法有问题；它首先证明我们跑的是固定形状兼容路径。",
+    "下一步不要再测尺寸，把 476x742 当产品约束，继续查 image-only cam_dec 和官方 preprocess 的权威路径。"
+  ]
+}

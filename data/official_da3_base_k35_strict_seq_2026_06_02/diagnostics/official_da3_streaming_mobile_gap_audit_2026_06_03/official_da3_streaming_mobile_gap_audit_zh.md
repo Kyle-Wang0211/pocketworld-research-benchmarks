@@ -59,7 +59,7 @@
 | loop | 官方 SALAD + FAISS + NMS + loop Sim3 optimizer | SelaVPR++ MIT；官方阈值下当前没有 loop，0.80 仅诊断 | 换 VPR 不是厚层的直接证据；只有真实 loop pair 才能进入 Sim3 optimizer。 |
 | loop optimizer | 官方 `Sim3LoopOptimizer`，默认 C++ | 当前只做过诊断/准备，未成为最终 CoreML full 414 输出 | 完整闭环约束还没证明对当前序列有效。 |
 | 输出保存 | 官方 `save_depth_conf_result` 只保存每 chunk 非重叠核心帧，避免重复 overlap | micro audit 故意导出全窗口；最终 full 414 需要确认只保存 core frames | 重复 overlap 帧会让同一表面被多次写入，可能加厚。 |
-| 点云采样 | 官方 `sample_ratio=0.015`、`conf_threshold=mean(conf)*0.75` | 诊断已复刻；不同报告里也保留 GLB-style | 需要确保最终导出只使用官方配置，不混用 CLI 默认 0.5。 |
+| 点云采样 | 官方 `npz_output_process.py` CLI 默认 `sample_ratio=0.015`、`conf_threshold=mean(conf)*0.5`；DA3-Streaming full-chunk PLY config 使用 `0.75` | APP official core-frame baseline 已切到 `0.5`；历史诊断仍保留 `0.75` sensitivity/streaming-config 对照 | 需要继续区分 core-frame npz baseline 与 `pcd/combined_pcd.ply` full-chunk PLY 口径。 |
 | 图像排序 | 官方直接 `sorted(glob(...))` | 我们用 timestamp 顺序 | 如果喂官方代码，必须先稳定重命名；否则 `cap-10`/`cap-2` 这类字典序会错。 |
 | 平台依赖 | 官方 PyTorch/CUDA/triton/FAISS/SALAD | 目标是手机、平板、笔记本、苹果/安卓/鸿蒙 | 官方 Python 运行栈不能直接成为产品路径，只能作为 reference。 |
 | 商业许可 | 官方 loop 默认 SALAD | 产品路径用 DA3-BASE Apache-2.0 + SelaVPR++ MIT | SALAD 只能做本地研究参考，不能默认进商业路径。 |

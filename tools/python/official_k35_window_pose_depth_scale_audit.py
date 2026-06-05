@@ -27,25 +27,23 @@ def main() -> int:
     parser.add_argument("--postprocess-report", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--window-id", default="window_016")
+    parser.add_argument(
+        "--frame-source",
+        default="window_report",
+        choices=["window_report", "depth_index"],
+        help="Use all raw window-report slots or only final downstream depth_index frames.",
+    )
     parser.add_argument("--seed", type=int, default=4316)
     parser.add_argument("--glb-conf-thresh", type=float, default=1.05)
     parser.add_argument("--glb-conf-percentile", type=float, default=40.0)
     parser.add_argument("--glb-ensure-percentile", type=float, default=90.0)
     parser.add_argument("--glb-num-max-points", type=int, default=1_000_000)
-    parser.add_argument("--npz-conf-threshold-coef", type=float, default=0.75)
+    parser.add_argument("--npz-conf-threshold-coef", type=float, default=0.5)
     parser.add_argument("--npz-sample-ratio", type=float, default=0.015)
     args = parser.parse_args()
 
     strict = load_strict_micro_audit_module()
-    reports = read_json(args.da3_dir / "mac_da3_window_reports.json")
-    window_reports = {str(row["windowID"]): row for row in reports.get("windows", [])}
-    if args.window_id not in window_reports:
-        raise KeyError(f"{args.window_id} not found in {args.da3_dir}")
-
-    frames = sorted(
-        window_reports[args.window_id].get("frames", []),
-        key=lambda row: int(row.get("windowSlot", 0)),
-    )
+    frames = load_frames(args.da3_dir, args.window_id, args.frame_source)
     slots = [
         strict.load_slot(frame, capture_dir=args.capture_dir, da3_dir=args.da3_dir)
         for frame in frames
@@ -86,6 +84,8 @@ def main() -> int:
             "da3_dir": str(args.da3_dir),
             "postprocess_report": str(args.postprocess_report),
             "window_id": args.window_id,
+            "frame_source": args.frame_source,
+            "frame_count": len(frames),
             "pose_scale": pose_scale,
             "note": "Read-only diagnostic. Uses official-postprocessed CoreML outputs and official GLB/NPZ-style point metrics; writes no PLYs.",
         },
@@ -99,6 +99,7 @@ def main() -> int:
             },
             "npz_streaming_style": {
                 "conf_threshold_coef": args.npz_conf_threshold_coef,
+                "conf_threshold_coef_source": "npz_output_process.py CLI default is 0.5; DA3-Streaming Pointcloud_Save config uses 0.75 for full-chunk pcd export.",
                 "sample_ratio": args.npz_sample_ratio,
             },
         },
@@ -112,6 +113,28 @@ def main() -> int:
     write_markdown(args.out_dir / f"{args.window_id}_pose_depth_scale_audit_zh.md", report)
     print(json.dumps(compact_console(report), ensure_ascii=False, indent=2))
     return 0
+
+
+def load_frames(da3_dir: Path, window_id: str, frame_source: str) -> list[dict[str, Any]]:
+    if frame_source == "depth_index":
+        depth_index = read_json(da3_dir / "depth_index.json")
+        frames = [
+            row
+            for row in depth_index.get("frames", [])
+            if str(row.get("windowID")) == window_id
+        ]
+        if not frames:
+            raise KeyError(f"{window_id} not found in {da3_dir}/depth_index.json")
+        return sorted(frames, key=lambda row: int(row.get("windowSlot", 0)))
+
+    reports = read_json(da3_dir / "mac_da3_window_reports.json")
+    window_reports = {str(row["windowID"]): row for row in reports.get("windows", [])}
+    if window_id not in window_reports:
+        raise KeyError(f"{window_id} not found in {da3_dir}")
+    return sorted(
+        window_reports[window_id].get("frames", []),
+        key=lambda row: int(row.get("windowSlot", 0)),
+    )
 
 
 def load_strict_micro_audit_module() -> Any:

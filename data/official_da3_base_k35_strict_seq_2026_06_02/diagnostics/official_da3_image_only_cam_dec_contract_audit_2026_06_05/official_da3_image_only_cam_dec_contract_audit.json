@@ -1,0 +1,165 @@
+{
+  "schema_version": "aether_da3_image_only_cam_dec_contract_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "official_image_only_contract_and_product_coreml_ready",
+    "goal_complete": false,
+    "official_algorithm_blame_supported": false,
+    "official_image_only_contract": true,
+    "selected_image_only_policy": true,
+    "current_pose_coreml_requires_external_camera": true,
+    "target_image_only_coreml_missing": false,
+    "conclusion": "Official DA3-Streaming is image-only at the public API level: it passes images only, leaves extrinsics/intrinsics as None, and relies on cam_dec to predict camera extrinsics/intrinsics from image features. The product policy and Swift allowlist now select DA3BASE_280x504_N35_image_only; the CoreML artifact/signature is present and image-only; old pose-conditioned outputs remain compatibility/research evidence, not official APP authority.",
+    "next_best_action": "Run the same capture/window through the product image-only CoreML path and compare official core-frame NPZ downstream."
+  },
+  "inputs": {
+    "official_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "dart_package": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "pose_coreml": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+    "image_only_coreml": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage"
+  },
+  "pose_coreml_signature": {
+    "exists": true,
+    "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+    "type": "mlProgram",
+    "inputs": [
+      "image",
+      "extrinsics",
+      "intrinsics"
+    ],
+    "outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ]
+  },
+  "image_only_coreml_signature": {
+    "exists": true,
+    "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+    "type": "mlProgram",
+    "inputs": [
+      "image"
+    ],
+    "outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ]
+  },
+  "checks": [
+    {
+      "id": "official_streaming_calls_inference_without_external_camera",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "line": 273,
+      "needle": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)",
+      "evidence": "官方 DA3-Streaming 默认只传 images/ref_view_strategy，不传 extrinsics/intrinsics。"
+    },
+    {
+      "id": "official_api_external_camera_is_optional",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "line": 204,
+      "needle": "ex_t_norm = self._normalize_extrinsics(ex_t.clone() if ex_t is not None else None)",
+      "evidence": "官方 API 的 extrinsics 是 optional；没有外部相机时 ex_t_norm 仍为 None。"
+    },
+    {
+      "id": "official_forward_uses_cam_enc_only_when_external_extrinsics_exist",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 126,
+      "needle": "if extrinsics is not None:",
+      "evidence": "官方网络只有在 extrinsics 存在时才用 cam_enc 生成 camera token。"
+    },
+    {
+      "id": "official_forward_image_only_has_no_camera_token",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 130,
+      "needle": "cam_token = None",
+      "evidence": "没有外部相机时 backbone 的 camera token 是 None，即 image-only 分支。"
+    },
+    {
+      "id": "official_cam_dec_predicts_pose_encoding",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 216,
+      "needle": "pose_enc = self.cam_dec(feats[-1][1])",
+      "evidence": "官方 cam_dec 从图像特征预测 pose encoding。"
+    },
+    {
+      "id": "official_cam_dec_outputs_extrinsics_intrinsics",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 224,
+      "needle": "c2w, ixt = pose_encoding_to_extri_intri(pose_enc, (H, W))",
+      "evidence": "官方 cam_dec 输出会被转换成 extrinsics/intrinsics。"
+    },
+    {
+      "id": "current_pose_coreml_requires_external_camera_inputs",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+      "line": null,
+      "needle": "extrinsics,image,intrinsics",
+      "evidence": "当前 APP bundle 里的 pose CoreML signature 需要 image/extrinsics/intrinsics。",
+      "actual_inputs": [
+        "extrinsics",
+        "image",
+        "intrinsics"
+      ]
+    },
+    {
+      "id": "target_image_only_coreml_image_only_signature_ready",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+      "line": null,
+      "needle": "image-only CoreML signature",
+      "evidence": "目标 DA3BASE_280x504_N35_image_only CoreML 必须具备只要求 image 输入的 signature。",
+      "actual_inputs": [
+        "image"
+      ]
+    },
+    {
+      "id": "app_swift_keeps_pose_conditioned_compat_branch_guarded",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 221,
+      "needle": "if spec.isPoseConditioned",
+      "evidence": "Swift 只在 pose-conditioned compat 分支才消费 external camera tensor。"
+    },
+    {
+      "id": "dart_policy_selects_image_only_resource",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+      "line": 69,
+      "needle": "resourceName: 'DA3BASE_280x504_N35_image_only'",
+      "evidence": "Dart policy 默认选择官方 image-only K35 resource。"
+    },
+    {
+      "id": "swift_image_only_requires_pre_normalized_tensor",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 589,
+      "needle": "official image-only DA3 requires imageTensorFloat32ChwPath",
+      "evidence": "Swift image-only 分支现在强制消费 Dart 官方预处理 tensor，不再回退 PNG decode。"
+    },
+    {
+      "id": "dart_policy_marks_image_only_signature_ready",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+      "line": 83,
+      "needle": "ready_DA3BASE_280x504_N35_image_only_coreml_signature",
+      "evidence": "Dart policy 已把官方 image-only APP 路径标成 image-only CoreML signature ready。"
+    }
+  ],
+  "plain_language": [
+    "官方 DA3-Streaming 没有借助 AR/VIO 相机输入；它把图片交给模型，模型自己用 cam_dec 估相机。",
+    "当前 APP policy/native allowlist 已改成官方 image-only K35 目标，不再把 476x742 pose 当 official mainline。",
+    "Swift image-only 分支现在强制吃 Dart 写出的 normalized float32 CHW tensor，不走 PNG decode fallback。",
+    "DA3BASE_280x504_N35_image_only CoreML artifact/signature 现在已存在并通过 image-only 检查。",
+    "旧 pose-conditioned 输出都必须继续标成 compatibility/research path。"
+  ]
+}

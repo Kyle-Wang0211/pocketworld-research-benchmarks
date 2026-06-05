@@ -1,0 +1,157 @@
+{
+  "schema_version": "aether_da3_external_camera_branch_parity_audit_v2",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "coreml_pose_path_pre_forward_extrinsics_normalization_likely_embedded_not_root_cause",
+    "goal_complete": false,
+    "official_algorithm_blame_supported": false,
+    "pytorch_pose_branch_parity": true,
+    "coreml_export_wrapper_pre_forward_normalization_supported": true,
+    "coreml_runtime_raw_extrinsics_are_expected": true,
+    "empirical_raw_vs_pre_norm_equivalent": true,
+    "coreml_pre_forward_normalization_parity": true,
+    "conclusion": "The current DA3BASE_476x742_N35_pose package was exported through the pose CoreML wrapper, and that wrapper embeds official-style pre-forward extrinsics normalization inside the model. Mac/Swift feeding raw OpenCV w2c is therefore expected for this package. A research-only raw-vs-pre-normalized rerun on window_016 produced only small raw output differences, so pre-forward extrinsics normalization is no longer a root-cause-level suspect for the NPZ downstream thickness.",
+    "next_best_action": "Keep the pose CoreML external-camera branch as a compatibility path, but move the root-cause search back to the bigger official-parity gaps: image-only cam_dec and official upper_bound_resize/patch preprocess."
+  },
+  "inputs": {
+    "official_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "research_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks",
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "stage_scripts_dir": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage",
+    "raw_coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+    "pre_norm_raw_coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_window016_official_pre_norm_raw_2026_06_05"
+  },
+  "raw_vs_pre_norm": {
+    "status": "pass",
+    "raw_coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+    "pre_norm_raw_coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_window016_official_pre_norm_raw_2026_06_05",
+    "stats": {
+      "depth": {
+        "mean_abs_avg": 0.001577089904874031,
+        "max_abs_max": 0.0771484375,
+        "mean_rel_avg": 0.001805507912234004
+      },
+      "confidence": {
+        "mean_abs_avg": 0.017626450290637356,
+        "max_abs_max": 0.4765625,
+        "mean_rel_avg": 0.0032146845744656666
+      },
+      "pred_extrinsics": {
+        "mean_abs_avg": 0.0009708489744558132,
+        "max_abs_max": 0.005126953125,
+        "mean_rel_avg": 1.7953386700080176
+      },
+      "pred_intrinsics": {
+        "mean_abs_avg": 0.14285714605024882,
+        "max_abs_max": 2.0,
+        "mean_rel_avg": 0.0002633064230654522
+      }
+    },
+    "evidence": "window_016 raw vs external-pre-normalized raw outputs: depth mean_abs=0.001577, confidence mean_abs=0.017626, pred_extrinsics mean_abs=0.000971, pred_intrinsics mean_abs=0.142857."
+  },
+  "checks": [
+    {
+      "id": "official_api_pre_forward_normalizes_external_extrinsics",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "line": 204,
+      "needle": "ex_t_norm = self._normalize_extrinsics(ex_t.clone() if ex_t is not None else None)",
+      "evidence": "官方 DepthAnything3.inference 在 external-camera mode 下 forward 前归一化 extrinsics。"
+    },
+    {
+      "id": "official_api_normalization_first_frame_and_median_distance",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "line": 338,
+      "needle": "ex_t_norm[..., :3, 3] = ex_t_norm[..., :3, 3] / median_dist",
+      "evidence": "官方 normalize 先归一到首帧，再用 camera center median distance 缩放平移。"
+    },
+    {
+      "id": "official_api_post_forward_umeyama_depth_scale",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "line": 362,
+      "needle": "prediction.depth /= scale",
+      "evidence": "官方 external-camera postprocess 用 Umeyama scale 反调 depth，并回填输入相机。"
+    },
+    {
+      "id": "research_pytorch_pose_branch_matches_pre_forward_normalize",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_pytorch_window_export.py",
+      "line": 85,
+      "needle": "ex_t_norm = model._normalize_extrinsics(ex_t.clone() if ex_t is not None else None)",
+      "evidence": "Research PyTorch pose-conditioned 分支有官方 pre-forward extrinsics normalize。"
+    },
+    {
+      "id": "research_pytorch_pose_branch_matches_post_umeyama",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_pytorch_window_export.py",
+      "line": 108,
+      "needle": "prediction.depth = np.asarray(prediction.depth, dtype=np.float32) / float(pose_scale)",
+      "evidence": "Research PyTorch pose-conditioned 分支有官方 Umeyama depth scale postprocess。"
+    },
+    {
+      "id": "coreml_pose_export_wrapper_normalizes_extrinsics_inside_model",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage/export_da3_pose_coreml.py",
+      "line": 210,
+      "needle": "ex_norm = self.normalize_extrinsics(extrinsics)",
+      "evidence": "用于导出 pose CoreML 的 wrapper 会在模型 forward 内部先 normalize extrinsics。"
+    },
+    {
+      "id": "coreml_pose_export_wrapper_uses_first_frame_median_distance",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage/export_da3_pose_coreml.py",
+      "line": 192,
+      "needle": "median_dist = fixed_k_median(dists).clamp(min=1e-1)",
+      "evidence": "pose CoreML wrapper 的归一化是首帧相对化 + median camera-center distance。"
+    },
+    {
+      "id": "base_476x742_n35_pose_export_uses_pose_wrapper",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/scripts/da3_official_stage/run_476742_neighborhood_sweep_20260525.sh",
+      "line": 61,
+      "needle": "K35_476x742",
+      "evidence": "K35_476x742 是矩形 DA3-BASE CoreML sweep 的当前 baseline；同目录矩形候选均通过 pose CoreML exporter 生成。"
+    },
+    {
+      "id": "mac_coreml_runtime_feeds_raw_extrinsics_expected_by_export_wrapper",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+      "line": 368,
+      "needle": "inputs[\"extrinsics\"] = extrinsic_stack[None, ...].astype(np.float32)",
+      "evidence": "Mac CoreML runner 喂 raw OpenCV w2c；如果模型是 pose wrapper 导出，这正是 wrapper 的预期输入。"
+    },
+    {
+      "id": "swift_coreml_runtime_feeds_raw_extrinsics_expected_by_export_wrapper",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 631,
+      "needle": "let values = doubleArray(frame[\"cameraExtrinsicOpenCvW2c4x4\"])",
+      "evidence": "Swift CoreML runner 喂 Dart 预计算 raw OpenCV w2c；pose wrapper 内部再做官方式归一化。"
+    },
+    {
+      "id": "coreml_postprocess_applies_only_post_forward_umeyama",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/coreml_official_postprocess_export.py",
+      "line": 132,
+      "needle": "post_depth = raw[\"depth\"] / pose_scale",
+      "evidence": "CoreML official postprocess 已补 forward 后 Umeyama/depth scale。"
+    },
+    {
+      "id": "window016_raw_vs_external_pre_norm_outputs_nearly_equivalent",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+      "line": null,
+      "needle": "raw_vs_pre_norm",
+      "evidence": "window_016 raw vs external-pre-normalized raw outputs: depth mean_abs=0.001577, confidence mean_abs=0.017626, pred_extrinsics mean_abs=0.000971, pred_intrinsics mean_abs=0.142857."
+    }
+  ],
+  "plain_language": [
+    "官方 external-camera API 会在 forward 前归一化 extrinsics，这一点仍然成立。",
+    "但当前 pose CoreML 的导出 wrapper 本身也做了这一步；所以 Mac/Swift 外面喂 raw OpenCV w2c 不是自动错误。",
+    "我做了 raw 输入 vs 外部预归一化输入的 window_016 对照，raw 模型输出差异很小；这说明它不是厚层主因级别的差异。",
+    "当前 _pose CoreML 仍不是官方 image-only baseline；它只是 external-camera compatibility path。",
+    "现在更该押注的复刻缺口是 image-only cam_dec 和官方等比 upper_bound_resize + patch multiple preprocess。"
+  ]
+}

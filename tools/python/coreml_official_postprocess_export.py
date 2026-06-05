@@ -18,6 +18,8 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from da3_mac_window_export import (  # noqa: E402
     camera_transform_to_opencv_w2c,
+    da3_extrinsics,
+    da3_intrinsics,
     scale_intrinsics,
 )
 
@@ -30,6 +32,22 @@ def main() -> int:
     parser.add_argument("--official-src", type=Path, required=True)
     parser.add_argument("--window-id", default="")
     parser.add_argument("--random-state", type=int, default=42)
+    parser.add_argument(
+        "--preserve-window-duplicates",
+        action="store_true",
+        help=(
+            "Research-only: keep duplicate frameIDs from different windows in depth_index.json. "
+            "Default production behavior keeps one selected row per frameID."
+        ),
+    )
+    parser.add_argument(
+        "--skip-invalid-alignment",
+        action="store_true",
+        help=(
+            "Research-only: skip windows whose official Umeyama pose alignment is degenerate, "
+            "instead of failing the entire export."
+        ),
+    )
     args = parser.parse_args()
 
     sys.path.insert(0, str(args.official_src))
@@ -50,12 +68,17 @@ def main() -> int:
     out_windows = []
     window_postprocess = []
     selected_by_frame: dict[str, dict[str, Any]] = {}
+    selected_frames_ordered: list[dict[str, Any]] = []
 
     for window in raw_windows:
         window_id = str(window["windowID"])
         frames = sorted(window.get("frames") or [], key=lambda row: int(row.get("windowSlot", 0)))
         if not frames:
             continue
+        window_plan = capture["windows_by_id"].get(window_id, {})
+        real_frame_count = int(window_plan.get("realFrameCount") or len(frames))
+        align_frame_count = max(1, min(real_frame_count, len(frames)))
+        align_slice = slice(0, align_frame_count)
         raw = load_raw_window(args.raw_coreml_dir, frames)
         input_extrinsics, input_intrinsics = build_input_camera_stacks(capture, frames)
 
@@ -64,13 +87,44 @@ def main() -> int:
         #   prediction.intrinsics = input_intrinsics
         #   prediction.extrinsics = input_extrinsics[..., :3, :]
         #   prediction.depth = prediction.depth / pose_scale
-        rot, trans, pose_scale, aligned_extrinsics = align_poses_umeyama(
-            raw["extrinsics"],
-            input_extrinsics,
-            ransac=len(frames) >= 10,
-            return_aligned=True,
-            random_state=args.random_state,
-        )
+        try:
+            rot, trans, pose_scale, aligned_extrinsics = align_poses_umeyama(
+                raw["extrinsics"][align_slice],
+                input_extrinsics[align_slice],
+                ransac=align_frame_count >= 10,
+                return_aligned=True,
+                random_state=args.random_state,
+            )
+        except Exception as exc:
+            if not args.skip_invalid_alignment:
+                raise
+            out_windows.append(
+                {
+                    **window,
+                    "status": "skipped_invalid_alignment",
+                    "frames": [],
+                    "telemetry": {
+                        **dict(window.get("telemetry") or {}),
+                        "officialPostprocess": False,
+                        "alignFrameCount": align_frame_count,
+                        "paddingFrameCount": max(0, len(frames) - align_frame_count),
+                        "skipReason": f"{type(exc).__name__}: {exc}",
+                    },
+                }
+            )
+            window_postprocess.append(
+                {
+                    "windowID": window_id,
+                    "status": "skipped_invalid_alignment",
+                    "frameCount": len(frames),
+                    "alignFrameCount": align_frame_count,
+                    "paddingFrameCount": max(0, len(frames) - align_frame_count),
+                    "ransac": align_frame_count >= 10,
+                    "randomState": args.random_state,
+                    "skipReason": f"{type(exc).__name__}: {exc}",
+                }
+            )
+            continue
         pose_scale = float(pose_scale)
         if not np.isfinite(pose_scale) or abs(pose_scale) <= 1e-12:
             raise ValueError(f"{window_id} got invalid pose_scale={pose_scale}")
@@ -81,6 +135,8 @@ def main() -> int:
         post_intrinsics = input_intrinsics.astype(np.float32, copy=False)
 
         out_frames = []
+        downstream_ids = official_downstream_ids(window_plan)
+        withheld_ids = set(str(value) for value in window_plan.get("withheldForNextOverlapFrameIDs", []))
         for slot, frame in enumerate(frames):
             frame_out = dict(frame)
             write_f32(args.out_dir / str(frame_out["relativeDepthPath"]), post_depth[slot])
@@ -101,14 +157,26 @@ def main() -> int:
                         "poseScale": pose_scale,
                         "depthMean": depth_stats["mean"],
                         "rawDepthMean": finite_stats(raw["depth"][slot])["mean"],
+                        "alignFrameCount": align_frame_count,
+                        "paddingFrameCount": max(0, len(frames) - align_frame_count),
                     },
+                    "officialDownstreamFrame": str(frame_out["frameID"]) in downstream_ids,
+                    "officialWithheldForNextOverlap": str(frame_out["frameID"]) in withheld_ids,
                 }
             )
             out_frames.append(frame_out)
-            merge_selected(selected_by_frame, frame_out, window)
+            if args.preserve_window_duplicates:
+                if is_preserved_downstream_slot(frame_out, window_plan):
+                    selected_frames_ordered.append(dict(frame_out))
+            else:
+                merge_selected(selected_by_frame, frame_out, window_plan)
 
         out_window = {
             **window,
+            "officialSaveFrameIDs": window_plan.get("officialSaveFrameIDs", []),
+            "downstreamFrameIDs": window_plan.get("downstreamFrameIDs", []),
+            "officialSaveLocalIndices": window_plan.get("officialSaveLocalIndices", []),
+            "withheldForNextOverlapFrameIDs": window_plan.get("withheldForNextOverlapFrameIDs", []),
             "status": "completed",
             "frames": out_frames,
             "telemetry": {
@@ -116,32 +184,49 @@ def main() -> int:
                 "officialPostprocess": True,
                 "poseScale": pose_scale,
                 "randomState": args.random_state,
+                "alignFrameCount": align_frame_count,
+                "paddingFrameCount": max(0, len(frames) - align_frame_count),
             },
         }
         out_windows.append(out_window)
         window_postprocess.append(
             {
                 "windowID": window_id,
+                "status": "completed",
                 "frameCount": len(frames),
-                "ransac": len(frames) >= 10,
+                "alignFrameCount": align_frame_count,
+                "paddingFrameCount": max(0, len(frames) - align_frame_count),
+                "ransac": align_frame_count >= 10,
                 "randomState": args.random_state,
                 "poseScale": pose_scale,
                 "rotation": np.asarray(rot, dtype=float).tolist(),
                 "translation": np.asarray(trans, dtype=float).reshape(-1).tolist(),
-                "rawDepth": summarize_array(raw["depth"].reshape(-1)),
-                "postDepth": summarize_array(post_depth.reshape(-1)),
-                "rawConfidence": summarize_array(raw["conf"].reshape(-1)),
-                "rawPredPoseVsInput": pose_stack_metrics(raw["extrinsics"], input_extrinsics[:, :3, :]),
+                "rawDepth": summarize_array(raw["depth"][align_slice].reshape(-1)),
+                "postDepth": summarize_array(post_depth[align_slice].reshape(-1)),
+                "rawConfidence": summarize_array(raw["conf"][align_slice].reshape(-1)),
+                "rawPredPoseVsInput": pose_stack_metrics(
+                    raw["extrinsics"][align_slice],
+                    input_extrinsics[align_slice, :3, :],
+                ),
                 "alignedInputVsRawPredPose": pose_stack_metrics(
                     np.asarray(aligned_extrinsics, dtype=np.float32)[:, :3, :],
-                    raw["extrinsics"],
+                    raw["extrinsics"][align_slice],
                 ),
-                "postPoseVsInput": pose_stack_metrics(post_extrinsics, input_extrinsics[:, :3, :]),
-                "rawPredIntrinsicsVsInput": matrix_metrics(raw["intrinsics"], input_intrinsics),
+                "postPoseVsInput": pose_stack_metrics(
+                    post_extrinsics[align_slice],
+                    input_extrinsics[align_slice, :3, :],
+                ),
+                "rawPredIntrinsicsVsInput": matrix_metrics(
+                    raw["intrinsics"][align_slice],
+                    input_intrinsics[align_slice],
+                ),
             }
         )
 
-    selected_frames = sorted(selected_by_frame.values(), key=lambda row: int(row.get("frameIndex", 0)))
+    if args.preserve_window_duplicates:
+        selected_frames = selected_frames_ordered
+    else:
+        selected_frames = sorted(selected_by_frame.values(), key=lambda row: int(row.get("frameIndex", 0)))
     write_json(args.out_dir / "mac_da3_window_reports.json", {"windows": out_windows})
     write_depth_index_like_raw(
         raw_coreml_dir=args.raw_coreml_dir,
@@ -162,8 +247,8 @@ def main() -> int:
             "depth_index": str(args.out_dir / "depth_index.json"),
             "runner_report": str(args.out_dir / "depth_runner_report.json"),
         },
-        "official_postprocess": {
-            "algorithm": [
+            "official_postprocess": {
+                "algorithm": [
                 "align_poses_umeyama(raw_pred_extrinsics, input_extrinsics)",
                 "depth = raw_depth / pose_scale",
                 "intrinsics = input_intrinsics",
@@ -171,8 +256,9 @@ def main() -> int:
             ],
             "note": "This does not modify CoreML inference; it changes only the postprocess/export semantics to match the official PyTorch API.",
         },
-        "windows": window_postprocess,
-    }
+            "windows": window_postprocess,
+            "preserve_window_duplicates": args.preserve_window_duplicates,
+        }
     write_json(args.out_dir / "official_postprocess_report.json", report)
     write_markdown(args.out_dir / "official_postprocess_report_zh.md", report)
     print(json.dumps(compact_report(report), ensure_ascii=False, indent=2))
@@ -182,10 +268,14 @@ def main() -> int:
 def load_capture_context(capture_dir: Path) -> dict[str, Any]:
     bundle = read_json(capture_dir / "photo_bundle.json")
     input_manifest = maybe_read_json(capture_dir / "da3_input_manifest.json")
+    k_windows = maybe_read_json(capture_dir / "da3_k_windows.json")
     return {
         "capture_dir": capture_dir,
         "frames_by_id": {str(row["id"]): row for row in bundle.get("frames", [])},
         "input_by_id": {str(row["id"]): row for row in input_manifest.get("frames", [])},
+        "windows_by_id": {
+            str(row.get("id")): row for row in k_windows.get("windows", [])
+        },
     }
 
 
@@ -201,8 +291,8 @@ def build_input_camera_stacks(
         input_frame = capture["input_by_id"].get(frame_id, {})
         height = int(frame["depthHeight"])
         width = int(frame["depthWidth"])
-        extrinsics.append(camera_transform_to_opencv_w2c(capture_frame["cameraTransform"]))
-        intrinsics.append(scale_intrinsics(capture_frame, input_frame, height, width))
+        extrinsics.append(da3_extrinsics(capture_frame, input_frame))
+        intrinsics.append(da3_intrinsics(capture_frame, input_frame, height, width))
     return np.stack(extrinsics, axis=0), np.stack(intrinsics, axis=0)
 
 
@@ -237,10 +327,37 @@ def merge_selected(
     window: dict[str, Any],
 ) -> None:
     frame_id = str(row["frameID"])
-    core_ids = set(str(value) for value in window.get("coreFrameIDs", []))
+    downstream_ids = official_downstream_ids(window)
+    if downstream_ids and frame_id not in downstream_ids:
+        return
     current = selected_by_frame.get(frame_id)
-    if current is None or (frame_id in core_ids and current.get("windowRole") != "core"):
-        selected_by_frame[frame_id] = dict(row)
+    if current is None or (row.get("officialDownstreamFrame") and not current.get("officialDownstreamFrame")):
+            selected_by_frame[frame_id] = dict(row)
+
+
+def is_preserved_downstream_slot(row: dict[str, Any], window: dict[str, Any]) -> bool:
+    slot = int(row.get("windowSlot", -1))
+    save_indices = {
+        int(value)
+        for value in window.get("officialSaveLocalIndices", [])
+        if value is not None
+    }
+    if save_indices:
+        return slot in save_indices
+    real_count = int(window.get("realFrameCount") or 0)
+    if real_count > 0:
+        return 0 <= slot < real_count
+    frame_id = str(row["frameID"])
+    downstream_ids = official_downstream_ids(window)
+    return not downstream_ids or frame_id in downstream_ids
+
+
+def official_downstream_ids(window: dict[str, Any]) -> set[str]:
+    for key in ("downstreamFrameIDs", "officialSaveFrameIDs"):
+        values = set(str(value) for value in window.get(key, []))
+        if values:
+            return values
+    return set(str(value) for value in window.get("coreFrameIDs", []))
 
 
 def write_depth_index_like_raw(
@@ -390,12 +507,21 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         "",
         "## Window Summary",
         "",
-        "| window | frames | ransac | pose_scale | raw depth mean | post depth mean | raw pose center median | post pose center median | raw K MAE |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| window | status | frames | ransac | pose_scale | raw depth mean | post depth mean | raw pose center median | post pose center median | raw K MAE |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in report["windows"]:
+        if row.get("status") == "skipped_invalid_alignment":
+            lines.append(
+                "| {window} | skipped_invalid_alignment | {frames} | {ransac} | n/a | n/a | n/a | n/a | n/a | n/a |".format(
+                    window=row["windowID"],
+                    frames=row["frameCount"],
+                    ransac=str(row["ransac"]),
+                )
+            )
+            continue
         lines.append(
-            "| {window} | {frames} | {ransac} | {scale:.8g} | {raw:.6g} | {post:.6g} | {raw_pose:.6g} | {post_pose:.6g} | {k_mae:.6g} |".format(
+            "| {window} | completed | {frames} | {ransac} | {scale:.8g} | {raw:.6g} | {post:.6g} | {raw_pose:.6g} | {post_pose:.6g} | {k_mae:.6g} |".format(
                 window=row["windowID"],
                 frames=row["frameCount"],
                 ransac=str(row["ransac"]),
@@ -428,11 +554,16 @@ def compact_report(report: dict[str, Any]) -> dict[str, Any]:
         "windows": [
             {
                 "windowID": row["windowID"],
-                "poseScale": row["poseScale"],
-                "rawDepthMean": row["rawDepth"].get("mean"),
-                "postDepthMean": row["postDepth"].get("mean"),
-                "rawPoseCenterMedian": row["rawPredPoseVsInput"]["camera_center_distance"].get("median"),
-                "postPoseCenterMedian": row["postPoseVsInput"]["camera_center_distance"].get("median"),
+                "status": row.get("status", "completed"),
+                "poseScale": row.get("poseScale"),
+                "rawDepthMean": (row.get("rawDepth") or {}).get("mean"),
+                "postDepthMean": (row.get("postDepth") or {}).get("mean"),
+                "rawPoseCenterMedian": (
+                    (row.get("rawPredPoseVsInput") or {}).get("camera_center_distance") or {}
+                ).get("median"),
+                "postPoseCenterMedian": (
+                    (row.get("postPoseVsInput") or {}).get("camera_center_distance") or {}
+                ).get("median"),
             }
             for row in report["windows"]
         ],

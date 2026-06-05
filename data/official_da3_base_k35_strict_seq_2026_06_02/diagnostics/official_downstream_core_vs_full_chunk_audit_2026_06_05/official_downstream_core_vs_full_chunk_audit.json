@@ -1,0 +1,264 @@
+{
+  "schema_version": "pocketworld_da3_official_downstream_core_vs_full_chunk_audit_v1",
+  "date": "2026-06-05",
+  "inputs": {
+    "official_root": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "official_pytorch_audit": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_pytorch_image_only_k35_504_pose_depth_scale_2026_06_05/window_016_official_pytorch_image_only_pose_depth_scale_audit.json",
+    "coreml_official_save_audit": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_save_frame_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json"
+  },
+  "official_source_evidence": {
+    "confidence_convention": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "exists": true,
+      "line": 276,
+      "pattern": "predictions.conf -= 1.0",
+      "text": "predictions.conf -= 1.0"
+    },
+    "core_frame_save_indices_first_chunk": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "exists": true,
+      "line": 215,
+      "pattern": "save_indices = list(range(0, chunk_end - chunk_start - self.overlap_e))",
+      "text": "save_indices = list(range(0, chunk_end - chunk_start - self.overlap_e))"
+    },
+    "core_frame_save_indices_middle_chunk": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "exists": true,
+      "line": 219,
+      "pattern": "save_indices = list(range(self.overlap_s, chunk_end - chunk_start - self.overlap_e))",
+      "text": "save_indices = list(range(self.overlap_s, chunk_end - chunk_start - self.overlap_e))"
+    },
+    "full_chunk_pcd_first_chunk_save": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "exists": true,
+      "line": 664,
+      "pattern": "ply_path_first = os.path.join(self.pcd_dir, \"0_pcd.ply\")",
+      "text": "ply_path_first = os.path.join(self.pcd_dir, \"0_pcd.ply\")"
+    },
+    "full_chunk_pcd_aligned_chunk_save": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "exists": true,
+      "line": 681,
+      "pattern": "ply_path = os.path.join(self.pcd_dir, f\"{chunk_idx+1}_pcd.ply\")",
+      "text": "ply_path = os.path.join(self.pcd_dir, f\"{chunk_idx+1}_pcd.ply\")"
+    },
+    "combined_pcd_readme": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/README.md",
+      "exists": true,
+      "line": 91,
+      "pattern": "combined_pcd.ply",
+      "text": "- `${OUTPUT_DIR}/pcd/combined_pcd.ply`: The combined point cloud file. It contains the 3D points from all frames."
+    },
+    "results_output_readme": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/README.md",
+      "exists": true,
+      "line": 97,
+      "pattern": "results_output",
+      "text": "- `${OUTPUT_DIR}/results_output`: The folder that contains the rgb, depth, confidence and intrinsic results for each frame. Note that the minimum value of confidence is 0."
+    },
+    "npz_verify_command_readme": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/README.md",
+      "exists": true,
+      "line": 102,
+      "pattern": "npz_output_process.py",
+      "text": "python npz_output_process.py --npz_folder ${OUTPUT_DIR}/results_output --pose_file ${OUTPUT_DIR}/camera_poses.txt --output_file ${OUTPUT_DIR}/output.ply"
+    },
+    "npz_default_conf_threshold_coef": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+      "exists": true,
+      "line": 105,
+      "pattern": "--conf_threshold_coef\", type=float, default=0.5",
+      "text": "\"--conf_threshold_coef\", type=float, default=0.5, help=\"Confidence threshold coefficient\""
+    },
+    "npz_default_sample_ratio": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+      "exists": true,
+      "line": 108,
+      "pattern": "--sample_ratio\", type=float, default=0.015",
+      "text": "\"--sample_ratio\", type=float, default=0.015, help=\"Sample ratio for downsampling\""
+    },
+    "streaming_default_pointcloud_coef": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/configs/base_config.yaml",
+      "exists": true,
+      "line": 36,
+      "pattern": "conf_threshold_coef: 0.75",
+      "text": "conf_threshold_coef: 0.75 # conf_threshold = np.mean(confs) * conf_threshold_coef"
+    },
+    "streaming_default_sample_ratio": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/configs/base_config.yaml",
+      "exists": true,
+      "line": 35,
+      "pattern": "sample_ratio: 0.015",
+      "text": "sample_ratio: 0.015"
+    }
+  },
+  "official_pytorch_image_only_window016": {
+    "scope": {
+      "pytorch_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu",
+      "manifest": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/strict_window_016_highres_official_manifest.json",
+      "export_report": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/official_pytorch_window_000_export_report.json",
+      "window_id": "window_016",
+      "source_window_id": "window_016",
+      "frame_count": 35,
+      "processed_shape_nhwc": [
+        35,
+        280,
+        504,
+        3
+      ],
+      "camera_mode": "image_only",
+      "process_res": 504,
+      "process_res_method": "upper_bound_resize",
+      "runtime": {
+        "torch": "2.12.0",
+        "load_ms": 719.5075000054203,
+        "run_ms": 332313.261333009,
+        "rss_before_mb": 1481.953125,
+        "rss_after_mb": 7289.03125,
+        "rss_delta_mb": 5807.078125
+      },
+      "note": "Official PyTorch image-only authority path. No AR/input cameras; poses come from DA3 cam_dec. This audit measures window-internal K growth only."
+    },
+    "k10": {
+      "k": 10,
+      "pose_diag": 0.29301178455352783,
+      "pose_ratio_vs_k10": 1.0,
+      "depth_p95": 2.563742995262146,
+      "depth_p95_ratio_vs_k10": 1.0,
+      "glb_bbox_ratio_vs_k10": 1.0,
+      "glb_minor_ratio_vs_k10": 1.0,
+      "npz_bbox_ratio_vs_k10": 1.0,
+      "npz_minor_ratio_vs_k10": 1.0
+    },
+    "official_core_like_k17": {
+      "k": 17,
+      "pose_diag": 1.1817824840545654,
+      "pose_ratio_vs_k10": 4.033225099991416,
+      "depth_p95": 2.527888798713684,
+      "depth_p95_ratio_vs_k10": 0.9860149021899928,
+      "glb_bbox_ratio_vs_k10": 1.2295208268856566,
+      "glb_minor_ratio_vs_k10": 1.2038595450920504,
+      "npz_bbox_ratio_vs_k10": 1.4449288298477723,
+      "npz_minor_ratio_vs_k10": 1.5020679393630347
+    },
+    "full_chunk_k35": {
+      "k": 35,
+      "pose_diag": 1.4521863460540771,
+      "pose_ratio_vs_k10": 4.956068058036722,
+      "depth_p95": 2.6021933794021606,
+      "depth_p95_ratio_vs_k10": 1.014997752977218,
+      "glb_bbox_ratio_vs_k10": 1.237372088965834,
+      "glb_minor_ratio_vs_k10": 1.2329722202676523,
+      "npz_bbox_ratio_vs_k10": 1.4368060630744963,
+      "npz_minor_ratio_vs_k10": 1.554276954114803
+    },
+    "k17_vs_k10": {
+      "k": 17,
+      "pose_diag": 1.1817824840545654,
+      "pose_ratio_vs_k10": 4.033225099991416,
+      "depth_p95": 2.527888798713684,
+      "depth_p95_ratio_vs_k10": 0.9860149021899928,
+      "glb_bbox_ratio_vs_k10": 1.2295208268856566,
+      "glb_minor_ratio_vs_k10": 1.2038595450920504,
+      "npz_bbox_ratio_vs_k10": 1.4449288298477723,
+      "npz_minor_ratio_vs_k10": 1.5020679393630347
+    },
+    "k35_vs_k10": {
+      "k": 35,
+      "pose_diag": 1.4521863460540771,
+      "pose_ratio_vs_k10": 4.956068058036722,
+      "depth_p95": 2.6021933794021606,
+      "depth_p95_ratio_vs_k10": 1.014997752977218,
+      "glb_bbox_ratio_vs_k10": 1.237372088965834,
+      "glb_minor_ratio_vs_k10": 1.2329722202676523,
+      "npz_bbox_ratio_vs_k10": 1.4368060630744963,
+      "npz_minor_ratio_vs_k10": 1.554276954114803
+    },
+    "k35_vs_k17": {
+      "pose_ratio_k35_over_k17": 1.2288101792402488,
+      "depth_p95_ratio_k35_over_k17": 1.0293939277417135,
+      "glb_bbox_ratio_k35_over_k17": 1.0063856275619703,
+      "glb_minor_ratio_k35_over_k17": 1.024182783859039,
+      "npz_bbox_ratio_k35_over_k17": 0.9943784312379373,
+      "npz_minor_ratio_k35_over_k17": 1.0347580914175611
+    },
+    "first_events": {
+      "npz_first_minor_ge_1_10": {
+        "k": 11,
+        "minor_ratio_vs_k10": 1.2625691744546244,
+        "pose_diag": 0.6776036024093628
+      },
+      "npz_first_minor_ge_1_35": {
+        "k": 12,
+        "minor_ratio_vs_k10": 1.4150212631787205,
+        "pose_diag": 0.8340039849281311
+      },
+      "glb_first_minor_ge_1_10": {
+        "k": 11,
+        "minor_ratio_vs_k10": 1.266773156651487,
+        "pose_diag": 0.6776036024093628
+      },
+      "glb_first_minor_ge_1_35": null
+    },
+    "pose": {
+      "k10_pose_diag": 0.29301178455352783,
+      "k35_pose_diag": 1.4521863460540771,
+      "k35_over_k10_pose_diag": 4.956068058036722,
+      "largest_step": 0.4506412744522095
+    },
+    "depth": {
+      "k10_p95": 2.563742995262146,
+      "k35_p95": 2.6021933794021606,
+      "k35_over_k10_p95": 1.014997752977218
+    }
+  },
+  "current_coreml_pose_official_save_window016": {
+    "scope": {
+      "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+      "da3_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_save_postprocess_2026_06_05",
+      "postprocess_report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_save_postprocess_2026_06_05/official_postprocess_report.json",
+      "window_id": "window_016",
+      "frame_source": "depth_index",
+      "frame_count": 17,
+      "pose_scale": 0.7230838815049764,
+      "note": "Read-only diagnostic. Uses official-postprocessed CoreML outputs and official GLB/NPZ-style point metrics; writes no PLYs."
+    },
+    "npz_k35_over_k10": {
+      "k": 17,
+      "pose_diag": 1.1662309169769287,
+      "bbox_ratio_vs_k10": 1.3965190442163795,
+      "minor_ratio_vs_k10": 1.428882770403555,
+      "conf_threshold_ratio_vs_k10": 0.8988160026859728,
+      "valid_fraction_delta_vs_k10": 0.03135644934999526
+    },
+    "glb_k35_over_k10": {
+      "k": 17,
+      "pose_diag": 1.1662309169769287,
+      "bbox_ratio_vs_k10": 1.2409977557195655,
+      "minor_ratio_vs_k10": 1.1525447135495752,
+      "conf_threshold_ratio_vs_k10": 1.2162921348314606,
+      "valid_fraction_delta_vs_k10": -1.5155895876639569e-05
+    },
+    "pose": {
+      "k10_pose_diag": 0.29698339104652405,
+      "k35_pose_diag": 1.1662309169769287,
+      "k35_over_k10_pose_diag": 3.9269230271339732,
+      "largest_step": 0.410023957490921
+    },
+    "depth": {
+      "k10_p95": 2.6065657138824463,
+      "k35_p95": 2.5809051990509033,
+      "k35_over_k10_p95": 0.9901554314572327
+    }
+  },
+  "decision": {
+    "status": "core_frame_downstream_does_not_close_window016_thickness",
+    "plain_language": [
+      "官方有两条容易混淆的 downstream：pcd/combined_pcd.ply 是把每个 chunk 的点云文件合并；results_output/frame_*.npz + npz_output_process.py 是用保存下来的 core-frame NPZ 再融合。",
+      "core-frame 的作用主要是跨 chunk 去掉 overlap 帧，不是同一 window 内的表面融合/去重算法。",
+      "同一官方 PyTorch image-only 输出里，core-like K17 的 NPZ minor/k10 已经是 1.50207，full K35 是 1.55428，K35/K17 只有 1.03476。",
+      "GLB-style 在 K17 的 minor/k10 是 1.20386，明显比 NPZ-style 温和；所以 confidence/filter/export style 会影响厚层外观，但 core-frame 不是根治。",
+      "首次 NPZ minor >=1.35 出现在 k=12 (1.41502)；跳变发生在核心区间内，不能只归因给 withheld overlap/full-chunk 尾部。"
+    ]
+  }
+}

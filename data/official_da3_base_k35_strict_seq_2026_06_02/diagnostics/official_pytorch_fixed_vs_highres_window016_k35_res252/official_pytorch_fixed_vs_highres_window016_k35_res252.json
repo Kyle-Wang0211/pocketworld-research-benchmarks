@@ -1,0 +1,75 @@
+{
+  "schema_version": "pocketworld_official_pytorch_fixed_vs_highres_window016_k35_res252_v1",
+  "window_id": "window_016",
+  "model": "DA3-BASE official PyTorch",
+  "process_res": 252,
+  "note": "Low-resolution trend check only; this does not replace same-resolution K35 PyTorch/CoreML hard parity.",
+  "metrics": {
+    "fixed_input": {
+      "source": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_k35_252/official_pytorch_window_000_export_report.json",
+      "image_source": "photos_depth fixed 742x476 direct-stretch cache",
+      "processed_shape_nhwc": [
+        35,
+        168,
+        252,
+        3
+      ],
+      "umeyama_scale": 0.903520027933256,
+      "depth_mean": 1.2700125750601967,
+      "depth_median": 1.0472308993339539,
+      "depth_p95": 2.3830011010169985,
+      "confidence_mean": 2.751193997682898,
+      "confidence_median": 2.4073967933654785,
+      "confidence_p95": 5.8049170017242435,
+      "camera_center_diag": 1.364758014678955,
+      "bbox_diag_p01_p99": 1.8150007724761963,
+      "bbox_extent_p01_p99": [
+        1.2769757509231567,
+        0.8183983564376831,
+        0.9968875646591187
+      ],
+      "valid_point_count_before_sampling": 813088,
+      "sampled_point_count": 12174
+    },
+    "highres_official_dynamic": {
+      "source": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_highres_k35_252/official_pytorch_window_000_export_report.json",
+      "image_source": "photos_highres original ARKit image + official upper_bound_resize",
+      "processed_shape_nhwc": [
+        35,
+        140,
+        252,
+        3
+      ],
+      "umeyama_scale": 0.9321018065776231,
+      "depth_mean": 1.2166153426410689,
+      "depth_median": 1.0306404829025269,
+      "depth_p95": 2.201822543144226,
+      "confidence_mean": 2.3737583267814255,
+      "confidence_median": 1.9546353220939636,
+      "confidence_p95": 4.704817295074463,
+      "camera_center_diag": 1.364758014678955,
+      "bbox_diag_p01_p99": 1.699973464012146,
+      "bbox_extent_p01_p99": [
+        1.1630102396011353,
+        0.8087998628616333,
+        0.9397658109664917
+      ],
+      "valid_point_count_before_sampling": 654491,
+      "sampled_point_count": 9801
+    }
+  },
+  "comparison": {
+    "umeyama_scale_fixed_over_highres": 0.9693362050768788,
+    "depth_mean_fixed_over_highres": 1.0438899876958738,
+    "depth_median_fixed_over_highres": 1.0160971907339642,
+    "depth_p95_fixed_over_highres": 1.0822857220882331,
+    "confidence_mean_fixed_over_highres": 1.1590034110225689,
+    "confidence_median_fixed_over_highres": 1.2316347536309127,
+    "confidence_p95_fixed_over_highres": 1.2338241078567471,
+    "camera_center_diag_fixed_over_highres": 1.0,
+    "bbox_diag_fixed_over_highres": 1.0676641788234575,
+    "valid_points_fixed_over_highres": 1.2423211319941756,
+    "sampled_points_fixed_over_highres": 1.2421181512090602
+  },
+  "interpretation": "At K35/process_res=252, official highres dynamic preprocessing gives a slightly smaller sampled-cloud bbox diag than the fixed 742x476 input (1.699973 vs 1.815001; fixed/highres=1.067664). The difference is visible but not a catastrophic fixed-input-only thick-layer signal. This keeps fixed mobile input as a parity risk, while the stronger current clue remains K35 upstream multi-frame geometry consistency."
+}

@@ -1,0 +1,238 @@
+{
+  "schema_version": "aether_official_da3_coordinate_convention_audit_v1",
+  "date": "2026-06-04",
+  "purpose": "Separate DA3 OpenCV world coordinates, official GLB glTF alignment, official streaming NPZ/PLY semantics, and APP pose-conditioned camera inputs.",
+  "official": {
+    "local_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "remote_main": {
+      "sha": "41736238f5bced4debf3f2a12375d2466874866d",
+      "date": "2026-03-21T07:14:45Z",
+      "message": "Update README.md",
+      "url": "https://github.com/ByteDance-Seed/Depth-Anything-3/commit/41736238f5bced4debf3f2a12375d2466874866d"
+    },
+    "opencv_w2c_output": {
+      "readme_comment": "Official README/API describes prediction.extrinsics as OpenCV/Colmap w2c.",
+      "api_align_no_input_camera": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 350,
+        "needle": "if extrinsics is None:",
+        "text": "if extrinsics is None:"
+      }
+    },
+    "glb_path": {
+      "backproject_w2c_to_world": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "line": 237,
+        "needle": "c2w = np.linalg.inv(_as_homogeneous44(ext_w2c[i]))",
+        "text": "c2w = np.linalg.inv(_as_homogeneous44(ext_w2c[i]))  # (4,4)"
+      },
+      "alignment_function": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "line": 275,
+        "needle": "def _compute_alignment_transform_first_cam_glTF_center_by_points",
+        "text": "def _compute_alignment_transform_first_cam_glTF_center_by_points("
+      },
+      "cv_to_gltf_flip_y": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "line": 302,
+        "needle": "M[1, 1] = -1.0",
+        "text": "M[1, 1] = -1.0  # flip Y"
+      },
+      "cv_to_gltf_flip_z": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "line": 303,
+        "needle": "M[2, 2] = -1.0",
+        "text": "M[2, 2] = -1.0  # flip Z"
+      },
+      "center_by_median": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "line": 311,
+        "needle": "center = np.median(pts_tmp, axis=0)",
+        "text": "center = np.median(pts_tmp, axis=0)"
+      },
+      "meaning": "GLB first backprojects in DA3 world, then applies first-camera + CV-to-glTF axis flip and median centering for visualization."
+    },
+    "streaming_npz_ply_path": {
+      "image_only_inference": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 273,
+        "needle": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)",
+        "text": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)"
+      },
+      "depth_to_world": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 102,
+        "needle": "c2w = torch.inverse(extrinsics_4x4)",
+        "text": "c2w = torch.inverse(extrinsics_4x4)"
+      },
+      "npz_conf_threshold": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 77,
+        "needle": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef",
+        "text": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef"
+      },
+      "save_confident_pointcloud_batch": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/loop_utils/sim3utils.py",
+        "line": 237,
+        "needle": "def save_confident_pointcloud_batch",
+        "text": "def save_confident_pointcloud_batch("
+      },
+      "trimesh_export": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/loop_utils/sim3utils.py",
+        "line": 233,
+        "needle": "trimesh.PointCloud(points, colors=colors).export(output_path)",
+        "text": "trimesh.PointCloud(points, colors=colors).export(output_path)"
+      },
+      "meaning": "Streaming NPZ/PLY writes DA3 world points after confidence filtering and sampling. It does not apply the GLB first-camera/glTF alignment."
+    }
+  },
+  "research": {
+    "mac_exporter": {
+      "camera_transform_conversion": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 321,
+        "needle": "extrinsics.append(camera_transform_to_opencv_w2c(frame[\"cameraTransform\"]))",
+        "text": "extrinsics.append(camera_transform_to_opencv_w2c(frame[\"cameraTransform\"]))"
+      },
+      "conversion_impl": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 345,
+        "needle": "def camera_transform_to_opencv_w2c",
+        "text": "def camera_transform_to_opencv_w2c(values: list[float]) -> np.ndarray:"
+      },
+      "writes_pred_extrinsics": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 427,
+        "needle": "write_f32(out_dir / extr_rel, pred_extrinsics[slot])",
+        "text": "write_f32(out_dir / extr_rel, pred_extrinsics[slot])"
+      },
+      "meaning": "Research Mac exporter converts external cameraTransform to OpenCV w2c only for pose-conditioned models; image-only sends no external camera."
+    },
+    "official_filter_audit": {
+      "glb_alignment_reimplemented": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/strict_k35_window_official_filter_micro_audit.py",
+        "line": 359,
+        "needle": "def official_glb_alignment_transform",
+        "text": "def official_glb_alignment_transform(ext_w2c0: np.ndarray, points_world: np.ndarray) -> np.ndarray:"
+      },
+      "npz_world_backprojection": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/strict_k35_window_official_filter_micro_audit.py",
+        "line": 395,
+        "needle": "def depth_to_point_cloud_vectorized",
+        "text": "def depth_to_point_cloud_vectorized("
+      },
+      "both_styles_present": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/strict_k35_window_official_filter_micro_audit.py",
+        "line": 83,
+        "needle": "\"npz_streaming_style\"",
+        "text": "\"npz_streaming_style\","
+      },
+      "meaning": "Research explicitly keeps GLB-style and NPZ-streaming-style as separate coordinate paths."
+    },
+    "sequence_export": {
+      "official_save_slots": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_save_sequence_pointcloud_export.py",
+        "line": 5,
+        "needle": "officialSaveSlotIndices",
+        "text": "and a DA3 output directory, selects only officialSaveSlotIndices, then applies"
+      },
+      "world_backprojection": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_save_sequence_pointcloud_export.py",
+        "line": 312,
+        "needle": "world_points = (c2w @ camera_points_h)[:3].T.astype(np.float32)",
+        "text": "world_points = (c2w @ camera_points_h)[:3].T.astype(np.float32)"
+      },
+      "no_cleanup_note": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_save_sequence_pointcloud_export.py",
+        "line": 365,
+        "needle": "No cleanup, no Poisson, no mesh",
+        "text": "\"note\": \"No cleanup, no Poisson, no mesh; only official confidence filter and reservoir sample.\","
+      },
+      "meaning": "Research sequence export matches official NPZ streaming semantics, not GLB visualization semantics."
+    }
+  },
+  "app": {
+    "native_adapter": {
+      "image_only_allowlist": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 30,
+        "needle": "\"DA3BASE_476x742_N35_image_only\"",
+        "text": "\"DA3BASE_476x742_N35_image_only\","
+      },
+      "pose_allowlist": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 31,
+        "needle": "\"DA3BASE_476x742_N35_pose\"",
+        "text": "\"DA3BASE_476x742_N35_pose\","
+      },
+      "image_only_provider": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 237,
+        "needle": "\"image\": MLFeatureValue(multiArray: imageArray),",
+        "text": "\"image\": MLFeatureValue(multiArray: imageArray),"
+      },
+      "pose_provider_extrinsics": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 238,
+        "needle": "\"extrinsics\": MLFeatureValue(multiArray: extrinsics),",
+        "text": "\"extrinsics\": MLFeatureValue(multiArray: extrinsics),"
+      },
+      "raw_camera_transform_used": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 631,
+        "needle": "let values = doubleArray(frame[\"cameraTransform\"])",
+        "text": "let values = doubleArray(frame[\"cameraTransform\"])"
+      },
+      "raw_camera_transform_written": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 633,
+        "needle": "for i in 0..<16 { ptr[base + i] = Float(values[i]) }",
+        "text": "for i in 0..<16 { ptr[base + i] = Float(values[i]) }"
+      },
+      "writes_pred_extrinsics": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 335,
+        "needle": "try Self.writeFloats(",
+        "text": "try Self.writeFloats(depthSlice, to: relativeDepthDir.appendingPathComponent(\"\\(safeID).bin\"))"
+      },
+      "meaning": "APP image-only path sends only image. APP pose-conditioned path still passes frame cameraTransform raw to CoreML, so it must not be treated as official DA3-Streaming image-only baseline."
+    },
+    "dart_gate": {
+      "official_image_only_gate": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+        "line": 2597,
+        "needle": "official_streaming_image_only_coreml_contract",
+        "text": "id: 'official_streaming_image_only_coreml_contract',"
+      },
+      "pose_conditioned_detection": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+        "line": 2551,
+        "needle": "_isPoseConditionedDa3Model",
+        "text": "final poseConditionedModel = _isPoseConditionedDa3Model(model);"
+      },
+      "policy_blocks_pose_baseline": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 17,
+        "needle": "blocked_until_image_only_coreml_signature",
+        "text": "'blocked_until_image_only_coreml_signature',"
+      }
+    }
+  },
+  "decision": {
+    "official_repo_main_sha": "41736238f5bced4debf3f2a12375d2466874866d",
+    "coordinate_truth": {
+      "da3_prediction_extrinsics": "OpenCV/Colmap-style world-to-camera (w2c)",
+      "official_glb": "DA3 world -> first-camera view -> CV-to-glTF Y/Z flip -> median-centered scene",
+      "official_npz_streaming_ply": "DA3 world points with confidence threshold and reservoir sampling",
+      "blender_or_gltf_consumers": "need explicit coordinate conversion; NPZ PLY is not already glTF aligned"
+    },
+    "current_project_alignment": {
+      "research_npz_sequence_export": "aligned_with_official_npz_streaming",
+      "research_glb_style_audit": "aligned_with_official_glb_visualization",
+      "app_image_only_branch": "ready_for_future_image_only_package",
+      "app_pose_branch": "compat_only_raw_cameraTransform_risk"
+    },
+    "thickness_interpretation": "Do not compare GLB-aligned views and NPZ world PLYs as if they used the same coordinate frame. For single-window thickness, use one fixed official style, preferably NPZ streaming for APP baseline.",
+    "highest_priority_check": "After DA3BASE_476x742_N35_image_only exists, run the same window through image-only and compare first35/first10 thickness in NPZ streaming coordinates."
+  }
+}

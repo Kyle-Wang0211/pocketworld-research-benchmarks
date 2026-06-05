@@ -1,0 +1,2739 @@
+{
+  "schema_version": "aether_da3_window016_late_slot_geometry_consistency_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "late_slot_pose_depth_consistency_suspect",
+    "goal_complete": false,
+    "conclusion": "window_016 thickening starts after the first 10 frames and aligns most strongly with late-slot pose-span expansion, with additional depth/confidence risk around slot 24.",
+    "next_best_action": "Inspect/remediate K-window composition and DA3 upstream pose/depth consistency for late slots; do not treat downstream point filtering as the primary fix."
+  },
+  "inputs": {
+    "pose_depth_scale_audit": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_dart_camera_contract_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json",
+    "window_reports": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_postprocess_2026_06_05/mac_da3_window_reports.json"
+  },
+  "baseline": {
+    "k": 10,
+    "pose_diag": 0.29698339104652405,
+    "npz_bbox": 1.4300570487976074,
+    "npz_minor": 0.6780410514532298,
+    "glb_bbox": 1.7082405090332031,
+    "glb_minor": 0.8407340608085718
+  },
+  "summary": {
+    "largest_pose_step": [
+      {
+        "slot": 10,
+        "k": 11,
+        "frame_id": "cap-1396",
+        "frame_index": 282,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.410023957490921,
+        "cumulative_pose_diag": 0.6772668361663818,
+        "cumulative_pose_diag_delta": 0.3802834451198578,
+        "depth_median": 0.9845525622367859,
+        "depth_p95": 2.441798448562622,
+        "confidence_median": 6.1796875,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0576961614806304,
+          "minor_ratio_vs_prev": 1.098405809631306,
+          "conf_threshold_ratio_vs_prev": 0.9877547483189116,
+          "valid_fraction_delta_vs_prev": 0.007966874571440963,
+          "bbox_ratio_vs_k10": 1.0576961614806304,
+          "minor_ratio_vs_k10": 1.098405809631306,
+          "conf_threshold_ratio_vs_k10": 0.9877547483189116,
+          "valid_fraction_delta_vs_k10": 0.007966874571440963
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0163680340773327,
+          "minor_ratio_vs_prev": 1.0702859401725322,
+          "conf_threshold_ratio_vs_prev": 1.0767790262172285,
+          "valid_fraction_delta_vs_prev": 3.6292390026337884e-05,
+          "bbox_ratio_vs_k10": 1.0163680340773327,
+          "minor_ratio_vs_k10": 1.0702859401725322,
+          "conf_threshold_ratio_vs_k10": 1.0767790262172285,
+          "valid_fraction_delta_vs_k10": 3.6292390026337884e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 24,
+        "k": 25,
+        "frame_id": "cap-1514",
+        "frame_index": 296,
+        "window_role": "core",
+        "pose_step_from_previous": 0.37145501375198364,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.7489651441574097,
+        "depth_p95": 3.1143734455108643,
+        "confidence_median": 2.02734375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0116440950587666,
+          "minor_ratio_vs_prev": 0.9408731851491217,
+          "conf_threshold_ratio_vs_prev": 0.9841861163296253,
+          "valid_fraction_delta_vs_prev": -0.0021173610953815203,
+          "bbox_ratio_vs_k10": 1.53617215735532,
+          "minor_ratio_vs_k10": 1.5322827359848354,
+          "conf_threshold_ratio_vs_k10": 0.797416635449967,
+          "valid_fraction_delta_vs_k10": 0.033891594373598566
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.021399812743907,
+          "minor_ratio_vs_prev": 0.9877815267187434,
+          "conf_threshold_ratio_vs_prev": 0.9761709120788825,
+          "valid_fraction_delta_vs_prev": 5.924067740303851e-05,
+          "bbox_ratio_vs_k10": 1.290693354250176,
+          "minor_ratio_vs_k10": 1.138496449066643,
+          "conf_threshold_ratio_vs_k10": 1.1123595505617978,
+          "valid_fraction_delta_vs_k10": 2.7860200684126646e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": true
+        }
+      },
+      {
+        "slot": 14,
+        "k": 15,
+        "frame_id": "cap-1437",
+        "frame_index": 286,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.2947385311126709,
+        "cumulative_pose_diag": 1.0976414680480957,
+        "cumulative_pose_diag_delta": 0.14717906713485718,
+        "depth_median": 1.1439176797866821,
+        "depth_p95": 2.5120270252227783,
+        "confidence_median": 4.4140625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.03192093773624,
+          "minor_ratio_vs_prev": 0.8198830895731709,
+          "conf_threshold_ratio_vs_prev": 0.9867681166509289,
+          "valid_fraction_delta_vs_prev": 0.002642728250329851,
+          "bbox_ratio_vs_k10": 1.3400920359034054,
+          "minor_ratio_vs_k10": 1.381582523948169,
+          "conf_threshold_ratio_vs_k10": 0.9283279889253454,
+          "valid_fraction_delta_vs_k10": 0.02987817768616885
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0117415542541655,
+          "minor_ratio_vs_prev": 1.0147843338789573,
+          "conf_threshold_ratio_vs_prev": 1.0045731707317074,
+          "valid_fraction_delta_vs_prev": 7.728158648911965e-05,
+          "bbox_ratio_vs_k10": 1.2301187179687587,
+          "minor_ratio_vs_k10": 1.1591649772998869,
+          "conf_threshold_ratio_vs_k10": 1.2340823970037453,
+          "valid_fraction_delta_vs_k10": 5.624891466027293e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 21,
+        "k": 22,
+        "frame_id": "cap-1488",
+        "frame_index": 293,
+        "window_role": "core",
+        "pose_step_from_previous": 0.2804042398929596,
+        "cumulative_pose_diag": 1.353991985321045,
+        "cumulative_pose_diag_delta": 0.17550277709960938,
+        "depth_median": 0.9028441309928894,
+        "depth_p95": 1.7800278663635254,
+        "confidence_median": 3.49609375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0072781649341942,
+          "minor_ratio_vs_prev": 1.009968413047344,
+          "conf_threshold_ratio_vs_prev": 0.9842417096574296,
+          "valid_fraction_delta_vs_prev": 0.0028611910336298063,
+          "bbox_ratio_vs_k10": 1.4999186408215677,
+          "minor_ratio_vs_k10": 1.5064142184980849,
+          "conf_threshold_ratio_vs_k10": 0.8362581259126067,
+          "valid_fraction_delta_vs_k10": 0.035059272422519605
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 0.9981184081954958,
+          "minor_ratio_vs_prev": 0.9997464170294563,
+          "conf_threshold_ratio_vs_prev": 1.0,
+          "valid_fraction_delta_vs_prev": 7.338147216739976e-05,
+          "bbox_ratio_vs_k10": 1.2571451301347685,
+          "minor_ratio_vs_k10": 1.1347533006027637,
+          "conf_threshold_ratio_vs_k10": 1.1685393258426966,
+          "valid_fraction_delta_vs_k10": 0.00020591426965299586
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 25,
+        "k": 26,
+        "frame_id": "cap-1518",
+        "frame_index": 297,
+        "window_role": "core",
+        "pose_step_from_previous": 0.19753733277320862,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.087194561958313,
+        "depth_p95": 2.9523072242736816,
+        "confidence_median": 5.15625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0044783513971243,
+          "minor_ratio_vs_prev": 0.9891633570541406,
+          "conf_threshold_ratio_vs_prev": 0.9985565220295165,
+          "valid_fraction_delta_vs_prev": 0.0029849704758535545,
+          "bbox_ratio_vs_k10": 1.5430516760824355,
+          "minor_ratio_vs_k10": 1.5156779350828633,
+          "conf_threshold_ratio_vs_k10": 0.7962655821033979,
+          "valid_fraction_delta_vs_k10": 0.03687656484945212
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0000514724639078,
+          "minor_ratio_vs_prev": 0.9956215708507709,
+          "conf_threshold_ratio_vs_prev": 1.0117845117845117,
+          "valid_fraction_delta_vs_prev": -2.7969097653679498e-05,
+          "bbox_ratio_vs_k10": 1.2907597894172687,
+          "minor_ratio_vs_k10": 1.1335116230277558,
+          "conf_threshold_ratio_vs_k10": 1.1254681647940075,
+          "valid_fraction_delta_vs_k10": -1.0889696955285189e-07
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      }
+    ],
+    "largest_pose_diag_delta": [
+      {
+        "slot": 10,
+        "k": 11,
+        "frame_id": "cap-1396",
+        "frame_index": 282,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.410023957490921,
+        "cumulative_pose_diag": 0.6772668361663818,
+        "cumulative_pose_diag_delta": 0.3802834451198578,
+        "depth_median": 0.9845525622367859,
+        "depth_p95": 2.441798448562622,
+        "confidence_median": 6.1796875,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0576961614806304,
+          "minor_ratio_vs_prev": 1.098405809631306,
+          "conf_threshold_ratio_vs_prev": 0.9877547483189116,
+          "valid_fraction_delta_vs_prev": 0.007966874571440963,
+          "bbox_ratio_vs_k10": 1.0576961614806304,
+          "minor_ratio_vs_k10": 1.098405809631306,
+          "conf_threshold_ratio_vs_k10": 0.9877547483189116,
+          "valid_fraction_delta_vs_k10": 0.007966874571440963
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0163680340773327,
+          "minor_ratio_vs_prev": 1.0702859401725322,
+          "conf_threshold_ratio_vs_prev": 1.0767790262172285,
+          "valid_fraction_delta_vs_prev": 3.6292390026337884e-05,
+          "bbox_ratio_vs_k10": 1.0163680340773327,
+          "minor_ratio_vs_k10": 1.0702859401725322,
+          "conf_threshold_ratio_vs_k10": 1.0767790262172285,
+          "valid_fraction_delta_vs_k10": 3.6292390026337884e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 21,
+        "k": 22,
+        "frame_id": "cap-1488",
+        "frame_index": 293,
+        "window_role": "core",
+        "pose_step_from_previous": 0.2804042398929596,
+        "cumulative_pose_diag": 1.353991985321045,
+        "cumulative_pose_diag_delta": 0.17550277709960938,
+        "depth_median": 0.9028441309928894,
+        "depth_p95": 1.7800278663635254,
+        "confidence_median": 3.49609375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0072781649341942,
+          "minor_ratio_vs_prev": 1.009968413047344,
+          "conf_threshold_ratio_vs_prev": 0.9842417096574296,
+          "valid_fraction_delta_vs_prev": 0.0028611910336298063,
+          "bbox_ratio_vs_k10": 1.4999186408215677,
+          "minor_ratio_vs_k10": 1.5064142184980849,
+          "conf_threshold_ratio_vs_k10": 0.8362581259126067,
+          "valid_fraction_delta_vs_k10": 0.035059272422519605
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 0.9981184081954958,
+          "minor_ratio_vs_prev": 0.9997464170294563,
+          "conf_threshold_ratio_vs_prev": 1.0,
+          "valid_fraction_delta_vs_prev": 7.338147216739976e-05,
+          "bbox_ratio_vs_k10": 1.2571451301347685,
+          "minor_ratio_vs_k10": 1.1347533006027637,
+          "conf_threshold_ratio_vs_k10": 1.1685393258426966,
+          "valid_fraction_delta_vs_k10": 0.00020591426965299586
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 11,
+        "k": 12,
+        "frame_id": "cap-1413",
+        "frame_index": 283,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.17145958542823792,
+        "cumulative_pose_diag": 0.8342361450195312,
+        "cumulative_pose_diag_delta": 0.15696930885314941,
+        "depth_median": 1.219886302947998,
+        "depth_p95": 2.5822558403015137,
+        "confidence_median": 5.2890625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0830053020407269,
+          "minor_ratio_vs_prev": 1.2078101623095236,
+          "conf_threshold_ratio_vs_prev": 0.9827302328840866,
+          "valid_fraction_delta_vs_prev": 0.00630095520197782,
+          "bbox_ratio_vs_k10": 1.1454905508316475,
+          "minor_ratio_vs_k10": 1.3266656992125114,
+          "conf_threshold_ratio_vs_k10": 0.9706964538478063,
+          "valid_fraction_delta_vs_k10": 0.014267829773418783
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.129830592729762,
+          "minor_ratio_vs_prev": 1.178104164277811,
+          "conf_threshold_ratio_vs_prev": 1.06,
+          "valid_fraction_delta_vs_prev": -4.95052223290493e-05,
+          "bbox_ratio_vs_k10": 1.1483236983731757,
+          "minor_ratio_vs_k10": 1.2609083230852522,
+          "conf_threshold_ratio_vs_k10": 1.1413857677902621,
+          "valid_fraction_delta_vs_k10": -1.321283230271142e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 14,
+        "k": 15,
+        "frame_id": "cap-1437",
+        "frame_index": 286,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.2947385311126709,
+        "cumulative_pose_diag": 1.0976414680480957,
+        "cumulative_pose_diag_delta": 0.14717906713485718,
+        "depth_median": 1.1439176797866821,
+        "depth_p95": 2.5120270252227783,
+        "confidence_median": 4.4140625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.03192093773624,
+          "minor_ratio_vs_prev": 0.8198830895731709,
+          "conf_threshold_ratio_vs_prev": 0.9867681166509289,
+          "valid_fraction_delta_vs_prev": 0.002642728250329851,
+          "bbox_ratio_vs_k10": 1.3400920359034054,
+          "minor_ratio_vs_k10": 1.381582523948169,
+          "conf_threshold_ratio_vs_k10": 0.9283279889253454,
+          "valid_fraction_delta_vs_k10": 0.02987817768616885
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0117415542541655,
+          "minor_ratio_vs_prev": 1.0147843338789573,
+          "conf_threshold_ratio_vs_prev": 1.0045731707317074,
+          "valid_fraction_delta_vs_prev": 7.728158648911965e-05,
+          "bbox_ratio_vs_k10": 1.2301187179687587,
+          "minor_ratio_vs_k10": 1.1591649772998869,
+          "conf_threshold_ratio_vs_k10": 1.2340823970037453,
+          "valid_fraction_delta_vs_k10": 5.624891466027293e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 13,
+        "k": 14,
+        "frame_id": "cap-1429",
+        "frame_index": 285,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.09281762689352036,
+        "cumulative_pose_diag": 0.9504624009132385,
+        "cumulative_pose_diag_delta": 0.08233469724655151,
+        "depth_median": 1.289777398109436,
+        "depth_p95": 2.61466908454895,
+        "confidence_median": 4.9609375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0596426939709838,
+          "minor_ratio_vs_prev": 1.1343308488031119,
+          "conf_threshold_ratio_vs_prev": 0.9845165902813348,
+          "valid_fraction_delta_vs_prev": 0.006552735130958776,
+          "bbox_ratio_vs_k10": 1.2986382840949142,
+          "minor_ratio_vs_k10": 1.6850969870197192,
+          "conf_threshold_ratio_vs_k10": 0.9407762302617476,
+          "valid_fraction_delta_vs_k10": 0.027235449435839
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0319603978974532,
+          "minor_ratio_vs_prev": 0.8730137742271807,
+          "conf_threshold_ratio_vs_prev": 1.02660406885759,
+          "valid_fraction_delta_vs_prev": -0.00010858583532935562,
+          "bbox_ratio_vs_k10": 1.2158428333761346,
+          "minor_ratio_vs_k10": 1.1422771702328538,
+          "conf_threshold_ratio_vs_k10": 1.2284644194756553,
+          "valid_fraction_delta_vs_k10": -2.1032671828846716e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      }
+    ],
+    "largest_npz_minor_growth_vs_prev": [
+      {
+        "slot": 11,
+        "k": 12,
+        "frame_id": "cap-1413",
+        "frame_index": 283,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.17145958542823792,
+        "cumulative_pose_diag": 0.8342361450195312,
+        "cumulative_pose_diag_delta": 0.15696930885314941,
+        "depth_median": 1.219886302947998,
+        "depth_p95": 2.5822558403015137,
+        "confidence_median": 5.2890625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0830053020407269,
+          "minor_ratio_vs_prev": 1.2078101623095236,
+          "conf_threshold_ratio_vs_prev": 0.9827302328840866,
+          "valid_fraction_delta_vs_prev": 0.00630095520197782,
+          "bbox_ratio_vs_k10": 1.1454905508316475,
+          "minor_ratio_vs_k10": 1.3266656992125114,
+          "conf_threshold_ratio_vs_k10": 0.9706964538478063,
+          "valid_fraction_delta_vs_k10": 0.014267829773418783
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.129830592729762,
+          "minor_ratio_vs_prev": 1.178104164277811,
+          "conf_threshold_ratio_vs_prev": 1.06,
+          "valid_fraction_delta_vs_prev": -4.95052223290493e-05,
+          "bbox_ratio_vs_k10": 1.1483236983731757,
+          "minor_ratio_vs_k10": 1.2609083230852522,
+          "conf_threshold_ratio_vs_k10": 1.1413857677902621,
+          "valid_fraction_delta_vs_k10": -1.321283230271142e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 13,
+        "k": 14,
+        "frame_id": "cap-1429",
+        "frame_index": 285,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.09281762689352036,
+        "cumulative_pose_diag": 0.9504624009132385,
+        "cumulative_pose_diag_delta": 0.08233469724655151,
+        "depth_median": 1.289777398109436,
+        "depth_p95": 2.61466908454895,
+        "confidence_median": 4.9609375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0596426939709838,
+          "minor_ratio_vs_prev": 1.1343308488031119,
+          "conf_threshold_ratio_vs_prev": 0.9845165902813348,
+          "valid_fraction_delta_vs_prev": 0.006552735130958776,
+          "bbox_ratio_vs_k10": 1.2986382840949142,
+          "minor_ratio_vs_k10": 1.6850969870197192,
+          "conf_threshold_ratio_vs_k10": 0.9407762302617476,
+          "valid_fraction_delta_vs_k10": 0.027235449435839
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0319603978974532,
+          "minor_ratio_vs_prev": 0.8730137742271807,
+          "conf_threshold_ratio_vs_prev": 1.02660406885759,
+          "valid_fraction_delta_vs_prev": -0.00010858583532935562,
+          "bbox_ratio_vs_k10": 1.2158428333761346,
+          "minor_ratio_vs_k10": 1.1422771702328538,
+          "conf_threshold_ratio_vs_k10": 1.2284644194756553,
+          "valid_fraction_delta_vs_k10": -2.1032671828846716e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 12,
+        "k": 13,
+        "frame_id": "cap-1417",
+        "frame_index": 284,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.09490681439638138,
+        "cumulative_pose_diag": 0.868127703666687,
+        "cumulative_pose_diag_delta": 0.03389155864715576,
+        "depth_median": 1.1965892314910889,
+        "depth_p95": 2.6673405170440674,
+        "confidence_median": 5.52734375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.069885354749693,
+          "minor_ratio_vs_prev": 1.119756670555648,
+          "conf_threshold_ratio_vs_prev": 0.9844186977552071,
+          "valid_fraction_delta_vs_prev": 0.00641488453146144,
+          "bbox_ratio_vs_k10": 1.2255435643389383,
+          "minor_ratio_vs_k10": 1.4855427662905825,
+          "conf_threshold_ratio_vs_k10": 0.955571739012455,
+          "valid_fraction_delta_vs_k10": 0.020682714304880223
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0260064248371776,
+          "minor_ratio_vs_prev": 1.0376882271372654,
+          "conf_threshold_ratio_vs_prev": 1.0484003281378178,
+          "valid_fraction_delta_vs_prev": 0.00010076599580322032,
+          "bbox_ratio_vs_k10": 1.1781874923236677,
+          "minor_ratio_vs_k10": 1.3084297223649575,
+          "conf_threshold_ratio_vs_k10": 1.196629213483146,
+          "valid_fraction_delta_vs_k10": 8.75531635005089e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 10,
+        "k": 11,
+        "frame_id": "cap-1396",
+        "frame_index": 282,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.410023957490921,
+        "cumulative_pose_diag": 0.6772668361663818,
+        "cumulative_pose_diag_delta": 0.3802834451198578,
+        "depth_median": 0.9845525622367859,
+        "depth_p95": 2.441798448562622,
+        "confidence_median": 6.1796875,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0576961614806304,
+          "minor_ratio_vs_prev": 1.098405809631306,
+          "conf_threshold_ratio_vs_prev": 0.9877547483189116,
+          "valid_fraction_delta_vs_prev": 0.007966874571440963,
+          "bbox_ratio_vs_k10": 1.0576961614806304,
+          "minor_ratio_vs_k10": 1.098405809631306,
+          "conf_threshold_ratio_vs_k10": 0.9877547483189116,
+          "valid_fraction_delta_vs_k10": 0.007966874571440963
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0163680340773327,
+          "minor_ratio_vs_prev": 1.0702859401725322,
+          "conf_threshold_ratio_vs_prev": 1.0767790262172285,
+          "valid_fraction_delta_vs_prev": 3.6292390026337884e-05,
+          "bbox_ratio_vs_k10": 1.0163680340773327,
+          "minor_ratio_vs_k10": 1.0702859401725322,
+          "conf_threshold_ratio_vs_k10": 1.0767790262172285,
+          "valid_fraction_delta_vs_k10": 3.6292390026337884e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 23,
+        "k": 24,
+        "frame_id": "cap-1494",
+        "frame_index": 295,
+        "window_role": "core",
+        "pose_step_from_previous": 0.120168536901474,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.0149400234222412,
+        "depth_p95": 1.7638212442398071,
+        "confidence_median": 2.375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0056557335146183,
+          "minor_ratio_vs_prev": 1.0791657174110059,
+          "conf_threshold_ratio_vs_prev": 0.9843939334169035,
+          "valid_fraction_delta_vs_prev": -0.0011554098669820378,
+          "bbox_ratio_vs_k10": 1.5184907072146585,
+          "minor_ratio_vs_k10": 1.6285752003251954,
+          "conf_threshold_ratio_vs_k10": 0.8102295106781358,
+          "valid_fraction_delta_vs_k10": 0.036008955468980086
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0050730378015083,
+          "minor_ratio_vs_prev": 1.0152978331523734,
+          "conf_threshold_ratio_vs_prev": 0.9814516129032258,
+          "valid_fraction_delta_vs_prev": -0.00020999991464998313,
+          "bbox_ratio_vs_k10": 1.263651449849823,
+          "minor_ratio_vs_k10": 1.1525792073157626,
+          "conf_threshold_ratio_vs_k10": 1.1395131086142323,
+          "valid_fraction_delta_vs_k10": -3.1380476718911865e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": true
+        }
+      }
+    ],
+    "largest_npz_bbox_growth_vs_prev": [
+      {
+        "slot": 11,
+        "k": 12,
+        "frame_id": "cap-1413",
+        "frame_index": 283,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.17145958542823792,
+        "cumulative_pose_diag": 0.8342361450195312,
+        "cumulative_pose_diag_delta": 0.15696930885314941,
+        "depth_median": 1.219886302947998,
+        "depth_p95": 2.5822558403015137,
+        "confidence_median": 5.2890625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0830053020407269,
+          "minor_ratio_vs_prev": 1.2078101623095236,
+          "conf_threshold_ratio_vs_prev": 0.9827302328840866,
+          "valid_fraction_delta_vs_prev": 0.00630095520197782,
+          "bbox_ratio_vs_k10": 1.1454905508316475,
+          "minor_ratio_vs_k10": 1.3266656992125114,
+          "conf_threshold_ratio_vs_k10": 0.9706964538478063,
+          "valid_fraction_delta_vs_k10": 0.014267829773418783
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.129830592729762,
+          "minor_ratio_vs_prev": 1.178104164277811,
+          "conf_threshold_ratio_vs_prev": 1.06,
+          "valid_fraction_delta_vs_prev": -4.95052223290493e-05,
+          "bbox_ratio_vs_k10": 1.1483236983731757,
+          "minor_ratio_vs_k10": 1.2609083230852522,
+          "conf_threshold_ratio_vs_k10": 1.1413857677902621,
+          "valid_fraction_delta_vs_k10": -1.321283230271142e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 12,
+        "k": 13,
+        "frame_id": "cap-1417",
+        "frame_index": 284,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.09490681439638138,
+        "cumulative_pose_diag": 0.868127703666687,
+        "cumulative_pose_diag_delta": 0.03389155864715576,
+        "depth_median": 1.1965892314910889,
+        "depth_p95": 2.6673405170440674,
+        "confidence_median": 5.52734375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.069885354749693,
+          "minor_ratio_vs_prev": 1.119756670555648,
+          "conf_threshold_ratio_vs_prev": 0.9844186977552071,
+          "valid_fraction_delta_vs_prev": 0.00641488453146144,
+          "bbox_ratio_vs_k10": 1.2255435643389383,
+          "minor_ratio_vs_k10": 1.4855427662905825,
+          "conf_threshold_ratio_vs_k10": 0.955571739012455,
+          "valid_fraction_delta_vs_k10": 0.020682714304880223
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0260064248371776,
+          "minor_ratio_vs_prev": 1.0376882271372654,
+          "conf_threshold_ratio_vs_prev": 1.0484003281378178,
+          "valid_fraction_delta_vs_prev": 0.00010076599580322032,
+          "bbox_ratio_vs_k10": 1.1781874923236677,
+          "minor_ratio_vs_k10": 1.3084297223649575,
+          "conf_threshold_ratio_vs_k10": 1.196629213483146,
+          "valid_fraction_delta_vs_k10": 8.75531635005089e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 13,
+        "k": 14,
+        "frame_id": "cap-1429",
+        "frame_index": 285,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.09281762689352036,
+        "cumulative_pose_diag": 0.9504624009132385,
+        "cumulative_pose_diag_delta": 0.08233469724655151,
+        "depth_median": 1.289777398109436,
+        "depth_p95": 2.61466908454895,
+        "confidence_median": 4.9609375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0596426939709838,
+          "minor_ratio_vs_prev": 1.1343308488031119,
+          "conf_threshold_ratio_vs_prev": 0.9845165902813348,
+          "valid_fraction_delta_vs_prev": 0.006552735130958776,
+          "bbox_ratio_vs_k10": 1.2986382840949142,
+          "minor_ratio_vs_k10": 1.6850969870197192,
+          "conf_threshold_ratio_vs_k10": 0.9407762302617476,
+          "valid_fraction_delta_vs_k10": 0.027235449435839
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0319603978974532,
+          "minor_ratio_vs_prev": 0.8730137742271807,
+          "conf_threshold_ratio_vs_prev": 1.02660406885759,
+          "valid_fraction_delta_vs_prev": -0.00010858583532935562,
+          "bbox_ratio_vs_k10": 1.2158428333761346,
+          "minor_ratio_vs_k10": 1.1422771702328538,
+          "conf_threshold_ratio_vs_k10": 1.2284644194756553,
+          "valid_fraction_delta_vs_k10": -2.1032671828846716e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": true,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 10,
+        "k": 11,
+        "frame_id": "cap-1396",
+        "frame_index": 282,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.410023957490921,
+        "cumulative_pose_diag": 0.6772668361663818,
+        "cumulative_pose_diag_delta": 0.3802834451198578,
+        "depth_median": 0.9845525622367859,
+        "depth_p95": 2.441798448562622,
+        "confidence_median": 6.1796875,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0576961614806304,
+          "minor_ratio_vs_prev": 1.098405809631306,
+          "conf_threshold_ratio_vs_prev": 0.9877547483189116,
+          "valid_fraction_delta_vs_prev": 0.007966874571440963,
+          "bbox_ratio_vs_k10": 1.0576961614806304,
+          "minor_ratio_vs_k10": 1.098405809631306,
+          "conf_threshold_ratio_vs_k10": 0.9877547483189116,
+          "valid_fraction_delta_vs_k10": 0.007966874571440963
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0163680340773327,
+          "minor_ratio_vs_prev": 1.0702859401725322,
+          "conf_threshold_ratio_vs_prev": 1.0767790262172285,
+          "valid_fraction_delta_vs_prev": 3.6292390026337884e-05,
+          "bbox_ratio_vs_k10": 1.0163680340773327,
+          "minor_ratio_vs_k10": 1.0702859401725322,
+          "conf_threshold_ratio_vs_k10": 1.0767790262172285,
+          "valid_fraction_delta_vs_k10": 3.6292390026337884e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": true,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 14,
+        "k": 15,
+        "frame_id": "cap-1437",
+        "frame_index": 286,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.2947385311126709,
+        "cumulative_pose_diag": 1.0976414680480957,
+        "cumulative_pose_diag_delta": 0.14717906713485718,
+        "depth_median": 1.1439176797866821,
+        "depth_p95": 2.5120270252227783,
+        "confidence_median": 4.4140625,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.03192093773624,
+          "minor_ratio_vs_prev": 0.8198830895731709,
+          "conf_threshold_ratio_vs_prev": 0.9867681166509289,
+          "valid_fraction_delta_vs_prev": 0.002642728250329851,
+          "bbox_ratio_vs_k10": 1.3400920359034054,
+          "minor_ratio_vs_k10": 1.381582523948169,
+          "conf_threshold_ratio_vs_k10": 0.9283279889253454,
+          "valid_fraction_delta_vs_k10": 0.02987817768616885
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0117415542541655,
+          "minor_ratio_vs_prev": 1.0147843338789573,
+          "conf_threshold_ratio_vs_prev": 1.0045731707317074,
+          "valid_fraction_delta_vs_prev": 7.728158648911965e-05,
+          "bbox_ratio_vs_k10": 1.2301187179687587,
+          "minor_ratio_vs_k10": 1.1591649772998869,
+          "conf_threshold_ratio_vs_k10": 1.2340823970037453,
+          "valid_fraction_delta_vs_k10": 5.624891466027293e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      }
+    ],
+    "largest_depth_p95": [
+      {
+        "slot": 28,
+        "k": 29,
+        "frame_id": "cap-1529",
+        "frame_index": 300,
+        "window_role": "core",
+        "pose_step_from_previous": 0.09948136657476425,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 0.9744234085083008,
+        "depth_p95": 3.2413253784179688,
+        "confidence_median": 3.783203125,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.004787573771868,
+          "minor_ratio_vs_prev": 1.0202308528600352,
+          "conf_threshold_ratio_vs_prev": 0.9984030465441629,
+          "valid_fraction_delta_vs_prev": -0.0007564230265021399,
+          "bbox_ratio_vs_k10": 1.5406502465616578,
+          "minor_ratio_vs_k10": 1.5209568546763022,
+          "conf_threshold_ratio_vs_k10": 0.7917241265468812,
+          "valid_fraction_delta_vs_k10": 0.03747749587798688
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0020043748356404,
+          "minor_ratio_vs_prev": 1.0006662986048365,
+          "conf_threshold_ratio_vs_prev": 0.9950083194675541,
+          "valid_fraction_delta_vs_prev": -6.782618242939797e-05,
+          "bbox_ratio_vs_k10": 1.291202364868637,
+          "minor_ratio_vs_k10": 1.129104618288998,
+          "conf_threshold_ratio_vs_k10": 1.1198501872659177,
+          "valid_fraction_delta_vs_k10": 8.425621387142535e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 31,
+        "k": 32,
+        "frame_id": "cap-1540",
+        "frame_index": 303,
+        "window_role": "core",
+        "pose_step_from_previous": 0.05595462769269943,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 0.8792095184326172,
+        "depth_p95": 3.2359230518341064,
+        "confidence_median": 4.4296875,
+        "npz": {
+          "bbox_ratio_vs_prev": 0.9956507642801966,
+          "minor_ratio_vs_prev": 1.0173870010050423,
+          "conf_threshold_ratio_vs_prev": 1.000973551969415,
+          "valid_fraction_delta_vs_prev": -0.0008026196251476048,
+          "bbox_ratio_vs_k10": 1.5175329029521711,
+          "minor_ratio_vs_k10": 1.6583580824512885,
+          "conf_threshold_ratio_vs_k10": 0.7917583085410058,
+          "valid_fraction_delta_vs_k10": 0.035756879402704556
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0001408762939954,
+          "minor_ratio_vs_prev": 1.0001150049536025,
+          "conf_threshold_ratio_vs_prev": 0.9966358284272497,
+          "valid_fraction_delta_vs_prev": -2.3749419122531812e-05,
+          "bbox_ratio_vs_k10": 1.2851514610153973,
+          "minor_ratio_vs_k10": 1.1447198690854337,
+          "conf_threshold_ratio_vs_k10": 1.1095505617977528,
+          "valid_fraction_delta_vs_k10": 1.4245084826391974e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 29,
+        "k": 30,
+        "frame_id": "cap-1533",
+        "frame_index": 301,
+        "window_role": "core",
+        "pose_step_from_previous": 0.009545681066811085,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 0.9399843215942383,
+        "depth_p95": 3.2278196811676025,
+        "confidence_median": 4.1171875,
+        "npz": {
+          "bbox_ratio_vs_prev": 0.9939853684111994,
+          "minor_ratio_vs_prev": 1.07857561500297,
+          "conf_threshold_ratio_vs_prev": 0.9989240890751966,
+          "valid_fraction_delta_vs_prev": -0.000262987433099493,
+          "bbox_ratio_vs_k10": 1.5313838029213946,
+          "minor_ratio_vs_k10": 1.6404669749254754,
+          "conf_threshold_ratio_vs_k10": 0.7908723019096989,
+          "valid_fraction_delta_vs_k10": 0.037214508444887384
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 0.9984578400248181,
+          "minor_ratio_vs_prev": 0.996300498186601,
+          "conf_threshold_ratio_vs_prev": 0.9966555183946488,
+          "valid_fraction_delta_vs_prev": -2.3194053158093197e-05,
+          "bbox_ratio_vs_k10": 1.2892111242616764,
+          "minor_ratio_vs_k10": 1.1249274937061209,
+          "conf_threshold_ratio_vs_k10": 1.1161048689138577,
+          "valid_fraction_delta_vs_k10": 6.106216071333215e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 34,
+        "k": 35,
+        "frame_id": "cap-1555",
+        "frame_index": 306,
+        "window_role": "core",
+        "pose_step_from_previous": 0.041693612933158875,
+        "cumulative_pose_diag": 1.3647595643997192,
+        "cumulative_pose_diag_delta": 0.00639653205871582,
+        "depth_median": 0.8771836757659912,
+        "depth_p95": 3.1764988899230957,
+        "confidence_median": 5.0625,
+        "npz": {
+          "bbox_ratio_vs_prev": 0.9938650286318644,
+          "minor_ratio_vs_prev": 1.0069762981736743,
+          "conf_threshold_ratio_vs_prev": 1.0011931385404267,
+          "valid_fraction_delta_vs_prev": -0.000877673885472996,
+          "bbox_ratio_vs_k10": 1.4927366926893777,
+          "minor_ratio_vs_k10": 1.7202283280891768,
+          "conf_threshold_ratio_vs_k10": 0.7941071332215579,
+          "valid_fraction_delta_vs_k10": 0.03252840219645814
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 0.9984239138199843,
+          "minor_ratio_vs_prev": 0.998063586799802,
+          "conf_threshold_ratio_vs_prev": 0.9974424552429667,
+          "valid_fraction_delta_vs_prev": -2.724254439367968e-05,
+          "bbox_ratio_vs_k10": 1.2874112336843047,
+          "minor_ratio_vs_k10": 1.1204682916042057,
+          "conf_threshold_ratio_vs_k10": 1.095505617977528,
+          "valid_fraction_delta_vs_k10": -8.089489164864183e-06
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 30,
+        "k": 31,
+        "frame_id": "cap-1535",
+        "frame_index": 302,
+        "window_role": "core",
+        "pose_step_from_previous": 0.029970256611704826,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 0.8846117258071899,
+        "depth_p95": 3.16569447517395,
+        "confidence_median": 4.3515625,
+        "npz": {
+          "bbox_ratio_vs_prev": 0.995284029497297,
+          "minor_ratio_vs_prev": 0.9936298630646611,
+          "conf_threshold_ratio_vs_prev": 1.0001465956916422,
+          "valid_fraction_delta_vs_prev": -0.0006550094170352239,
+          "bbox_ratio_vs_k10": 1.5241618420785004,
+          "minor_ratio_vs_k10": 1.6300169756572989,
+          "conf_threshold_ratio_vs_k10": 0.790988240381798,
+          "valid_fraction_delta_vs_k10": 0.03655949902785216
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 0.996710635643896,
+          "minor_ratio_vs_prev": 1.0174773415818925,
+          "conf_threshold_ratio_vs_prev": 0.99748322147651,
+          "valid_fraction_delta_vs_prev": -2.3067656764408362e-05,
+          "bbox_ratio_vs_k10": 1.2849704391420373,
+          "minor_ratio_vs_k10": 1.1445882357684851,
+          "conf_threshold_ratio_vs_k10": 1.1132958801498127,
+          "valid_fraction_delta_vs_k10": 3.7994503948923786e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": false
+        }
+      }
+    ],
+    "lowest_confidence_median": [
+      {
+        "slot": 24,
+        "k": 25,
+        "frame_id": "cap-1514",
+        "frame_index": 296,
+        "window_role": "core",
+        "pose_step_from_previous": 0.37145501375198364,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.7489651441574097,
+        "depth_p95": 3.1143734455108643,
+        "confidence_median": 2.02734375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0116440950587666,
+          "minor_ratio_vs_prev": 0.9408731851491217,
+          "conf_threshold_ratio_vs_prev": 0.9841861163296253,
+          "valid_fraction_delta_vs_prev": -0.0021173610953815203,
+          "bbox_ratio_vs_k10": 1.53617215735532,
+          "minor_ratio_vs_k10": 1.5322827359848354,
+          "conf_threshold_ratio_vs_k10": 0.797416635449967,
+          "valid_fraction_delta_vs_k10": 0.033891594373598566
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.021399812743907,
+          "minor_ratio_vs_prev": 0.9877815267187434,
+          "conf_threshold_ratio_vs_prev": 0.9761709120788825,
+          "valid_fraction_delta_vs_prev": 5.924067740303851e-05,
+          "bbox_ratio_vs_k10": 1.290693354250176,
+          "minor_ratio_vs_k10": 1.138496449066643,
+          "conf_threshold_ratio_vs_k10": 1.1123595505617978,
+          "valid_fraction_delta_vs_k10": 2.7860200684126646e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": true,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": true,
+          "confidence_median_lt_2_5": true
+        }
+      },
+      {
+        "slot": 23,
+        "k": 24,
+        "frame_id": "cap-1494",
+        "frame_index": 295,
+        "window_role": "core",
+        "pose_step_from_previous": 0.120168536901474,
+        "cumulative_pose_diag": 1.3583630323410034,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.0149400234222412,
+        "depth_p95": 1.7638212442398071,
+        "confidence_median": 2.375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0056557335146183,
+          "minor_ratio_vs_prev": 1.0791657174110059,
+          "conf_threshold_ratio_vs_prev": 0.9843939334169035,
+          "valid_fraction_delta_vs_prev": -0.0011554098669820378,
+          "bbox_ratio_vs_k10": 1.5184907072146585,
+          "minor_ratio_vs_k10": 1.6285752003251954,
+          "conf_threshold_ratio_vs_k10": 0.8102295106781358,
+          "valid_fraction_delta_vs_k10": 0.036008955468980086
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0050730378015083,
+          "minor_ratio_vs_prev": 1.0152978331523734,
+          "conf_threshold_ratio_vs_prev": 0.9814516129032258,
+          "valid_fraction_delta_vs_prev": -0.00020999991464998313,
+          "bbox_ratio_vs_k10": 1.263651449849823,
+          "minor_ratio_vs_k10": 1.1525792073157626,
+          "conf_threshold_ratio_vs_k10": 1.1395131086142323,
+          "valid_fraction_delta_vs_k10": -3.1380476718911865e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": true
+        }
+      },
+      {
+        "slot": 19,
+        "k": 20,
+        "frame_id": "cap-1457",
+        "frame_index": 291,
+        "window_role": "core",
+        "pose_step_from_previous": 0.0015712676104158163,
+        "cumulative_pose_diag": 1.1784892082214355,
+        "cumulative_pose_diag_delta": 0.0,
+        "depth_median": 1.2181980609893799,
+        "depth_p95": 2.223008871078491,
+        "confidence_median": 2.888671875,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0085480115819385,
+          "minor_ratio_vs_prev": 1.0011637577472656,
+          "conf_threshold_ratio_vs_prev": 0.9861931116893735,
+          "valid_fraction_delta_vs_prev": -0.00015741400830437957,
+          "bbox_ratio_vs_k10": 1.4671730719791987,
+          "minor_ratio_vs_k10": 1.4799914012669018,
+          "conf_threshold_ratio_vs_k10": 0.8595438502426883,
+          "valid_fraction_delta_vs_k10": 0.031131933905637732
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.002770297560325,
+          "minor_ratio_vs_prev": 0.9977225060226539,
+          "conf_threshold_ratio_vs_prev": 0.9873817034700315,
+          "valid_fraction_delta_vs_prev": 0.00015698185927792707,
+          "bbox_ratio_vs_k10": 1.2582086510869686,
+          "minor_ratio_vs_k10": 1.1395548348743552,
+          "conf_threshold_ratio_vs_k10": 1.1722846441947565,
+          "valid_fraction_delta_vs_k10": 0.0001459546082583918
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 17,
+        "k": 18,
+        "frame_id": "cap-1453",
+        "frame_index": 289,
+        "window_role": "bridge",
+        "pose_step_from_previous": 0.018518980592489243,
+        "cumulative_pose_diag": 1.178369402885437,
+        "cumulative_pose_diag_delta": 0.0121384859085083,
+        "depth_median": 1.2627663612365723,
+        "depth_p95": 2.2635254859924316,
+        "confidence_median": 2.93359375,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0260873561928514,
+          "minor_ratio_vs_prev": 1.0042109837157012,
+          "conf_threshold_ratio_vs_prev": 0.9837912399442422,
+          "valid_fraction_delta_vs_prev": -0.0001586557671533484,
+          "bbox_ratio_vs_k10": 1.4329505339529525,
+          "minor_ratio_vs_k10": 1.4348997724813706,
+          "conf_threshold_ratio_vs_k10": 0.8842473097641605,
+          "valid_fraction_delta_vs_k10": 0.031197793582841915
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0077095235953035,
+          "minor_ratio_vs_prev": 0.9951623928251812,
+          "conf_threshold_ratio_vs_prev": 0.9861431870669746,
+          "valid_fraction_delta_vs_prev": 6.07716264455771e-05,
+          "bbox_ratio_vs_k10": 1.250565257199004,
+          "minor_ratio_vs_k10": 1.1469691549740084,
+          "conf_threshold_ratio_vs_k10": 1.199438202247191,
+          "valid_fraction_delta_vs_k10": 4.561573056893753e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      },
+      {
+        "slot": 18,
+        "k": 19,
+        "frame_id": "cap-1455",
+        "frame_index": 290,
+        "window_role": "core",
+        "pose_step_from_previous": 0.0009978280868381262,
+        "cumulative_pose_diag": 1.1784892082214355,
+        "cumulative_pose_diag_delta": 0.00011980533599853516,
+        "depth_median": 1.2418327331542969,
+        "depth_p95": 2.239215612411499,
+        "confidence_median": 2.953125,
+        "npz": {
+          "bbox_ratio_vs_prev": 1.0152045870539195,
+          "minor_ratio_vs_prev": 1.030225999214808,
+          "conf_threshold_ratio_vs_prev": 0.9856717860978012,
+          "valid_fraction_delta_vs_prev": 9.15543311001965e-05,
+          "bbox_ratio_vs_k10": 1.4547379550904005,
+          "minor_ratio_vs_k10": 1.4782710518777205,
+          "conf_threshold_ratio_vs_k10": 0.8715776251674159,
+          "valid_fraction_delta_vs_k10": 0.03128934791394211
+        },
+        "glb": {
+          "bbox_ratio_vs_prev": 1.0033324218902586,
+          "minor_ratio_vs_prev": 0.9958036652807425,
+          "conf_threshold_ratio_vs_prev": 0.9898516783762685,
+          "valid_fraction_delta_vs_prev": -5.664298158847281e-05,
+          "bbox_ratio_vs_k10": 1.2547326682372908,
+          "minor_ratio_vs_k10": 1.1421560884870736,
+          "conf_threshold_ratio_vs_k10": 1.1872659176029963,
+          "valid_fraction_delta_vs_k10": -1.1027251019535278e-05
+        },
+        "signals": {
+          "large_pose_step_ge_0_25": false,
+          "pose_diag_delta_ge_0_15": false,
+          "npz_minor_jump_ge_1_10": false,
+          "npz_bbox_jump_ge_1_10": false,
+          "depth_p95_ge_3": false,
+          "confidence_median_lt_2_5": false
+        }
+      }
+    ],
+    "first_npz_bbox_ge_1_10_vs_k10": {
+      "slot": 11,
+      "k": 12,
+      "frame_id": "cap-1413",
+      "frame_index": 283,
+      "window_role": "bridge",
+      "bbox_ratio_vs_k10": 1.1454905508316475
+    },
+    "first_npz_minor_ge_1_10_vs_k10": {
+      "slot": 11,
+      "k": 12,
+      "frame_id": "cap-1413",
+      "frame_index": 283,
+      "window_role": "bridge",
+      "minor_ratio_vs_k10": 1.3266656992125114
+    },
+    "first_npz_minor_ge_1_35_vs_k10": {
+      "slot": 12,
+      "k": 13,
+      "frame_id": "cap-1417",
+      "frame_index": 284,
+      "window_role": "bridge",
+      "minor_ratio_vs_k10": 1.4855427662905825
+    },
+    "interpretation": [
+      "Largest pose step is slot 10 / cap-1396 (0.410); this is the first major span break after k10.",
+      "First npz minor ratio >=1.10 vs k10 occurs at slot 11 / cap-1413 (k=12).",
+      "Lowest confidence median is slot 24 / cap-1514 (2.027); low-confidence late slots can lower npz threshold pressure.",
+      "Largest depth p95 is slot 28 / cap-1529 (3.241); this late depth tail can widen the layer after the pose span has expanded."
+    ]
+  },
+  "slot_rows": [
+    {
+      "slot": 0,
+      "k": 1,
+      "frame_id": "cap-1346",
+      "frame_index": 272,
+      "window_role": "bridge",
+      "pose_step_from_previous": null,
+      "cumulative_pose_diag": 0.0,
+      "cumulative_pose_diag_delta": null,
+      "depth_median": 1.0000839233398438,
+      "depth_p95": 2.459355592727661,
+      "confidence_median": 4.62890625,
+      "npz": {
+        "bbox_ratio_vs_prev": null,
+        "minor_ratio_vs_prev": null,
+        "conf_threshold_ratio_vs_prev": null,
+        "valid_fraction_delta_vs_prev": null,
+        "bbox_ratio_vs_k10": 1.067734600358047,
+        "minor_ratio_vs_k10": 1.1182332545281235,
+        "conf_threshold_ratio_vs_k10": 0.9439381036499284,
+        "valid_fraction_delta_vs_k10": 0.0037124283675734615
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": null,
+        "minor_ratio_vs_prev": null,
+        "conf_threshold_ratio_vs_prev": null,
+        "valid_fraction_delta_vs_prev": null,
+        "bbox_ratio_vs_k10": 0.9931187961277789,
+        "minor_ratio_vs_k10": 1.0371604793321834,
+        "conf_threshold_ratio_vs_k10": 1.0383895131086143,
+        "valid_fraction_delta_vs_k10": -3.680717570042624e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 1,
+      "k": 2,
+      "frame_id": "cap-1354",
+      "frame_index": 273,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.1883389800786972,
+      "cumulative_pose_diag": 0.1883389800786972,
+      "cumulative_pose_diag_delta": 0.1883389800786972,
+      "depth_median": 0.7367262244224548,
+      "depth_p95": 2.544440269470215,
+      "confidence_median": 7.921875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9631189472504917,
+        "minor_ratio_vs_prev": 0.927277568348427,
+        "conf_threshold_ratio_vs_prev": 1.0572563013408793,
+        "valid_fraction_delta_vs_prev": 0.014404346644318111,
+        "bbox_ratio_vs_k10": 1.0283554242397668,
+        "minor_ratio_vs_k10": 1.036912613105186,
+        "conf_threshold_ratio_vs_k10": 0.9979845081596469,
+        "valid_fraction_delta_vs_k10": 0.018116775011891573
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9834844033027821,
+        "minor_ratio_vs_prev": 0.9891998636645812,
+        "conf_threshold_ratio_vs_prev": 1.1623083859332732,
+        "valid_fraction_delta_vs_prev": 4.246981811562023e-06,
+        "bbox_ratio_vs_k10": 0.9767168466185058,
+        "minor_ratio_vs_k10": 1.0259590047536875,
+        "conf_threshold_ratio_vs_k10": 1.2069288389513109,
+        "valid_fraction_delta_vs_k10": -3.256019388886422e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": true,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 2,
+      "k": 3,
+      "frame_id": "cap-1356",
+      "frame_index": 274,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.021890779957175255,
+      "cumulative_pose_diag": 0.20883238315582275,
+      "cumulative_pose_diag_delta": 0.02049340307712555,
+      "depth_median": 0.7495564818382263,
+      "depth_p95": 2.5768535137176514,
+      "confidence_median": 7.84765625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.975870081454434,
+        "minor_ratio_vs_prev": 0.9494877150413398,
+        "conf_threshold_ratio_vs_prev": 1.0164749779474882,
+        "valid_fraction_delta_vs_prev": 0.00489110738635079,
+        "bbox_ratio_vs_k10": 1.0035412916169704,
+        "minor_ratio_vs_k10": 0.9845357877147878,
+        "conf_threshold_ratio_vs_k10": 1.0144262809235118,
+        "valid_fraction_delta_vs_k10": 0.023007882398242363
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.8959791565061112,
+        "minor_ratio_vs_prev": 0.8189421569423765,
+        "conf_threshold_ratio_vs_prev": 1.034910783553142,
+        "valid_fraction_delta_vs_prev": 1.0853397963028755e-05,
+        "bbox_ratio_vs_k10": 0.8751179363785576,
+        "minor_ratio_vs_k10": 0.8402010802874387,
+        "conf_threshold_ratio_vs_k10": 1.249063670411985,
+        "valid_fraction_delta_vs_k10": -2.1706795925835465e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 3,
+      "k": 4,
+      "frame_id": "cap-1358",
+      "frame_index": 275,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.010574801824986935,
+      "cumulative_pose_diag": 0.21869730949401855,
+      "cumulative_pose_diag_delta": 0.0098649263381958,
+      "depth_median": 0.780619204044342,
+      "depth_p95": 2.617370128631592,
+      "confidence_median": 6.76171875,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0033606702401512,
+        "minor_ratio_vs_prev": 1.0040900895710674,
+        "conf_threshold_ratio_vs_prev": 0.9966661795218653,
+        "valid_fraction_delta_vs_prev": -0.0047622822713991875,
+        "bbox_ratio_vs_k10": 1.0069138629704704,
+        "minor_ratio_vs_k10": 0.9885626272724626,
+        "conf_threshold_ratio_vs_k10": 1.011044365814611,
+        "valid_fraction_delta_vs_k10": 0.018245600126843176
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0057919990303208,
+        "minor_ratio_vs_prev": 1.0201492181032388,
+        "conf_threshold_ratio_vs_prev": 0.9370314842578711,
+        "valid_fraction_delta_vs_prev": 2.59537777369534e-06,
+        "bbox_ratio_vs_k10": 0.8801866186174786,
+        "minor_ratio_vs_k10": 0.8571304751047271,
+        "conf_threshold_ratio_vs_k10": 1.1704119850187267,
+        "valid_fraction_delta_vs_k10": -1.9111418152140125e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 4,
+      "k": 5,
+      "frame_id": "cap-1360",
+      "frame_index": 276,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.012713134288787842,
+      "cumulative_pose_diag": 0.23025202751159668,
+      "cumulative_pose_diag_delta": 0.011554718017578125,
+      "depth_median": 0.8893386125564575,
+      "depth_p95": 2.6673405170440674,
+      "confidence_median": 3.62890625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.99173127397938,
+        "minor_ratio_vs_prev": 0.9824838537315806,
+        "conf_threshold_ratio_vs_prev": 0.9848858617057309,
+        "valid_fraction_delta_vs_prev": -0.01082867109107788,
+        "bbox_ratio_vs_k10": 0.9985879681112033,
+        "minor_ratio_vs_k10": 0.9712468196976652,
+        "conf_threshold_ratio_vs_k10": 0.9957633014480474,
+        "valid_fraction_delta_vs_k10": 0.007416929035765296
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.1141866838639252,
+        "minor_ratio_vs_prev": 1.2266863684013825,
+        "conf_threshold_ratio_vs_prev": 0.8968,
+        "valid_fraction_delta_vs_prev": 6.653604838202654e-06,
+        "bbox_ratio_vs_k10": 0.98069220977881,
+        "minor_ratio_vs_k10": 1.0514302697523692,
+        "conf_threshold_ratio_vs_k10": 1.049625468164794,
+        "valid_fraction_delta_vs_k10": -1.2457813313937471e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 5,
+      "k": 6,
+      "frame_id": "cap-1361",
+      "frame_index": 277,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.0050095501355826855,
+      "cumulative_pose_diag": 0.2327515184879303,
+      "cumulative_pose_diag_delta": 0.002499490976333618,
+      "depth_median": 0.8849493563175201,
+      "depth_p95": 2.652484655380249,
+      "confidence_median": 3.599609375,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9922449228661997,
+        "minor_ratio_vs_prev": 0.9998172507589868,
+        "conf_threshold_ratio_vs_prev": 0.9885449603698041,
+        "valid_fraction_delta_vs_prev": -0.007171925373923194,
+        "bbox_ratio_vs_k10": 0.990843841393616,
+        "minor_ratio_vs_k10": 0.9710693250785289,
+        "conf_threshold_ratio_vs_k10": 0.9843567933676654,
+        "valid_fraction_delta_vs_k10": 0.00024500366184210254
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0230128845739483,
+        "minor_ratio_vs_prev": 1.0170008716777412,
+        "conf_threshold_ratio_vs_prev": 0.9313113291703836,
+        "valid_fraction_delta_vs_prev": 1.7648568861439173e-05,
+        "bbox_ratio_vs_k10": 1.00326076640502,
+        "minor_ratio_vs_k10": 1.069305500846522,
+        "conf_threshold_ratio_vs_k10": 0.9775280898876404,
+        "valid_fraction_delta_vs_k10": 5.190755547501702e-06
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 6,
+      "k": 7,
+      "frame_id": "cap-1363",
+      "frame_index": 278,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.010311326012015343,
+      "cumulative_pose_diag": 0.23455791175365448,
+      "cumulative_pose_diag_delta": 0.0018063932657241821,
+      "depth_median": 0.8346412777900696,
+      "depth_p95": 2.6470823287963867,
+      "confidence_median": 4.765625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9990316622875536,
+        "minor_ratio_vs_prev": 0.9946649353126651,
+        "conf_threshold_ratio_vs_prev": 0.9961716051739136,
+        "valid_fraction_delta_vs_prev": -0.002679373636246929,
+        "bbox_ratio_vs_k10": 0.9898843699348493,
+        "minor_ratio_vs_k10": 0.9658886074133485,
+        "conf_threshold_ratio_vs_k10": 0.9805882869129136,
+        "valid_fraction_delta_vs_k10": -0.0024343699744048264
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0099095147451191,
+        "minor_ratio_vs_prev": 1.000268865413968,
+        "conf_threshold_ratio_vs_prev": 0.9669540229885057,
+        "valid_fraction_delta_vs_prev": -2.5818952918088556e-05,
+        "bbox_ratio_vs_k10": 1.01320259376291,
+        "minor_ratio_vs_k10": 1.0695930001126654,
+        "conf_threshold_ratio_vs_k10": 0.9452247191011236,
+        "valid_fraction_delta_vs_k10": -2.0628197370586854e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 7,
+      "k": 8,
+      "frame_id": "cap-1365",
+      "frame_index": 279,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.07640867680311203,
+      "cumulative_pose_diag": 0.2382696121931076,
+      "cumulative_pose_diag_delta": 0.003711700439453125,
+      "depth_median": 0.7765675187110901,
+      "depth_p95": 2.5890085697174072,
+      "confidence_median": 6.79296875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.990166771945287,
+        "minor_ratio_vs_prev": 0.9843486781078131,
+        "conf_threshold_ratio_vs_prev": 1.011324220956582,
+        "valid_fraction_delta_vs_prev": 0.0010454653559537341,
+        "bbox_ratio_vs_k10": 0.980150611177484,
+        "minor_ratio_vs_k10": 0.9507711739067259,
+        "conf_threshold_ratio_vs_k10": 0.9916926853413516,
+        "valid_fraction_delta_vs_k10": -0.0013889046184510923
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9904519954955421,
+        "minor_ratio_vs_prev": 0.983912109497838,
+        "conf_threshold_ratio_vs_prev": 1.0153541357107478,
+        "valid_fraction_delta_vs_prev": 1.1072488294572302e-05,
+        "bbox_ratio_vs_k10": 1.0035285308337334,
+        "minor_ratio_vs_k10": 1.0523855050449737,
+        "conf_threshold_ratio_vs_k10": 0.9597378277153558,
+        "valid_fraction_delta_vs_k10": -9.555709076014551e-06
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 8,
+      "k": 9,
+      "frame_id": "cap-1367",
+      "frame_index": 280,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.11545947194099426,
+      "cumulative_pose_diag": 0.24853914976119995,
+      "cumulative_pose_diag_delta": 0.010269537568092346,
+      "depth_median": 0.7792686223983765,
+      "depth_p95": 2.5120270252227783,
+      "confidence_median": 6.7890625,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0004786499418143,
+        "minor_ratio_vs_prev": 1.0174889508033382,
+        "conf_threshold_ratio_vs_prev": 1.0084277823247014,
+        "valid_fraction_delta_vs_prev": 0.0004878523736537854,
+        "bbox_ratio_vs_k10": 0.9806197602104936,
+        "minor_ratio_vs_k10": 0.9673991641924129,
+        "conf_threshold_ratio_vs_k10": 1.0000504554264071,
+        "valid_fraction_delta_vs_k10": -0.0009010522447973068
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9950107518447256,
+        "minor_ratio_vs_prev": 1.0038373269905807,
+        "conf_threshold_ratio_vs_prev": 1.024390243902439,
+        "valid_fraction_delta_vs_prev": 5.076716221075195e-05,
+        "bbox_ratio_vs_k10": 0.998521677962506,
+        "minor_ratio_vs_k10": 1.0564238523479788,
+        "conf_threshold_ratio_vs_k10": 0.9831460674157303,
+        "valid_fraction_delta_vs_k10": 4.12114531347374e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 9,
+      "k": 10,
+      "frame_id": "cap-1369",
+      "frame_index": 281,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.07956787943840027,
+      "cumulative_pose_diag": 0.29698339104652405,
+      "cumulative_pose_diag_delta": 0.0484442412853241,
+      "depth_median": 0.8555748462677002,
+      "depth_p95": 2.528233766555786,
+      "confidence_median": 5.72265625,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0197632564383023,
+        "minor_ratio_vs_prev": 1.033699466584512,
+        "conf_threshold_ratio_vs_prev": 0.9999495471192145,
+        "valid_fraction_delta_vs_prev": 0.0009010522447973068,
+        "bbox_ratio_vs_k10": 1.0,
+        "minor_ratio_vs_k10": 1.0,
+        "conf_threshold_ratio_vs_k10": 1.0,
+        "valid_fraction_delta_vs_k10": 0.0
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.001480510709102,
+        "minor_ratio_vs_prev": 0.9465897591931755,
+        "conf_threshold_ratio_vs_prev": 1.0171428571428571,
+        "valid_fraction_delta_vs_prev": -4.12114531347374e-05,
+        "bbox_ratio_vs_k10": 1.0,
+        "minor_ratio_vs_k10": 1.0,
+        "conf_threshold_ratio_vs_k10": 1.0,
+        "valid_fraction_delta_vs_k10": 0.0
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 10,
+      "k": 11,
+      "frame_id": "cap-1396",
+      "frame_index": 282,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.410023957490921,
+      "cumulative_pose_diag": 0.6772668361663818,
+      "cumulative_pose_diag_delta": 0.3802834451198578,
+      "depth_median": 0.9845525622367859,
+      "depth_p95": 2.441798448562622,
+      "confidence_median": 6.1796875,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0576961614806304,
+        "minor_ratio_vs_prev": 1.098405809631306,
+        "conf_threshold_ratio_vs_prev": 0.9877547483189116,
+        "valid_fraction_delta_vs_prev": 0.007966874571440963,
+        "bbox_ratio_vs_k10": 1.0576961614806304,
+        "minor_ratio_vs_k10": 1.098405809631306,
+        "conf_threshold_ratio_vs_k10": 0.9877547483189116,
+        "valid_fraction_delta_vs_k10": 0.007966874571440963
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0163680340773327,
+        "minor_ratio_vs_prev": 1.0702859401725322,
+        "conf_threshold_ratio_vs_prev": 1.0767790262172285,
+        "valid_fraction_delta_vs_prev": 3.6292390026337884e-05,
+        "bbox_ratio_vs_k10": 1.0163680340773327,
+        "minor_ratio_vs_k10": 1.0702859401725322,
+        "conf_threshold_ratio_vs_k10": 1.0767790262172285,
+        "valid_fraction_delta_vs_k10": 3.6292390026337884e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": true,
+        "pose_diag_delta_ge_0_15": true,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 11,
+      "k": 12,
+      "frame_id": "cap-1413",
+      "frame_index": 283,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.17145958542823792,
+      "cumulative_pose_diag": 0.8342361450195312,
+      "cumulative_pose_diag_delta": 0.15696930885314941,
+      "depth_median": 1.219886302947998,
+      "depth_p95": 2.5822558403015137,
+      "confidence_median": 5.2890625,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0830053020407269,
+        "minor_ratio_vs_prev": 1.2078101623095236,
+        "conf_threshold_ratio_vs_prev": 0.9827302328840866,
+        "valid_fraction_delta_vs_prev": 0.00630095520197782,
+        "bbox_ratio_vs_k10": 1.1454905508316475,
+        "minor_ratio_vs_k10": 1.3266656992125114,
+        "conf_threshold_ratio_vs_k10": 0.9706964538478063,
+        "valid_fraction_delta_vs_k10": 0.014267829773418783
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.129830592729762,
+        "minor_ratio_vs_prev": 1.178104164277811,
+        "conf_threshold_ratio_vs_prev": 1.06,
+        "valid_fraction_delta_vs_prev": -4.95052223290493e-05,
+        "bbox_ratio_vs_k10": 1.1483236983731757,
+        "minor_ratio_vs_k10": 1.2609083230852522,
+        "conf_threshold_ratio_vs_k10": 1.1413857677902621,
+        "valid_fraction_delta_vs_k10": -1.321283230271142e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": true,
+        "npz_minor_jump_ge_1_10": true,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 12,
+      "k": 13,
+      "frame_id": "cap-1417",
+      "frame_index": 284,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.09490681439638138,
+      "cumulative_pose_diag": 0.868127703666687,
+      "cumulative_pose_diag_delta": 0.03389155864715576,
+      "depth_median": 1.1965892314910889,
+      "depth_p95": 2.6673405170440674,
+      "confidence_median": 5.52734375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.069885354749693,
+        "minor_ratio_vs_prev": 1.119756670555648,
+        "conf_threshold_ratio_vs_prev": 0.9844186977552071,
+        "valid_fraction_delta_vs_prev": 0.00641488453146144,
+        "bbox_ratio_vs_k10": 1.2255435643389383,
+        "minor_ratio_vs_k10": 1.4855427662905825,
+        "conf_threshold_ratio_vs_k10": 0.955571739012455,
+        "valid_fraction_delta_vs_k10": 0.020682714304880223
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0260064248371776,
+        "minor_ratio_vs_prev": 1.0376882271372654,
+        "conf_threshold_ratio_vs_prev": 1.0484003281378178,
+        "valid_fraction_delta_vs_prev": 0.00010076599580322032,
+        "bbox_ratio_vs_k10": 1.1781874923236677,
+        "minor_ratio_vs_k10": 1.3084297223649575,
+        "conf_threshold_ratio_vs_k10": 1.196629213483146,
+        "valid_fraction_delta_vs_k10": 8.75531635005089e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": true,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 13,
+      "k": 14,
+      "frame_id": "cap-1429",
+      "frame_index": 285,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.09281762689352036,
+      "cumulative_pose_diag": 0.9504624009132385,
+      "cumulative_pose_diag_delta": 0.08233469724655151,
+      "depth_median": 1.289777398109436,
+      "depth_p95": 2.61466908454895,
+      "confidence_median": 4.9609375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0596426939709838,
+        "minor_ratio_vs_prev": 1.1343308488031119,
+        "conf_threshold_ratio_vs_prev": 0.9845165902813348,
+        "valid_fraction_delta_vs_prev": 0.006552735130958776,
+        "bbox_ratio_vs_k10": 1.2986382840949142,
+        "minor_ratio_vs_k10": 1.6850969870197192,
+        "conf_threshold_ratio_vs_k10": 0.9407762302617476,
+        "valid_fraction_delta_vs_k10": 0.027235449435839
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0319603978974532,
+        "minor_ratio_vs_prev": 0.8730137742271807,
+        "conf_threshold_ratio_vs_prev": 1.02660406885759,
+        "valid_fraction_delta_vs_prev": -0.00010858583532935562,
+        "bbox_ratio_vs_k10": 1.2158428333761346,
+        "minor_ratio_vs_k10": 1.1422771702328538,
+        "conf_threshold_ratio_vs_k10": 1.2284644194756553,
+        "valid_fraction_delta_vs_k10": -2.1032671828846716e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": true,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 14,
+      "k": 15,
+      "frame_id": "cap-1437",
+      "frame_index": 286,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.2947385311126709,
+      "cumulative_pose_diag": 1.0976414680480957,
+      "cumulative_pose_diag_delta": 0.14717906713485718,
+      "depth_median": 1.1439176797866821,
+      "depth_p95": 2.5120270252227783,
+      "confidence_median": 4.4140625,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.03192093773624,
+        "minor_ratio_vs_prev": 0.8198830895731709,
+        "conf_threshold_ratio_vs_prev": 0.9867681166509289,
+        "valid_fraction_delta_vs_prev": 0.002642728250329851,
+        "bbox_ratio_vs_k10": 1.3400920359034054,
+        "minor_ratio_vs_k10": 1.381582523948169,
+        "conf_threshold_ratio_vs_k10": 0.9283279889253454,
+        "valid_fraction_delta_vs_k10": 0.02987817768616885
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0117415542541655,
+        "minor_ratio_vs_prev": 1.0147843338789573,
+        "conf_threshold_ratio_vs_prev": 1.0045731707317074,
+        "valid_fraction_delta_vs_prev": 7.728158648911965e-05,
+        "bbox_ratio_vs_k10": 1.2301187179687587,
+        "minor_ratio_vs_k10": 1.1591649772998869,
+        "conf_threshold_ratio_vs_k10": 1.2340823970037453,
+        "valid_fraction_delta_vs_k10": 5.624891466027293e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": true,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 15,
+      "k": 16,
+      "frame_id": "cap-1441",
+      "frame_index": 287,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.031179940328001976,
+      "cumulative_pose_diag": 1.1121379137039185,
+      "cumulative_pose_diag_delta": 0.014496445655822754,
+      "depth_median": 1.2290024757385254,
+      "depth_p95": 2.12306809425354,
+      "confidence_median": 3.314453125,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.023724688660037,
+        "minor_ratio_vs_prev": 1.075915158042307,
+        "conf_threshold_ratio_vs_prev": 0.9831942605489739,
+        "valid_fraction_delta_vs_prev": 0.0005429884217837966,
+        "bbox_ratio_vs_k10": 1.3718853022310087,
+        "minor_ratio_vs_k10": 1.4864655796021835,
+        "conf_threshold_ratio_vs_k10": 0.9127267506183709,
+        "valid_fraction_delta_vs_k10": 0.030421166107952646
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.010332265179943,
+        "minor_ratio_vs_prev": 1.0118243947474705,
+        "conf_threshold_ratio_vs_prev": 0.9901365705614568,
+        "valid_fraction_delta_vs_prev": -1.9087823808772164e-05,
+        "bbox_ratio_vs_k10": 1.2428286307656233,
+        "minor_ratio_vs_k10": 1.1728714015689234,
+        "conf_threshold_ratio_vs_k10": 1.2219101123595506,
+        "valid_fraction_delta_vs_k10": 3.7161090851500767e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 16,
+      "k": 17,
+      "frame_id": "cap-1448",
+      "frame_index": 288,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.09268718212842941,
+      "cumulative_pose_diag": 1.1662309169769287,
+      "cumulative_pose_diag_delta": 0.054093003273010254,
+      "depth_median": 1.177681565284729,
+      "depth_p95": 2.2621748447418213,
+      "confidence_median": 3.59375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0179561235515173,
+        "minor_ratio_vs_prev": 0.9612619289751472,
+        "conf_threshold_ratio_vs_prev": 0.9847591319932569,
+        "valid_fraction_delta_vs_prev": 0.0009352832420426171,
+        "bbox_ratio_vs_k10": 1.3965190442163795,
+        "minor_ratio_vs_k10": 1.428882770403555,
+        "conf_threshold_ratio_vs_k10": 0.8988160026859728,
+        "valid_fraction_delta_vs_k10": 0.03135644934999526
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9985268483516266,
+        "minor_ratio_vs_prev": 0.9826692952081894,
+        "conf_threshold_ratio_vs_prev": 0.9954022988505747,
+        "valid_fraction_delta_vs_prev": -5.2316986728140336e-05,
+        "bbox_ratio_vs_k10": 1.2409977557195655,
+        "minor_ratio_vs_k10": 1.1525447135495752,
+        "conf_threshold_ratio_vs_k10": 1.2162921348314606,
+        "valid_fraction_delta_vs_k10": -1.5155895876639569e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 17,
+      "k": 18,
+      "frame_id": "cap-1453",
+      "frame_index": 289,
+      "window_role": "bridge",
+      "pose_step_from_previous": 0.018518980592489243,
+      "cumulative_pose_diag": 1.178369402885437,
+      "cumulative_pose_diag_delta": 0.0121384859085083,
+      "depth_median": 1.2627663612365723,
+      "depth_p95": 2.2635254859924316,
+      "confidence_median": 2.93359375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0260873561928514,
+        "minor_ratio_vs_prev": 1.0042109837157012,
+        "conf_threshold_ratio_vs_prev": 0.9837912399442422,
+        "valid_fraction_delta_vs_prev": -0.0001586557671533484,
+        "bbox_ratio_vs_k10": 1.4329505339529525,
+        "minor_ratio_vs_k10": 1.4348997724813706,
+        "conf_threshold_ratio_vs_k10": 0.8842473097641605,
+        "valid_fraction_delta_vs_k10": 0.031197793582841915
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0077095235953035,
+        "minor_ratio_vs_prev": 0.9951623928251812,
+        "conf_threshold_ratio_vs_prev": 0.9861431870669746,
+        "valid_fraction_delta_vs_prev": 6.07716264455771e-05,
+        "bbox_ratio_vs_k10": 1.250565257199004,
+        "minor_ratio_vs_k10": 1.1469691549740084,
+        "conf_threshold_ratio_vs_k10": 1.199438202247191,
+        "valid_fraction_delta_vs_k10": 4.561573056893753e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 18,
+      "k": 19,
+      "frame_id": "cap-1455",
+      "frame_index": 290,
+      "window_role": "core",
+      "pose_step_from_previous": 0.0009978280868381262,
+      "cumulative_pose_diag": 1.1784892082214355,
+      "cumulative_pose_diag_delta": 0.00011980533599853516,
+      "depth_median": 1.2418327331542969,
+      "depth_p95": 2.239215612411499,
+      "confidence_median": 2.953125,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0152045870539195,
+        "minor_ratio_vs_prev": 1.030225999214808,
+        "conf_threshold_ratio_vs_prev": 0.9856717860978012,
+        "valid_fraction_delta_vs_prev": 9.15543311001965e-05,
+        "bbox_ratio_vs_k10": 1.4547379550904005,
+        "minor_ratio_vs_k10": 1.4782710518777205,
+        "conf_threshold_ratio_vs_k10": 0.8715776251674159,
+        "valid_fraction_delta_vs_k10": 0.03128934791394211
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0033324218902586,
+        "minor_ratio_vs_prev": 0.9958036652807425,
+        "conf_threshold_ratio_vs_prev": 0.9898516783762685,
+        "valid_fraction_delta_vs_prev": -5.664298158847281e-05,
+        "bbox_ratio_vs_k10": 1.2547326682372908,
+        "minor_ratio_vs_k10": 1.1421560884870736,
+        "conf_threshold_ratio_vs_k10": 1.1872659176029963,
+        "valid_fraction_delta_vs_k10": -1.1027251019535278e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 19,
+      "k": 20,
+      "frame_id": "cap-1457",
+      "frame_index": 291,
+      "window_role": "core",
+      "pose_step_from_previous": 0.0015712676104158163,
+      "cumulative_pose_diag": 1.1784892082214355,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.2181980609893799,
+      "depth_p95": 2.223008871078491,
+      "confidence_median": 2.888671875,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0085480115819385,
+        "minor_ratio_vs_prev": 1.0011637577472656,
+        "conf_threshold_ratio_vs_prev": 0.9861931116893735,
+        "valid_fraction_delta_vs_prev": -0.00015741400830437957,
+        "bbox_ratio_vs_k10": 1.4671730719791987,
+        "minor_ratio_vs_k10": 1.4799914012669018,
+        "conf_threshold_ratio_vs_k10": 0.8595438502426883,
+        "valid_fraction_delta_vs_k10": 0.031131933905637732
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.002770297560325,
+        "minor_ratio_vs_prev": 0.9977225060226539,
+        "conf_threshold_ratio_vs_prev": 0.9873817034700315,
+        "valid_fraction_delta_vs_prev": 0.00015698185927792707,
+        "bbox_ratio_vs_k10": 1.2582086510869686,
+        "minor_ratio_vs_k10": 1.1395548348743552,
+        "conf_threshold_ratio_vs_k10": 1.1722846441947565,
+        "valid_fraction_delta_vs_k10": 0.0001459546082583918
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 20,
+      "k": 21,
+      "frame_id": "cap-1459",
+      "frame_index": 292,
+      "window_role": "core",
+      "pose_step_from_previous": 0.0016785676125437021,
+      "cumulative_pose_diag": 1.1784892082214355,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.1844342947006226,
+      "depth_p95": 2.2203078269958496,
+      "confidence_median": 3.099609375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0149319757343036,
+        "minor_ratio_vs_prev": 1.0078071209593635,
+        "conf_threshold_ratio_vs_prev": 0.9884860575164474,
+        "valid_fraction_delta_vs_prev": 0.0010661474832520668,
+        "bbox_ratio_vs_k10": 1.4890808646880158,
+        "minor_ratio_vs_k10": 1.4915458731554103,
+        "conf_threshold_ratio_vs_k10": 0.8496471117889026,
+        "valid_fraction_delta_vs_k10": 0.0321980813888898
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0010382794555777,
+        "minor_ratio_vs_prev": 0.9960390610152281,
+        "conf_threshold_ratio_vs_prev": 0.9968051118210862,
+        "valid_fraction_delta_vs_prev": -1.3421810772795695e-05,
+        "bbox_ratio_vs_k10": 1.2595150232802224,
+        "minor_ratio_vs_k10": 1.1350411277036159,
+        "conf_threshold_ratio_vs_k10": 1.1685393258426966,
+        "valid_fraction_delta_vs_k10": 0.0001325327974855961
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 21,
+      "k": 22,
+      "frame_id": "cap-1488",
+      "frame_index": 293,
+      "window_role": "core",
+      "pose_step_from_previous": 0.2804042398929596,
+      "cumulative_pose_diag": 1.353991985321045,
+      "cumulative_pose_diag_delta": 0.17550277709960938,
+      "depth_median": 0.9028441309928894,
+      "depth_p95": 1.7800278663635254,
+      "confidence_median": 3.49609375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0072781649341942,
+        "minor_ratio_vs_prev": 1.009968413047344,
+        "conf_threshold_ratio_vs_prev": 0.9842417096574296,
+        "valid_fraction_delta_vs_prev": 0.0028611910336298063,
+        "bbox_ratio_vs_k10": 1.4999186408215677,
+        "minor_ratio_vs_k10": 1.5064142184980849,
+        "conf_threshold_ratio_vs_k10": 0.8362581259126067,
+        "valid_fraction_delta_vs_k10": 0.035059272422519605
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9981184081954958,
+        "minor_ratio_vs_prev": 0.9997464170294563,
+        "conf_threshold_ratio_vs_prev": 1.0,
+        "valid_fraction_delta_vs_prev": 7.338147216739976e-05,
+        "bbox_ratio_vs_k10": 1.2571451301347685,
+        "minor_ratio_vs_k10": 1.1347533006027637,
+        "conf_threshold_ratio_vs_k10": 1.1685393258426966,
+        "valid_fraction_delta_vs_k10": 0.00020591426965299586
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": true,
+        "pose_diag_delta_ge_0_15": true,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 22,
+      "k": 23,
+      "frame_id": "cap-1492",
+      "frame_index": 294,
+      "window_role": "core",
+      "pose_step_from_previous": 0.011779388412833214,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.004371047019958496,
+      "depth_median": 0.9156743884086609,
+      "depth_p95": 1.7989355325698853,
+      "confidence_median": 3.28125,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.006688487374138,
+        "minor_ratio_vs_prev": 1.0017867208374394,
+        "conf_threshold_ratio_vs_prev": 0.9842349390539865,
+        "valid_fraction_delta_vs_prev": 0.002105092913442519,
+        "bbox_ratio_vs_k10": 1.5099508277129368,
+        "minor_ratio_vs_k10": 1.5091057601720903,
+        "conf_threshold_ratio_vs_k10": 0.8230744655909954,
+        "valid_fraction_delta_vs_k10": 0.037164365335962124
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0001019174016081,
+        "minor_ratio_vs_prev": 1.0004050299116003,
+        "conf_threshold_ratio_vs_prev": 0.9935897435897436,
+        "valid_fraction_delta_vs_prev": -2.7294831721924595e-05,
+        "bbox_ratio_vs_k10": 1.257273255099876,
+        "minor_ratio_vs_k10": 1.1352129096317949,
+        "conf_threshold_ratio_vs_k10": 1.1610486891385767,
+        "valid_fraction_delta_vs_k10": 0.00017861943793107127
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 23,
+      "k": 24,
+      "frame_id": "cap-1494",
+      "frame_index": 295,
+      "window_role": "core",
+      "pose_step_from_previous": 0.120168536901474,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.0149400234222412,
+      "depth_p95": 1.7638212442398071,
+      "confidence_median": 2.375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0056557335146183,
+        "minor_ratio_vs_prev": 1.0791657174110059,
+        "conf_threshold_ratio_vs_prev": 0.9843939334169035,
+        "valid_fraction_delta_vs_prev": -0.0011554098669820378,
+        "bbox_ratio_vs_k10": 1.5184907072146585,
+        "minor_ratio_vs_k10": 1.6285752003251954,
+        "conf_threshold_ratio_vs_k10": 0.8102295106781358,
+        "valid_fraction_delta_vs_k10": 0.036008955468980086
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0050730378015083,
+        "minor_ratio_vs_prev": 1.0152978331523734,
+        "conf_threshold_ratio_vs_prev": 0.9814516129032258,
+        "valid_fraction_delta_vs_prev": -0.00020999991464998313,
+        "bbox_ratio_vs_k10": 1.263651449849823,
+        "minor_ratio_vs_k10": 1.1525792073157626,
+        "conf_threshold_ratio_vs_k10": 1.1395131086142323,
+        "valid_fraction_delta_vs_k10": -3.1380476718911865e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": true
+      }
+    },
+    {
+      "slot": 24,
+      "k": 25,
+      "frame_id": "cap-1514",
+      "frame_index": 296,
+      "window_role": "core",
+      "pose_step_from_previous": 0.37145501375198364,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.7489651441574097,
+      "depth_p95": 3.1143734455108643,
+      "confidence_median": 2.02734375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0116440950587666,
+        "minor_ratio_vs_prev": 0.9408731851491217,
+        "conf_threshold_ratio_vs_prev": 0.9841861163296253,
+        "valid_fraction_delta_vs_prev": -0.0021173610953815203,
+        "bbox_ratio_vs_k10": 1.53617215735532,
+        "minor_ratio_vs_k10": 1.5322827359848354,
+        "conf_threshold_ratio_vs_k10": 0.797416635449967,
+        "valid_fraction_delta_vs_k10": 0.033891594373598566
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.021399812743907,
+        "minor_ratio_vs_prev": 0.9877815267187434,
+        "conf_threshold_ratio_vs_prev": 0.9761709120788825,
+        "valid_fraction_delta_vs_prev": 5.924067740303851e-05,
+        "bbox_ratio_vs_k10": 1.290693354250176,
+        "minor_ratio_vs_k10": 1.138496449066643,
+        "conf_threshold_ratio_vs_k10": 1.1123595505617978,
+        "valid_fraction_delta_vs_k10": 2.7860200684126646e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": true,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": true
+      }
+    },
+    {
+      "slot": 25,
+      "k": 26,
+      "frame_id": "cap-1518",
+      "frame_index": 297,
+      "window_role": "core",
+      "pose_step_from_previous": 0.19753733277320862,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.087194561958313,
+      "depth_p95": 2.9523072242736816,
+      "confidence_median": 5.15625,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0044783513971243,
+        "minor_ratio_vs_prev": 0.9891633570541406,
+        "conf_threshold_ratio_vs_prev": 0.9985565220295165,
+        "valid_fraction_delta_vs_prev": 0.0029849704758535545,
+        "bbox_ratio_vs_k10": 1.5430516760824355,
+        "minor_ratio_vs_k10": 1.5156779350828633,
+        "conf_threshold_ratio_vs_k10": 0.7962655821033979,
+        "valid_fraction_delta_vs_k10": 0.03687656484945212
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0000514724639078,
+        "minor_ratio_vs_prev": 0.9956215708507709,
+        "conf_threshold_ratio_vs_prev": 1.0117845117845117,
+        "valid_fraction_delta_vs_prev": -2.7969097653679498e-05,
+        "bbox_ratio_vs_k10": 1.2907597894172687,
+        "minor_ratio_vs_k10": 1.1335116230277558,
+        "conf_threshold_ratio_vs_k10": 1.1254681647940075,
+        "valid_fraction_delta_vs_k10": -1.0889696955285189e-07
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": false,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 26,
+      "k": 27,
+      "frame_id": "cap-1523",
+      "frame_index": 298,
+      "window_role": "core",
+      "pose_step_from_previous": 0.05154908075928688,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 1.169578194618225,
+      "depth_p95": 3.122476816177368,
+      "confidence_median": 3.599609375,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.0016150625653066,
+        "minor_ratio_vs_prev": 0.9620877076356524,
+        "conf_threshold_ratio_vs_prev": 0.9953035529226455,
+        "valid_fraction_delta_vs_prev": 0.00036185253007836593,
+        "bbox_ratio_vs_k10": 1.54554380108081,
+        "minor_ratio_vs_k10": 1.4582151100778111,
+        "conf_threshold_ratio_vs_k10": 0.7925259629375305,
+        "valid_fraction_delta_vs_k10": 0.037238417379530486
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0011082229624793,
+        "minor_ratio_vs_prev": 0.9948155062374113,
+        "conf_threshold_ratio_vs_prev": 0.9958402662229617,
+        "valid_fraction_delta_vs_prev": 6.428551101145263e-05,
+        "bbox_ratio_vs_k10": 1.2921902390549458,
+        "minor_ratio_vs_k10": 1.1276349390883467,
+        "conf_threshold_ratio_vs_k10": 1.1207865168539326,
+        "valid_fraction_delta_vs_k10": 6.417661404189978e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 27,
+      "k": 28,
+      "frame_id": "cap-1525",
+      "frame_index": 299,
+      "window_role": "core",
+      "pose_step_from_previous": 0.09924949705600739,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.9426854252815247,
+      "depth_p95": 3.0927646160125732,
+      "confidence_median": 5.2421875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9920840894653333,
+        "minor_ratio_vs_prev": 1.0223435173471622,
+        "conf_threshold_ratio_vs_prev": 1.0005861417079616,
+        "valid_fraction_delta_vs_prev": 0.0009955015249585308,
+        "bbox_ratio_vs_k10": 1.5333094146240456,
+        "minor_ratio_vs_k10": 1.4907967646857287,
+        "conf_threshold_ratio_vs_k10": 0.7929904954590505,
+        "valid_fraction_delta_vs_k10": 0.03823391890448902
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9972366679815103,
+        "minor_ratio_vs_prev": 1.0006366061217462,
+        "conf_threshold_ratio_vs_prev": 1.0041771094402674,
+        "valid_fraction_delta_vs_prev": 8.790578225892354e-05,
+        "bbox_ratio_vs_k10": 1.2886194883933855,
+        "minor_ratio_vs_k10": 1.1283527983936652,
+        "conf_threshold_ratio_vs_k10": 1.1254681647940075,
+        "valid_fraction_delta_vs_k10": 0.00015208239630082332
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 28,
+      "k": 29,
+      "frame_id": "cap-1529",
+      "frame_index": 300,
+      "window_role": "core",
+      "pose_step_from_previous": 0.09948136657476425,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.9744234085083008,
+      "depth_p95": 3.2413253784179688,
+      "confidence_median": 3.783203125,
+      "npz": {
+        "bbox_ratio_vs_prev": 1.004787573771868,
+        "minor_ratio_vs_prev": 1.0202308528600352,
+        "conf_threshold_ratio_vs_prev": 0.9984030465441629,
+        "valid_fraction_delta_vs_prev": -0.0007564230265021399,
+        "bbox_ratio_vs_k10": 1.5406502465616578,
+        "minor_ratio_vs_k10": 1.5209568546763022,
+        "conf_threshold_ratio_vs_k10": 0.7917241265468812,
+        "valid_fraction_delta_vs_k10": 0.03747749587798688
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0020043748356404,
+        "minor_ratio_vs_prev": 1.0006662986048365,
+        "conf_threshold_ratio_vs_prev": 0.9950083194675541,
+        "valid_fraction_delta_vs_prev": -6.782618242939797e-05,
+        "bbox_ratio_vs_k10": 1.291202364868637,
+        "minor_ratio_vs_k10": 1.129104618288998,
+        "conf_threshold_ratio_vs_k10": 1.1198501872659177,
+        "valid_fraction_delta_vs_k10": 8.425621387142535e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 29,
+      "k": 30,
+      "frame_id": "cap-1533",
+      "frame_index": 301,
+      "window_role": "core",
+      "pose_step_from_previous": 0.009545681066811085,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.9399843215942383,
+      "depth_p95": 3.2278196811676025,
+      "confidence_median": 4.1171875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9939853684111994,
+        "minor_ratio_vs_prev": 1.07857561500297,
+        "conf_threshold_ratio_vs_prev": 0.9989240890751966,
+        "valid_fraction_delta_vs_prev": -0.000262987433099493,
+        "bbox_ratio_vs_k10": 1.5313838029213946,
+        "minor_ratio_vs_k10": 1.6404669749254754,
+        "conf_threshold_ratio_vs_k10": 0.7908723019096989,
+        "valid_fraction_delta_vs_k10": 0.037214508444887384
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9984578400248181,
+        "minor_ratio_vs_prev": 0.996300498186601,
+        "conf_threshold_ratio_vs_prev": 0.9966555183946488,
+        "valid_fraction_delta_vs_prev": -2.3194053158093197e-05,
+        "bbox_ratio_vs_k10": 1.2892111242616764,
+        "minor_ratio_vs_k10": 1.1249274937061209,
+        "conf_threshold_ratio_vs_k10": 1.1161048689138577,
+        "valid_fraction_delta_vs_k10": 6.106216071333215e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 30,
+      "k": 31,
+      "frame_id": "cap-1535",
+      "frame_index": 302,
+      "window_role": "core",
+      "pose_step_from_previous": 0.029970256611704826,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.8846117258071899,
+      "depth_p95": 3.16569447517395,
+      "confidence_median": 4.3515625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.995284029497297,
+        "minor_ratio_vs_prev": 0.9936298630646611,
+        "conf_threshold_ratio_vs_prev": 1.0001465956916422,
+        "valid_fraction_delta_vs_prev": -0.0006550094170352239,
+        "bbox_ratio_vs_k10": 1.5241618420785004,
+        "minor_ratio_vs_k10": 1.6300169756572989,
+        "conf_threshold_ratio_vs_k10": 0.790988240381798,
+        "valid_fraction_delta_vs_k10": 0.03655949902785216
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.996710635643896,
+        "minor_ratio_vs_prev": 1.0174773415818925,
+        "conf_threshold_ratio_vs_prev": 0.99748322147651,
+        "valid_fraction_delta_vs_prev": -2.3067656764408362e-05,
+        "bbox_ratio_vs_k10": 1.2849704391420373,
+        "minor_ratio_vs_k10": 1.1445882357684851,
+        "conf_threshold_ratio_vs_k10": 1.1132958801498127,
+        "valid_fraction_delta_vs_k10": 3.7994503948923786e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 31,
+      "k": 32,
+      "frame_id": "cap-1540",
+      "frame_index": 303,
+      "window_role": "core",
+      "pose_step_from_previous": 0.05595462769269943,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.8792095184326172,
+      "depth_p95": 3.2359230518341064,
+      "confidence_median": 4.4296875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9956507642801966,
+        "minor_ratio_vs_prev": 1.0173870010050423,
+        "conf_threshold_ratio_vs_prev": 1.000973551969415,
+        "valid_fraction_delta_vs_prev": -0.0008026196251476048,
+        "bbox_ratio_vs_k10": 1.5175329029521711,
+        "minor_ratio_vs_k10": 1.6583580824512885,
+        "conf_threshold_ratio_vs_k10": 0.7917583085410058,
+        "valid_fraction_delta_vs_k10": 0.035756879402704556
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0001408762939954,
+        "minor_ratio_vs_prev": 1.0001150049536025,
+        "conf_threshold_ratio_vs_prev": 0.9966358284272497,
+        "valid_fraction_delta_vs_prev": -2.3749419122531812e-05,
+        "bbox_ratio_vs_k10": 1.2851514610153973,
+        "minor_ratio_vs_k10": 1.1447198690854337,
+        "conf_threshold_ratio_vs_k10": 1.1095505617977528,
+        "valid_fraction_delta_vs_k10": 1.4245084826391974e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 32,
+      "k": 33,
+      "frame_id": "cap-1549",
+      "frame_index": 304,
+      "window_role": "core",
+      "pose_step_from_previous": 0.09095937758684158,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.9102721810340881,
+      "depth_p95": 3.130579948425293,
+      "confidence_median": 3.716796875,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.999059688727196,
+        "minor_ratio_vs_prev": 0.9822224002987823,
+        "conf_threshold_ratio_vs_prev": 1.0004927931339784,
+        "valid_fraction_delta_vs_prev": -0.001379869593635119,
+        "bbox_ratio_vs_k10": 1.5161059496566742,
+        "minor_ratio_vs_k10": 1.6288764563001903,
+        "conf_threshold_ratio_vs_k10": 0.7921484815992252,
+        "valid_fraction_delta_vs_k10": 0.034377009809069436
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0030853752993607,
+        "minor_ratio_vs_prev": 0.9870952494376621,
+        "conf_threshold_ratio_vs_prev": 0.9940928270042194,
+        "valid_fraction_delta_vs_prev": -4.221510645419091e-05,
+        "bbox_ratio_vs_k10": 1.2891166355891515,
+        "minor_ratio_vs_k10": 1.129947544711134,
+        "conf_threshold_ratio_vs_k10": 1.1029962546816479,
+        "valid_fraction_delta_vs_k10": -2.7970021627798936e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 33,
+      "k": 34,
+      "frame_id": "cap-1553",
+      "frame_index": 305,
+      "window_role": "core",
+      "pose_step_from_previous": 0.024902645498514175,
+      "cumulative_pose_diag": 1.3583630323410034,
+      "cumulative_pose_diag_delta": 0.0,
+      "depth_median": 0.878534197807312,
+      "depth_p95": 3.1494877338409424,
+      "confidence_median": 4.28515625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9906636934878102,
+        "minor_ratio_vs_prev": 1.0487662444001056,
+        "conf_threshold_ratio_vs_prev": 1.0012779181522962,
+        "valid_fraction_delta_vs_prev": -0.0009709337271383012,
+        "bbox_ratio_vs_k10": 1.501951119805725,
+        "minor_ratio_vs_k10": 1.7083106436657032,
+        "conf_threshold_ratio_vs_k10": 0.7931607825231747,
+        "valid_fraction_delta_vs_k10": 0.033406076081931135
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 1.0002535629272378,
+        "minor_ratio_vs_prev": 0.9935347848810926,
+        "conf_threshold_ratio_vs_prev": 0.9957555178268251,
+        "valid_fraction_delta_vs_prev": 4.712307685661443e-05,
+        "bbox_ratio_vs_k10": 1.2894435077768225,
+        "minor_ratio_vs_k10": 1.1226421907614954,
+        "conf_threshold_ratio_vs_k10": 1.098314606741573,
+        "valid_fraction_delta_vs_k10": 1.9153055228815496e-05
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    },
+    {
+      "slot": 34,
+      "k": 35,
+      "frame_id": "cap-1555",
+      "frame_index": 306,
+      "window_role": "core",
+      "pose_step_from_previous": 0.041693612933158875,
+      "cumulative_pose_diag": 1.3647595643997192,
+      "cumulative_pose_diag_delta": 0.00639653205871582,
+      "depth_median": 0.8771836757659912,
+      "depth_p95": 3.1764988899230957,
+      "confidence_median": 5.0625,
+      "npz": {
+        "bbox_ratio_vs_prev": 0.9938650286318644,
+        "minor_ratio_vs_prev": 1.0069762981736743,
+        "conf_threshold_ratio_vs_prev": 1.0011931385404267,
+        "valid_fraction_delta_vs_prev": -0.000877673885472996,
+        "bbox_ratio_vs_k10": 1.4927366926893777,
+        "minor_ratio_vs_k10": 1.7202283280891768,
+        "conf_threshold_ratio_vs_k10": 0.7941071332215579,
+        "valid_fraction_delta_vs_k10": 0.03252840219645814
+      },
+      "glb": {
+        "bbox_ratio_vs_prev": 0.9984239138199843,
+        "minor_ratio_vs_prev": 0.998063586799802,
+        "conf_threshold_ratio_vs_prev": 0.9974424552429667,
+        "valid_fraction_delta_vs_prev": -2.724254439367968e-05,
+        "bbox_ratio_vs_k10": 1.2874112336843047,
+        "minor_ratio_vs_k10": 1.1204682916042057,
+        "conf_threshold_ratio_vs_k10": 1.095505617977528,
+        "valid_fraction_delta_vs_k10": -8.089489164864183e-06
+      },
+      "signals": {
+        "large_pose_step_ge_0_25": false,
+        "pose_diag_delta_ge_0_15": false,
+        "npz_minor_jump_ge_1_10": false,
+        "npz_bbox_jump_ge_1_10": false,
+        "depth_p95_ge_3": true,
+        "confidence_median_lt_2_5": false
+      }
+    }
+  ],
+  "plain_language": [
+    "first10 之后第一个强信号是 slot 10/cap-1396：相机中心 span 从 0.297 跳到 0.677，最大 step 0.410。",
+    "npz downstream 的 bbox/minor 不是最后才突然出现；k12 已经超过 k10 的 1.10x minor 阈值，后面逐步累积。",
+    "slot 24/cap-1514 是第二个可疑点：pose step 很大、depth p95 很高、confidence median 很低，容易把厚层尾部拉大。",
+    "这更像上游几何一致性和 K-window 组成问题，而不是 downstream 缺一个去重点云开关。"
+  ]
+}

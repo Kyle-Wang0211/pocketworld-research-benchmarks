@@ -1,0 +1,169 @@
+{
+  "schema_version": "aether_official_da3_save_window_ownership_attribution_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "window016_official_save_thickness_cap1396_primary",
+    "goal_complete": false,
+    "conclusion": "After official save-frame downstream alignment, window_016 still thickens, while window_017 does not. The strongest current upstream consistency suspect is cap-1396 inside window_016 official downstream.",
+    "next_best_action": "Inspect/remediate frame acceptance or capture continuity around cap-1369 -> cap-1396. Keep cap-1514/cap-1529 as window_017 risk signals, but not the current primary thickness cause."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "window_audits": {
+      "window_016": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_save_frame_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json",
+      "window_017": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_017_official_save_frame_pose_depth_scale_2026_06_05/window_017_pose_depth_scale_audit.json"
+    }
+  },
+  "window_summaries": {
+    "window_016": {
+      "frame_source": "depth_index",
+      "frame_count": 17,
+      "pose_scale": 0.7230838815049764,
+      "npz_bbox_ratio_vs_k10": 1.3965190442163795,
+      "npz_minor_ratio_vs_k10": 1.428882770403555,
+      "glb_bbox_ratio_vs_k10": 1.2409977557195655,
+      "glb_minor_ratio_vs_k10": 1.1525447135495752,
+      "pose_diag_ratio_vs_k10": 3.9269230271339732,
+      "largest_pose_step": 0.410023957490921,
+      "depth_p95_ratio_vs_k10": 0.9901554314572327
+    },
+    "window_017": {
+      "frame_source": "depth_index",
+      "frame_count": 17,
+      "pose_scale": 0.694218900009191,
+      "npz_bbox_ratio_vs_k10": 0.9481316854242545,
+      "npz_minor_ratio_vs_k10": 0.9695491516935039,
+      "glb_bbox_ratio_vs_k10": 0.9782950419543819,
+      "glb_minor_ratio_vs_k10": 0.9768384016867157,
+      "pose_diag_ratio_vs_k10": 1.529258860481266,
+      "largest_pose_step": 0.37145501375198364,
+      "depth_p95_ratio_vs_k10": 1.1909001555391414
+    }
+  },
+  "suspect_frame_roles": {
+    "cap-1396": {
+      "ownership": [
+        {
+          "windowID": "window_015",
+          "localSlot": 27,
+          "officialDownstream": false,
+          "withheldForNextOverlap": true,
+          "bridgeFrame": false,
+          "coreFrame": true
+        },
+        {
+          "windowID": "window_016",
+          "localSlot": 10,
+          "officialDownstream": true,
+          "withheldForNextOverlap": false,
+          "bridgeFrame": true,
+          "coreFrame": false
+        }
+      ],
+      "metadata": {
+        "timestamp": 1339628.778594208,
+        "azimuth": 3.2935947215854817,
+        "elevation": 0.44551418040551954,
+        "cameraRadiusM": 0.87067062088647,
+        "qualityScore": 0.7764674201451368,
+        "kWindowWeight": 0.6869217112136229
+      },
+      "audit_rows": [
+        {
+          "windowID": "window_016",
+          "slot": 10,
+          "frameIndex": 282,
+          "stepFromPrevious": 0.410023957490921,
+          "cumulativePoseDiag": 0.6772668361663818,
+          "depthP95": 2.441798448562622,
+          "confidenceMedian": 6.1796875
+        }
+      ]
+    },
+    "cap-1514": {
+      "ownership": [
+        {
+          "windowID": "window_016",
+          "localSlot": 24,
+          "officialDownstream": false,
+          "withheldForNextOverlap": true,
+          "bridgeFrame": false,
+          "coreFrame": true
+        },
+        {
+          "windowID": "window_017",
+          "localSlot": 7,
+          "officialDownstream": true,
+          "withheldForNextOverlap": false,
+          "bridgeFrame": true,
+          "coreFrame": false
+        }
+      ],
+      "metadata": {
+        "timestamp": 1339648.446520541,
+        "azimuth": 2.765700875082894,
+        "elevation": 0.6486084086678223,
+        "cameraRadiusM": 0.9556681058052956,
+        "qualityScore": 0.41908592228176866,
+        "kWindowWeight": 0.4587294398037571
+      },
+      "audit_rows": [
+        {
+          "windowID": "window_017",
+          "slot": 7,
+          "frameIndex": 296,
+          "stepFromPrevious": 0.37145501375198364,
+          "cumulativePoseDiag": 0.4340207874774933,
+          "depthP95": 3.4492454528808594,
+          "confidenceMedian": 3.654296875
+        }
+      ]
+    },
+    "cap-1529": {
+      "ownership": [
+        {
+          "windowID": "window_016",
+          "localSlot": 28,
+          "officialDownstream": false,
+          "withheldForNextOverlap": true,
+          "bridgeFrame": false,
+          "coreFrame": true
+        },
+        {
+          "windowID": "window_017",
+          "localSlot": 11,
+          "officialDownstream": true,
+          "withheldForNextOverlap": false,
+          "bridgeFrame": true,
+          "coreFrame": false
+        }
+      ],
+      "metadata": {
+        "timestamp": 1339651.446711833,
+        "azimuth": 2.8032662883017094,
+        "elevation": 0.21890863318180884,
+        "cameraRadiusM": 0.8743247408484116,
+        "qualityScore": 0.7593737709478536,
+        "kWindowWeight": 0.7578495224291446
+      },
+      "audit_rows": [
+        {
+          "windowID": "window_017",
+          "slot": 11,
+          "frameIndex": 300,
+          "stepFromPrevious": 0.09948136657476425,
+          "cumulativePoseDiag": 0.6777255535125732,
+          "depthP95": 3.578662395477295,
+          "confidenceMedian": 5.765625
+        }
+      ]
+    }
+  },
+  "plain_language": [
+    "官方 save-frame ownership 已经把 window_016 和 window_017 的 downstream 责任分开。",
+    "window_016 official downstream 17 帧仍厚：npz minor vs k10 约 1.429x，bbox 约 1.397x。",
+    "window_017 official downstream 17 帧不厚：npz minor vs k10 约 0.970x，bbox 约 0.948x。",
+    "cap-1396 在 window_016 的 official downstream 内，且从前一帧 cap-1369 跳了 4.47s / 0.410m / elevation +0.387rad。",
+    "cap-1514 和 cap-1529 在 window_017 里是风险信号，但这次没有把 window_017 的官方 downstream 点云拉厚。"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "aether_official_da3_preprocess_pixel_parity_audit_v1",
+  "date": "2026-06-05",
+  "bundle_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+  "official_da3_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+  "official_source_mode": "canonical_source_rgb",
+  "sample_count": 1,
+  "decision": {
+    "status": "warning_tensor_not_exact_official_input_processor",
+    "shape_match": true,
+    "tensor_cache": true,
+    "png_lossless_cache": true,
+    "exact_tensor_match": false,
+    "max_abs_normalized": 0.017429232597351074,
+    "mean_abs_normalized_mean": 1.63956045184932e-07,
+    "hard_gap": "Dart now feeds native from a pre-normalized float32 CHW tensor cache and shape parity holds, but tensor values are not yet byte-exact with official PIL/OpenCV preprocessing."
+  },
+  "rows": [
+    {
+      "id": "cap-1",
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_canonical_source_probe_2026_06_05/canonical_source_rgb/cap-1.png",
+      "official_source_mode": "canonical_source_rgb",
+      "dart_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/photos_depth/cap-1.png",
+      "dart_tensor_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/photos_depth_tensor/cap-1.float32_chw.bin",
+      "dart_input_kind": "float32_chw_tensor",
+      "dart_codec": "PNG",
+      "manifest_codec": "png",
+      "manifest_lossless": true,
+      "manifest_tensor": {
+        "layout": "CHW",
+        "dtype": "float32_le",
+        "normalization": "imagenet_rgb",
+        "shape": [
+          3,
+          280,
+          504
+        ],
+        "officialSource": "Depth-Anything-3 InputProcessor._normalize_image after ToTensor"
+      },
+      "official_chw": [
+        3,
+        280,
+        504
+      ],
+      "dart_chw": [
+        3,
+        280,
+        504
+      ],
+      "shape_match": true,
+      "max_abs_normalized": 0.017429232597351074,
+      "mean_abs_normalized": 1.63956045184932e-07,
+      "p95_abs_normalized": 0.0
+    }
+  ]
+}

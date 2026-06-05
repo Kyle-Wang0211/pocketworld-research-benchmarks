@@ -1,0 +1,81 @@
+{
+  "schema_version": "aether_da3_image_only_coreml_export_v1",
+  "purpose": "Export official DA3-Streaming image-only CoreML wrapper",
+  "inputs": {
+    "official_da3_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "out_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_image_only.mlpackage",
+    "window_size": 35,
+    "height": 28,
+    "width": 28,
+    "dry_run": true,
+    "convert": false,
+    "compute_precision": "float16",
+    "minimum_deployment_target": "iOS18",
+    "allow_duplicate_openmp": true
+  },
+  "contract": {
+    "coreml_inputs": [
+      "image"
+    ],
+    "forbidden_coreml_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "torch_semantics": "net(image, None, None, [], False, False, 'saddle_balanced')",
+    "outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ],
+    "not_identity_camera": true
+  },
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.12.0"
+  },
+  "dry_run": {
+    "status": "pass",
+    "elapsed_s": 0.20165704199462198,
+    "output_shapes": [
+      [
+        1,
+        35,
+        28,
+        28
+      ],
+      [
+        1,
+        35,
+        28,
+        28
+      ],
+      [
+        1,
+        35,
+        3,
+        4
+      ],
+      [
+        1,
+        35,
+        3,
+        3
+      ]
+    ],
+    "output_dtypes": [
+      "float32",
+      "float32",
+      "float32",
+      "float32"
+    ],
+    "finite": [
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "elapsed_s": 3.3601413750002393
+}

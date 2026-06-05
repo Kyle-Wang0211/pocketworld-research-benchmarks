@@ -34,8 +34,18 @@ def main() -> int:
     parser.add_argument("--process-res", type=int, default=252)
     parser.add_argument("--process-res-method", default="upper_bound_resize")
     parser.add_argument("--sample-ratio", type=float, default=0.006)
-    parser.add_argument("--conf-threshold-coef", type=float, default=0.75)
+    parser.add_argument("--conf-threshold-coef", type=float, default=0.5)
+    parser.add_argument("--ref-view-strategy", default="saddle_balanced")
     parser.add_argument("--seed", type=int, default=35)
+    parser.add_argument(
+        "--camera-mode",
+        choices=["pose_conditioned", "image_only"],
+        default="pose_conditioned",
+        help=(
+            "pose_conditioned mirrors the optional DA3 API mode with input cameras; "
+            "image_only mirrors official DA3-Streaming's default model.inference(images, ...)."
+        ),
+    )
     args = parser.parse_args()
 
     started = time.perf_counter()
@@ -50,8 +60,11 @@ def main() -> int:
     manifest = read_json(args.manifest)
     rows = list(manifest.get("frames") or [])
     image_paths = [str(resolve_image(args.frames_dir, row["jpegPath"])) for row in rows]
-    extrinsics = np.stack([np.asarray(row["cameraExtrinsic4x4"], dtype=np.float32).reshape(4, 4) for row in rows])
-    intrinsics = np.stack([intrinsics_matrix(row["cameraIntrinsicFxFyCxCy"]) for row in rows])
+    extrinsics = None
+    intrinsics = None
+    if args.camera_mode == "pose_conditioned":
+        extrinsics = np.stack([np.asarray(row["cameraExtrinsic4x4"], dtype=np.float32).reshape(4, 4) for row in rows])
+        intrinsics = np.stack([intrinsics_matrix(row["cameraIntrinsicFxFyCxCy"]) for row in rows])
 
     device = choose_device(torch, args.device)
     load_t0 = time.perf_counter()
@@ -70,7 +83,7 @@ def main() -> int:
         args.process_res_method,
     )
     imgs, ex_t, in_t = model._prepare_model_inputs(imgs_cpu, ex_pre, in_pre)
-    ex_t_norm = model._normalize_extrinsics(ex_t.clone())
+    ex_t_norm = model._normalize_extrinsics(ex_t.clone() if ex_t is not None else None)
     raw_output = model._run_model_forward(
         imgs,
         ex_t_norm,
@@ -78,19 +91,22 @@ def main() -> int:
         export_feat_layers=[],
         infer_gs=False,
         use_ray_pose=False,
-        ref_view_strategy="saddle_balanced",
+        ref_view_strategy=args.ref_view_strategy,
     )
     prediction = model._convert_to_prediction(raw_output)
-    _, _, pose_scale, aligned_extrinsics = align_poses_umeyama(
-        prediction.extrinsics,
-        tensor_to_numpy(ex_pre),
-        ransac=len(rows) >= 10,
-        return_aligned=True,
-        random_state=42,
-    )
-    prediction.intrinsics = tensor_to_numpy(in_pre)
-    prediction.extrinsics = tensor_to_numpy(ex_pre)[..., :3, :]
-    prediction.depth = np.asarray(prediction.depth, dtype=np.float32) / float(pose_scale)
+    pose_scale = None
+    aligned_extrinsics = None
+    if args.camera_mode == "pose_conditioned":
+        _, _, pose_scale, aligned_extrinsics = align_poses_umeyama(
+            prediction.extrinsics,
+            tensor_to_numpy(ex_pre),
+            ransac=len(rows) >= 10,
+            return_aligned=True,
+            random_state=42,
+        )
+        prediction.intrinsics = tensor_to_numpy(in_pre)
+        prediction.extrinsics = tensor_to_numpy(ex_pre)[..., :3, :]
+        prediction.depth = np.asarray(prediction.depth, dtype=np.float32) / float(pose_scale)
     prediction = model._add_processed_images(prediction, imgs_cpu)
     run_ms = (time.perf_counter() - run_t0) * 1000.0
     rss_after = rss_mb()
@@ -118,10 +134,15 @@ def main() -> int:
         conf_threshold_coef=args.conf_threshold_coef,
         rng=rng,
     )
-    ply_path = args.out_dir / "official_pytorch_k35_process_res_252_single_rgb.ply"
-    png_path = args.out_dir / "official_pytorch_k35_process_res_252_single_views.png"
+    ply_path = args.out_dir / f"official_pytorch_{args.camera_mode}_k35_process_res_{args.process_res}_single_rgb.ply"
+    png_path = args.out_dir / f"official_pytorch_{args.camera_mode}_k35_process_res_{args.process_res}_single_views.png"
     write_point_cloud(ply_path, cloud["points"], cloud["colors"])
-    write_views_png(png_path, cloud["points"], cloud["colors"], title="official PyTorch K35 process_res=252")
+    write_views_png(
+        png_path,
+        cloud["points"],
+        cloud["colors"],
+        title=f"official PyTorch {args.camera_mode} K35 process_res={args.process_res}",
+    )
 
     report = {
         "schema_version": "pocketworld_official_pytorch_window_export_v1",
@@ -136,8 +157,11 @@ def main() -> int:
             "device": str(device),
             "process_res": args.process_res,
             "process_res_method": args.process_res_method,
+            "camera_mode": args.camera_mode,
+            "ref_view_strategy": args.ref_view_strategy,
             "sample_ratio": args.sample_ratio,
             "conf_threshold_coef": args.conf_threshold_coef,
+            "conf_threshold_coef_source": "npz_output_process.py CLI default is 0.5; this window-export PLY is diagnostic and still uses per-frame visualization sampling.",
         },
         "runtime": {
             "torch": torch.__version__,
@@ -148,8 +172,10 @@ def main() -> int:
             "rss_delta_mb": rss_after - rss_before,
         },
         "official_alignment": {
-            "umeyama_scale": float(pose_scale),
-            "aligned_extrinsics_shape": list(np.asarray(aligned_extrinsics).shape),
+            "mode": args.camera_mode,
+            "input_camera_umeyama_applied": args.camera_mode == "pose_conditioned",
+            "umeyama_scale": None if pose_scale is None else float(pose_scale),
+            "aligned_extrinsics_shape": None if aligned_extrinsics is None else list(np.asarray(aligned_extrinsics).shape),
         },
         "outputs": {
             "depth_npy": str(args.out_dir / "pytorch_depth.npy"),

@@ -1,0 +1,37 @@
+{
+  "schema_version": "aether_da3_image_only_coreml_export_failure_v1",
+  "purpose": "Record failed K35 336x532 image-only CoreML conversion attempt",
+  "inputs": {
+    "window_size": 35,
+    "height": 336,
+    "width": 532,
+    "compute_precision": "float16",
+    "static_shape_export_patches": true,
+    "out_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_336x532_image_only.mlpackage"
+  },
+  "dry_run": {
+    "status": "pass",
+    "source_report": "official_da3_image_only_coreml_static_k35_336x532_dry_run.json",
+    "elapsed_s": 38.142336459000944,
+    "output_shapes": [
+      [1, 35, 336, 532],
+      [1, 35, 336, 532],
+      [1, 35, 3, 4],
+      [1, 35, 3, 3]
+    ],
+    "finite": [true, true, true, true],
+    "time_l_peak_memory_footprint_bytes": 14991601280,
+    "time_l_maximum_resident_set_size_bytes": 6526943232
+  },
+  "conversion": {
+    "status": "fail",
+    "reason": "abnormal_process_termination_during_coreml_conversion",
+    "script_report_written": false,
+    "package_written": false,
+    "time_l_real_s": 104.49,
+    "time_l_peak_memory_footprint_bytes": 37624360752,
+    "time_l_maximum_resident_set_size_bytes": 9013411840,
+    "observed_detail": "coremltools printed only the torch-version warning before the process terminated abnormally; no conversion JSON or mlpackage was produced."
+  },
+  "interpretation": "K35 336x532 image-only PyTorch dry-run is valid, but CoreML conversion exceeded the stable local resource envelope. This is a target-size/resource gate, not evidence for AR/external-camera fallback."
+}

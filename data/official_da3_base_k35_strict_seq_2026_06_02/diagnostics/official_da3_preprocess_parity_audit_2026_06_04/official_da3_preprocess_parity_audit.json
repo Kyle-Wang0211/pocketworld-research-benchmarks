@@ -1,0 +1,242 @@
+{
+  "schema_version": "aether_official_da3_preprocess_parity_audit_v1",
+  "date": "2026-06-04",
+  "purpose": "Separate official DA3 API preprocessing from the fixed CoreML K35@476x742 same-input parity path.",
+  "fixed_target": {
+    "window_size": 35,
+    "height": 476,
+    "width": 742,
+    "patch_size": 14,
+    "patch_grid": [
+      34,
+      53
+    ],
+    "shape_is_patch_aligned": true,
+    "dimension_sweep": "disabled"
+  },
+  "official": {
+    "api_defaults": {
+      "process_res": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 145,
+        "needle": "process_res: int = 504",
+        "text": "process_res: int = 504,"
+      },
+      "process_res_method": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 146,
+        "needle": "process_res_method: str = \"upper_bound_resize\"",
+        "text": "process_res_method: str = \"upper_bound_resize\","
+      }
+    },
+    "input_processor": {
+      "pipeline_doc": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 43,
+        "needle": "Boundary resize (upper/lower bound, preserving aspect ratio)",
+        "text": "2) Boundary resize (upper/lower bound, preserving aspect ratio)"
+      },
+      "patch_size": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 57,
+        "needle": "PATCH_SIZE = 14",
+        "text": "PATCH_SIZE = 14"
+      },
+      "normalize": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 56,
+        "needle": "NORMALIZE = T.Normalize",
+        "text": "NORMALIZE = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])"
+      },
+      "load_rgb": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 300,
+        "needle": "return Image.open(img).convert(\"RGB\")",
+        "text": "return Image.open(img).convert(\"RGB\")"
+      },
+      "longest_side_resize": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 318,
+        "needle": "return self._resize_longest_side(img, target_size)",
+        "text": "return self._resize_longest_side(img, target_size)"
+      },
+      "cv2_interpolation": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 332,
+        "needle": "interpolation = cv2.INTER_CUBIC if scale > 1.0 else cv2.INTER_AREA",
+        "text": "interpolation = cv2.INTER_CUBIC if scale > 1.0 else cv2.INTER_AREA"
+      },
+      "make_divisible_resize": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 239,
+        "needle": "pil_img = self._make_divisible_by_resize(pil_img, self.PATCH_SIZE)",
+        "text": "pil_img = self._make_divisible_by_resize(pil_img, self.PATCH_SIZE)"
+      },
+      "nearest_multiple": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 371,
+        "needle": "def nearest_multiple(x: int, p: int) -> int:",
+        "text": "def nearest_multiple(x: int, p: int) -> int:"
+      }
+    },
+    "meaning": "Official model.inference defaults to upper_bound_resize: preserve aspect ratio, round dimensions to a 14-pixel patch multiple, convert to RGB, ToTensor, then ImageNet normalize."
+  },
+  "current_project": {
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest_frame0": {
+      "id": "cap-1",
+      "sourceWidth": 4224,
+      "sourceHeight": 2376,
+      "inputWidth": 742,
+      "inputHeight": 476,
+      "depthImageRelativePath": "photos_depth/cap-1.jpg",
+      "resize": {
+        "mode": "direct_stretch",
+        "interpolation": "cubic",
+        "colorSpace": "sRGB",
+        "jpegQuality": 95
+      },
+      "transform": {
+        "scaleX": 0.17566287878787878,
+        "scaleY": 0.20033670033670034,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "cropX": 0.0,
+        "cropY": 0.0,
+        "cropWidth": 4224,
+        "cropHeight": 2376
+      },
+      "intrinsicsTransform": {
+        "fxScale": 0.17566287878787878,
+        "fyScale": 0.20033670033670034,
+        "cxScale": 0.17566287878787878,
+        "cyScale": 0.20033670033670034,
+        "cxOffset": 0.0,
+        "cyOffset": 0.0
+      },
+      "scaleX": 0.17566287878787878,
+      "scaleY": 0.20033670033670034,
+      "aspect_preserving": false
+    },
+    "model_policy_selected": {
+      "id": "DA3-BASE",
+      "license": "Apache-2.0",
+      "mobileTag": "da3:base:k35:476x742:active",
+      "resourceName": "DA3BASE_476x742_N35_pose",
+      "windowSize": 35,
+      "inputWidth": 742,
+      "inputHeight": 476,
+      "inputSizeStatus": "locked_da3_base_k35_476x742_benchmark_2026_05_25",
+      "commercialSafe": true
+    },
+    "app_policy": {
+      "fixed_model": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 53,
+        "needle": "static const da3BaseK35_476x742",
+        "text": "static const da3BaseK35_476x742 = AetherDa3ModelSpec("
+      },
+      "resize_contract": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 161,
+        "needle": "dart_photos_depth_direct_stretch",
+        "text": "inputLocked ? 'dart_photos_depth_direct_stretch' : 'runtime_policy',"
+      },
+      "normalization_contract": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 162,
+        "needle": "'normalization': 'imagenet_rgb'",
+        "text": "'normalization': 'imagenet_rgb',"
+      }
+    },
+    "app_native": {
+      "requires_already_fixed": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 569,
+        "needle": "DA3 imagePath must already be",
+        "text": "\"DA3 imagePath must already be \\(spec.inputWidth)x\\(spec.inputHeight) from photos_depth; got \\(image.width)x\\(image.height): \\(imagePath)\""
+      },
+      "cgcontext_srgb": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 548,
+        "needle": "CGColorSpace(name: CGColorSpace.sRGB)",
+        "text": "guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else {"
+      },
+      "normalize_mean": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 554,
+        "needle": "let meanR: Float = 0.485",
+        "text": "let meanR: Float = 0.485"
+      },
+      "normalize_write": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 605,
+        "needle": "ptr[viewBase + 0 * planeSize + dst] = (r - meanR) / stdR",
+        "text": "ptr[viewBase + 0 * planeSize + dst] = (r - meanR) / stdR"
+      }
+    },
+    "research_exporter": {
+      "pil_exif_rgb": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 337,
+        "needle": "ImageOps.exif_transpose(image).convert(\"RGB\")",
+        "text": "image = ImageOps.exif_transpose(image).convert(\"RGB\")"
+      },
+      "bicubic_resize": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 339,
+        "needle": "image.resize((width, height), Image.Resampling.BICUBIC)",
+        "text": "image = image.resize((width, height), Image.Resampling.BICUBIC)"
+      },
+      "imagenet_normalize": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 341,
+        "needle": "arr = (arr - IMAGENET_MEAN) / IMAGENET_STD",
+        "text": "arr = (arr - IMAGENET_MEAN) / IMAGENET_STD"
+      }
+    },
+    "pytorch_manifest": {
+      "photos_depth_role": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/make_official_pytorch_window_manifest.py",
+        "line": 25,
+        "needle": "photos_depth uses the APP fixed 742x476 input",
+        "text": "\"photos_depth uses the APP fixed 742x476 input and scaled intrinsics; \""
+      },
+      "photos_highres_role": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/make_official_pytorch_window_manifest.py",
+        "line": 26,
+        "needle": "photos_highres lets official PyTorch do dynamic upper_bound_resize",
+        "text": "\"photos_highres lets official PyTorch do dynamic upper_bound_resize.\""
+      },
+      "fixed_contract": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/make_official_pytorch_window_manifest.py",
+        "line": 155,
+        "needle": "already_fixed_742x476_then_upper_bound_resize_no_shape_change",
+        "text": "\"expectedMethod\": \"already_fixed_742x476_then_upper_bound_resize_no_shape_change\","
+      },
+      "highres_contract": {
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/make_official_pytorch_window_manifest.py",
+        "line": 150,
+        "needle": "official_dynamic_aspect_ratio_reference",
+        "text": "\"role\": \"official_dynamic_aspect_ratio_reference\","
+      }
+    }
+  },
+  "decision": {
+    "official_api_preprocess": "aspect_preserving_upper_bound_resize_then_patch14_then_imagenet",
+    "fixed_coreml_preprocess": "photos_depth_direct_stretch_742x476_then_imagenet",
+    "shape_parity": "pass_476x742_is_patch14_aligned",
+    "tensor_parity_risk": "photos_depth direct_stretch is not identical to official API upper_bound_resize from highres images",
+    "current_frame0_aspect_preserving": false,
+    "current_frame0_scale_x": 0.17566287878787878,
+    "current_frame0_scale_y": 0.20033670033670034,
+    "baseline_rule": "Use photos_depth for CoreML-vs-PyTorch same-input parity; use photos_highres only when asking what official API dynamic preprocessing would do.",
+    "impact_on_thickness_test": "The image-only overlap regression gate must state which preprocessing baseline produced the image tensor. Mixing photos_depth and photos_highres can make a thickness comparison inconclusive.",
+    "do_next": [
+      "Keep DA3BASE_476x742_N35 fixed for APP/CoreML parity.",
+      "When target image-only CoreML exists, run overlap regression on photos_depth same-input parity first.",
+      "Separately run official PyTorch image-only on photos_highres/dynamic preprocessing if memory allows, and label it as official API reference, not same-input CoreML parity.",
+      "Do not claim exact official API preprocessing parity for direct_stretch photos_depth."
+    ]
+  }
+}

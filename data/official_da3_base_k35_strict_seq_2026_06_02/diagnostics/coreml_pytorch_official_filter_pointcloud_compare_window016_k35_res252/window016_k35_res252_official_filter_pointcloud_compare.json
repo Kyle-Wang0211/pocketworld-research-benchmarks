@@ -1,0 +1,189 @@
+{
+  "schema_version": "pocketworld_coreml_pytorch_official_filter_pointcloud_compare_v1",
+  "inputs": {
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap18_official_postprocess",
+    "pytorch_case_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_k35_252",
+    "window_id": "window_016",
+    "case_name": "window016_k35_res252"
+  },
+  "parameters": {
+    "glb_conf_thresh": 1.05,
+    "glb_conf_percentile": 40.0,
+    "glb_ensure_percentile": 90.0,
+    "glb_num_max_points": 1000000,
+    "seed": 8120
+  },
+  "outputs": {
+    "comparison_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_window016_k35_res252/window016_k35_res252_coreml_vs_pytorch_glb_style.png"
+  },
+  "datasets": {
+    "coreml": {
+      "outputs": {
+        "ply": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_window016_k35_res252/window016_k35_res252_coreml_rgb.ply",
+        "views_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_window016_k35_res252/window016_k35_res252_coreml_views.png"
+      },
+      "filter": {
+        "conf_threshold": 2.28515625,
+        "valid_point_count_before_downsample": 7417590,
+        "sampled_point_count": 1000000,
+        "valid_fraction_of_pixels": 0.6000451393495404
+      },
+      "point_cloud": {
+        "point_count": 1000000,
+        "bbox_p01": [
+          -0.6842167973518372,
+          -0.9507409930229187,
+          -1.0838874578475952
+        ],
+        "bbox_p99": [
+          0.21645140647888184,
+          0.3997577428817749,
+          0.39865589141845703
+        ],
+        "bbox_extent_p01_p99": [
+          0.900668203830719,
+          1.3504986763000488,
+          1.4825433492660522
+        ],
+        "bbox_diag_p01_p99": 2.1984050273895264,
+        "bbox_extent_p05_p95": [
+          0.7792439460754395,
+          0.8436455130577087,
+          0.9951764345169067
+        ],
+        "bbox_diag_p05_p95": 1.519649624824524,
+        "std_xyz": [
+          0.25294169783592224,
+          0.249582439661026,
+          0.28920233249664307
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.09243043353819858,
+          0.06253705038106865,
+          0.05502992831304044
+        ],
+        "extent_p01_p99_desc": [
+          1.5779636567308966,
+          1.1919812979314757,
+          0.9411106889189373
+        ],
+        "major_extent": 1.5779636567308966,
+        "middle_extent": 1.1919812979314757,
+        "minor_extent": 0.9411106889189373,
+        "minor_to_major_ratio": 0.5964083424257425
+      },
+      "confidence": {
+        "count": 12361720,
+        "min": 1.0,
+        "p05": 1.0029296875,
+        "p40": 2.28515625,
+        "median": 3.9921875,
+        "mean": 4.863135006334702,
+        "p90": 10.234375,
+        "p95": 11.546875,
+        "max": 17.6875
+      },
+      "depth": {
+        "count": 12361720,
+        "min": 0.25086504220962524,
+        "p05": 0.48316001892089844,
+        "p40": 0.8684049844741821,
+        "median": 1.027094841003418,
+        "mean": 1.3288889678575388,
+        "p90": 2.4836652278900146,
+        "p95": 2.7983438968658447,
+        "max": 3.6491918563842773
+      }
+    },
+    "pytorch": {
+      "outputs": {
+        "ply": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_window016_k35_res252/window016_k35_res252_pytorch_rgb.ply",
+        "views_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/coreml_pytorch_official_filter_pointcloud_compare_window016_k35_res252/window016_k35_res252_pytorch_views.png"
+      },
+      "filter": {
+        "conf_threshold": 1.4919030666351318,
+        "valid_point_count_before_downsample": 889056,
+        "sampled_point_count": 889056,
+        "valid_fraction_of_pixels": 0.6
+      },
+      "point_cloud": {
+        "point_count": 889056,
+        "bbox_p01": [
+          -0.6663769483566284,
+          -0.8183453679084778,
+          -0.9880219101905823
+        ],
+        "bbox_p99": [
+          0.20176081359386444,
+          0.4046097695827484,
+          0.3869674503803253
+        ],
+        "bbox_extent_p01_p99": [
+          0.868137776851654,
+          1.2229551076889038,
+          1.37498939037323
+        ],
+        "bbox_diag_p01_p99": 2.0346691608428955,
+        "bbox_extent_p05_p95": [
+          0.7700374126434326,
+          0.7959591150283813,
+          0.9550446271896362
+        ],
+        "bbox_diag_p05_p95": 1.4624017477035522,
+        "std_xyz": [
+          0.2407422959804535,
+          0.2338646501302719,
+          0.27611854672431946
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.08908757120215716,
+          0.05326478852923342,
+          0.046629341635589634
+        ],
+        "extent_p01_p99_desc": [
+          1.482480729649755,
+          0.918878601920882,
+          1.0210951897520935
+        ],
+        "major_extent": 1.482480729649755,
+        "middle_extent": 0.918878601920882,
+        "minor_extent": 1.0210951897520935,
+        "minor_to_major_ratio": 0.6887746797176468
+      },
+      "confidence": {
+        "count": 1481760,
+        "min": 1.0,
+        "p05": 1.0000144243240356,
+        "p40": 1.4919030666351318,
+        "median": 2.4073967933654785,
+        "mean": 2.751193997682898,
+        "p90": 5.2898938179016115,
+        "p95": 5.8049170017242435,
+        "max": 10.489226341247559
+      },
+      "depth": {
+        "count": 1481760,
+        "min": 0.2913539409637451,
+        "p05": 0.5529160261154175,
+        "p40": 0.9048236489295959,
+        "median": 1.0472308993339539,
+        "mean": 1.2700125750601967,
+        "p90": 2.2703336238861085,
+        "p95": 2.3830011010169985,
+        "max": 2.8170738220214844
+      }
+    }
+  },
+  "comparison": {
+    "bbox_diag_ratio_coreml_over_pytorch": 1.0804729681354195,
+    "pca_minor_ratio_coreml_over_pytorch": 0.921667929066853,
+    "valid_fraction_ratio_coreml_over_pytorch": 1.0000752322492341,
+    "conf_threshold_ratio_coreml_over_pytorch": 1.5317055786700589
+  },
+  "interpretation": "同 K、同图、同 official GLB-style filter 下比较点云。CoreML/PyTorch valid fraction=0.600045/0.6，bbox diag=2.19841/2.03467，PCA minor=0.941111/1.0211。如果两边都出现类似厚层/暗部片状保留，漂浮更像官方模型/导出规则在这组图上的表现；如果 PyTorch 明显干净而 CoreML 更厚，再回头查 CoreML export parity。"
+}

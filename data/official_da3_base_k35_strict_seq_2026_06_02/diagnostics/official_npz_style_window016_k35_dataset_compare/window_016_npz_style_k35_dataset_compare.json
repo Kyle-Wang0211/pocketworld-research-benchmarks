@@ -1,0 +1,420 @@
+{
+  "schema_version": "pocketworld_official_npz_style_k35_dataset_compare_v1",
+  "window_id": "window_016",
+  "official_path": "DA3-Streaming results_output/frame_*.npz + npz_output_process.py + save_confident_pointcloud_batch",
+  "parameters": {
+    "conf_offset": -1.0,
+    "conf_offset_reason": "DA3-Streaming process_single_chunk applies predictions.conf -= 1.0 before save_depth_conf_result.",
+    "conf_threshold_coef": 0.75,
+    "conf_threshold_coef_reason": "npz_output_process.py CLI default is 0.5; DA3-Streaming Pointcloud_Save config uses 0.75 for full-chunk pcd export.",
+    "sample_ratio": 0.015,
+    "seed": 9160
+  },
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "coreml_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap18_official_postprocess",
+    "pytorch_fixed_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_k35_252",
+    "pytorch_highres_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_highres_k35_252"
+  },
+  "outputs": {
+    "contact_sheet": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/window_016_npz_style_contact_sheet.png"
+  },
+  "datasets": {
+    "coreml_official_postprocess": {
+      "name": "coreml_official_postprocess",
+      "source": "CoreML official postprocess output",
+      "frame_count": 35,
+      "processed_shape_nhwc": [
+        35,
+        476,
+        742,
+        3
+      ],
+      "outputs": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/coreml_official_postprocess_npz_style_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/coreml_official_postprocess_npz_style_views.png"
+      },
+      "filter": {
+        "style": "npz_output_process.py + save_confident_pointcloud_batch",
+        "conf_threshold": 2.897353172302246,
+        "conf_threshold_coef": 0.75,
+        "sample_ratio": 0.015,
+        "valid_point_count_before_downsample": 6232853,
+        "exported_point_count": 93492,
+        "random_downsample_seed": 9160,
+        "valid_fraction_of_pixels": 0.5042059681015263
+      },
+      "point_cloud": {
+        "point_count": 93492,
+        "bbox_p01": [
+          1.7130945920944214,
+          -1.0742310285568237,
+          1.1503944396972656
+        ],
+        "bbox_p99": [
+          2.679532527923584,
+          -0.2762439250946045,
+          2.0579724311828613
+        ],
+        "bbox_extent_p01_p99": [
+          0.9664379358291626,
+          0.7979871034622192,
+          0.9075779914855957
+        ],
+        "bbox_diag_p01_p99": 1.5474119186401367,
+        "bbox_extent_p05_p95": [
+          0.616594672203064,
+          0.7219456434249878,
+          0.6861611604690552
+        ],
+        "bbox_diag_p05_p95": 1.1714143753051758,
+        "std_xyz": [
+          0.18725652992725372,
+          0.24820151925086975,
+          0.20629866421222687
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.0689201611936353,
+          0.04691454404572749,
+          0.023396159821287583
+        ],
+        "extent_p01_p99_desc": [
+          0.9220603908195601,
+          0.9025066984751494,
+          0.8412329437710006
+        ],
+        "major_extent": 0.9220603908195601,
+        "middle_extent": 0.9025066984751494,
+        "minor_extent": 0.8412329437710006,
+        "minor_to_major_ratio": 0.9123403978163326
+      },
+      "depth": {
+        "count": 12361720,
+        "min": 0.25086504220962524,
+        "max": 3.6491918563842773,
+        "mean": 1.3288889678575388,
+        "median": 1.027094841003418,
+        "p05": 0.48316001892089844,
+        "p40": 0.8684049844741821,
+        "p90": 2.4836652278900146,
+        "p95": 2.7983438968658447
+      },
+      "confidence_raw": {
+        "count": 12361720,
+        "min": 1.0,
+        "max": 17.6875,
+        "mean": 4.863135006334702,
+        "median": 3.9921875,
+        "p05": 1.0029296875,
+        "p40": 2.28515625,
+        "p90": 10.234375,
+        "p95": 11.546875
+      },
+      "confidence_after_offset": {
+        "count": 12361720,
+        "min": 0.0,
+        "max": 16.6875,
+        "mean": 3.863135006334702,
+        "median": 2.9921875,
+        "p05": 0.0029296875,
+        "p40": 1.28515625,
+        "p90": 9.234375,
+        "p95": 10.546875
+      },
+      "pose": {
+        "camera_center_min": [
+          2.3770339488983154,
+          -0.7925563454627991,
+          1.1374624967575073
+        ],
+        "camera_center_max": [
+          2.9625022411346436,
+          0.04043351486325264,
+          2.0462634563446045
+        ],
+        "camera_center_extent": [
+          0.5854682922363281,
+          0.8329898715019226,
+          0.9088009595870972
+        ],
+        "camera_center_diag": 1.364758014678955,
+        "step_mean": 0.09457366913557053,
+        "step_max": 0.41002368927001953
+      }
+    },
+    "pytorch_fixed_photos_depth": {
+      "name": "pytorch_fixed_photos_depth",
+      "source": "pytorch_fixed_photos_depth",
+      "frame_count": 35,
+      "processed_shape_nhwc": [
+        35,
+        168,
+        252,
+        3
+      ],
+      "outputs": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/pytorch_fixed_photos_depth_npz_style_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/pytorch_fixed_photos_depth_npz_style_views.png"
+      },
+      "filter": {
+        "style": "npz_output_process.py + save_confident_pointcloud_batch",
+        "conf_threshold": 1.3133955001831055,
+        "conf_threshold_coef": 0.75,
+        "sample_ratio": 0.015,
+        "valid_point_count_before_downsample": 754542,
+        "exported_point_count": 11318,
+        "random_downsample_seed": 9161,
+        "valid_fraction_of_pixels": 0.5092201166180758
+      },
+      "point_cloud": {
+        "point_count": 11318,
+        "bbox_p01": [
+          1.5955543518066406,
+          -1.0889183282852173,
+          1.1524152755737305
+        ],
+        "bbox_p99": [
+          2.649505853652954,
+          -0.2935377359390259,
+          2.0776093006134033
+        ],
+        "bbox_extent_p01_p99": [
+          1.0539515018463135,
+          0.7953805923461914,
+          0.9251940250396729
+        ],
+        "bbox_diag_p01_p99": 1.612274169921875,
+        "bbox_extent_p05_p95": [
+          0.6610878705978394,
+          0.7210612297058105,
+          0.6972299814224243
+        ],
+        "bbox_diag_p05_p95": 1.201289415359497,
+        "std_xyz": [
+          0.20395858585834503,
+          0.23922911286354065,
+          0.20862868428230286
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.06835171338471406,
+          0.048897725212990885,
+          0.02511893324233627
+        ],
+        "extent_p01_p99_desc": [
+          0.929793874580644,
+          0.8894729088411379,
+          0.7960320225507098
+        ],
+        "major_extent": 0.929793874580644,
+        "middle_extent": 0.8894729088411379,
+        "minor_extent": 0.7960320225507098,
+        "minor_to_major_ratio": 0.8561381660098981
+      },
+      "depth": {
+        "count": 1481760,
+        "min": 0.2913539409637451,
+        "max": 2.8170738220214844,
+        "mean": 1.2700125750601967,
+        "median": 1.0472308993339539,
+        "p05": 0.5529160261154175,
+        "p40": 0.9048236489295959,
+        "p90": 2.2703336238861085,
+        "p95": 2.3830011010169985
+      },
+      "confidence_raw": {
+        "count": 1481760,
+        "min": 1.0,
+        "max": 10.489226341247559,
+        "mean": 2.751193997682898,
+        "median": 2.4073967933654785,
+        "p05": 1.0000144243240356,
+        "p40": 1.4919030666351318,
+        "p90": 5.2898938179016115,
+        "p95": 5.8049170017242435
+      },
+      "confidence_after_offset": {
+        "count": 1481760,
+        "min": 0.0,
+        "max": 9.489226341247559,
+        "mean": 1.7511939976828979,
+        "median": 1.4073967933654785,
+        "p05": 1.4424324035644531e-05,
+        "p40": 0.49190306663513184,
+        "p90": 4.2898938179016115,
+        "p95": 4.8049170017242435
+      },
+      "pose": {
+        "camera_center_min": [
+          2.3770339488983154,
+          -0.7925563454627991,
+          1.1374624967575073
+        ],
+        "camera_center_max": [
+          2.9625022411346436,
+          0.04043351486325264,
+          2.0462634563446045
+        ],
+        "camera_center_extent": [
+          0.5854682922363281,
+          0.8329898715019226,
+          0.9088009595870972
+        ],
+        "camera_center_diag": 1.364758014678955,
+        "step_mean": 0.09457366913557053,
+        "step_max": 0.41002368927001953
+      }
+    },
+    "pytorch_highres_official_dynamic": {
+      "name": "pytorch_highres_official_dynamic",
+      "source": "pytorch_highres_official_dynamic",
+      "frame_count": 35,
+      "processed_shape_nhwc": [
+        35,
+        140,
+        252,
+        3
+      ],
+      "outputs": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/pytorch_highres_official_dynamic_npz_style_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_style_window016_k35_dataset_compare/pytorch_highres_official_dynamic_npz_style_views.png"
+      },
+      "filter": {
+        "style": "npz_output_process.py + save_confident_pointcloud_batch",
+        "conf_threshold": 1.0303187370300293,
+        "conf_threshold_coef": 0.75,
+        "sample_ratio": 0.015,
+        "valid_point_count_before_downsample": 606099,
+        "exported_point_count": 9091,
+        "random_downsample_seed": 9162,
+        "valid_fraction_of_pixels": 0.4908479105928086
+      },
+      "point_cloud": {
+        "point_count": 9091,
+        "bbox_p01": [
+          1.6698375940322876,
+          -1.101292371749878,
+          1.1650409698486328
+        ],
+        "bbox_p99": [
+          2.6421449184417725,
+          -0.28837794065475464,
+          2.0728402137756348
+        ],
+        "bbox_extent_p01_p99": [
+          0.9723073244094849,
+          0.8129144310951233,
+          0.907799243927002
+        ],
+        "bbox_diag_p01_p99": 1.5589454174041748,
+        "bbox_extent_p05_p95": [
+          0.632957935333252,
+          0.7388612031936646,
+          0.6798890829086304
+        ],
+        "bbox_diag_p05_p95": 1.1869291067123413,
+        "std_xyz": [
+          0.19285738468170166,
+          0.24509109556674957,
+          0.204192116856575
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.06892370853341397,
+          0.046690830969076114,
+          0.023358812016222027
+        ],
+        "extent_p01_p99_desc": [
+          0.9308220967434702,
+          0.9029571393218124,
+          0.7834296571980127
+        ],
+        "major_extent": 0.9308220967434702,
+        "middle_extent": 0.9029571393218124,
+        "minor_extent": 0.7834296571980127,
+        "minor_to_major_ratio": 0.8416534802288025
+      },
+      "depth": {
+        "count": 1234800,
+        "min": 0.30432721972465515,
+        "max": 2.637694835662842,
+        "mean": 1.2166153426410689,
+        "median": 1.0306404829025269,
+        "p05": 0.5457387238740922,
+        "p40": 0.9056738257408142,
+        "p90": 2.0875976562500007,
+        "p95": 2.201822543144226
+      },
+      "confidence_raw": {
+        "count": 1234800,
+        "min": 1.0,
+        "max": 7.074095249176025,
+        "mean": 2.3737583267814255,
+        "median": 1.9546353220939636,
+        "p05": 1.0000042915344238,
+        "p40": 1.166628122329712,
+        "p90": 4.451312398910523,
+        "p95": 4.704817295074463
+      },
+      "confidence_after_offset": {
+        "count": 1234800,
+        "min": 0.0,
+        "max": 6.074095249176025,
+        "mean": 1.3737583267814255,
+        "median": 0.9546353220939636,
+        "p05": 4.291534423828125e-06,
+        "p40": 0.16662812232971194,
+        "p90": 3.451312398910523,
+        "p95": 3.704817295074463
+      },
+      "pose": {
+        "camera_center_min": [
+          2.3770339488983154,
+          -0.7925563454627991,
+          1.1374624967575073
+        ],
+        "camera_center_max": [
+          2.9625022411346436,
+          0.04043351486325264,
+          2.0462634563446045
+        ],
+        "camera_center_extent": [
+          0.5854682922363281,
+          0.8329898715019226,
+          0.9088009595870972
+        ],
+        "camera_center_diag": 1.364758014678955,
+        "step_mean": 0.09457366913557053,
+        "step_max": 0.41002368927001953
+      }
+    }
+  },
+  "comparison": {
+    "coreml_over_pytorch_fixed": {
+      "bbox_diag_ratio": 0.9597697138043951,
+      "pca_minor_ratio": 1.0567827925759246,
+      "valid_fraction_ratio": 0.9901532788023962,
+      "conf_threshold_ratio": 2.206002054901448,
+      "depth_median_ratio": 0.9807720930089605
+    },
+    "coreml_over_pytorch_highres": {
+      "bbox_diag_ratio": 0.9926017302239852,
+      "pca_minor_ratio": 1.0737823568994376,
+      "valid_fraction_ratio": 1.0272142495067054,
+      "conf_threshold_ratio": 2.812094032817537,
+      "depth_median_ratio": 0.996559768456675
+    },
+    "pytorch_fixed_over_highres": {
+      "bbox_diag_ratio": 1.0342082230220084,
+      "pca_minor_ratio": 1.0160861479226742,
+      "valid_fraction_ratio": 1.0374295288393478,
+      "conf_threshold_ratio": 1.2747467875514582,
+      "depth_median_ratio": 1.0160971907339642
+    }
+  },
+  "interpretation": "按 DA3-Streaming npz downstream 口径先做 conf -= 1.0，再用 mean(conf)*0.75 和 sample_ratio=0.015。CoreML/PyTorch fixed bbox diag=1.54741/1.61227，PCA minor=0.841233/0.796032，CoreML/fixed bbox ratio=0.95977。PyTorch fixed/highres bbox ratio=1.03421，highres bbox diag=1.55895。如果这个口径下 CoreML 仍没有相对 PyTorch 成倍变厚，就继续支持“厚层主要是 K35 上游几何一致性限制，而不是下游漏了官方去重”。"
+}

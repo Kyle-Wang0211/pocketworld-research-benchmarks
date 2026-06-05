@@ -1,0 +1,100 @@
+{
+  "schema_version": "aether_official_da3_overlap_vs_window_thickness_attribution_v1",
+  "purpose": "Separate official overlap-frame duplicate removal from single-window K35 within-window geometry thickness.",
+  "inputs": {
+    "thickness_report": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_k35_window_thickness_factor_audit/official_k35_window_thickness_factor_audit.json",
+    "overlap_compare_report": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_save_overlap_compare_2026_06_03/official_save_overlap_compare_report.json"
+  },
+  "evidence": {
+    "overlap_duplicate_evidence": {
+      "left": {
+        "label": "overlap18",
+        "chunk_size": 35,
+        "overlap": 18,
+        "step": 17,
+        "selected_frame_count": 414,
+        "selected_unique_frame_count": 414,
+        "selected_duplicate_frame_count": 0,
+        "missing_frame_count": 0,
+        "order_matches_source": true,
+        "bbox_diag_p01_p99": 2.935530618466983,
+        "pca_minor_extent": 1.2744253566064692
+      },
+      "right": {
+        "label": "overlap06",
+        "chunk_size": 35,
+        "overlap": 6,
+        "step": 29,
+        "selected_frame_count": 414,
+        "selected_unique_frame_count": 414,
+        "selected_duplicate_frame_count": 0,
+        "missing_frame_count": 0,
+        "order_matches_source": true,
+        "bbox_diag_p01_p99": 2.817083828949502,
+        "pca_minor_extent": 1.2481216670007975
+      },
+      "selected_frame_count_delta": 0.0,
+      "selected_duplicate_frame_count_delta": 0.0,
+      "bbox_diag_p01_p99_ratio_overlap_right_over_left": 0.9596506373422407,
+      "pca_minor_extent_ratio_overlap_right_over_left": 0.9793603529078291
+    },
+    "within_window_thickness_evidence": {
+      "row_count": 10,
+      "largest_bbox_growth": {
+        "window_id": "window_016",
+        "style": "glb_style",
+        "pose_scale": 0.7230839040376699,
+        "bbox_growth": 1.2851006596234356,
+        "minor_growth": 1.105667583402953,
+        "pose_span_growth": 4.595401355328742,
+        "conf_threshold_ratio": 1.095505617977528,
+        "valid_fraction_delta": -8.089489164864183e-06,
+        "depth_p95_ratio": 1.0735751406236393
+      },
+      "largest_pca_minor_growth": {
+        "window_id": "window_016",
+        "style": "npz_streaming_style",
+        "pose_scale": 0.7230839040376699,
+        "bbox_growth": 1.2582178072922119,
+        "minor_growth": 1.4654765399923089,
+        "pose_span_growth": 4.595401355328742,
+        "conf_threshold_ratio": 0.7941074149059311,
+        "valid_fraction_delta": -0.00821803114776909,
+        "depth_p95_ratio": 1.0735751406236393
+      },
+      "thickened_without_valid_fraction_increase_count": 7,
+      "thickened_despite_tighter_threshold_count": 1,
+      "minor_growth_vs_pose_span_growth": 0.7531157108620408,
+      "minor_growth_vs_conf_threshold_ratio": 0.029661445243062575,
+      "minor_growth_vs_valid_fraction_delta": -0.0240653914717789
+    }
+  },
+  "findings": {
+    "overlap_frame_duplicate_saved_to_downstream": false,
+    "official_core_frame_selection_removed_overlap_duplicates": true,
+    "single_window_thickness_remains_after_official_filter": true,
+    "confidence_or_valid_fraction_is_sufficient_explanation": false,
+    "pose_span_is_strongest_current_clue": true,
+    "most_likely_current_cause": "within_window_upstream_geometry_consistency",
+    "plain_language": [
+      "Official core-frame downstream removes repeated overlap frames from the final sequence-level pointcloud.",
+      "That does not fuse multiple K35 views of the same surface into one thin surface.",
+      "Current evidence says the remaining thick layer is already present inside individual K35 windows, before cross-window loop or full-chunk merge can explain it."
+    ]
+  },
+  "decision": {
+    "overlap_frame_duplicate_saved_to_downstream": false,
+    "single_window_thickness_remains_after_official_filter": true,
+    "most_likely_current_cause": "within_window_upstream_geometry_consistency",
+    "allowed_next_actions": [
+      "Keep official core-frame downstream baseline clean.",
+      "Close full same-resolution PyTorch K35 reference gate on larger GPU or official memory-efficient attention.",
+      "Only after official parity is frozen, label voxel/TSDF/surfel/normal cleanup as product adaptation."
+    ],
+    "disallowed_in_official_baseline": [
+      "Claiming voxel/TSDF/surfel thinning is hidden official DA3 behavior.",
+      "Using pcd/combined_pcd.ply full-chunk merge as APP baseline.",
+      "Calling mobile K35/18 exact official 120/60 parity."
+    ]
+  }
+}

@@ -1,0 +1,804 @@
+{
+  "schema_version": "aether_da3_continuity_quarantine_counterfactual_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "counterfactual_quarantine_effect_weak_or_inconclusive",
+    "goal_complete": false,
+    "conclusion": "Removing high-risk continuity targets from fixed outputs did not clearly reduce thickness. A true re-run may still be needed because DA3 predictions depend on full K-window context.",
+    "boundary": "This audit removes frames only at point-generation time from fixed DA3 outputs. It proves a downstream inclusion effect, not the final result of re-running DA3 with a different K35 context.",
+    "next_best_action": "If the counterfactual reduces thickness, run a true Dart-window simulation that splits or quarantines the high-risk capture segment, then re-run the current DA3BASE_476x742_N35 CoreML path on that altered window plan."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "da3_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_save_postprocess_2026_06_05",
+    "window_id": "window_016",
+    "frame_source": "depth_index official-save downstream"
+  },
+  "thresholds": {
+    "timestampDeltaSecondsWarningGt": 2.0,
+    "translationStepMWarningGt": 0.25,
+    "azimuthDeltaRadWarningGt": 0.35,
+    "elevationDeltaRadWarningGt": 0.25,
+    "qualityScoreWarningLt": 0.5
+  },
+  "official_downstream_frame_ids": [
+    "cap-1346",
+    "cap-1354",
+    "cap-1356",
+    "cap-1358",
+    "cap-1360",
+    "cap-1361",
+    "cap-1363",
+    "cap-1365",
+    "cap-1367",
+    "cap-1369",
+    "cap-1396",
+    "cap-1413",
+    "cap-1417",
+    "cap-1429",
+    "cap-1437",
+    "cap-1441",
+    "cap-1448"
+  ],
+  "continuity_rows": [
+    {
+      "fromFrameID": "cap-1345",
+      "toFrameID": "cap-1346",
+      "toManifestIndex": 272,
+      "timestampDeltaSeconds": 0.2666838748846203,
+      "translationStepM": 0.056065772917336595,
+      "azimuthDeltaRad": 0.0008245799457142766,
+      "elevationDeltaRad": 0.026828203470161974,
+      "toKWindowWeight": 0.9598799656018797,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1346",
+      "toFrameID": "cap-1354",
+      "toManifestIndex": 273,
+      "timestampDeltaSeconds": 1.3334190419409424,
+      "translationStepM": 0.18833908570053573,
+      "azimuthDeltaRad": 0.07478485754134434,
+      "elevationDeltaRad": 0.20527040595366713,
+      "toKWindowWeight": 0.9430572653555771,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1354",
+      "toFrameID": "cap-1356",
+      "toManifestIndex": 274,
+      "timestampDeltaSeconds": 0.3000193750485778,
+      "translationStepM": 0.021890682239673907,
+      "azimuthDeltaRad": 0.0024854771595839154,
+      "elevationDeltaRad": 0.02754365970881728,
+      "toKWindowWeight": 0.8784962354351771,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1356",
+      "toFrameID": "cap-1358",
+      "toManifestIndex": 275,
+      "timestampDeltaSeconds": 0.2666837500873953,
+      "translationStepM": 0.010574864554667822,
+      "azimuthDeltaRad": 0.0017272823558456274,
+      "elevationDeltaRad": 0.01366812406003598,
+      "toKWindowWeight": 0.8429998583312874,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1358",
+      "toFrameID": "cap-1360",
+      "toManifestIndex": 276,
+      "timestampDeltaSeconds": 0.3000193750485778,
+      "translationStepM": 0.012713112463410517,
+      "azimuthDeltaRad": 0.006835545388376829,
+      "elevationDeltaRad": 0.011231438830988288,
+      "toKWindowWeight": 0.7218072587857938,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1360",
+      "toFrameID": "cap-1361",
+      "toManifestIndex": 277,
+      "timestampDeltaSeconds": 0.23334837495349348,
+      "translationStepM": 0.005009562235869877,
+      "azimuthDeltaRad": 0.0022904036331299338,
+      "elevationDeltaRad": 0.003907824787902775,
+      "toKWindowWeight": 0.8039947970349177,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1361",
+      "toFrameID": "cap-1363",
+      "toManifestIndex": 278,
+      "timestampDeltaSeconds": 0.36669020797125995,
+      "translationStepM": 0.010310512909687482,
+      "azimuthDeltaRad": 0.0039875926460246625,
+      "elevationDeltaRad": 0.003121272672767461,
+      "toKWindowWeight": 0.7762940058120964,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1363",
+      "toFrameID": "cap-1365",
+      "toManifestIndex": 279,
+      "timestampDeltaSeconds": 0.3333547920919955,
+      "translationStepM": 0.07640890959925303,
+      "azimuthDeltaRad": 0.0009481183221833334,
+      "elevationDeltaRad": 0.05958403957576314,
+      "toKWindowWeight": 0.8704423609394665,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1365",
+      "toFrameID": "cap-1367",
+      "toManifestIndex": 280,
+      "timestampDeltaSeconds": 0.33335479185916483,
+      "translationStepM": 0.11545930280162874,
+      "azimuthDeltaRad": 0.004207319832570722,
+      "elevationDeltaRad": 0.11374569219309927,
+      "toKWindowWeight": 0.8274355306152656,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1367",
+      "toFrameID": "cap-1369",
+      "toManifestIndex": 281,
+      "timestampDeltaSeconds": 0.3000192081090063,
+      "translationStepM": 0.07956796941965635,
+      "azimuthDeltaRad": 0.003114952242180724,
+      "elevationDeltaRad": 0.09915255045041932,
+      "toKWindowWeight": 0.7320361076529236,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1369",
+      "toFrameID": "cap-1396",
+      "toManifestIndex": 282,
+      "timestampDeltaSeconds": 4.4669542498886585,
+      "translationStepM": 0.41002378556831426,
+      "azimuthDeltaRad": 0.2828885886364847,
+      "elevationDeltaRad": 0.38718296732736246,
+      "toKWindowWeight": 0.6869217112136229,
+      "highRisk": true,
+      "violations": [
+        {
+          "metric": "timestampDeltaSeconds",
+          "op": ">",
+          "threshold": 2.0,
+          "value": 4.4669542498886585
+        },
+        {
+          "metric": "translationStepM",
+          "op": ">",
+          "threshold": 0.25,
+          "value": 0.41002378556831426
+        },
+        {
+          "metric": "elevationDeltaRad",
+          "op": ">",
+          "threshold": 0.25,
+          "value": 0.38718296732736246
+        }
+      ],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1396",
+      "toFrameID": "cap-1413",
+      "toManifestIndex": 283,
+      "timestampDeltaSeconds": 2.833515833131969,
+      "translationStepM": 0.1714592400095311,
+      "azimuthDeltaRad": 0.0339267124834004,
+      "elevationDeltaRad": 0.19457861468106724,
+      "toKWindowWeight": 0.8461429858422891,
+      "highRisk": true,
+      "violations": [
+        {
+          "metric": "timestampDeltaSeconds",
+          "op": ">",
+          "threshold": 2.0,
+          "value": 2.833515833131969
+        }
+      ],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1413",
+      "toFrameID": "cap-1417",
+      "toManifestIndex": 284,
+      "timestampDeltaSeconds": 0.6667095839511603,
+      "translationStepM": 0.09490724609519764,
+      "azimuthDeltaRad": 0.11979713086857169,
+      "elevationDeltaRad": 0.02406242770419842,
+      "toKWindowWeight": 0.7365175390279801,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1417",
+      "toFrameID": "cap-1429",
+      "toManifestIndex": 285,
+      "timestampDeltaSeconds": 2.100135040935129,
+      "translationStepM": 0.09281797211268006,
+      "azimuthDeltaRad": 0.004495798602842882,
+      "elevationDeltaRad": 0.10875601279783875,
+      "toKWindowWeight": 0.6155519784390571,
+      "highRisk": true,
+      "violations": [
+        {
+          "metric": "timestampDeltaSeconds",
+          "op": ">",
+          "threshold": 2.0,
+          "value": 2.100135040935129
+        }
+      ],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1429",
+      "toFrameID": "cap-1437",
+      "toManifestIndex": 286,
+      "timestampDeltaSeconds": 1.6334382500499487,
+      "translationStepM": 0.2947389048823436,
+      "azimuthDeltaRad": 0.35758199888413733,
+      "elevationDeltaRad": 0.15629917892685175,
+      "toKWindowWeight": 0.5314556183733531,
+      "highRisk": true,
+      "violations": [
+        {
+          "metric": "translationStepM",
+          "op": ">",
+          "threshold": 0.25,
+          "value": 0.2947389048823436
+        },
+        {
+          "metric": "azimuthDeltaRad",
+          "op": ">",
+          "threshold": 0.35,
+          "value": 0.35758199888413733
+        }
+      ],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1437",
+      "toFrameID": "cap-1441",
+      "toManifestIndex": 287,
+      "timestampDeltaSeconds": 0.30001916689798236,
+      "translationStepM": 0.031179250835062747,
+      "azimuthDeltaRad": 0.08630168228753554,
+      "elevationDeltaRad": 0.04771962579704925,
+      "toKWindowWeight": 0.43892263017665784,
+      "highRisk": true,
+      "violations": [
+        {
+          "metric": "toKWindowWeight",
+          "op": "<",
+          "threshold": 0.5,
+          "value": 0.43892263017665784
+        }
+      ],
+      "inSelectedOfficialDownstream": true
+    },
+    {
+      "fromFrameID": "cap-1441",
+      "toFrameID": "cap-1448",
+      "toManifestIndex": 288,
+      "timestampDeltaSeconds": 1.033399792155251,
+      "translationStepM": 0.09268772885880379,
+      "azimuthDeltaRad": 0.13105273682585494,
+      "elevationDeltaRad": 0.059515527819408165,
+      "toKWindowWeight": 0.6345519042469401,
+      "highRisk": false,
+      "violations": [],
+      "inSelectedOfficialDownstream": true
+    }
+  ],
+  "high_risk_frame_ids": [
+    "cap-1396",
+    "cap-1413",
+    "cap-1429",
+    "cap-1437",
+    "cap-1441"
+  ],
+  "variants": [
+    {
+      "id": "official_save_all_17",
+      "description": "Official save-frame downstream as currently used.",
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "removed_frame_ids": [],
+      "selected_slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "frame_count": 17,
+      "pose": {
+        "camera_center_diag": 1.1662309169769287,
+        "camera_center_min": [
+          2.6350884437561035,
+          -0.7925569415092468,
+          1.2921677827835083
+        ],
+        "camera_center_max": [
+          2.9474332332611084,
+          0.040433358401060104,
+          2.046264886856079
+        ]
+      },
+      "glb_style": {
+        "conf_threshold": 2.537109375,
+        "valid_fraction_of_pixels": 0.6000380729428286,
+        "valid_point_count_before_downsample": 3602787,
+        "sampled_point_count": 1000000,
+        "bbox_diag_p01_p99": 2.121516704559326,
+        "bbox_diag_p05_p95": 1.4019447565078735,
+        "pca_minor_extent": 0.9692616394535251,
+        "pca_minor_to_major_ratio": 0.69312194944283,
+        "depth_p95": 2.5809051990509033,
+        "confidence_median": 5.1640625
+      },
+      "npz_streaming_style": {
+        "conf_threshold": 2.752187490463257,
+        "valid_fraction_of_pixels": 0.585451106080612,
+        "valid_point_count_before_downsample": 3515203,
+        "sampled_point_count": 52728,
+        "bbox_diag_p01_p99": 2.009443521499634,
+        "bbox_diag_p05_p95": 1.3217344284057617,
+        "pca_minor_extent": 0.9535630031941683,
+        "pca_minor_to_major_ratio": 0.792369608347595,
+        "depth_p95": 2.5809051990509033,
+        "confidence_median": 5.1640625
+      }
+    },
+    {
+      "id": "drop_first_break_target",
+      "description": "Drop only the first high-risk continuity target (cap-1396).",
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "removed_frame_ids": [
+        "cap-1396"
+      ],
+      "selected_slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "frame_count": 16,
+      "pose": {
+        "camera_center_diag": 1.1662309169769287,
+        "camera_center_min": [
+          2.6350884437561035,
+          -0.7925569415092468,
+          1.2921677827835083
+        ],
+        "camera_center_max": [
+          2.9474332332611084,
+          0.040433358401060104,
+          2.046264886856079
+        ]
+      },
+      "glb_style": {
+        "conf_threshold": 2.48828125,
+        "valid_fraction_of_pixels": 0.6000797724750278,
+        "valid_point_count_before_downsample": 3391094,
+        "sampled_point_count": 1000000,
+        "bbox_diag_p01_p99": 2.1389882564544678,
+        "bbox_diag_p05_p95": 1.400023341178894,
+        "pca_minor_extent": 0.9661317305690237,
+        "pca_minor_to_major_ratio": 0.6713959569794997,
+        "depth_p95": 2.587657928466797,
+        "confidence_median": 5.05078125
+      },
+      "npz_streaming_style": {
+        "conf_threshold": 2.758601427078247,
+        "valid_fraction_of_pixels": 0.5817243170853247,
+        "valid_point_count_before_downsample": 3287366,
+        "sampled_point_count": 49310,
+        "bbox_diag_p01_p99": 1.9979833364486694,
+        "bbox_diag_p05_p95": 1.2948578596115112,
+        "pca_minor_extent": 1.0034269378985172,
+        "pca_minor_to_major_ratio": 0.8360824642748172,
+        "depth_p95": 2.587657928466797,
+        "confidence_median": 5.05078125
+      }
+    },
+    {
+      "id": "prefix_before_first_break",
+      "description": "Keep only the official downstream prefix before the first continuity break.",
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369"
+      ],
+      "removed_frame_ids": [
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "selected_slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "frame_count": 10,
+      "pose": {
+        "camera_center_diag": 0.29698339104652405,
+        "camera_center_min": [
+          2.828927755355835,
+          -0.7925569415092468,
+          1.998789668083191
+        ],
+        "camera_center_max": [
+          2.9474332332611084,
+          -0.5244120359420776,
+          2.046264886856079
+        ]
+      },
+      "glb_style": {
+        "conf_threshold": 2.0859375,
+        "valid_fraction_of_pixels": 0.6000532288387053,
+        "valid_point_count_before_downsample": 2119340,
+        "sampled_point_count": 1000000,
+        "bbox_diag_p01_p99": 1.7083770036697388,
+        "bbox_diag_p05_p95": 1.186125636100769,
+        "pca_minor_extent": 0.8347695844857361,
+        "pca_minor_to_major_ratio": 0.6567760886778615,
+        "depth_p95": 2.6065657138824463,
+        "confidence_median": 6.08203125
+      },
+      "npz_streaming_style": {
+        "conf_threshold": 3.06201434135437,
+        "valid_fraction_of_pixels": 0.5540946567306168,
+        "valid_point_count_before_downsample": 1957018,
+        "sampled_point_count": 29355,
+        "bbox_diag_p01_p99": 1.4254249334335327,
+        "bbox_diag_p05_p95": 1.0142028331756592,
+        "pca_minor_extent": 0.6780326796971646,
+        "pca_minor_to_major_ratio": 0.7715920482814502,
+        "depth_p95": 2.6065657138824463,
+        "confidence_median": 6.08203125
+      }
+    },
+    {
+      "id": "segment_from_first_break",
+      "description": "Keep only the segment after the first continuity break.",
+      "frame_ids": [
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "removed_frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369"
+      ],
+      "selected_slots": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "frame_count": 7,
+      "pose": {
+        "camera_center_diag": 0.5472861528396606,
+        "camera_center_min": [
+          2.6350884437561035,
+          -0.2036069631576538,
+          1.2921677827835083
+        ],
+        "camera_center_max": [
+          2.800922155380249,
+          0.040433358401060104,
+          1.7531076669692993
+        ]
+      },
+      "glb_style": {
+        "conf_threshold": 2.88671875,
+        "valid_fraction_of_pixels": 0.6000435214517074,
+        "valid_point_count_before_downsample": 1483514,
+        "sampled_point_count": 1000000,
+        "bbox_diag_p01_p99": 1.977729082107544,
+        "bbox_diag_p05_p95": 1.5210609436035156,
+        "pca_minor_extent": 1.0012100724915671,
+        "pca_minor_to_major_ratio": 0.8047158814148795,
+        "depth_p95": 2.501222610473633,
+        "confidence_median": 4.7421875
+      },
+      "npz_streaming_style": {
+        "conf_threshold": 2.309576988220215,
+        "valid_fraction_of_pixels": 0.6597819720880266,
+        "valid_point_count_before_downsample": 1631208,
+        "sampled_point_count": 24468,
+        "bbox_diag_p01_p99": 2.3582890033721924,
+        "bbox_diag_p05_p95": 1.7973761558532715,
+        "pca_minor_extent": 0.9608200183830038,
+        "pca_minor_to_major_ratio": 0.5913499167940882,
+        "depth_p95": 2.501222610473633,
+        "confidence_median": 4.7421875
+      }
+    },
+    {
+      "id": "drop_all_high_risk_targets",
+      "description": "Drop every frame that violates the current Dart continuity warning thresholds.",
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1417",
+        "cap-1448"
+      ],
+      "removed_frame_ids": [
+        "cap-1396",
+        "cap-1413",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441"
+      ],
+      "selected_slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        12,
+        16
+      ],
+      "frame_count": 12,
+      "pose": {
+        "camera_center_diag": 1.113646388053894,
+        "camera_center_min": [
+          2.6350884437561035,
+          -0.7925569415092468,
+          1.2921677827835083
+        ],
+        "camera_center_max": [
+          2.9474332332611084,
+          -0.03493792191147804,
+          2.046264886856079
+        ]
+      },
+      "glb_style": {
+        "conf_threshold": 2.30859375,
+        "valid_fraction_of_pixels": 0.6001018331861047,
+        "valid_point_count_before_downsample": 2543414,
+        "sampled_point_count": 1000000,
+        "bbox_diag_p01_p99": 2.0231242179870605,
+        "bbox_diag_p05_p95": 1.2998175621032715,
+        "pca_minor_extent": 1.1452862989734176,
+        "pca_minor_to_major_ratio": 0.8257238205234205,
+        "depth_p95": 2.601163625717163,
+        "confidence_median": 5.49609375
+      },
+      "npz_streaming_style": {
+        "conf_threshold": 2.9217538833618164,
+        "valid_fraction_of_pixels": 0.5639633211775276,
+        "valid_point_count_before_downsample": 2390248,
+        "sampled_point_count": 35853,
+        "bbox_diag_p01_p99": 1.6956617832183838,
+        "bbox_diag_p05_p95": 1.166778564453125,
+        "pca_minor_extent": 0.82779371428289,
+        "pca_minor_to_major_ratio": 0.811856115590253,
+        "depth_p95": 2.601163625717163,
+        "confidence_median": 5.49609375
+      }
+    }
+  ],
+  "summary": {
+    "status": "counterfactual_quarantine_effect_weak_or_inconclusive",
+    "official_all_npz_minor": 0.9535630031941683,
+    "drop_first_break_npz_minor_ratio": 1.0522922287644536,
+    "drop_all_high_risk_npz_minor_ratio": 0.8681059473889123,
+    "variant_ratios": [
+      {
+        "id": "official_save_all_17",
+        "frame_count": 17,
+        "removed_frame_ids": [],
+        "npz_minor_ratio_vs_official_all": 1.0,
+        "npz_bbox_ratio_vs_official_all": 1.0,
+        "glb_minor_ratio_vs_official_all": 1.0,
+        "pose_diag_ratio_vs_official_all": 1.0
+      },
+      {
+        "id": "drop_first_break_target",
+        "frame_count": 16,
+        "removed_frame_ids": [
+          "cap-1396"
+        ],
+        "npz_minor_ratio_vs_official_all": 1.0522922287644536,
+        "npz_bbox_ratio_vs_official_all": 0.9942968364483259,
+        "glb_minor_ratio_vs_official_all": 0.9967708317784391,
+        "pose_diag_ratio_vs_official_all": 1.0
+      },
+      {
+        "id": "prefix_before_first_break",
+        "frame_count": 10,
+        "removed_frame_ids": [
+          "cap-1396",
+          "cap-1413",
+          "cap-1417",
+          "cap-1429",
+          "cap-1437",
+          "cap-1441",
+          "cap-1448"
+        ],
+        "npz_minor_ratio_vs_official_all": 0.7110517893688676,
+        "npz_bbox_ratio_vs_official_all": 0.7093630242315783,
+        "glb_minor_ratio_vs_official_all": 0.8612427754351072,
+        "pose_diag_ratio_vs_official_all": 0.2546523048937479
+      },
+      {
+        "id": "segment_from_first_break",
+        "frame_count": 7,
+        "removed_frame_ids": [
+          "cap-1346",
+          "cap-1354",
+          "cap-1356",
+          "cap-1358",
+          "cap-1360",
+          "cap-1361",
+          "cap-1363",
+          "cap-1365",
+          "cap-1367",
+          "cap-1369"
+        ],
+        "npz_minor_ratio_vs_official_all": 1.00761042024966,
+        "npz_bbox_ratio_vs_official_all": 1.1736030289680486,
+        "glb_minor_ratio_vs_official_all": 1.0329616191723576,
+        "pose_diag_ratio_vs_official_all": 0.469277691812802
+      },
+      {
+        "id": "drop_all_high_risk_targets",
+        "frame_count": 12,
+        "removed_frame_ids": [
+          "cap-1396",
+          "cap-1413",
+          "cap-1429",
+          "cap-1437",
+          "cap-1441"
+        ],
+        "npz_minor_ratio_vs_official_all": 0.8681059473889123,
+        "npz_bbox_ratio_vs_official_all": 0.8438464505600651,
+        "glb_minor_ratio_vs_official_all": 1.18160695972569,
+        "pose_diag_ratio_vs_official_all": 0.9549107057980054
+      }
+    ],
+    "conclusion": "Removing high-risk continuity targets from fixed outputs did not clearly reduce thickness. A true re-run may still be needed because DA3 predictions depend on full K-window context."
+  },
+  "plain_language": [
+    "当前 official-save downstream 中 high-risk targets 是：cap-1396, cap-1413, cap-1429, cap-1437, cap-1441。",
+    "这个审计没有重跑 DA3，只是在现有预测结果上重新选择哪些帧参与官方风格点云生成。",
+    "只去掉第一个断点帧后，npz minor 相对 official-all 的比例是 1.052。",
+    "去掉所有 high-risk targets 后，npz minor 相对 official-all 的比例是 0.868。",
+    "Removing high-risk continuity targets from fixed outputs did not clearly reduce thickness. A true re-run may still be needed because DA3 predictions depend on full K-window context.",
+    "如果这个信号强，下一步才值得做真正的 Dart window 分段/补帧重跑，而不是改官方复刻分支。"
+  ]
+}

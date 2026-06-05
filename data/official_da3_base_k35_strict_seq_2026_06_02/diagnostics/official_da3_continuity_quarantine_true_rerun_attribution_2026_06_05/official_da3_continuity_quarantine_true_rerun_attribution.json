@@ -1,0 +1,175 @@
+{
+  "schema_version": "aether_da3_continuity_quarantine_true_rerun_attribution_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "true_rerun_continuity_quarantine_reduces_window016_thickness",
+    "goal_complete": false,
+    "conclusion": "A true CoreML N35 rerun on continuity-quarantined variants reduces window_016 thickness substantially. The strongest signal is not deleting cap-1396 points downstream; it is preventing a discontinuous capture segment from sharing one DA3 K35 inference context.",
+    "boundary": "This is still the current pose-conditioned product CoreML path, not full image-only DA3 parity. The official-replication branch remains unchanged; quarantine is a mobile capture/windowing adaptation candidate.",
+    "next_best_action": "Implement a Dart-side research window split/quarantine simulator that recomputes continuity after removals, then re-run on more windows/captures before turning it into a product gate."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "audits": {
+      "official_save_window016": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_save_frame_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json",
+      "prefix_before_first_break": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_prefix_before_first_break_true_rerun_pose_depth_scale_2026_06_05/window_016_prefix_before_first_break_pose_depth_scale_audit.json",
+      "segment_from_first_break": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_segment_from_first_break_true_rerun_pose_depth_scale_2026_06_05/window_016_segment_from_first_break_pose_depth_scale_audit.json",
+      "drop_all_high_risk_targets": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_drop_all_high_risk_targets_true_rerun_pose_depth_scale_2026_06_05/window_016_drop_all_high_risk_targets_pose_depth_scale_audit.json"
+    }
+  },
+  "rows": {
+    "official_save_window016": {
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_save_frame_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json",
+      "window_id": "window_016",
+      "frame_count": 17,
+      "pose_scale": 0.7230838815049764,
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "npz_minor_abs": 0.9688411760478304,
+      "npz_bbox_abs": 1.997101902961731,
+      "glb_minor_abs": 0.9689835972859866,
+      "pose_diag_abs": 1.1662309169769287,
+      "depth_p95_abs": 2.5809051990509033,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 1.428882770403555,
+        "npz_bbox_ratio_vs_k10": 1.3965190442163795,
+        "glb_minor_ratio_vs_k10": 1.1525447135495752,
+        "pose_diag_ratio_vs_k10": 3.9269230271339732
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 1.0,
+        "npz_bbox_ratio": 1.0,
+        "glb_minor_ratio": 1.0,
+        "pose_diag_ratio": 1.0
+      }
+    },
+    "prefix_before_first_break": {
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_prefix_before_first_break_true_rerun_pose_depth_scale_2026_06_05/window_016_prefix_before_first_break_pose_depth_scale_audit.json",
+      "window_id": "window_016_prefix_before_first_break",
+      "frame_count": 10,
+      "pose_scale": 0.7130960166510641,
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369"
+      ],
+      "npz_minor_abs": 0.7533598210374991,
+      "npz_bbox_abs": 1.4886056184768677,
+      "glb_minor_abs": 0.7540139843419276,
+      "pose_diag_abs": 0.29698339104652405,
+      "depth_p95_abs": 2.421220302581787,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 1.0,
+        "npz_bbox_ratio_vs_k10": 1.0,
+        "glb_minor_ratio_vs_k10": 1.0,
+        "pose_diag_ratio_vs_k10": 1.0
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 0.7775885662814839,
+        "npz_bbox_ratio": 0.7453829052334505,
+        "glb_minor_ratio": 0.7781493788479344,
+        "pose_diag_ratio": 0.2546523048937479
+      }
+    },
+    "segment_from_first_break": {
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_segment_from_first_break_true_rerun_pose_depth_scale_2026_06_05/window_016_segment_from_first_break_pose_depth_scale_audit.json",
+      "window_id": "window_016_segment_from_first_break",
+      "frame_count": 7,
+      "pose_scale": 0.8464647694242134,
+      "frame_ids": [
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ],
+      "npz_minor_abs": 0.8500196266633396,
+      "npz_bbox_abs": 2.2690064907073975,
+      "glb_minor_abs": 0.9736150394819743,
+      "pose_diag_abs": 0.5472861528396606,
+      "depth_p95_abs": 2.189713954925537,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 1.0,
+        "npz_bbox_ratio_vs_k10": 1.0,
+        "glb_minor_ratio_vs_k10": 1.0,
+        "pose_diag_ratio_vs_k10": 1.0
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 0.8773570402228397,
+        "npz_bbox_ratio": 1.1361495812218836,
+        "glb_minor_ratio": 1.004779691017433,
+        "pose_diag_ratio": 0.469277691812802
+      }
+    },
+    "drop_all_high_risk_targets": {
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_drop_all_high_risk_targets_true_rerun_pose_depth_scale_2026_06_05/window_016_drop_all_high_risk_targets_pose_depth_scale_audit.json",
+      "window_id": "window_016_drop_all_high_risk_targets",
+      "frame_count": 12,
+      "pose_scale": 0.7537124981776103,
+      "frame_ids": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1417",
+        "cap-1448"
+      ],
+      "npz_minor_abs": 0.6816171870363128,
+      "npz_bbox_abs": 1.512145757675171,
+      "glb_minor_abs": 0.8465696240321889,
+      "pose_diag_abs": 1.113646388053894,
+      "depth_p95_abs": 2.4293808937072754,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 1.050547604527744,
+        "npz_bbox_ratio_vs_k10": 1.1020340823693457,
+        "glb_minor_ratio_vs_k10": 1.0027885254668536,
+        "pose_diag_ratio_vs_k10": 3.7498608394549424
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 0.7035386231382287,
+        "npz_bbox_ratio": 0.7571700549844937,
+        "glb_minor_ratio": 0.8736676517572998,
+        "pose_diag_ratio": 0.9549107057980054
+      }
+    }
+  },
+  "plain_language": [
+    "原始 window_016 official-save 17 帧仍厚：npz minor=0.969, bbox=1.997, 内部 minor/k10=1.429。",
+    "断点前 prefix 10 帧真重跑更薄：npz minor=0.753，约为原始的 0.778。",
+    "断点后 segment 7 帧单独跑：npz minor=0.850，bbox=2.269；它说明后半段不是简单无害，但不应和前半段共享同一个 K35 context。",
+    "去掉所有当前 high-risk targets 的 12 帧真重跑：npz minor=0.682，约为原始的 0.704；内部 minor/k10 只有 1.051。",
+    "这支持 continuity quarantine/window split，而不是 downstream 点云去重；官方复刻分支仍然保留，移动端适配分支再加这个 gate。"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "aether_da3_depth_index_official_npz_oracle_bridge_v1",
+  "status": "failed_to_materialize_official_python_oracle_inputs",
+  "official_authority": "Depth-Anything-3/da3_streaming/npz_output_process.py",
+  "note": "Failure is reported rather than repaired by resizing or reimplementing official point-cloud filtering.",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "depth_index": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_postprocess_2026_06_05/depth_index.json"
+  },
+  "outputs": {
+    "npz_folder": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_oracle_bridge_window016_2026_06_05/results_output",
+    "pose_file": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_oracle_bridge_window016_2026_06_05/camera_poses.txt",
+    "output_ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_npz_oracle_bridge_window016_2026_06_05/official_npz_output_process.ply"
+  },
+  "error": {
+    "type": "ValueError",
+    "message": "image/depth shape mismatch for cap-1346: image=504x280, depth=742x476",
+    "traceback_tail": "Traceback (most recent call last):\n  File \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_depth_index_official_npz_oracle_bridge.py\", line 42, in main\n    report = materialize_official_inputs(args)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_depth_index_official_npz_oracle_bridge.py\", line 91, in materialize_official_inputs\n    raise ValueError(\nValueError: image/depth shape mismatch for cap-1346: image=504x280, depth=742x476\n"
+  }
+}

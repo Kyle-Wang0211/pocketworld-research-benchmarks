@@ -1,0 +1,343 @@
+{
+  "schema_version": "aether_official_da3_algorithm_replication_audit_v1",
+  "date": "2026-06-04",
+  "purpose": "Track official DA3-Streaming parity for the fixed DA3BASE_476x742_N35 single-window thick-layer investigation.",
+  "fixed_target": {
+    "model_family": "DA3-BASE",
+    "resource": "DA3BASE_476x742_N35_image_only",
+    "pose_compat_resource": "DA3BASE_476x742_N35_pose",
+    "window_size": 35,
+    "height": 476,
+    "width": 742,
+    "commercial_path": "DA3-BASE only; DA3-LARGE/GIANT/NESTED are not product defaults",
+    "dimension_sweep": "disabled",
+    "arkit_vio_as_da3_input": "disabled_for_official_baseline"
+  },
+  "official": {
+    "repo": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+      "head": "41736238f5bced4debf3f2a12375d2466874866d",
+      "remote_origin": "https://github.com/ByteDance-Seed/Depth-Anything-3.git",
+      "remote_main": "41736238f5bced4debf3f2a12375d2466874866d\trefs/heads/main"
+    },
+    "commercial_license": {
+      "da3_base_apache_2": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/README.md",
+        "line": 223,
+        "text": "| [DA3-BASE](https://huggingface.co/depth-anything/DA3-BASE)                     | 0.12B     | ✅             | ✅            | ✅             |       |               |           | Apache 2.0     |",
+        "expected": "README model table lists DA3-BASE as Apache 2.0."
+      },
+      "large_giant_noncommercial": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/README.md",
+        "line": 219,
+        "text": "| [DA3-GIANT-1.1](https://huggingface.co/depth-anything/DA3-GIANT-1.1)                     | 1.15B     | ✅             | ✅            | ✅             | ✅     |               |           | CC BY-NC 4.0   |",
+        "expected": "README model table lists DA3-LARGE/GIANT/NESTED families as CC BY-NC 4.0."
+      },
+      "package_license": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/pyproject.toml",
+        "line": 11,
+        "text": "license = { text = \"Apache-2.0\" }"
+      }
+    },
+    "streaming_default": {
+      "image_only_call": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 273,
+        "text": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)"
+      },
+      "call_has_no_external_camera_args": true,
+      "conf_minus_one": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 276,
+        "text": "predictions.conf -= 1.0"
+      },
+      "conclusion": "official_da3_streaming_default_is_image_only"
+    },
+    "camera_estimation": {
+      "external_camera_encoder_only_when_extrinsics_present": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 126,
+        "text": "if extrinsics is not None:"
+      },
+      "cam_token_none_without_extrinsics": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 130,
+        "text": "cam_token = None"
+      },
+      "default_uses_camera_decoder": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 144,
+        "text": "output = self._process_camera_estimation(feats, H, W, output)"
+      },
+      "cam_dec_to_pose_encoding": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 216,
+        "text": "pose_enc = self.cam_dec(feats[-1][1])"
+      },
+      "pose_encoding_to_extri_intri": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 224,
+        "text": "c2w, ixt = pose_encoding_to_extri_intri(pose_enc, (H, W))"
+      },
+      "output_extrinsics_are_w2c": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 225,
+        "text": "output.extrinsics = affine_inverse(c2w)"
+      },
+      "gs_head_prefers_predicted_camera_space": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 247,
+        "text": "# we instead use the predicted camera poses for better alignment."
+      }
+    },
+    "pose_conditioned_optional_path": {
+      "api_accepts_optional_cameras": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 136,
+        "text": "extrinsics: np.ndarray | None = None,"
+      },
+      "normalize_first_frame_and_median_distance": [
+        {
+          "present": true,
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+          "line": 331,
+          "text": "transform = affine_inverse(ex_t[:, :1])"
+        },
+        {
+          "present": true,
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+          "line": 336,
+          "text": "median_dist = torch.median(dists)"
+        }
+      ],
+      "umeyama_to_input_camera_when_provided": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 353,
+        "text": "_, _, scale, aligned_extrinsics = align_poses_umeyama("
+      },
+      "replace_prediction_with_input_scale_when_enabled": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 362,
+        "text": "prediction.depth /= scale"
+      }
+    },
+    "preprocess": {
+      "official_default_process_res": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 145,
+        "text": "process_res: int = 504,"
+      },
+      "official_default_method": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 146,
+        "text": "process_res_method: str = \"upper_bound_resize\","
+      },
+      "aspect_preserving_doc": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 43,
+        "text": "2) Boundary resize (upper/lower bound, preserving aspect ratio)"
+      },
+      "patch_size_14": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 57,
+        "text": "PATCH_SIZE = 14"
+      },
+      "imagenet_normalize": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 56,
+        "text": "NORMALIZE = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])"
+      },
+      "make_divisible_by_resize": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+        "line": 239,
+        "text": "pil_img = self._make_divisible_by_resize(pil_img, self.PATCH_SIZE)"
+      }
+    },
+    "downstream": {
+      "core_frame_save_indices_remove_cross_chunk_overlap": [
+        {
+          "present": true,
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+          "line": 215,
+          "text": "save_indices = list(range(0, chunk_end - chunk_start - self.overlap_e))"
+        },
+        {
+          "present": true,
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+          "line": 219,
+          "text": "save_indices = list(range(self.overlap_s, chunk_end - chunk_start - self.overlap_e))"
+        }
+      ],
+      "npz_process_reads_frame_npz": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 27,
+        "text": "npz_files = sorted(glob(os.path.join(npz_folder, \"frame_*.npz\")))"
+      },
+      "npz_conf_threshold_mean_coef": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 77,
+        "text": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef"
+      },
+      "npz_default_sample_ratio": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 108,
+        "text": "\"--sample_ratio\", type=float, default=0.015, help=\"Sample ratio for downsampling\""
+      },
+      "no_in_window_surface_fusion_or_dedup_detected": true,
+      "conclusion": "official downstream filters confidence and samples points; it does not merge duplicate observations of the same surface inside one chunk."
+    }
+  },
+  "current_project": {
+    "model_artifacts": {
+      "coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+      "image_only_package_exists": false,
+      "image_only_compiled_exists": false,
+      "pose_package_exists": true,
+      "pose_compiled_exists": false,
+      "image_only_da3_output_dir_exists": false
+    },
+    "research_alignment": {
+      "pytorch_export_has_image_only_mode": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_pytorch_window_export.py",
+        "line": 41,
+        "text": "choices=[\"pose_conditioned\", \"image_only\"],"
+      },
+      "pytorch_image_only_omits_cameras": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/official_pytorch_window_export.py",
+        "line": 64,
+        "text": "if args.camera_mode == \"pose_conditioned\":"
+      },
+      "mac_export_detects_coreml_signature": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 286,
+        "text": "def da3_input_contract(input_names: list[str]) -> str:"
+      },
+      "mac_export_omits_cameras_for_image_only": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 308,
+        "text": "needs_extrinsics = \"extrinsics\" in model_input_names"
+      },
+      "mac_export_pose_converts_arkit_to_opencv_w2c": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_mac_window_export.py",
+        "line": 321,
+        "text": "extrinsics.append(camera_transform_to_opencv_w2c(frame[\"cameraTransform\"]))"
+      }
+    },
+    "app_alignment": {
+      "swift_supports_image_only_resource": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 30,
+        "text": "\"DA3BASE_476x742_N35_image_only\","
+      },
+      "swift_pose_conditioned_detection": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 23,
+        "text": "var isPoseConditioned: Bool {"
+      },
+      "swift_image_only_provider_only_sends_image": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 236,
+        "text": "provider = try MLDictionaryFeatureProvider(dictionary: ["
+      },
+      "swift_pose_provider_sends_external_cameras": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 238,
+        "text": "\"extrinsics\": MLFeatureValue(multiArray: extrinsics),"
+      },
+      "swift_pose_raw_camera_transform_risk": {
+        "present": true,
+        "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+        "line": 631,
+        "text": "let values = doubleArray(frame[\"cameraTransform\"])"
+      },
+      "policy_marks_current_pose_as_compat": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 14,
+        "text": "'pose_conditioned_coreml_requires_image_extrinsics_intrinsics',"
+      },
+      "policy_blocks_until_image_only_signature": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 17,
+        "text": "'blocked_until_image_only_coreml_signature',"
+      },
+      "policy_arkit_metadata_only": {
+        "present": true,
+        "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+        "line": 137,
+        "text": "'arkitVioRole': 'metadata_only_not_da3_input',"
+      }
+    },
+    "preprocess_current": {
+      "capture_manifest": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+      "frame_count": 414,
+      "input_width": 742,
+      "input_height": 476,
+      "resize_mode": "direct_stretch",
+      "interpolation": "cubic",
+      "scale_x": 0.17566287878787878,
+      "scale_y": 0.20033670033670034,
+      "aspect_preserving": false,
+      "preprocess_report_exists": true
+    },
+    "overlap_gate": {
+      "report_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_overlap_regression_gate_2026_06_04/official_da3_image_only_overlap_regression_gate.json",
+      "report_exists": true,
+      "decision": {
+        "status": "blocked_missing_image_only_target_output",
+        "can_judge_original_thick_layer": false,
+        "reason": "Need DA3BASE_476x742_N35 image-only CoreML output for the same capture/window before testing whether overlap thickness is removed.",
+        "highest_priority_gap": "da3_output_dir_missing",
+        "do_not_change_dimension": true,
+        "do_not_use_arkit_vio_as_da3_input": true,
+        "do_not_claim_downstream_cleanup_fixed_upstream_overlap": true
+      }
+    }
+  },
+  "decision": {
+    "status": "incomplete_missing_target_image_only_coreml_model",
+    "can_judge_original_thick_layer": false,
+    "highest_priority_gap": "DA3BASE_476x742_N35_image_only.mlpackage_or_mlmodelc_missing",
+    "current_pose_coreml_is_official_baseline": false,
+    "single_window_thick_layer_likely_stage": "upstream_geometry_or_pose_contract_until_image_only_baseline_runs"
+  },
+  "next_actions": [
+    "Export or obtain DA3BASE_476x742_N35_image_only.mlpackage with CoreML input signature image only.",
+    "Put the package in ios/Runner/Models/DA3-BASE-CoreML or pass it to the Mac exporter.",
+    "Run da3_image_only_coreml_readiness_gate.py, then da3_mac_window_export.py on the same capture."
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "schema_version": "aether_official_da3_preprocess_stage_attribution_audit_v1",
+  "date": "2026-06-05",
+  "diagnostics_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics",
+  "decision": {
+    "status": "pass_product_preprocess_stage_parity_with_native_kernel",
+    "goal_complete": false,
+    "hard_gaps": [],
+    "fallback_probe_gaps": [
+      "source_jpeg_decode",
+      "canonical_source_resize"
+    ],
+    "dominant_observed_gap": null,
+    "dominant_fallback_probe_gap": "source_jpeg_decode",
+    "product_source_highres_preprocess_exact": true,
+    "full_highres_preprocess_exact": true,
+    "runtime_tensor_boundary_exact": true,
+    "source_jpeg_decode_byte_exact": false,
+    "source_jpeg_decode_max_abs_uint8": 12,
+    "canonical_resize_max_abs_uint8_equiv_upper": 1.0177800375223158,
+    "next_action": "产品 official preprocess 已由 C++ OpenCV/libjpeg kernel 闭合；下一步是把 APP 平台包默认接到该 kernel，并继续补 image-only CoreML artifact/signature。"
+  },
+  "rows": [
+    {
+      "id": "source_jpeg_decode",
+      "requirement": "Dart source JPEG decode 必须 byte-exact 复刻官方 PIL/libjpeg source load。",
+      "status": "warning",
+      "evidence": {
+        "status": "warning_source_decode_not_byte_exact",
+        "shape_match": true,
+        "byte_exact": false,
+        "max_abs_uint8": 12,
+        "mean_abs_uint8": 0.5644947077041458,
+        "nonzero_values": 15343998,
+        "total_values": 30108672,
+        "nonzero_ratio": 0.5096205505178043
+      },
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_source_decode_parity_audit_2026_06_05/official_da3_source_decode_parity_audit.json",
+      "interpretation": "这是当前最大的输入像素差异源；只修 resize 不能关闭官方 high-res source parity。"
+    },
+    {
+      "id": "full_highres_preprocess",
+      "requirement": "官方 PIL/libjpeg source decode + OpenCV resize/patch-align 全链路，对比 Dart source decode + Dart OpenCV-like resize 写出的 runtime tensor。",
+      "status": "pass",
+      "evidence": {
+        "status": "pass_exact_tensor_parity",
+        "sample_count": 32,
+        "shape_match": true,
+        "tensor_cache": true,
+        "png_lossless_cache": true,
+        "exact_tensor_match": true,
+        "max_abs_normalized": 0.0,
+        "mean_abs_normalized_mean": 0.0,
+        "approx_max_abs_uint8_equiv_by_channel": {
+          "R": 0.0,
+          "G": 0.0,
+          "B": 0.0
+        }
+      },
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_preprocess_pixel_parity_audit_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "interpretation": "这段边界已经 exact；native/CoreML 不再引入额外 decode 差异。"
+    },
+    {
+      "id": "canonical_source_resize",
+      "requirement": "把 JPEG decode 固定为 Dart 已解出的 lossless RGB PNG 后，只看官方 OpenCV resize/patch-align 与 Dart OpenCV-like resize 的剩余差异。",
+      "status": "warning",
+      "evidence": {
+        "status": "warning_tensor_not_exact_official_input_processor",
+        "sample_count": 1,
+        "shape_match": true,
+        "tensor_cache": true,
+        "png_lossless_cache": true,
+        "exact_tensor_match": false,
+        "max_abs_normalized": 0.017429232597351074,
+        "mean_abs_normalized_mean": 1.63956045184932e-07,
+        "approx_max_abs_uint8_equiv_by_channel": {
+          "R": 1.0177800375223158,
+          "G": 0.9955577659606935,
+          "B": 1.000002220273018
+        }
+      },
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_canonical_source_probe_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "interpretation": "JPEG decode 被固定后仍有约 1 个 uint8 级别的 resize/rounding residual；这是小差异但仍不是官方 byte-exact。"
+    },
+    {
+      "id": "runtime_tensor_boundary",
+      "requirement": "官方 InputProcessor 从同一张 photos_depth PNG 读入后，对比 Swift/CoreML 实际消费的 Dart float32 CHW tensor。",
+      "status": "pass",
+      "evidence": {
+        "status": "pass_exact_tensor_parity",
+        "sample_count": 32,
+        "shape_match": true,
+        "tensor_cache": true,
+        "png_lossless_cache": true,
+        "exact_tensor_match": true,
+        "max_abs_normalized": 0.0,
+        "mean_abs_normalized_mean": 0.0,
+        "approx_max_abs_uint8_equiv_by_channel": {
+          "R": 0.0,
+          "G": 0.0,
+          "B": 0.0
+        }
+      },
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_tensor_boundary_parity_audit_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "interpretation": "这段边界已经 exact；native/CoreML 不再引入额外 decode 差异。"
+    }
+  ],
+  "sources": {
+    "source_decode": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_source_decode_parity_audit_2026_06_05/official_da3_source_decode_parity_audit.json",
+      "loaded": true
+    },
+    "full_highres_preprocess": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_preprocess_pixel_parity_audit_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "loaded": true
+    },
+    "canonical_source_resize": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_canonical_source_probe_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "loaded": true
+    },
+    "runtime_tensor_boundary": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_tensor_boundary_parity_audit_2026_06_05/official_da3_preprocess_pixel_parity_audit.json",
+      "loaded": true
+    }
+  },
+  "plain_language": [
+    "产品 official preprocess 主路径已经闭合：source_highres -> C++ OpenCV/libjpeg -> photos_depth/photos_depth_tensor 与官方 Python InputProcessor exact match。",
+    "full_highres_preprocess 当前 max_abs_normalized=0.0，runtime tensor boundary max_abs_normalized=0.0。",
+    "Dart package:image source decode probe 仍然不是 byte-exact，但它现在只是 fallback 风险，不是产品 official preprocess 主路径。",
+    "canonical_source_rgb probe 仍记录 Dart fallback resize/rounding residual，上界约 1.0177800375223158 个 uint8。",
+    "下一步：产品 official preprocess 已由 C++ OpenCV/libjpeg kernel 闭合；下一步是把 APP 平台包默认接到该 kernel，并继续补 image-only CoreML artifact/signature。"
+  ]
+}

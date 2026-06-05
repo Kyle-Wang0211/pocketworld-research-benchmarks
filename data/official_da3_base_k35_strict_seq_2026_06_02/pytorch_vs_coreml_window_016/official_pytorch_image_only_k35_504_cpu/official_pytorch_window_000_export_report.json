@@ -1,0 +1,133 @@
+{
+  "schema_version": "pocketworld_official_pytorch_window_export_v1",
+  "note": "process_res may be lower than the CoreML 476x742 target; use this as a PyTorch API/contract diagnostic, not final quality parity.",
+  "inputs": {
+    "frames_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/strict_window_016_highres_official_manifest.json",
+    "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src"
+  },
+  "parameters": {
+    "device": "cpu",
+    "process_res": 504,
+    "process_res_method": "upper_bound_resize",
+    "camera_mode": "image_only",
+    "ref_view_strategy": "saddle_balanced",
+    "sample_ratio": 0.006,
+    "conf_threshold_coef": 0.5,
+    "conf_threshold_coef_source": "npz_output_process.py CLI default is 0.5; this window-export PLY is diagnostic and still uses per-frame visualization sampling."
+  },
+  "runtime": {
+    "torch": "2.12.0",
+    "load_ms": 719.5075000054203,
+    "run_ms": 332313.261333009,
+    "rss_before_mb": 1481.953125,
+    "rss_after_mb": 7289.03125,
+    "rss_delta_mb": 5807.078125
+  },
+  "official_alignment": {
+    "mode": "image_only",
+    "input_camera_umeyama_applied": false,
+    "umeyama_scale": null,
+    "aligned_extrinsics_shape": null
+  },
+  "outputs": {
+    "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/pytorch_depth.npy",
+    "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/pytorch_conf.npy",
+    "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/pytorch_intrinsics.npy",
+    "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/pytorch_extrinsics.npy",
+    "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/pytorch_processed_images.npy",
+    "single_ply": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/official_pytorch_image_only_k35_process_res_504_single_rgb.ply",
+    "single_views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_016/official_pytorch_image_only_k35_504_cpu/official_pytorch_image_only_k35_process_res_504_single_views.png"
+  },
+  "metrics": {
+    "frame_count": 35,
+    "processed_shape_nhwc": [
+      35,
+      280,
+      504,
+      3
+    ],
+    "depth": {
+      "count": 4939200,
+      "min": 0.2678973376750946,
+      "max": 3.220351219177246,
+      "mean": 1.2489649696420404,
+      "median": 1.0356817245483398,
+      "p05": 0.5080262929201126,
+      "p95": 2.6021933794021606
+    },
+    "confidence": {
+      "count": 4939200,
+      "min": 1.0,
+      "max": 10.996278762817383,
+      "mean": 3.650323046970742,
+      "median": 3.5295814275741577,
+      "p05": 1.0002259016036987,
+      "p95": 7.295509219169615
+    },
+    "pose": {
+      "count": 35,
+      "camera_center_min": [
+        -0.5670611262321472,
+        -0.4061373770236969,
+        -0.048279114067554474
+      ],
+      "camera_center_max": [
+        0.2909739911556244,
+        0.7000264525413513,
+        0.337755411863327
+      ],
+      "camera_center_extent": [
+        0.8580350875854492,
+        1.1061638593673706,
+        0.3860345184803009
+      ],
+      "camera_center_diag": 1.4521863460540771,
+      "center_radius_mean": 0.45964038372039795,
+      "center_radius_max": 0.7139840126037598
+    },
+    "pred_intrinsics": {
+      "fx": {
+        "count": 35,
+        "min": 373.08868408203125,
+        "max": 383.2502136230469,
+        "mean": 378.51546282087054,
+        "median": 378.7436218261719,
+        "p05": 375.6906005859375,
+        "p95": 381.6265380859375
+      },
+      "fy": {
+        "count": 35,
+        "min": 364.6518249511719,
+        "max": 378.728515625,
+        "mean": 372.38077741350446,
+        "median": 373.5201721191406,
+        "p05": 365.51743774414064,
+        "p95": 377.27167053222655
+      }
+    },
+    "point_cloud": {
+      "point_count": 20073,
+      "bbox_p01": [
+        -0.6399593949317932,
+        -0.47455233335494995,
+        0.47073835134506226
+      ],
+      "bbox_p99": [
+        0.4385221302509308,
+        0.8239026665687561,
+        1.8921369314193726
+      ],
+      "bbox_extent_p01_p99": [
+        1.0784815549850464,
+        1.298454999923706,
+        1.421398639678955
+      ],
+      "bbox_diag_p01_p99": 2.2066903114318848
+    },
+    "valid_point_count_before_sampling": 3348475,
+    "sampled_point_count": 20073
+  },
+  "elapsed_s": 336.726
+}

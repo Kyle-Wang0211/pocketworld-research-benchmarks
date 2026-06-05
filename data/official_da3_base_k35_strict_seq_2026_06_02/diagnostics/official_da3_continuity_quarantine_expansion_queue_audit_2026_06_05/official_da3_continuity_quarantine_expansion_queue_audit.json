@@ -1,0 +1,5524 @@
+{
+  "schema_version": "aether_da3_continuity_quarantine_expansion_queue_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "expansion_queue_and_manifest_batch_ready_true_reruns_needed",
+    "goal_complete": false,
+    "product_ready": false,
+    "conclusion": "The Dart quarantine plan has enough information to rank risky source windows for the next true CoreML rerun batch. The queue keeps official DA3 replication separate from the mobile continuity adaptation candidate.",
+    "boundary": "This ranking is not a geometry pass/fail result. It only chooses the next windows to rerun because full thickness attribution still requires actual CoreML outputs and downstream audits.",
+    "next_best_action": "Run the same current DA3BASE_476x742_N35_pose CoreML path on the prepared research capture manifests, then compare official-save thickness against the prefix/segment/drop-high-risk variants."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "official_window_plan": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_k_windows.json",
+    "dart_quarantine_window_plan": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_k_windows_continuity_quarantine.json"
+  },
+  "metrics": {
+    "official_window_count": 24,
+    "risky_source_window_count": 21,
+    "quarantine_variant_count": 63,
+    "top_n": 8,
+    "already_true_rerun_window_ids": [
+      "window_016"
+    ],
+    "recommended_batch_window_ids": [
+      "window_006",
+      "window_021",
+      "window_004",
+      "window_007"
+    ],
+    "recommended_batch_manifest_ready_count": 4
+  },
+  "priority_formula": {
+    "intent": "Rank windows for the next true rerun, not declare geometry quality.",
+    "high_risk_count": "+10 per high-risk target frame",
+    "timestamp": "+1.5 per second above 2.0s",
+    "translation": "+16 per meter above 0.25m",
+    "azimuth": "+10 per radian above 0.35rad",
+    "elevation": "+10 per radian above 0.25rad",
+    "quality": "+20 per score below 0.50",
+    "drop_variant": "+5 when drop-high-risk keeps at least 10 real frames; +3 when residual high-risk is zero",
+    "window016": "-8 because it is already the true-rerun baseline"
+  },
+  "top_candidates": [
+    {
+      "source_window_id": "window_019",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1659",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 9,
+      "high_risk_frame_ids": [
+        "cap-1659",
+        "cap-1673",
+        "cap-1671",
+        "cap-1677",
+        "cap-1681",
+        "cap-1679",
+        "cap-1774",
+        "cap-1780",
+        "cap-1801"
+      ],
+      "max_timestamp_delta_seconds": 15.434274083003402,
+      "max_translation_step_m": 0.39435454453729923,
+      "max_azimuth_delta_rad": 1.5133474856104927,
+      "max_elevation_delta_rad": 0.221214641353644,
+      "min_high_risk_quality_score": 0.4048248743658521,
+      "priority_score": 125.998,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-1646"
+          ],
+          "removed_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1772",
+            "cap-1780",
+            "cap-1785",
+            "cap-1789",
+            "cap-1801",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 8,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1772",
+            "cap-1780",
+            "cap-1785",
+            "cap-1789",
+            "cap-1801",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ],
+          "removed_frame_ids": [
+            "cap-1646"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 8,
+          "runtime_padding_frame_count": 27,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 9,
+          "downstream_frame_ids": [
+            "cap-1646",
+            "cap-1772",
+            "cap-1785",
+            "cap-1789",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ],
+          "removed_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1780",
+            "cap-1801"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1679",
+          "toFrameID": "cap-1774",
+          "toManifestIndex": 330,
+          "timestampDeltaSeconds": 15.434274083003402,
+          "translationStepM": 0.3506859465874478,
+          "azimuthDeltaRad": 1.5133474856104927,
+          "elevationDeltaRad": 0.0028482764443780173,
+          "radiusDeltaM": 0.08339247671386274,
+          "toQualityScore": 0.887990534032451,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1659",
+          "toFrameID": "cap-1673",
+          "toManifestIndex": 325,
+          "timestampDeltaSeconds": 2.3001387920230627,
+          "translationStepM": 0.32590774864719335,
+          "azimuthDeltaRad": 0.32662332490121493,
+          "elevationDeltaRad": 0.221214641353644,
+          "radiusDeltaM": 0.21346740915048834,
+          "toQualityScore": 0.8846258793300011,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1646",
+          "toFrameID": "cap-1659",
+          "toManifestIndex": 324,
+          "timestampDeltaSeconds": 2.1667961250059307,
+          "translationStepM": 0.39435454453729923,
+          "azimuthDeltaRad": 0.6219999082387266,
+          "elevationDeltaRad": 0.13599367180897548,
+          "radiusDeltaM": 0.020194822440332882,
+          "toQualityScore": 0.6114022023170353,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1789",
+          "toFrameID": "cap-1801",
+          "toManifestIndex": 335,
+          "timestampDeltaSeconds": 2.0334580421913415,
+          "translationStepM": 0.2962601308561583,
+          "azimuthDeltaRad": 0.6478182492781279,
+          "elevationDeltaRad": 0.13245526323950108,
+          "radiusDeltaM": 0.03931363094130769,
+          "toQualityScore": 0.8690813086989031,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1772",
+          "toFrameID": "cap-1780",
+          "toManifestIndex": 332,
+          "timestampDeltaSeconds": 1.066732541890815,
+          "translationStepM": 0.1766377948106745,
+          "azimuthDeltaRad": 0.6860499072268476,
+          "elevationDeltaRad": 0.018526037321296762,
+          "radiusDeltaM": 0.08986178659134803,
+          "toQualityScore": 0.8702314453572353,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 1,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window019_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_006",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-487",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-487",
+        "cap-529",
+        "cap-536",
+        "cap-567",
+        "cap-583",
+        "cap-591"
+      ],
+      "max_timestamp_delta_seconds": 6.167086792178452,
+      "max_translation_step_m": 0.39388254885257085,
+      "max_azimuth_delta_rad": 0.5992701603772181,
+      "max_elevation_delta_rad": 0.24057625177133912,
+      "min_high_risk_quality_score": 0.46944242181274165,
+      "priority_score": 76.657,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-458"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-458"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-458",
+            "cap-492",
+            "cap-538",
+            "cap-570",
+            "cap-581",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-529",
+            "cap-536",
+            "cap-567",
+            "cap-583",
+            "cap-591"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-492",
+          "toFrameID": "cap-529",
+          "toManifestIndex": 105,
+          "timestampDeltaSeconds": 6.167086792178452,
+          "translationStepM": 0.21044843370696378,
+          "azimuthDeltaRad": 0.10677795819210267,
+          "elevationDeltaRad": 0.24057625177133912,
+          "radiusDeltaM": 0.07661445918324727,
+          "toQualityScore": 0.48469676484343777,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-458",
+          "toFrameID": "cap-487",
+          "toManifestIndex": 103,
+          "timestampDeltaSeconds": 5.3003575841430575,
+          "translationStepM": 0.39388254885257085,
+          "azimuthDeltaRad": 0.4600511335565338,
+          "elevationDeltaRad": 0.017656722842819272,
+          "radiusDeltaM": 0.22387673629995264,
+          "toQualityScore": 0.6111016959616353,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-538",
+          "toFrameID": "cap-567",
+          "toManifestIndex": 108,
+          "timestampDeltaSeconds": 4.833663749974221,
+          "translationStepM": 0.1818457388771752,
+          "azimuthDeltaRad": 0.33073948650961715,
+          "elevationDeltaRad": 0.08654411925439343,
+          "radiusDeltaM": 0.028226512740474385,
+          "toQualityScore": 0.5872726329273614,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-570",
+          "toFrameID": "cap-583",
+          "toManifestIndex": 110,
+          "timestampDeltaSeconds": 2.1668150830082595,
+          "translationStepM": 0.24620879756508782,
+          "azimuthDeltaRad": 0.5992701603772181,
+          "elevationDeltaRad": 0.07102342960313945,
+          "radiusDeltaM": 0.03222636116099131,
+          "toQualityScore": 0.8911374369929096,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-581",
+          "toFrameID": "cap-591",
+          "toManifestIndex": 112,
+          "timestampDeltaSeconds": 1.5667740409262478,
+          "translationStepM": 0.12193976475431578,
+          "azimuthDeltaRad": 0.44915836370457374,
+          "elevationDeltaRad": 0.11823420755252334,
+          "radiusDeltaM": 0.041632405810409945,
+          "toQualityScore": 0.6520716037509965,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 2,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window006_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_006_prefix_before_first_break",
+          "window_006_segment_from_first_break",
+          "window_006_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_021",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1897",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1897",
+        "cap-1921",
+        "cap-1940",
+        "cap-1949",
+        "cap-1959"
+      ],
+      "max_timestamp_delta_seconds": 4.0335816668812186,
+      "max_translation_step_m": 0.7139124160317932,
+      "max_azimuth_delta_rad": 0.8815777851543247,
+      "max_elevation_delta_rad": 0.7310295672539412,
+      "min_high_risk_quality_score": 0.8801327142995753,
+      "priority_score": 75.599,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ],
+          "removed_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1940",
+            "cap-1949",
+            "cap-1959"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1897",
+          "toFrameID": "cap-1921",
+          "toManifestIndex": 362,
+          "timestampDeltaSeconds": 4.0335816668812186,
+          "translationStepM": 0.5412117197571222,
+          "azimuthDeltaRad": 0.8815777851543247,
+          "elevationDeltaRad": 0.2825396432399164,
+          "radiusDeltaM": 0.09300359734753016,
+          "toQualityScore": 0.9755666523493898,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1885",
+          "toFrameID": "cap-1897",
+          "toManifestIndex": 361,
+          "timestampDeltaSeconds": 2.0667933330405504,
+          "translationStepM": 0.7139124160317932,
+          "azimuthDeltaRad": 0.20502997310115378,
+          "elevationDeltaRad": 0.7310295672539412,
+          "radiusDeltaM": 0.07107229751867672,
+          "toQualityScore": 0.9334779042299437,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1949",
+          "toFrameID": "cap-1959",
+          "toManifestIndex": 373,
+          "timestampDeltaSeconds": 1.533426959067583,
+          "translationStepM": 0.3255616275815098,
+          "azimuthDeltaRad": 0.18477550173105572,
+          "elevationDeltaRad": 0.2390348732980293,
+          "radiusDeltaM": 0.06743184638144306,
+          "toQualityScore": 0.9511440270809186,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1932",
+          "toFrameID": "cap-1940",
+          "toManifestIndex": 368,
+          "timestampDeltaSeconds": 1.400086082983762,
+          "translationStepM": 0.37592227295776987,
+          "azimuthDeltaRad": 0.2824896843080267,
+          "elevationDeltaRad": 0.1891615527758218,
+          "radiusDeltaM": 0.25076021317368224,
+          "toQualityScore": 0.8801327142995753,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1944",
+          "toFrameID": "cap-1949",
+          "toManifestIndex": 372,
+          "timestampDeltaSeconds": 1.133402582956478,
+          "translationStepM": 0.423537179317786,
+          "azimuthDeltaRad": 0.48669362507278935,
+          "elevationDeltaRad": 0.17984014094481104,
+          "radiusDeltaM": 0.21065861395648167,
+          "toQualityScore": 0.9798449616206251,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 3,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window021_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_021_prefix_before_first_break",
+          "window_021_segment_from_first_break",
+          "window_021_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_004",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-333",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-333",
+        "cap-339",
+        "cap-358",
+        "cap-382",
+        "cap-393",
+        "cap-395"
+      ],
+      "max_timestamp_delta_seconds": 3.500238375039771,
+      "max_translation_step_m": 0.3026507783524309,
+      "max_azimuth_delta_rad": 0.36329931219178135,
+      "max_elevation_delta_rad": 0.17632515715889596,
+      "min_high_risk_quality_score": 0.4555092069790511,
+      "priority_score": 69.116,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ],
+          "removed_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312",
+            "cap-335",
+            "cap-337",
+            "cap-347",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-387",
+            "cap-389"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-339",
+            "cap-358",
+            "cap-382",
+            "cap-393",
+            "cap-395"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-312",
+          "toFrameID": "cap-333",
+          "toManifestIndex": 70,
+          "timestampDeltaSeconds": 3.500238375039771,
+          "translationStepM": 0.3026507783524309,
+          "azimuthDeltaRad": 0.3154254137044492,
+          "elevationDeltaRad": 0.17632515715889596,
+          "radiusDeltaM": 0.04448779659646962,
+          "toQualityScore": 0.6455762446328044,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-347",
+          "toFrameID": "cap-358",
+          "toManifestIndex": 75,
+          "timestampDeltaSeconds": 2.033472083043307,
+          "translationStepM": 0.23694773774162034,
+          "azimuthDeltaRad": 0.36329931219178135,
+          "elevationDeltaRad": 0.0651239908376462,
+          "radiusDeltaM": 0.020375396697049908,
+          "toQualityScore": 0.5688569275740141,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-337",
+          "toFrameID": "cap-339",
+          "toManifestIndex": 73,
+          "timestampDeltaSeconds": 0.5000343329738826,
+          "translationStepM": 0.04869923875030069,
+          "azimuthDeltaRad": 0.048629308400225835,
+          "elevationDeltaRad": 0.01661748022675591,
+          "radiusDeltaM": 0.008232923056927577,
+          "toQualityScore": 0.47836275401318407,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-389",
+          "toFrameID": "cap-393",
+          "toManifestIndex": 83,
+          "timestampDeltaSeconds": 0.43336295802146196,
+          "translationStepM": 0.026223551060877336,
+          "azimuthDeltaRad": 0.04209955703099899,
+          "elevationDeltaRad": 0.01711541713896403,
+          "radiusDeltaM": 0.0013500082941981795,
+          "toQualityScore": 0.4555092069790511,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-380",
+          "toFrameID": "cap-382",
+          "toManifestIndex": 80,
+          "timestampDeltaSeconds": 0.40002741711214185,
+          "translationStepM": 0.03561981902160033,
+          "azimuthDeltaRad": 0.04500197182225252,
+          "elevationDeltaRad": 0.022354120528911725,
+          "radiusDeltaM": 0.010383226357380426,
+          "toQualityScore": 0.4890736824712342,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 4,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window004_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_004_prefix_before_first_break",
+          "window_004_segment_from_first_break",
+          "window_004_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_007",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-630",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 4,
+      "high_risk_frame_ids": [
+        "cap-630",
+        "cap-712",
+        "cap-725",
+        "cap-758"
+      ],
+      "max_timestamp_delta_seconds": 12.300834249937907,
+      "max_translation_step_m": 0.4575813649709685,
+      "max_azimuth_delta_rad": 0.7719726500327708,
+      "max_elevation_delta_rad": 0.3152708169903188,
+      "min_high_risk_quality_score": 0.5825065378522414,
+      "priority_score": 68.645,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-621"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ],
+          "removed_frame_ids": [
+            "cap-621"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-621",
+            "cap-635",
+            "cap-639",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-712",
+            "cap-725",
+            "cap-758"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-639",
+          "toFrameID": "cap-712",
+          "toManifestIndex": 123,
+          "timestampDeltaSeconds": 12.300834249937907,
+          "translationStepM": 0.45519928486676414,
+          "azimuthDeltaRad": 0.7710002363420891,
+          "elevationDeltaRad": 0.25650462081373804,
+          "radiusDeltaM": 0.29205814307585143,
+          "toQualityScore": 0.5825065378522414,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-743",
+          "toFrameID": "cap-758",
+          "toManifestIndex": 135,
+          "timestampDeltaSeconds": 2.566839875187725,
+          "translationStepM": 0.4575813649709685,
+          "azimuthDeltaRad": 0.6509053513797272,
+          "elevationDeltaRad": 0.0310268047744216,
+          "radiusDeltaM": 0.02444885719410561,
+          "toQualityScore": 0.7098321567559573,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-621",
+          "toFrameID": "cap-630",
+          "toManifestIndex": 120,
+          "timestampDeltaSeconds": 1.9001287501305342,
+          "translationStepM": 0.4560357226609411,
+          "azimuthDeltaRad": 0.7719726500327708,
+          "elevationDeltaRad": 0.037220437120730865,
+          "radiusDeltaM": 0.005652291366655793,
+          "toQualityScore": 0.8116012816454088,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-718",
+          "toFrameID": "cap-725",
+          "toManifestIndex": 127,
+          "timestampDeltaSeconds": 0.6333767080213875,
+          "translationStepM": 0.14447638081012176,
+          "azimuthDeltaRad": 0.10779755837675387,
+          "elevationDeltaRad": 0.3152708169903188,
+          "radiusDeltaM": 0.14864153099919641,
+          "toQualityScore": 0.948515275865816,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 5,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window007_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_007_prefix_before_first_break",
+          "window_007_segment_from_first_break",
+          "window_007_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_017",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1488",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1488",
+        "cap-1494",
+        "cap-1514",
+        "cap-1523",
+        "cap-1549"
+      ],
+      "max_timestamp_delta_seconds": 5.000319208949804,
+      "max_translation_step_m": 0.37145495134770595,
+      "max_azimuth_delta_rad": 0.5459648012909133,
+      "max_elevation_delta_rad": 0.1438633691417539,
+      "min_high_risk_quality_score": 0.4587294398037571,
+      "priority_score": 64.229,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459"
+          ],
+          "removed_frame_ids": [
+            "cap-1488",
+            "cap-1492",
+            "cap-1494",
+            "cap-1514",
+            "cap-1518",
+            "cap-1523",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1549",
+            "cap-1553"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-1488",
+            "cap-1492",
+            "cap-1494",
+            "cap-1514",
+            "cap-1518",
+            "cap-1523",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1549",
+            "cap-1553"
+          ],
+          "removed_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459",
+            "cap-1492",
+            "cap-1518",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1553"
+          ],
+          "removed_frame_ids": [
+            "cap-1488",
+            "cap-1494",
+            "cap-1514",
+            "cap-1523",
+            "cap-1549"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1459",
+          "toFrameID": "cap-1488",
+          "toManifestIndex": 293,
+          "timestampDeltaSeconds": 5.000319208949804,
+          "translationStepM": 0.28040392679251686,
+          "azimuthDeltaRad": 0.39931817594903896,
+          "elevationDeltaRad": 0.0164456813579843,
+          "radiusDeltaM": 0.1050678882399303,
+          "toQualityScore": 0.5771856641623115,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1494",
+          "toFrameID": "cap-1514",
+          "toManifestIndex": 296,
+          "timestampDeltaSeconds": 2.866849208017811,
+          "translationStepM": 0.37145495134770595,
+          "azimuthDeltaRad": 0.5459648012909133,
+          "elevationDeltaRad": 0.07108856787776208,
+          "radiusDeltaM": 0.21928109938283125,
+          "toQualityScore": 0.4587294398037571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1540",
+          "toFrameID": "cap-1549",
+          "toManifestIndex": 304,
+          "timestampDeltaSeconds": 1.5000935420393944,
+          "translationStepM": 0.09095947409947489,
+          "azimuthDeltaRad": 0.06072273300532727,
+          "elevationDeltaRad": 0.07762850627527516,
+          "radiusDeltaM": 0.017416183229637117,
+          "toQualityScore": 0.4829931152617761,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1492",
+          "toFrameID": "cap-1494",
+          "toManifestIndex": 295,
+          "timestampDeltaSeconds": 0.8000510830897838,
+          "translationStepM": 0.12016821700270564,
+          "azimuthDeltaRad": 0.03517420250647696,
+          "elevationDeltaRad": 0.021630101488396836,
+          "radiusDeltaM": 0.015880349431376617,
+          "toQualityScore": 0.4713140429125801,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1518",
+          "toFrameID": "cap-1523",
+          "toManifestIndex": 298,
+          "timestampDeltaSeconds": 0.4000254590064287,
+          "translationStepM": 0.05154936645241533,
+          "azimuthDeltaRad": 0.015157452313402597,
+          "elevationDeltaRad": 0.1438633691417539,
+          "radiusDeltaM": 0.012838002545415339,
+          "toQualityScore": 0.46416841900854544,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 6,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window017_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_023",
+      "official_save_frame_count": 23,
+      "first_break_frame_id": "cap-2099",
+      "first_break_slot": 6,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-2099",
+        "cap-2135",
+        "cap-2159",
+        "cap-2177",
+        "cap-2190"
+      ],
+      "max_timestamp_delta_seconds": 5.4003293751738966,
+      "max_translation_step_m": 0.31046820136224085,
+      "max_azimuth_delta_rad": 0.2632723737366729,
+      "max_elevation_delta_rad": 0.18756680322589792,
+      "min_high_risk_quality_score": 0.5595419829542341,
+      "priority_score": 61.068,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 6,
+          "runtime_padding_frame_count": 29,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 17,
+          "downstream_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087"
+          ],
+          "removed_frame_ids": [
+            "cap-2099",
+            "cap-2103",
+            "cap-2106",
+            "cap-2135",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2159",
+            "cap-2165",
+            "cap-2168",
+            "cap-2177",
+            "cap-2190",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 17,
+          "runtime_padding_frame_count": 18,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-2099",
+            "cap-2103",
+            "cap-2106",
+            "cap-2135",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2159",
+            "cap-2165",
+            "cap-2168",
+            "cap-2177",
+            "cap-2190",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ],
+          "removed_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 18,
+          "runtime_padding_frame_count": 17,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087",
+            "cap-2103",
+            "cap-2106",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2165",
+            "cap-2168",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ],
+          "removed_frame_ids": [
+            "cap-2099",
+            "cap-2135",
+            "cap-2159",
+            "cap-2177",
+            "cap-2190"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-2106",
+          "toFrameID": "cap-2135",
+          "toManifestIndex": 400,
+          "timestampDeltaSeconds": 5.4003293751738966,
+          "translationStepM": 0.21499701529975843,
+          "azimuthDeltaRad": 0.0702824499613115,
+          "elevationDeltaRad": 0.1628381245065787,
+          "radiusDeltaM": 0.07331049243254972,
+          "toQualityScore": 0.6793172223551371,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2087",
+          "toFrameID": "cap-2099",
+          "toManifestIndex": 397,
+          "timestampDeltaSeconds": 2.0334570419508964,
+          "translationStepM": 0.1130312344753133,
+          "azimuthDeltaRad": 0.11163606471968057,
+          "elevationDeltaRad": 0.04433229207208547,
+          "radiusDeltaM": 7.575815117610851e-05,
+          "toQualityScore": 0.5834318330545982,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2168",
+          "toFrameID": "cap-2177",
+          "toManifestIndex": 408,
+          "timestampDeltaSeconds": 2.0001214588992298,
+          "translationStepM": 0.15305218472123147,
+          "azimuthDeltaRad": 0.025780642051775216,
+          "elevationDeltaRad": 0.18756680322589792,
+          "radiusDeltaM": 0.019010911544696918,
+          "toQualityScore": 0.5595419829542341,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2177",
+          "toFrameID": "cap-2190",
+          "toManifestIndex": 409,
+          "timestampDeltaSeconds": 1.6334324581548572,
+          "translationStepM": 0.2821289370767828,
+          "azimuthDeltaRad": 0.09415570502184023,
+          "elevationDeltaRad": 0.15648467384825987,
+          "radiusDeltaM": 0.29530239974796735,
+          "toQualityScore": 0.909082579864522,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2153",
+          "toFrameID": "cap-2159",
+          "toManifestIndex": 405,
+          "timestampDeltaSeconds": 0.9667254998348653,
+          "translationStepM": 0.31046820136224085,
+          "azimuthDeltaRad": 0.2632723737366729,
+          "elevationDeltaRad": 0.16870987242782473,
+          "radiusDeltaM": 0.017307202237580976,
+          "toQualityScore": 0.7799801677702356,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 7,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window023_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_005",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-411",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-411",
+        "cap-413",
+        "cap-428",
+        "cap-434",
+        "cap-436"
+      ],
+      "max_timestamp_delta_seconds": 1.666780082974583,
+      "max_translation_step_m": 0.2396571471264906,
+      "max_azimuth_delta_rad": 0.2464512308215996,
+      "max_elevation_delta_rad": 0.13265918144931677,
+      "min_high_risk_quality_score": 0.37351117526266475,
+      "priority_score": 57.53,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-397",
+            "cap-402"
+          ],
+          "removed_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-428",
+            "cap-430",
+            "cap-434",
+            "cap-436",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-428",
+            "cap-430",
+            "cap-434",
+            "cap-436",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ],
+          "removed_frame_ids": [
+            "cap-397",
+            "cap-402"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-397",
+            "cap-402",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-430",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ],
+          "removed_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-428",
+            "cap-434",
+            "cap-436"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-402",
+          "toFrameID": "cap-411",
+          "toManifestIndex": 87,
+          "timestampDeltaSeconds": 1.666780082974583,
+          "translationStepM": 0.09133019887980638,
+          "azimuthDeltaRad": 0.2464512308215996,
+          "elevationDeltaRad": 0.001759233308082253,
+          "radiusDeltaM": 0.02487184013134547,
+          "toQualityScore": 0.37351117526266475,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-430",
+          "toFrameID": "cap-434",
+          "toManifestIndex": 95,
+          "timestampDeltaSeconds": 0.8333900000434369,
+          "translationStepM": 0.2396571471264906,
+          "azimuthDeltaRad": 0.21317790624529387,
+          "elevationDeltaRad": 0.13265918144931677,
+          "radiusDeltaM": 0.002430422042125402,
+          "toQualityScore": 0.4495635498819955,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-424",
+          "toFrameID": "cap-428",
+          "toManifestIndex": 93,
+          "timestampDeltaSeconds": 0.6000407908577472,
+          "translationStepM": 0.13401218563409242,
+          "azimuthDeltaRad": 0.20607809245750364,
+          "elevationDeltaRad": 0.12172463815128054,
+          "radiusDeltaM": 0.02179627969134479,
+          "toQualityScore": 0.4851375531810522,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-434",
+          "toFrameID": "cap-436",
+          "toManifestIndex": 96,
+          "timestampDeltaSeconds": 0.30002025002613664,
+          "translationStepM": 0.07172894767716267,
+          "azimuthDeltaRad": 0.06434127345651763,
+          "elevationDeltaRad": 0.07193960168307767,
+          "radiusDeltaM": 0.013170654904329449,
+          "toQualityScore": 0.46366210501822586,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-411",
+          "toFrameID": "cap-413",
+          "toManifestIndex": 88,
+          "timestampDeltaSeconds": 0.2666848748922348,
+          "translationStepM": 0.014306262161541815,
+          "azimuthDeltaRad": 0.03609643143809382,
+          "elevationDeltaRad": 0.007087699224876065,
+          "radiusDeltaM": 0.01088254738433414,
+          "toQualityScore": 0.4643986262123577,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 8,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window005_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    }
+  ],
+  "recommended_true_rerun_batch": [
+    {
+      "source_window_id": "window_006",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-487",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-487",
+        "cap-529",
+        "cap-536",
+        "cap-567",
+        "cap-583",
+        "cap-591"
+      ],
+      "max_timestamp_delta_seconds": 6.167086792178452,
+      "max_translation_step_m": 0.39388254885257085,
+      "max_azimuth_delta_rad": 0.5992701603772181,
+      "max_elevation_delta_rad": 0.24057625177133912,
+      "min_high_risk_quality_score": 0.46944242181274165,
+      "priority_score": 76.657,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-458"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-458"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-458",
+            "cap-492",
+            "cap-538",
+            "cap-570",
+            "cap-581",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-529",
+            "cap-536",
+            "cap-567",
+            "cap-583",
+            "cap-591"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-492",
+          "toFrameID": "cap-529",
+          "toManifestIndex": 105,
+          "timestampDeltaSeconds": 6.167086792178452,
+          "translationStepM": 0.21044843370696378,
+          "azimuthDeltaRad": 0.10677795819210267,
+          "elevationDeltaRad": 0.24057625177133912,
+          "radiusDeltaM": 0.07661445918324727,
+          "toQualityScore": 0.48469676484343777,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-458",
+          "toFrameID": "cap-487",
+          "toManifestIndex": 103,
+          "timestampDeltaSeconds": 5.3003575841430575,
+          "translationStepM": 0.39388254885257085,
+          "azimuthDeltaRad": 0.4600511335565338,
+          "elevationDeltaRad": 0.017656722842819272,
+          "radiusDeltaM": 0.22387673629995264,
+          "toQualityScore": 0.6111016959616353,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-538",
+          "toFrameID": "cap-567",
+          "toManifestIndex": 108,
+          "timestampDeltaSeconds": 4.833663749974221,
+          "translationStepM": 0.1818457388771752,
+          "azimuthDeltaRad": 0.33073948650961715,
+          "elevationDeltaRad": 0.08654411925439343,
+          "radiusDeltaM": 0.028226512740474385,
+          "toQualityScore": 0.5872726329273614,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-570",
+          "toFrameID": "cap-583",
+          "toManifestIndex": 110,
+          "timestampDeltaSeconds": 2.1668150830082595,
+          "translationStepM": 0.24620879756508782,
+          "azimuthDeltaRad": 0.5992701603772181,
+          "elevationDeltaRad": 0.07102342960313945,
+          "radiusDeltaM": 0.03222636116099131,
+          "toQualityScore": 0.8911374369929096,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-581",
+          "toFrameID": "cap-591",
+          "toManifestIndex": 112,
+          "timestampDeltaSeconds": 1.5667740409262478,
+          "translationStepM": 0.12193976475431578,
+          "azimuthDeltaRad": 0.44915836370457374,
+          "elevationDeltaRad": 0.11823420755252334,
+          "radiusDeltaM": 0.041632405810409945,
+          "toQualityScore": 0.6520716037509965,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 2,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window006_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_006_prefix_before_first_break",
+          "window_006_segment_from_first_break",
+          "window_006_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_021",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1897",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1897",
+        "cap-1921",
+        "cap-1940",
+        "cap-1949",
+        "cap-1959"
+      ],
+      "max_timestamp_delta_seconds": 4.0335816668812186,
+      "max_translation_step_m": 0.7139124160317932,
+      "max_azimuth_delta_rad": 0.8815777851543247,
+      "max_elevation_delta_rad": 0.7310295672539412,
+      "min_high_risk_quality_score": 0.8801327142995753,
+      "priority_score": 75.599,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ],
+          "removed_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1940",
+            "cap-1949",
+            "cap-1959"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1897",
+          "toFrameID": "cap-1921",
+          "toManifestIndex": 362,
+          "timestampDeltaSeconds": 4.0335816668812186,
+          "translationStepM": 0.5412117197571222,
+          "azimuthDeltaRad": 0.8815777851543247,
+          "elevationDeltaRad": 0.2825396432399164,
+          "radiusDeltaM": 0.09300359734753016,
+          "toQualityScore": 0.9755666523493898,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1885",
+          "toFrameID": "cap-1897",
+          "toManifestIndex": 361,
+          "timestampDeltaSeconds": 2.0667933330405504,
+          "translationStepM": 0.7139124160317932,
+          "azimuthDeltaRad": 0.20502997310115378,
+          "elevationDeltaRad": 0.7310295672539412,
+          "radiusDeltaM": 0.07107229751867672,
+          "toQualityScore": 0.9334779042299437,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1949",
+          "toFrameID": "cap-1959",
+          "toManifestIndex": 373,
+          "timestampDeltaSeconds": 1.533426959067583,
+          "translationStepM": 0.3255616275815098,
+          "azimuthDeltaRad": 0.18477550173105572,
+          "elevationDeltaRad": 0.2390348732980293,
+          "radiusDeltaM": 0.06743184638144306,
+          "toQualityScore": 0.9511440270809186,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1932",
+          "toFrameID": "cap-1940",
+          "toManifestIndex": 368,
+          "timestampDeltaSeconds": 1.400086082983762,
+          "translationStepM": 0.37592227295776987,
+          "azimuthDeltaRad": 0.2824896843080267,
+          "elevationDeltaRad": 0.1891615527758218,
+          "radiusDeltaM": 0.25076021317368224,
+          "toQualityScore": 0.8801327142995753,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1944",
+          "toFrameID": "cap-1949",
+          "toManifestIndex": 372,
+          "timestampDeltaSeconds": 1.133402582956478,
+          "translationStepM": 0.423537179317786,
+          "azimuthDeltaRad": 0.48669362507278935,
+          "elevationDeltaRad": 0.17984014094481104,
+          "radiusDeltaM": 0.21065861395648167,
+          "toQualityScore": 0.9798449616206251,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 3,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window021_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_021_prefix_before_first_break",
+          "window_021_segment_from_first_break",
+          "window_021_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_004",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-333",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-333",
+        "cap-339",
+        "cap-358",
+        "cap-382",
+        "cap-393",
+        "cap-395"
+      ],
+      "max_timestamp_delta_seconds": 3.500238375039771,
+      "max_translation_step_m": 0.3026507783524309,
+      "max_azimuth_delta_rad": 0.36329931219178135,
+      "max_elevation_delta_rad": 0.17632515715889596,
+      "min_high_risk_quality_score": 0.4555092069790511,
+      "priority_score": 69.116,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ],
+          "removed_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312",
+            "cap-335",
+            "cap-337",
+            "cap-347",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-387",
+            "cap-389"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-339",
+            "cap-358",
+            "cap-382",
+            "cap-393",
+            "cap-395"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-312",
+          "toFrameID": "cap-333",
+          "toManifestIndex": 70,
+          "timestampDeltaSeconds": 3.500238375039771,
+          "translationStepM": 0.3026507783524309,
+          "azimuthDeltaRad": 0.3154254137044492,
+          "elevationDeltaRad": 0.17632515715889596,
+          "radiusDeltaM": 0.04448779659646962,
+          "toQualityScore": 0.6455762446328044,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-347",
+          "toFrameID": "cap-358",
+          "toManifestIndex": 75,
+          "timestampDeltaSeconds": 2.033472083043307,
+          "translationStepM": 0.23694773774162034,
+          "azimuthDeltaRad": 0.36329931219178135,
+          "elevationDeltaRad": 0.0651239908376462,
+          "radiusDeltaM": 0.020375396697049908,
+          "toQualityScore": 0.5688569275740141,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-337",
+          "toFrameID": "cap-339",
+          "toManifestIndex": 73,
+          "timestampDeltaSeconds": 0.5000343329738826,
+          "translationStepM": 0.04869923875030069,
+          "azimuthDeltaRad": 0.048629308400225835,
+          "elevationDeltaRad": 0.01661748022675591,
+          "radiusDeltaM": 0.008232923056927577,
+          "toQualityScore": 0.47836275401318407,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-389",
+          "toFrameID": "cap-393",
+          "toManifestIndex": 83,
+          "timestampDeltaSeconds": 0.43336295802146196,
+          "translationStepM": 0.026223551060877336,
+          "azimuthDeltaRad": 0.04209955703099899,
+          "elevationDeltaRad": 0.01711541713896403,
+          "radiusDeltaM": 0.0013500082941981795,
+          "toQualityScore": 0.4555092069790511,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-380",
+          "toFrameID": "cap-382",
+          "toManifestIndex": 80,
+          "timestampDeltaSeconds": 0.40002741711214185,
+          "translationStepM": 0.03561981902160033,
+          "azimuthDeltaRad": 0.04500197182225252,
+          "elevationDeltaRad": 0.022354120528911725,
+          "radiusDeltaM": 0.010383226357380426,
+          "toQualityScore": 0.4890736824712342,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 4,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window004_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_004_prefix_before_first_break",
+          "window_004_segment_from_first_break",
+          "window_004_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_007",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-630",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 4,
+      "high_risk_frame_ids": [
+        "cap-630",
+        "cap-712",
+        "cap-725",
+        "cap-758"
+      ],
+      "max_timestamp_delta_seconds": 12.300834249937907,
+      "max_translation_step_m": 0.4575813649709685,
+      "max_azimuth_delta_rad": 0.7719726500327708,
+      "max_elevation_delta_rad": 0.3152708169903188,
+      "min_high_risk_quality_score": 0.5825065378522414,
+      "priority_score": 68.645,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-621"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ],
+          "removed_frame_ids": [
+            "cap-621"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-621",
+            "cap-635",
+            "cap-639",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-712",
+            "cap-725",
+            "cap-758"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-639",
+          "toFrameID": "cap-712",
+          "toManifestIndex": 123,
+          "timestampDeltaSeconds": 12.300834249937907,
+          "translationStepM": 0.45519928486676414,
+          "azimuthDeltaRad": 0.7710002363420891,
+          "elevationDeltaRad": 0.25650462081373804,
+          "radiusDeltaM": 0.29205814307585143,
+          "toQualityScore": 0.5825065378522414,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-743",
+          "toFrameID": "cap-758",
+          "toManifestIndex": 135,
+          "timestampDeltaSeconds": 2.566839875187725,
+          "translationStepM": 0.4575813649709685,
+          "azimuthDeltaRad": 0.6509053513797272,
+          "elevationDeltaRad": 0.0310268047744216,
+          "radiusDeltaM": 0.02444885719410561,
+          "toQualityScore": 0.7098321567559573,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-621",
+          "toFrameID": "cap-630",
+          "toManifestIndex": 120,
+          "timestampDeltaSeconds": 1.9001287501305342,
+          "translationStepM": 0.4560357226609411,
+          "azimuthDeltaRad": 0.7719726500327708,
+          "elevationDeltaRad": 0.037220437120730865,
+          "radiusDeltaM": 0.005652291366655793,
+          "toQualityScore": 0.8116012816454088,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-718",
+          "toFrameID": "cap-725",
+          "toManifestIndex": 127,
+          "timestampDeltaSeconds": 0.6333767080213875,
+          "translationStepM": 0.14447638081012176,
+          "azimuthDeltaRad": 0.10779755837675387,
+          "elevationDeltaRad": 0.3152708169903188,
+          "radiusDeltaM": 0.14864153099919641,
+          "toQualityScore": 0.948515275865816,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 5,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window007_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_007_prefix_before_first_break",
+          "window_007_segment_from_first_break",
+          "window_007_drop_all_high_risk_targets"
+        ]
+      }
+    }
+  ],
+  "all_risky_windows": [
+    {
+      "source_window_id": "window_019",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1659",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 9,
+      "high_risk_frame_ids": [
+        "cap-1659",
+        "cap-1673",
+        "cap-1671",
+        "cap-1677",
+        "cap-1681",
+        "cap-1679",
+        "cap-1774",
+        "cap-1780",
+        "cap-1801"
+      ],
+      "max_timestamp_delta_seconds": 15.434274083003402,
+      "max_translation_step_m": 0.39435454453729923,
+      "max_azimuth_delta_rad": 1.5133474856104927,
+      "max_elevation_delta_rad": 0.221214641353644,
+      "min_high_risk_quality_score": 0.4048248743658521,
+      "priority_score": 125.998,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-1646"
+          ],
+          "removed_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1772",
+            "cap-1780",
+            "cap-1785",
+            "cap-1789",
+            "cap-1801",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 8,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1772",
+            "cap-1780",
+            "cap-1785",
+            "cap-1789",
+            "cap-1801",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ],
+          "removed_frame_ids": [
+            "cap-1646"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 8,
+          "runtime_padding_frame_count": 27,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 9,
+          "downstream_frame_ids": [
+            "cap-1646",
+            "cap-1772",
+            "cap-1785",
+            "cap-1789",
+            "cap-1804",
+            "cap-1807",
+            "cap-1809",
+            "cap-1811"
+          ],
+          "removed_frame_ids": [
+            "cap-1659",
+            "cap-1673",
+            "cap-1671",
+            "cap-1677",
+            "cap-1681",
+            "cap-1679",
+            "cap-1774",
+            "cap-1780",
+            "cap-1801"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1679",
+          "toFrameID": "cap-1774",
+          "toManifestIndex": 330,
+          "timestampDeltaSeconds": 15.434274083003402,
+          "translationStepM": 0.3506859465874478,
+          "azimuthDeltaRad": 1.5133474856104927,
+          "elevationDeltaRad": 0.0028482764443780173,
+          "radiusDeltaM": 0.08339247671386274,
+          "toQualityScore": 0.887990534032451,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1659",
+          "toFrameID": "cap-1673",
+          "toManifestIndex": 325,
+          "timestampDeltaSeconds": 2.3001387920230627,
+          "translationStepM": 0.32590774864719335,
+          "azimuthDeltaRad": 0.32662332490121493,
+          "elevationDeltaRad": 0.221214641353644,
+          "radiusDeltaM": 0.21346740915048834,
+          "toQualityScore": 0.8846258793300011,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1646",
+          "toFrameID": "cap-1659",
+          "toManifestIndex": 324,
+          "timestampDeltaSeconds": 2.1667961250059307,
+          "translationStepM": 0.39435454453729923,
+          "azimuthDeltaRad": 0.6219999082387266,
+          "elevationDeltaRad": 0.13599367180897548,
+          "radiusDeltaM": 0.020194822440332882,
+          "toQualityScore": 0.6114022023170353,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1789",
+          "toFrameID": "cap-1801",
+          "toManifestIndex": 335,
+          "timestampDeltaSeconds": 2.0334580421913415,
+          "translationStepM": 0.2962601308561583,
+          "azimuthDeltaRad": 0.6478182492781279,
+          "elevationDeltaRad": 0.13245526323950108,
+          "radiusDeltaM": 0.03931363094130769,
+          "toQualityScore": 0.8690813086989031,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1772",
+          "toFrameID": "cap-1780",
+          "toManifestIndex": 332,
+          "timestampDeltaSeconds": 1.066732541890815,
+          "translationStepM": 0.1766377948106745,
+          "azimuthDeltaRad": 0.6860499072268476,
+          "elevationDeltaRad": 0.018526037321296762,
+          "radiusDeltaM": 0.08986178659134803,
+          "toQualityScore": 0.8702314453572353,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 1,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window019_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_006",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-487",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-487",
+        "cap-529",
+        "cap-536",
+        "cap-567",
+        "cap-583",
+        "cap-591"
+      ],
+      "max_timestamp_delta_seconds": 6.167086792178452,
+      "max_translation_step_m": 0.39388254885257085,
+      "max_azimuth_delta_rad": 0.5992701603772181,
+      "max_elevation_delta_rad": 0.24057625177133912,
+      "min_high_risk_quality_score": 0.46944242181274165,
+      "priority_score": 76.657,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-458"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-458"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-458",
+            "cap-492",
+            "cap-538",
+            "cap-570",
+            "cap-581",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "removed_frame_ids": [
+            "cap-487",
+            "cap-529",
+            "cap-536",
+            "cap-567",
+            "cap-583",
+            "cap-591"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-492",
+          "toFrameID": "cap-529",
+          "toManifestIndex": 105,
+          "timestampDeltaSeconds": 6.167086792178452,
+          "translationStepM": 0.21044843370696378,
+          "azimuthDeltaRad": 0.10677795819210267,
+          "elevationDeltaRad": 0.24057625177133912,
+          "radiusDeltaM": 0.07661445918324727,
+          "toQualityScore": 0.48469676484343777,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-458",
+          "toFrameID": "cap-487",
+          "toManifestIndex": 103,
+          "timestampDeltaSeconds": 5.3003575841430575,
+          "translationStepM": 0.39388254885257085,
+          "azimuthDeltaRad": 0.4600511335565338,
+          "elevationDeltaRad": 0.017656722842819272,
+          "radiusDeltaM": 0.22387673629995264,
+          "toQualityScore": 0.6111016959616353,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-538",
+          "toFrameID": "cap-567",
+          "toManifestIndex": 108,
+          "timestampDeltaSeconds": 4.833663749974221,
+          "translationStepM": 0.1818457388771752,
+          "azimuthDeltaRad": 0.33073948650961715,
+          "elevationDeltaRad": 0.08654411925439343,
+          "radiusDeltaM": 0.028226512740474385,
+          "toQualityScore": 0.5872726329273614,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-570",
+          "toFrameID": "cap-583",
+          "toManifestIndex": 110,
+          "timestampDeltaSeconds": 2.1668150830082595,
+          "translationStepM": 0.24620879756508782,
+          "azimuthDeltaRad": 0.5992701603772181,
+          "elevationDeltaRad": 0.07102342960313945,
+          "radiusDeltaM": 0.03222636116099131,
+          "toQualityScore": 0.8911374369929096,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-581",
+          "toFrameID": "cap-591",
+          "toManifestIndex": 112,
+          "timestampDeltaSeconds": 1.5667740409262478,
+          "translationStepM": 0.12193976475431578,
+          "azimuthDeltaRad": 0.44915836370457374,
+          "elevationDeltaRad": 0.11823420755252334,
+          "radiusDeltaM": 0.041632405810409945,
+          "toQualityScore": 0.6520716037509965,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 2,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window006_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_006_prefix_before_first_break",
+          "window_006_segment_from_first_break",
+          "window_006_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_021",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1897",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1897",
+        "cap-1921",
+        "cap-1940",
+        "cap-1949",
+        "cap-1959"
+      ],
+      "max_timestamp_delta_seconds": 4.0335816668812186,
+      "max_translation_step_m": 0.7139124160317932,
+      "max_azimuth_delta_rad": 0.8815777851543247,
+      "max_elevation_delta_rad": 0.7310295672539412,
+      "min_high_risk_quality_score": 0.8801327142995753,
+      "priority_score": 75.599,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1940",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944",
+            "cap-1949",
+            "cap-1959"
+          ],
+          "removed_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1877",
+            "cap-1881",
+            "cap-1883",
+            "cap-1885",
+            "cap-1923",
+            "cap-1925",
+            "cap-1930",
+            "cap-1927",
+            "cap-1932",
+            "cap-1938",
+            "cap-1942",
+            "cap-1944"
+          ],
+          "removed_frame_ids": [
+            "cap-1897",
+            "cap-1921",
+            "cap-1940",
+            "cap-1949",
+            "cap-1959"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1897",
+          "toFrameID": "cap-1921",
+          "toManifestIndex": 362,
+          "timestampDeltaSeconds": 4.0335816668812186,
+          "translationStepM": 0.5412117197571222,
+          "azimuthDeltaRad": 0.8815777851543247,
+          "elevationDeltaRad": 0.2825396432399164,
+          "radiusDeltaM": 0.09300359734753016,
+          "toQualityScore": 0.9755666523493898,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1885",
+          "toFrameID": "cap-1897",
+          "toManifestIndex": 361,
+          "timestampDeltaSeconds": 2.0667933330405504,
+          "translationStepM": 0.7139124160317932,
+          "azimuthDeltaRad": 0.20502997310115378,
+          "elevationDeltaRad": 0.7310295672539412,
+          "radiusDeltaM": 0.07107229751867672,
+          "toQualityScore": 0.9334779042299437,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1949",
+          "toFrameID": "cap-1959",
+          "toManifestIndex": 373,
+          "timestampDeltaSeconds": 1.533426959067583,
+          "translationStepM": 0.3255616275815098,
+          "azimuthDeltaRad": 0.18477550173105572,
+          "elevationDeltaRad": 0.2390348732980293,
+          "radiusDeltaM": 0.06743184638144306,
+          "toQualityScore": 0.9511440270809186,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1932",
+          "toFrameID": "cap-1940",
+          "toManifestIndex": 368,
+          "timestampDeltaSeconds": 1.400086082983762,
+          "translationStepM": 0.37592227295776987,
+          "azimuthDeltaRad": 0.2824896843080267,
+          "elevationDeltaRad": 0.1891615527758218,
+          "radiusDeltaM": 0.25076021317368224,
+          "toQualityScore": 0.8801327142995753,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1944",
+          "toFrameID": "cap-1949",
+          "toManifestIndex": 372,
+          "timestampDeltaSeconds": 1.133402582956478,
+          "translationStepM": 0.423537179317786,
+          "azimuthDeltaRad": 0.48669362507278935,
+          "elevationDeltaRad": 0.17984014094481104,
+          "radiusDeltaM": 0.21065861395648167,
+          "toQualityScore": 0.9798449616206251,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 3,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window021_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_021_prefix_before_first_break",
+          "window_021_segment_from_first_break",
+          "window_021_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_004",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-333",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 6,
+      "high_risk_frame_ids": [
+        "cap-333",
+        "cap-339",
+        "cap-358",
+        "cap-382",
+        "cap-393",
+        "cap-395"
+      ],
+      "max_timestamp_delta_seconds": 3.500238375039771,
+      "max_translation_step_m": 0.3026507783524309,
+      "max_azimuth_delta_rad": 0.36329931219178135,
+      "max_elevation_delta_rad": 0.17632515715889596,
+      "min_high_risk_quality_score": 0.4555092069790511,
+      "priority_score": 69.116,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 5,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-333",
+            "cap-335",
+            "cap-337",
+            "cap-339",
+            "cap-347",
+            "cap-358",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-382",
+            "cap-387",
+            "cap-389",
+            "cap-393",
+            "cap-395"
+          ],
+          "removed_frame_ids": [
+            "cap-310",
+            "cap-312"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-310",
+            "cap-312",
+            "cap-335",
+            "cap-337",
+            "cap-347",
+            "cap-360",
+            "cap-371",
+            "cap-373",
+            "cap-380",
+            "cap-387",
+            "cap-389"
+          ],
+          "removed_frame_ids": [
+            "cap-333",
+            "cap-339",
+            "cap-358",
+            "cap-382",
+            "cap-393",
+            "cap-395"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-312",
+          "toFrameID": "cap-333",
+          "toManifestIndex": 70,
+          "timestampDeltaSeconds": 3.500238375039771,
+          "translationStepM": 0.3026507783524309,
+          "azimuthDeltaRad": 0.3154254137044492,
+          "elevationDeltaRad": 0.17632515715889596,
+          "radiusDeltaM": 0.04448779659646962,
+          "toQualityScore": 0.6455762446328044,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-347",
+          "toFrameID": "cap-358",
+          "toManifestIndex": 75,
+          "timestampDeltaSeconds": 2.033472083043307,
+          "translationStepM": 0.23694773774162034,
+          "azimuthDeltaRad": 0.36329931219178135,
+          "elevationDeltaRad": 0.0651239908376462,
+          "radiusDeltaM": 0.020375396697049908,
+          "toQualityScore": 0.5688569275740141,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-337",
+          "toFrameID": "cap-339",
+          "toManifestIndex": 73,
+          "timestampDeltaSeconds": 0.5000343329738826,
+          "translationStepM": 0.04869923875030069,
+          "azimuthDeltaRad": 0.048629308400225835,
+          "elevationDeltaRad": 0.01661748022675591,
+          "radiusDeltaM": 0.008232923056927577,
+          "toQualityScore": 0.47836275401318407,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-389",
+          "toFrameID": "cap-393",
+          "toManifestIndex": 83,
+          "timestampDeltaSeconds": 0.43336295802146196,
+          "translationStepM": 0.026223551060877336,
+          "azimuthDeltaRad": 0.04209955703099899,
+          "elevationDeltaRad": 0.01711541713896403,
+          "radiusDeltaM": 0.0013500082941981795,
+          "toQualityScore": 0.4555092069790511,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-380",
+          "toFrameID": "cap-382",
+          "toManifestIndex": 80,
+          "timestampDeltaSeconds": 0.40002741711214185,
+          "translationStepM": 0.03561981902160033,
+          "azimuthDeltaRad": 0.04500197182225252,
+          "elevationDeltaRad": 0.022354120528911725,
+          "radiusDeltaM": 0.010383226357380426,
+          "toQualityScore": 0.4890736824712342,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 4,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window004_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_004_prefix_before_first_break",
+          "window_004_segment_from_first_break",
+          "window_004_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_007",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-630",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 4,
+      "high_risk_frame_ids": [
+        "cap-630",
+        "cap-712",
+        "cap-725",
+        "cap-758"
+      ],
+      "max_timestamp_delta_seconds": 12.300834249937907,
+      "max_translation_step_m": 0.4575813649709685,
+      "max_azimuth_delta_rad": 0.7719726500327708,
+      "max_elevation_delta_rad": 0.3152708169903188,
+      "min_high_risk_quality_score": 0.5825065378522414,
+      "priority_score": 68.645,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-621"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758"
+          ],
+          "removed_frame_ids": [
+            "cap-621"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-621",
+            "cap-635",
+            "cap-639",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743"
+          ],
+          "removed_frame_ids": [
+            "cap-630",
+            "cap-712",
+            "cap-725",
+            "cap-758"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-639",
+          "toFrameID": "cap-712",
+          "toManifestIndex": 123,
+          "timestampDeltaSeconds": 12.300834249937907,
+          "translationStepM": 0.45519928486676414,
+          "azimuthDeltaRad": 0.7710002363420891,
+          "elevationDeltaRad": 0.25650462081373804,
+          "radiusDeltaM": 0.29205814307585143,
+          "toQualityScore": 0.5825065378522414,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-743",
+          "toFrameID": "cap-758",
+          "toManifestIndex": 135,
+          "timestampDeltaSeconds": 2.566839875187725,
+          "translationStepM": 0.4575813649709685,
+          "azimuthDeltaRad": 0.6509053513797272,
+          "elevationDeltaRad": 0.0310268047744216,
+          "radiusDeltaM": 0.02444885719410561,
+          "toQualityScore": 0.7098321567559573,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-621",
+          "toFrameID": "cap-630",
+          "toManifestIndex": 120,
+          "timestampDeltaSeconds": 1.9001287501305342,
+          "translationStepM": 0.4560357226609411,
+          "azimuthDeltaRad": 0.7719726500327708,
+          "elevationDeltaRad": 0.037220437120730865,
+          "radiusDeltaM": 0.005652291366655793,
+          "toQualityScore": 0.8116012816454088,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-718",
+          "toFrameID": "cap-725",
+          "toManifestIndex": 127,
+          "timestampDeltaSeconds": 0.6333767080213875,
+          "translationStepM": 0.14447638081012176,
+          "azimuthDeltaRad": 0.10779755837675387,
+          "elevationDeltaRad": 0.3152708169903188,
+          "radiusDeltaM": 0.14864153099919641,
+          "toQualityScore": 0.948515275865816,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 5,
+      "recommendation": "next_true_rerun_candidate",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window007_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_007_prefix_before_first_break",
+          "window_007_segment_from_first_break",
+          "window_007_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_017",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1488",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1488",
+        "cap-1494",
+        "cap-1514",
+        "cap-1523",
+        "cap-1549"
+      ],
+      "max_timestamp_delta_seconds": 5.000319208949804,
+      "max_translation_step_m": 0.37145495134770595,
+      "max_azimuth_delta_rad": 0.5459648012909133,
+      "max_elevation_delta_rad": 0.1438633691417539,
+      "min_high_risk_quality_score": 0.4587294398037571,
+      "priority_score": 64.229,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459"
+          ],
+          "removed_frame_ids": [
+            "cap-1488",
+            "cap-1492",
+            "cap-1494",
+            "cap-1514",
+            "cap-1518",
+            "cap-1523",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1549",
+            "cap-1553"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-1488",
+            "cap-1492",
+            "cap-1494",
+            "cap-1514",
+            "cap-1518",
+            "cap-1523",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1549",
+            "cap-1553"
+          ],
+          "removed_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 3,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1453",
+            "cap-1455",
+            "cap-1457",
+            "cap-1459",
+            "cap-1492",
+            "cap-1518",
+            "cap-1525",
+            "cap-1529",
+            "cap-1533",
+            "cap-1535",
+            "cap-1540",
+            "cap-1553"
+          ],
+          "removed_frame_ids": [
+            "cap-1488",
+            "cap-1494",
+            "cap-1514",
+            "cap-1523",
+            "cap-1549"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1459",
+          "toFrameID": "cap-1488",
+          "toManifestIndex": 293,
+          "timestampDeltaSeconds": 5.000319208949804,
+          "translationStepM": 0.28040392679251686,
+          "azimuthDeltaRad": 0.39931817594903896,
+          "elevationDeltaRad": 0.0164456813579843,
+          "radiusDeltaM": 0.1050678882399303,
+          "toQualityScore": 0.5771856641623115,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1494",
+          "toFrameID": "cap-1514",
+          "toManifestIndex": 296,
+          "timestampDeltaSeconds": 2.866849208017811,
+          "translationStepM": 0.37145495134770595,
+          "azimuthDeltaRad": 0.5459648012909133,
+          "elevationDeltaRad": 0.07108856787776208,
+          "radiusDeltaM": 0.21928109938283125,
+          "toQualityScore": 0.4587294398037571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1540",
+          "toFrameID": "cap-1549",
+          "toManifestIndex": 304,
+          "timestampDeltaSeconds": 1.5000935420393944,
+          "translationStepM": 0.09095947409947489,
+          "azimuthDeltaRad": 0.06072273300532727,
+          "elevationDeltaRad": 0.07762850627527516,
+          "radiusDeltaM": 0.017416183229637117,
+          "toQualityScore": 0.4829931152617761,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1492",
+          "toFrameID": "cap-1494",
+          "toManifestIndex": 295,
+          "timestampDeltaSeconds": 0.8000510830897838,
+          "translationStepM": 0.12016821700270564,
+          "azimuthDeltaRad": 0.03517420250647696,
+          "elevationDeltaRad": 0.021630101488396836,
+          "radiusDeltaM": 0.015880349431376617,
+          "toQualityScore": 0.4713140429125801,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1518",
+          "toFrameID": "cap-1523",
+          "toManifestIndex": 298,
+          "timestampDeltaSeconds": 0.4000254590064287,
+          "translationStepM": 0.05154936645241533,
+          "azimuthDeltaRad": 0.015157452313402597,
+          "elevationDeltaRad": 0.1438633691417539,
+          "radiusDeltaM": 0.012838002545415339,
+          "toQualityScore": 0.46416841900854544,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 6,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window017_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_023",
+      "official_save_frame_count": 23,
+      "first_break_frame_id": "cap-2099",
+      "first_break_slot": 6,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-2099",
+        "cap-2135",
+        "cap-2159",
+        "cap-2177",
+        "cap-2190"
+      ],
+      "max_timestamp_delta_seconds": 5.4003293751738966,
+      "max_translation_step_m": 0.31046820136224085,
+      "max_azimuth_delta_rad": 0.2632723737366729,
+      "max_elevation_delta_rad": 0.18756680322589792,
+      "min_high_risk_quality_score": 0.5595419829542341,
+      "priority_score": 61.068,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 6,
+          "runtime_padding_frame_count": 29,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 17,
+          "downstream_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087"
+          ],
+          "removed_frame_ids": [
+            "cap-2099",
+            "cap-2103",
+            "cap-2106",
+            "cap-2135",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2159",
+            "cap-2165",
+            "cap-2168",
+            "cap-2177",
+            "cap-2190",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 17,
+          "runtime_padding_frame_count": 18,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-2099",
+            "cap-2103",
+            "cap-2106",
+            "cap-2135",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2159",
+            "cap-2165",
+            "cap-2168",
+            "cap-2177",
+            "cap-2190",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ],
+          "removed_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 18,
+          "runtime_padding_frame_count": 17,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-2071",
+            "cap-2073",
+            "cap-2075",
+            "cap-2079",
+            "cap-2081",
+            "cap-2087",
+            "cap-2103",
+            "cap-2106",
+            "cap-2142",
+            "cap-2148",
+            "cap-2151",
+            "cap-2153",
+            "cap-2165",
+            "cap-2168",
+            "cap-2198",
+            "cap-2211",
+            "cap-2215",
+            "cap-2219"
+          ],
+          "removed_frame_ids": [
+            "cap-2099",
+            "cap-2135",
+            "cap-2159",
+            "cap-2177",
+            "cap-2190"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-2106",
+          "toFrameID": "cap-2135",
+          "toManifestIndex": 400,
+          "timestampDeltaSeconds": 5.4003293751738966,
+          "translationStepM": 0.21499701529975843,
+          "azimuthDeltaRad": 0.0702824499613115,
+          "elevationDeltaRad": 0.1628381245065787,
+          "radiusDeltaM": 0.07331049243254972,
+          "toQualityScore": 0.6793172223551371,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2087",
+          "toFrameID": "cap-2099",
+          "toManifestIndex": 397,
+          "timestampDeltaSeconds": 2.0334570419508964,
+          "translationStepM": 0.1130312344753133,
+          "azimuthDeltaRad": 0.11163606471968057,
+          "elevationDeltaRad": 0.04433229207208547,
+          "radiusDeltaM": 7.575815117610851e-05,
+          "toQualityScore": 0.5834318330545982,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2168",
+          "toFrameID": "cap-2177",
+          "toManifestIndex": 408,
+          "timestampDeltaSeconds": 2.0001214588992298,
+          "translationStepM": 0.15305218472123147,
+          "azimuthDeltaRad": 0.025780642051775216,
+          "elevationDeltaRad": 0.18756680322589792,
+          "radiusDeltaM": 0.019010911544696918,
+          "toQualityScore": 0.5595419829542341,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2177",
+          "toFrameID": "cap-2190",
+          "toManifestIndex": 409,
+          "timestampDeltaSeconds": 1.6334324581548572,
+          "translationStepM": 0.2821289370767828,
+          "azimuthDeltaRad": 0.09415570502184023,
+          "elevationDeltaRad": 0.15648467384825987,
+          "radiusDeltaM": 0.29530239974796735,
+          "toQualityScore": 0.909082579864522,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-2153",
+          "toFrameID": "cap-2159",
+          "toManifestIndex": 405,
+          "timestampDeltaSeconds": 0.9667254998348653,
+          "translationStepM": 0.31046820136224085,
+          "azimuthDeltaRad": 0.2632723737366729,
+          "elevationDeltaRad": 0.16870987242782473,
+          "radiusDeltaM": 0.017307202237580976,
+          "toQualityScore": 0.7799801677702356,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 7,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window023_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_005",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-411",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-411",
+        "cap-413",
+        "cap-428",
+        "cap-434",
+        "cap-436"
+      ],
+      "max_timestamp_delta_seconds": 1.666780082974583,
+      "max_translation_step_m": 0.2396571471264906,
+      "max_azimuth_delta_rad": 0.2464512308215996,
+      "max_elevation_delta_rad": 0.13265918144931677,
+      "min_high_risk_quality_score": 0.37351117526266475,
+      "priority_score": 57.53,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-397",
+            "cap-402"
+          ],
+          "removed_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-428",
+            "cap-430",
+            "cap-434",
+            "cap-436",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-428",
+            "cap-430",
+            "cap-434",
+            "cap-436",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ],
+          "removed_frame_ids": [
+            "cap-397",
+            "cap-402"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-397",
+            "cap-402",
+            "cap-418",
+            "cap-420",
+            "cap-422",
+            "cap-424",
+            "cap-430",
+            "cap-440",
+            "cap-438",
+            "cap-446",
+            "cap-453",
+            "cap-455"
+          ],
+          "removed_frame_ids": [
+            "cap-411",
+            "cap-413",
+            "cap-428",
+            "cap-434",
+            "cap-436"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-402",
+          "toFrameID": "cap-411",
+          "toManifestIndex": 87,
+          "timestampDeltaSeconds": 1.666780082974583,
+          "translationStepM": 0.09133019887980638,
+          "azimuthDeltaRad": 0.2464512308215996,
+          "elevationDeltaRad": 0.001759233308082253,
+          "radiusDeltaM": 0.02487184013134547,
+          "toQualityScore": 0.37351117526266475,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-430",
+          "toFrameID": "cap-434",
+          "toManifestIndex": 95,
+          "timestampDeltaSeconds": 0.8333900000434369,
+          "translationStepM": 0.2396571471264906,
+          "azimuthDeltaRad": 0.21317790624529387,
+          "elevationDeltaRad": 0.13265918144931677,
+          "radiusDeltaM": 0.002430422042125402,
+          "toQualityScore": 0.4495635498819955,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-424",
+          "toFrameID": "cap-428",
+          "toManifestIndex": 93,
+          "timestampDeltaSeconds": 0.6000407908577472,
+          "translationStepM": 0.13401218563409242,
+          "azimuthDeltaRad": 0.20607809245750364,
+          "elevationDeltaRad": 0.12172463815128054,
+          "radiusDeltaM": 0.02179627969134479,
+          "toQualityScore": 0.4851375531810522,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-434",
+          "toFrameID": "cap-436",
+          "toManifestIndex": 96,
+          "timestampDeltaSeconds": 0.30002025002613664,
+          "translationStepM": 0.07172894767716267,
+          "azimuthDeltaRad": 0.06434127345651763,
+          "elevationDeltaRad": 0.07193960168307767,
+          "radiusDeltaM": 0.013170654904329449,
+          "toQualityScore": 0.46366210501822586,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-411",
+          "toFrameID": "cap-413",
+          "toManifestIndex": 88,
+          "timestampDeltaSeconds": 0.2666848748922348,
+          "translationStepM": 0.014306262161541815,
+          "azimuthDeltaRad": 0.03609643143809382,
+          "elevationDeltaRad": 0.007087699224876065,
+          "radiusDeltaM": 0.01088254738433414,
+          "toQualityScore": 0.4643986262123577,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 8,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window005_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_016",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1396",
+      "first_break_slot": 10,
+      "high_risk_frame_count": 5,
+      "high_risk_frame_ids": [
+        "cap-1396",
+        "cap-1413",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441"
+      ],
+      "max_timestamp_delta_seconds": 4.4669542498886585,
+      "max_translation_step_m": 0.41002378556831426,
+      "max_azimuth_delta_rad": 0.35758199888413733,
+      "max_elevation_delta_rad": 0.38718296732736246,
+      "min_high_risk_quality_score": 0.43892263017665784,
+      "priority_score": 55.93,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 10,
+          "runtime_padding_frame_count": 25,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 7,
+          "downstream_frame_ids": [
+            "cap-1346",
+            "cap-1354",
+            "cap-1356",
+            "cap-1358",
+            "cap-1360",
+            "cap-1361",
+            "cap-1363",
+            "cap-1365",
+            "cap-1367",
+            "cap-1369"
+          ],
+          "removed_frame_ids": [
+            "cap-1396",
+            "cap-1413",
+            "cap-1417",
+            "cap-1429",
+            "cap-1437",
+            "cap-1441",
+            "cap-1448"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 7,
+          "runtime_padding_frame_count": 28,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 4,
+          "removed_frame_count": 10,
+          "downstream_frame_ids": [
+            "cap-1396",
+            "cap-1413",
+            "cap-1417",
+            "cap-1429",
+            "cap-1437",
+            "cap-1441",
+            "cap-1448"
+          ],
+          "removed_frame_ids": [
+            "cap-1346",
+            "cap-1354",
+            "cap-1356",
+            "cap-1358",
+            "cap-1360",
+            "cap-1361",
+            "cap-1363",
+            "cap-1365",
+            "cap-1367",
+            "cap-1369"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-1346",
+            "cap-1354",
+            "cap-1356",
+            "cap-1358",
+            "cap-1360",
+            "cap-1361",
+            "cap-1363",
+            "cap-1365",
+            "cap-1367",
+            "cap-1369",
+            "cap-1417",
+            "cap-1448"
+          ],
+          "removed_frame_ids": [
+            "cap-1396",
+            "cap-1413",
+            "cap-1429",
+            "cap-1437",
+            "cap-1441"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1369",
+          "toFrameID": "cap-1396",
+          "toManifestIndex": 282,
+          "timestampDeltaSeconds": 4.4669542498886585,
+          "translationStepM": 0.41002378556831426,
+          "azimuthDeltaRad": 0.2828885886364847,
+          "elevationDeltaRad": 0.38718296732736246,
+          "radiusDeltaM": 0.025308815605312507,
+          "toQualityScore": 0.6869217112136229,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1396",
+          "toFrameID": "cap-1413",
+          "toManifestIndex": 283,
+          "timestampDeltaSeconds": 2.833515833131969,
+          "translationStepM": 0.1714592400095311,
+          "azimuthDeltaRad": 0.0339267124834004,
+          "elevationDeltaRad": 0.19457861468106724,
+          "radiusDeltaM": 0.05519286300660753,
+          "toQualityScore": 0.8461429858422891,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1417",
+          "toFrameID": "cap-1429",
+          "toManifestIndex": 285,
+          "timestampDeltaSeconds": 2.100135040935129,
+          "translationStepM": 0.09281797211268006,
+          "azimuthDeltaRad": 0.004495798602842882,
+          "elevationDeltaRad": 0.10875601279783875,
+          "radiusDeltaM": 0.037838676931647885,
+          "toQualityScore": 0.6155519784390571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1429",
+          "toFrameID": "cap-1437",
+          "toManifestIndex": 286,
+          "timestampDeltaSeconds": 1.6334382500499487,
+          "translationStepM": 0.2947389048823436,
+          "azimuthDeltaRad": 0.35758199888413733,
+          "elevationDeltaRad": 0.15629917892685175,
+          "radiusDeltaM": 0.12618036132988464,
+          "toQualityScore": 0.5314556183733531,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1437",
+          "toFrameID": "cap-1441",
+          "toManifestIndex": 287,
+          "timestampDeltaSeconds": 0.30001916689798236,
+          "translationStepM": 0.031179250835062747,
+          "azimuthDeltaRad": 0.08630168228753554,
+          "elevationDeltaRad": 0.04771962579704925,
+          "radiusDeltaM": 0.01979142369358744,
+          "toQualityScore": 0.43892263017665784,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 9,
+      "recommendation": "already_true_rerun_baseline",
+      "research_capture_manifest": {
+        "exists": true,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window016_2026_06_05",
+        "window_count": 3,
+        "window_ids": [
+          "window_016_prefix_before_first_break",
+          "window_016_segment_from_first_break",
+          "window_016_drop_all_high_risk_targets"
+        ]
+      }
+    },
+    {
+      "source_window_id": "window_002",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-148",
+      "first_break_slot": 6,
+      "high_risk_frame_count": 3,
+      "high_risk_frame_ids": [
+        "cap-148",
+        "cap-167",
+        "cap-190"
+      ],
+      "max_timestamp_delta_seconds": 3.666914082830772,
+      "max_translation_step_m": 0.5858613491125729,
+      "max_azimuth_delta_rad": 0.8817035823888855,
+      "max_elevation_delta_rad": 0.6687215642686556,
+      "min_high_risk_quality_score": 0.4794202555962293,
+      "priority_score": 52.79,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 6,
+          "runtime_padding_frame_count": 29,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 11,
+          "downstream_frame_ids": [
+            "cap-131",
+            "cap-136",
+            "cap-138",
+            "cap-140",
+            "cap-142",
+            "cap-144"
+          ],
+          "removed_frame_ids": [
+            "cap-148",
+            "cap-167",
+            "cap-190",
+            "cap-192",
+            "cap-194",
+            "cap-196",
+            "cap-198",
+            "cap-205",
+            "cap-207",
+            "cap-210",
+            "cap-214"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 11,
+          "runtime_padding_frame_count": 24,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 6,
+          "downstream_frame_ids": [
+            "cap-148",
+            "cap-167",
+            "cap-190",
+            "cap-192",
+            "cap-194",
+            "cap-196",
+            "cap-198",
+            "cap-205",
+            "cap-207",
+            "cap-210",
+            "cap-214"
+          ],
+          "removed_frame_ids": [
+            "cap-131",
+            "cap-136",
+            "cap-138",
+            "cap-140",
+            "cap-142",
+            "cap-144"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 14,
+          "runtime_padding_frame_count": 21,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 3,
+          "downstream_frame_ids": [
+            "cap-131",
+            "cap-136",
+            "cap-138",
+            "cap-140",
+            "cap-142",
+            "cap-144",
+            "cap-192",
+            "cap-194",
+            "cap-196",
+            "cap-198",
+            "cap-205",
+            "cap-207",
+            "cap-210",
+            "cap-214"
+          ],
+          "removed_frame_ids": [
+            "cap-148",
+            "cap-167",
+            "cap-190"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-167",
+          "toFrameID": "cap-190",
+          "toManifestIndex": 42,
+          "timestampDeltaSeconds": 3.666914082830772,
+          "translationStepM": 0.3373505695490547,
+          "azimuthDeltaRad": 0.8817035823888855,
+          "elevationDeltaRad": 0.2132553061631386,
+          "radiusDeltaM": 0.05615179056523012,
+          "toQualityScore": 0.5629610371370946,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-148",
+          "toFrameID": "cap-167",
+          "toManifestIndex": 41,
+          "timestampDeltaSeconds": 3.2668846249580383,
+          "translationStepM": 0.5858613491125729,
+          "azimuthDeltaRad": 0.6385520591691822,
+          "elevationDeltaRad": 0.6687215642686556,
+          "radiusDeltaM": 0.04218142884522569,
+          "toQualityScore": 0.5200930554510015,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-144",
+          "toFrameID": "cap-148",
+          "toManifestIndex": 40,
+          "timestampDeltaSeconds": 0.7000468750484288,
+          "translationStepM": 0.06614433005196402,
+          "azimuthDeltaRad": 0.00547027294013791,
+          "elevationDeltaRad": 0.059719744589352586,
+          "radiusDeltaM": 0.0005226449189233984,
+          "toQualityScore": 0.4794202555962293,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 10,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window002_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_012",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1101",
+      "first_break_slot": 8,
+      "high_risk_frame_count": 3,
+      "high_risk_frame_ids": [
+        "cap-1101",
+        "cap-1121",
+        "cap-1139"
+      ],
+      "max_timestamp_delta_seconds": 3.4668909169267863,
+      "max_translation_step_m": 0.6572124970519108,
+      "max_azimuth_delta_rad": 0.4880002385774116,
+      "max_elevation_delta_rad": 0.5684994388255924,
+      "min_high_risk_quality_score": 0.6261310853453868,
+      "priority_score": 48.281,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 8,
+          "runtime_padding_frame_count": 27,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 9,
+          "downstream_frame_ids": [
+            "cap-1052",
+            "cap-1054",
+            "cap-1056",
+            "cap-1059",
+            "cap-1066",
+            "cap-1068",
+            "cap-1079",
+            "cap-1083"
+          ],
+          "removed_frame_ids": [
+            "cap-1101",
+            "cap-1121",
+            "cap-1123",
+            "cap-1139",
+            "cap-1150",
+            "cap-1152",
+            "cap-1154",
+            "cap-1156",
+            "cap-1158"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 9,
+          "runtime_padding_frame_count": 26,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 8,
+          "downstream_frame_ids": [
+            "cap-1101",
+            "cap-1121",
+            "cap-1123",
+            "cap-1139",
+            "cap-1150",
+            "cap-1152",
+            "cap-1154",
+            "cap-1156",
+            "cap-1158"
+          ],
+          "removed_frame_ids": [
+            "cap-1052",
+            "cap-1054",
+            "cap-1056",
+            "cap-1059",
+            "cap-1066",
+            "cap-1068",
+            "cap-1079",
+            "cap-1083"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 14,
+          "runtime_padding_frame_count": 21,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 3,
+          "downstream_frame_ids": [
+            "cap-1052",
+            "cap-1054",
+            "cap-1056",
+            "cap-1059",
+            "cap-1066",
+            "cap-1068",
+            "cap-1079",
+            "cap-1083",
+            "cap-1123",
+            "cap-1150",
+            "cap-1152",
+            "cap-1154",
+            "cap-1156",
+            "cap-1158"
+          ],
+          "removed_frame_ids": [
+            "cap-1101",
+            "cap-1121",
+            "cap-1139"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1101",
+          "toFrameID": "cap-1121",
+          "toManifestIndex": 213,
+          "timestampDeltaSeconds": 3.4668909169267863,
+          "translationStepM": 0.6572124970519108,
+          "azimuthDeltaRad": 0.4560887572133776,
+          "elevationDeltaRad": 0.5684994388255924,
+          "radiusDeltaM": 0.05227098971209665,
+          "toQualityScore": 0.6992231100966224,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1083",
+          "toFrameID": "cap-1101",
+          "toManifestIndex": 212,
+          "timestampDeltaSeconds": 3.0668645419646055,
+          "translationStepM": 0.13575483795858234,
+          "azimuthDeltaRad": 0.1561640766580732,
+          "elevationDeltaRad": 0.019875175959175095,
+          "radiusDeltaM": 0.036980841991392066,
+          "toQualityScore": 0.6261310853453868,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1123",
+          "toFrameID": "cap-1139",
+          "toManifestIndex": 215,
+          "timestampDeltaSeconds": 2.733510375022888,
+          "translationStepM": 0.357257953298657,
+          "azimuthDeltaRad": 0.4880002385774116,
+          "elevationDeltaRad": 0.05403716692259469,
+          "radiusDeltaM": 0.015173970101084011,
+          "toQualityScore": 0.709461227220217,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 11,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window012_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_018",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1567",
+      "first_break_slot": 3,
+      "high_risk_frame_count": 3,
+      "high_risk_frame_ids": [
+        "cap-1567",
+        "cap-1597",
+        "cap-1620"
+      ],
+      "max_timestamp_delta_seconds": 2.033445459092036,
+      "max_translation_step_m": 0.7403896171813378,
+      "max_azimuth_delta_rad": 0.03170165576483619,
+      "max_elevation_delta_rad": 0.5965293090309753,
+      "min_high_risk_quality_score": 0.4277100927324551,
+      "priority_score": 47.807,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 3,
+          "runtime_padding_frame_count": 32,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 14,
+          "downstream_frame_ids": [
+            "cap-1555",
+            "cap-1561",
+            "cap-1565"
+          ],
+          "removed_frame_ids": [
+            "cap-1567",
+            "cap-1572",
+            "cap-1574",
+            "cap-1577",
+            "cap-1583",
+            "cap-1585",
+            "cap-1587",
+            "cap-1590",
+            "cap-1592",
+            "cap-1597",
+            "cap-1610",
+            "cap-1620",
+            "cap-1624",
+            "cap-1633"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 14,
+          "runtime_padding_frame_count": 21,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 3,
+          "downstream_frame_ids": [
+            "cap-1567",
+            "cap-1572",
+            "cap-1574",
+            "cap-1577",
+            "cap-1583",
+            "cap-1585",
+            "cap-1587",
+            "cap-1590",
+            "cap-1592",
+            "cap-1597",
+            "cap-1610",
+            "cap-1620",
+            "cap-1624",
+            "cap-1633"
+          ],
+          "removed_frame_ids": [
+            "cap-1555",
+            "cap-1561",
+            "cap-1565"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 14,
+          "runtime_padding_frame_count": 21,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 3,
+          "downstream_frame_ids": [
+            "cap-1555",
+            "cap-1561",
+            "cap-1565",
+            "cap-1572",
+            "cap-1574",
+            "cap-1577",
+            "cap-1583",
+            "cap-1585",
+            "cap-1587",
+            "cap-1590",
+            "cap-1592",
+            "cap-1610",
+            "cap-1624",
+            "cap-1633"
+          ],
+          "removed_frame_ids": [
+            "cap-1567",
+            "cap-1597",
+            "cap-1620"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1610",
+          "toFrameID": "cap-1620",
+          "toManifestIndex": 320,
+          "timestampDeltaSeconds": 2.033445459092036,
+          "translationStepM": 0.07139639110591992,
+          "azimuthDeltaRad": 0.03170165576483619,
+          "elevationDeltaRad": 0.06664205007028345,
+          "radiusDeltaM": 0.03285983249095714,
+          "toQualityScore": 0.5568656748004255,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1592",
+          "toFrameID": "cap-1597",
+          "toManifestIndex": 318,
+          "timestampDeltaSeconds": 1.3334088330157101,
+          "translationStepM": 0.7403896171813378,
+          "azimuthDeltaRad": 0.012530512478965417,
+          "elevationDeltaRad": 0.5965293090309753,
+          "radiusDeltaM": 0.05667410904698755,
+          "toQualityScore": 0.4277100927324551,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1565",
+          "toFrameID": "cap-1567",
+          "toManifestIndex": 309,
+          "timestampDeltaSeconds": 0.26668233308009803,
+          "translationStepM": 0.011215498643303635,
+          "azimuthDeltaRad": 0.009263984313586437,
+          "elevationDeltaRad": 0.01117832237856295,
+          "radiusDeltaM": 0.0051838991707371385,
+          "toQualityScore": 0.49144982071506266,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 12,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window018_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_008",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-815",
+      "first_break_slot": 12,
+      "high_risk_frame_count": 2,
+      "high_risk_frame_ids": [
+        "cap-815",
+        "cap-829"
+      ],
+      "max_timestamp_delta_seconds": 1.3000860000029206,
+      "max_translation_step_m": 0.3455136878953936,
+      "max_azimuth_delta_rad": 0.5502871332560044,
+      "max_elevation_delta_rad": 0.18721049273524176,
+      "min_high_risk_quality_score": 0.9415276806537967,
+      "priority_score": 28.531,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 12,
+          "runtime_padding_frame_count": 23,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 5,
+          "downstream_frame_ids": [
+            "cap-764",
+            "cap-769",
+            "cap-771",
+            "cap-775",
+            "cap-777",
+            "cap-783",
+            "cap-787",
+            "cap-789",
+            "cap-797",
+            "cap-799",
+            "cap-805",
+            "cap-809"
+          ],
+          "removed_frame_ids": [
+            "cap-815",
+            "cap-817",
+            "cap-821",
+            "cap-824",
+            "cap-829"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 5,
+          "runtime_padding_frame_count": 30,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 12,
+          "downstream_frame_ids": [
+            "cap-815",
+            "cap-817",
+            "cap-821",
+            "cap-824",
+            "cap-829"
+          ],
+          "removed_frame_ids": [
+            "cap-764",
+            "cap-769",
+            "cap-771",
+            "cap-775",
+            "cap-777",
+            "cap-783",
+            "cap-787",
+            "cap-789",
+            "cap-797",
+            "cap-799",
+            "cap-805",
+            "cap-809"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-764",
+            "cap-769",
+            "cap-771",
+            "cap-775",
+            "cap-777",
+            "cap-783",
+            "cap-787",
+            "cap-789",
+            "cap-797",
+            "cap-799",
+            "cap-805",
+            "cap-809",
+            "cap-817",
+            "cap-821",
+            "cap-824"
+          ],
+          "removed_frame_ids": [
+            "cap-815",
+            "cap-829"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-824",
+          "toFrameID": "cap-829",
+          "toManifestIndex": 152,
+          "timestampDeltaSeconds": 1.3000860000029206,
+          "translationStepM": 0.28684937675445565,
+          "azimuthDeltaRad": 0.03551493520003701,
+          "elevationDeltaRad": 0.18721049273524176,
+          "radiusDeltaM": 0.09103856531972654,
+          "toQualityScore": 0.9415276806537967,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-809",
+          "toFrameID": "cap-815",
+          "toManifestIndex": 148,
+          "timestampDeltaSeconds": 1.2667510411702096,
+          "translationStepM": 0.3455136878953936,
+          "azimuthDeltaRad": 0.5502871332560044,
+          "elevationDeltaRad": 0.04873478338706594,
+          "radiusDeltaM": 0.07599850134354724,
+          "toQualityScore": 0.9666248249135458,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 13,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window008_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_014",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1232",
+      "first_break_slot": 1,
+      "high_risk_frame_count": 2,
+      "high_risk_frame_ids": [
+        "cap-1232",
+        "cap-1245"
+      ],
+      "max_timestamp_delta_seconds": 0.7333798750769347,
+      "max_translation_step_m": 0.046190932546033674,
+      "max_azimuth_delta_rad": 0.07802372026421356,
+      "max_elevation_delta_rad": 0.00796444476763275,
+      "min_high_risk_quality_score": 0.4903111450083664,
+      "priority_score": 28.194,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 1,
+          "runtime_padding_frame_count": 34,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 16,
+          "downstream_frame_ids": [
+            "cap-1230"
+          ],
+          "removed_frame_ids": [
+            "cap-1232",
+            "cap-1234",
+            "cap-1239",
+            "cap-1241",
+            "cap-1245",
+            "cap-1247",
+            "cap-1256",
+            "cap-1258",
+            "cap-1260",
+            "cap-1262",
+            "cap-1264",
+            "cap-1266",
+            "cap-1268",
+            "cap-1270",
+            "cap-1272",
+            "cap-1274"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1232",
+            "cap-1234",
+            "cap-1239",
+            "cap-1241",
+            "cap-1245",
+            "cap-1247",
+            "cap-1256",
+            "cap-1258",
+            "cap-1260",
+            "cap-1262",
+            "cap-1264",
+            "cap-1266",
+            "cap-1268",
+            "cap-1270",
+            "cap-1272",
+            "cap-1274"
+          ],
+          "removed_frame_ids": [
+            "cap-1230"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-1230",
+            "cap-1234",
+            "cap-1239",
+            "cap-1241",
+            "cap-1247",
+            "cap-1256",
+            "cap-1258",
+            "cap-1260",
+            "cap-1262",
+            "cap-1264",
+            "cap-1266",
+            "cap-1268",
+            "cap-1270",
+            "cap-1272",
+            "cap-1274"
+          ],
+          "removed_frame_ids": [
+            "cap-1232",
+            "cap-1245"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1241",
+          "toFrameID": "cap-1245",
+          "toManifestIndex": 243,
+          "timestampDeltaSeconds": 0.7333798750769347,
+          "translationStepM": 0.03436181840939379,
+          "azimuthDeltaRad": 0.05276362200906348,
+          "elevationDeltaRad": 0.0036006965970047933,
+          "radiusDeltaM": 0.002363975307032029,
+          "toQualityScore": 0.49968782703057096,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1230",
+          "toFrameID": "cap-1232",
+          "toManifestIndex": 239,
+          "timestampDeltaSeconds": 0.26668374985456467,
+          "translationStepM": 0.046190932546033674,
+          "azimuthDeltaRad": 0.07802372026421356,
+          "elevationDeltaRad": 0.00796444476763275,
+          "radiusDeltaM": 0.01038125006108781,
+          "toQualityScore": 0.4903111450083664,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 14,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window014_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_001",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-74",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 2,
+      "high_risk_frame_ids": [
+        "cap-74",
+        "cap-96"
+      ],
+      "max_timestamp_delta_seconds": 3.1335624591447413,
+      "max_translation_step_m": 0.33141039817567214,
+      "max_azimuth_delta_rad": 0.3431654319580657,
+      "max_elevation_delta_rad": 0.02261412657099693,
+      "min_high_risk_quality_score": 0.760494708438588,
+      "priority_score": 28.003,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-54",
+            "cap-56"
+          ],
+          "removed_frame_ids": [
+            "cap-74",
+            "cap-78",
+            "cap-80",
+            "cap-96",
+            "cap-103",
+            "cap-105",
+            "cap-107",
+            "cap-109",
+            "cap-114",
+            "cap-116",
+            "cap-118",
+            "cap-122",
+            "cap-124",
+            "cap-126",
+            "cap-128"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-74",
+            "cap-78",
+            "cap-80",
+            "cap-96",
+            "cap-103",
+            "cap-105",
+            "cap-107",
+            "cap-109",
+            "cap-114",
+            "cap-116",
+            "cap-118",
+            "cap-122",
+            "cap-124",
+            "cap-126",
+            "cap-128"
+          ],
+          "removed_frame_ids": [
+            "cap-54",
+            "cap-56"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 2,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-54",
+            "cap-56",
+            "cap-78",
+            "cap-80",
+            "cap-103",
+            "cap-105",
+            "cap-107",
+            "cap-109",
+            "cap-114",
+            "cap-116",
+            "cap-118",
+            "cap-122",
+            "cap-124",
+            "cap-126",
+            "cap-128"
+          ],
+          "removed_frame_ids": [
+            "cap-74",
+            "cap-96"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-56",
+          "toFrameID": "cap-74",
+          "toManifestIndex": 19,
+          "timestampDeltaSeconds": 3.1335624591447413,
+          "translationStepM": 0.33141039817567214,
+          "azimuthDeltaRad": 0.3363938145815988,
+          "elevationDeltaRad": 0.02261412657099693,
+          "radiusDeltaM": 0.1549077715014684,
+          "toQualityScore": 0.9418424111810233,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-80",
+          "toFrameID": "cap-96",
+          "toManifestIndex": 22,
+          "timestampDeltaSeconds": 2.700193916913122,
+          "translationStepM": 0.2644932653757243,
+          "azimuthDeltaRad": 0.3431654319580657,
+          "elevationDeltaRad": 0.008095158089780341,
+          "radiusDeltaM": 0.10838732580929156,
+          "toQualityScore": 0.760494708438588,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 15,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window001_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_003",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-257",
+      "first_break_slot": 8,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-257"
+      ],
+      "max_timestamp_delta_seconds": 3.633577332831919,
+      "max_translation_step_m": 0.3637088868161142,
+      "max_azimuth_delta_rad": 0.1677461572894714,
+      "max_elevation_delta_rad": 0.3488110119600318,
+      "min_high_risk_quality_score": 0.7874964884486761,
+      "priority_score": 20.258,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 8,
+          "runtime_padding_frame_count": 27,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 9,
+          "downstream_frame_ids": [
+            "cap-212",
+            "cap-216",
+            "cap-220",
+            "cap-222",
+            "cap-224",
+            "cap-227",
+            "cap-230",
+            "cap-235"
+          ],
+          "removed_frame_ids": [
+            "cap-257",
+            "cap-260",
+            "cap-263",
+            "cap-272",
+            "cap-274",
+            "cap-280",
+            "cap-288",
+            "cap-291",
+            "cap-296"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 9,
+          "runtime_padding_frame_count": 26,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 8,
+          "downstream_frame_ids": [
+            "cap-257",
+            "cap-260",
+            "cap-263",
+            "cap-272",
+            "cap-274",
+            "cap-280",
+            "cap-288",
+            "cap-291",
+            "cap-296"
+          ],
+          "removed_frame_ids": [
+            "cap-212",
+            "cap-216",
+            "cap-220",
+            "cap-222",
+            "cap-224",
+            "cap-227",
+            "cap-230",
+            "cap-235"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-212",
+            "cap-216",
+            "cap-220",
+            "cap-222",
+            "cap-224",
+            "cap-227",
+            "cap-230",
+            "cap-235",
+            "cap-260",
+            "cap-263",
+            "cap-272",
+            "cap-274",
+            "cap-280",
+            "cap-288",
+            "cap-291",
+            "cap-296"
+          ],
+          "removed_frame_ids": [
+            "cap-257"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-235",
+          "toFrameID": "cap-257",
+          "toManifestIndex": 59,
+          "timestampDeltaSeconds": 3.633577332831919,
+          "translationStepM": 0.3637088868161142,
+          "azimuthDeltaRad": 0.1677461572894714,
+          "elevationDeltaRad": 0.3488110119600318,
+          "radiusDeltaM": 0.05367388151833574,
+          "toQualityScore": 0.7874964884486761,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 16,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window003_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_015",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1302",
+      "first_break_slot": 2,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-1302"
+      ],
+      "max_timestamp_delta_seconds": 2.833511041942984,
+      "max_translation_step_m": 0.33058995771609156,
+      "max_azimuth_delta_rad": 0.32085975814839873,
+      "max_elevation_delta_rad": 0.009912252154454348,
+      "min_high_risk_quality_score": 0.9062624955455911,
+      "priority_score": 17.54,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 2,
+          "runtime_padding_frame_count": 33,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 15,
+          "downstream_frame_ids": [
+            "cap-1276",
+            "cap-1285"
+          ],
+          "removed_frame_ids": [
+            "cap-1302",
+            "cap-1304",
+            "cap-1306",
+            "cap-1309",
+            "cap-1311",
+            "cap-1313",
+            "cap-1314",
+            "cap-1319",
+            "cap-1326",
+            "cap-1328",
+            "cap-1330",
+            "cap-1336",
+            "cap-1338",
+            "cap-1343",
+            "cap-1345"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 15,
+          "runtime_padding_frame_count": 20,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 2,
+          "downstream_frame_ids": [
+            "cap-1302",
+            "cap-1304",
+            "cap-1306",
+            "cap-1309",
+            "cap-1311",
+            "cap-1313",
+            "cap-1314",
+            "cap-1319",
+            "cap-1326",
+            "cap-1328",
+            "cap-1330",
+            "cap-1336",
+            "cap-1338",
+            "cap-1343",
+            "cap-1345"
+          ],
+          "removed_frame_ids": [
+            "cap-1276",
+            "cap-1285"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1276",
+            "cap-1285",
+            "cap-1304",
+            "cap-1306",
+            "cap-1309",
+            "cap-1311",
+            "cap-1313",
+            "cap-1314",
+            "cap-1319",
+            "cap-1326",
+            "cap-1328",
+            "cap-1330",
+            "cap-1336",
+            "cap-1338",
+            "cap-1343",
+            "cap-1345"
+          ],
+          "removed_frame_ids": [
+            "cap-1302"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1285",
+          "toFrameID": "cap-1302",
+          "toManifestIndex": 257,
+          "timestampDeltaSeconds": 2.833511041942984,
+          "translationStepM": 0.33058995771609156,
+          "azimuthDeltaRad": 0.32085975814839873,
+          "elevationDeltaRad": 0.009912252154454348,
+          "radiusDeltaM": 0.15311648223463958,
+          "toQualityScore": 0.9062624955455911,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 17,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window015_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_013",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1207",
+      "first_break_slot": 10,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-1207"
+      ],
+      "max_timestamp_delta_seconds": 1.3667543339543045,
+      "max_translation_step_m": 0.30684502910128414,
+      "max_azimuth_delta_rad": 0.23322974988025003,
+      "max_elevation_delta_rad": 0.11899991276587568,
+      "min_high_risk_quality_score": 0.6391868455261307,
+      "priority_score": 15.91,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 10,
+          "runtime_padding_frame_count": 25,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 7,
+          "downstream_frame_ids": [
+            "cap-1160",
+            "cap-1167",
+            "cap-1169",
+            "cap-1171",
+            "cap-1173",
+            "cap-1179",
+            "cap-1188",
+            "cap-1197",
+            "cap-1199",
+            "cap-1202"
+          ],
+          "removed_frame_ids": [
+            "cap-1207",
+            "cap-1215",
+            "cap-1217",
+            "cap-1220",
+            "cap-1222",
+            "cap-1224",
+            "cap-1227"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 7,
+          "runtime_padding_frame_count": 28,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 10,
+          "downstream_frame_ids": [
+            "cap-1207",
+            "cap-1215",
+            "cap-1217",
+            "cap-1220",
+            "cap-1222",
+            "cap-1224",
+            "cap-1227"
+          ],
+          "removed_frame_ids": [
+            "cap-1160",
+            "cap-1167",
+            "cap-1169",
+            "cap-1171",
+            "cap-1173",
+            "cap-1179",
+            "cap-1188",
+            "cap-1197",
+            "cap-1199",
+            "cap-1202"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1160",
+            "cap-1167",
+            "cap-1169",
+            "cap-1171",
+            "cap-1173",
+            "cap-1179",
+            "cap-1188",
+            "cap-1197",
+            "cap-1199",
+            "cap-1202",
+            "cap-1215",
+            "cap-1217",
+            "cap-1220",
+            "cap-1222",
+            "cap-1224",
+            "cap-1227"
+          ],
+          "removed_frame_ids": [
+            "cap-1207"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1202",
+          "toFrameID": "cap-1207",
+          "toManifestIndex": 231,
+          "timestampDeltaSeconds": 1.3667543339543045,
+          "translationStepM": 0.30684502910128414,
+          "azimuthDeltaRad": 0.23322974988025003,
+          "elevationDeltaRad": 0.11899991276587568,
+          "radiusDeltaM": 0.07142424758069099,
+          "toQualityScore": 0.6391868455261307,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 18,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window013_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_020",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1837",
+      "first_break_slot": 3,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-1837"
+      ],
+      "max_timestamp_delta_seconds": 2.5001521250233054,
+      "max_translation_step_m": 0.23894546936826372,
+      "max_azimuth_delta_rad": 0.2474360379622358,
+      "max_elevation_delta_rad": 0.22794785884235091,
+      "min_high_risk_quality_score": 0.7604210687650528,
+      "priority_score": 15.75,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 3,
+          "runtime_padding_frame_count": 32,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 14,
+          "downstream_frame_ids": [
+            "cap-1813",
+            "cap-1817",
+            "cap-1822"
+          ],
+          "removed_frame_ids": [
+            "cap-1837",
+            "cap-1839",
+            "cap-1841",
+            "cap-1843",
+            "cap-1845",
+            "cap-1847",
+            "cap-1853",
+            "cap-1851",
+            "cap-1855",
+            "cap-1860",
+            "cap-1865",
+            "cap-1870",
+            "cap-1872",
+            "cap-1874"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 14,
+          "runtime_padding_frame_count": 21,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 3,
+          "downstream_frame_ids": [
+            "cap-1837",
+            "cap-1839",
+            "cap-1841",
+            "cap-1843",
+            "cap-1845",
+            "cap-1847",
+            "cap-1853",
+            "cap-1851",
+            "cap-1855",
+            "cap-1860",
+            "cap-1865",
+            "cap-1870",
+            "cap-1872",
+            "cap-1874"
+          ],
+          "removed_frame_ids": [
+            "cap-1813",
+            "cap-1817",
+            "cap-1822"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1813",
+            "cap-1817",
+            "cap-1822",
+            "cap-1839",
+            "cap-1841",
+            "cap-1843",
+            "cap-1845",
+            "cap-1847",
+            "cap-1853",
+            "cap-1851",
+            "cap-1855",
+            "cap-1860",
+            "cap-1865",
+            "cap-1870",
+            "cap-1872",
+            "cap-1874"
+          ],
+          "removed_frame_ids": [
+            "cap-1837"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1822",
+          "toFrameID": "cap-1837",
+          "toManifestIndex": 343,
+          "timestampDeltaSeconds": 2.5001521250233054,
+          "translationStepM": 0.23894546936826372,
+          "azimuthDeltaRad": 0.2474360379622358,
+          "elevationDeltaRad": 0.22794785884235091,
+          "radiusDeltaM": 0.10275699839498176,
+          "toQualityScore": 0.7604210687650528,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 19,
+      "recommendation": "lower_priority_short_segment",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window020_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_000",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-21",
+      "first_break_slot": 4,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-21"
+      ],
+      "max_timestamp_delta_seconds": 2.266840166877955,
+      "max_translation_step_m": 0.20308800625864443,
+      "max_azimuth_delta_rad": 0.0015174562705118078,
+      "max_elevation_delta_rad": 0.15420624077358058,
+      "min_high_risk_quality_score": 0.9786538340343174,
+      "priority_score": 15.4,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 4,
+          "runtime_padding_frame_count": 31,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 13,
+          "downstream_frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7"
+          ],
+          "removed_frame_ids": [
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35",
+            "cap-37",
+            "cap-39",
+            "cap-42",
+            "cap-44",
+            "cap-48",
+            "cap-50",
+            "cap-52"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 13,
+          "runtime_padding_frame_count": 22,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 4,
+          "downstream_frame_ids": [
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35",
+            "cap-37",
+            "cap-39",
+            "cap-42",
+            "cap-44",
+            "cap-48",
+            "cap-50",
+            "cap-52"
+          ],
+          "removed_frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35",
+            "cap-37",
+            "cap-39",
+            "cap-42",
+            "cap-44",
+            "cap-48",
+            "cap-50",
+            "cap-52"
+          ],
+          "removed_frame_ids": [
+            "cap-21"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-7",
+          "toFrameID": "cap-21",
+          "toManifestIndex": 4,
+          "timestampDeltaSeconds": 2.266840166877955,
+          "translationStepM": 0.20308800625864443,
+          "azimuthDeltaRad": 0.0015174562705118078,
+          "elevationDeltaRad": 0.15420624077358058,
+          "radiusDeltaM": 0.03188575445698216,
+          "toQualityScore": 0.9786538340343174,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 20,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window000_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    },
+    {
+      "source_window_id": "window_011",
+      "official_save_frame_count": 17,
+      "first_break_frame_id": "cap-1016",
+      "first_break_slot": 8,
+      "high_risk_frame_count": 1,
+      "high_risk_frame_ids": [
+        "cap-1016"
+      ],
+      "max_timestamp_delta_seconds": 2.1334712500683963,
+      "max_translation_step_m": 0.18741700588958626,
+      "max_azimuth_delta_rad": 0.1024973944916292,
+      "max_elevation_delta_rad": 0.11054243371346453,
+      "min_high_risk_quality_score": 0.9579222324133256,
+      "priority_score": 15.2,
+      "variants": {
+        "prefix_before_first_break": {
+          "exists": true,
+          "real_frame_count": 8,
+          "runtime_padding_frame_count": 27,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 9,
+          "downstream_frame_ids": [
+            "cap-973",
+            "cap-983",
+            "cap-987",
+            "cap-989",
+            "cap-991",
+            "cap-996",
+            "cap-999",
+            "cap-1003"
+          ],
+          "removed_frame_ids": [
+            "cap-1016",
+            "cap-1019",
+            "cap-1030",
+            "cap-1032",
+            "cap-1034",
+            "cap-1036",
+            "cap-1038",
+            "cap-1040",
+            "cap-1047"
+          ]
+        },
+        "segment_from_first_break": {
+          "exists": true,
+          "real_frame_count": 9,
+          "runtime_padding_frame_count": 26,
+          "continuity_status": "pass",
+          "residual_high_risk_step_count": 0,
+          "removed_frame_count": 8,
+          "downstream_frame_ids": [
+            "cap-1016",
+            "cap-1019",
+            "cap-1030",
+            "cap-1032",
+            "cap-1034",
+            "cap-1036",
+            "cap-1038",
+            "cap-1040",
+            "cap-1047"
+          ],
+          "removed_frame_ids": [
+            "cap-973",
+            "cap-983",
+            "cap-987",
+            "cap-989",
+            "cap-991",
+            "cap-996",
+            "cap-999",
+            "cap-1003"
+          ]
+        },
+        "drop_all_high_risk_targets": {
+          "exists": true,
+          "real_frame_count": 16,
+          "runtime_padding_frame_count": 19,
+          "continuity_status": "warning",
+          "residual_high_risk_step_count": 1,
+          "removed_frame_count": 1,
+          "downstream_frame_ids": [
+            "cap-973",
+            "cap-983",
+            "cap-987",
+            "cap-989",
+            "cap-991",
+            "cap-996",
+            "cap-999",
+            "cap-1003",
+            "cap-1019",
+            "cap-1030",
+            "cap-1032",
+            "cap-1034",
+            "cap-1036",
+            "cap-1038",
+            "cap-1040",
+            "cap-1047"
+          ],
+          "removed_frame_ids": [
+            "cap-1016"
+          ]
+        }
+      },
+      "top_high_risk_steps": [
+        {
+          "fromFrameID": "cap-1003",
+          "toFrameID": "cap-1016",
+          "toManifestIndex": 195,
+          "timestampDeltaSeconds": 2.1334712500683963,
+          "translationStepM": 0.18741700588958626,
+          "azimuthDeltaRad": 0.1024973944916292,
+          "elevationDeltaRad": 0.11054243371346453,
+          "radiusDeltaM": 0.14577713941893478,
+          "toQualityScore": 0.9579222324133256,
+          "highRisk": true
+        }
+      ],
+      "priority_rank": 21,
+      "recommendation": "queue_candidate",
+      "research_capture_manifest": {
+        "exists": false,
+        "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_continuity_quarantine_window011_2026_06_05",
+        "window_count": 0,
+        "window_ids": []
+      }
+    }
+  ],
+  "plain_language": [
+    "这不是新算法结论，只是下一批真重跑的排队表：先挑官方 downstream 内 continuity 风险最大、且变体仍有足够真帧的 window。",
+    "window_016 已经有 true rerun 证据，所以它在队列里保留为 baseline，不再作为第一优先级重复跑。",
+    "1. window_019: high-risk=9, max_dt=15.43s, max_trans=0.394m, drop_real=8, recommendation=lower_priority_short_segment",
+    "2. window_006: high-risk=6, max_dt=6.17s, max_trans=0.394m, drop_real=11, recommendation=next_true_rerun_candidate",
+    "3. window_021: high-risk=5, max_dt=4.03s, max_trans=0.714m, drop_real=12, recommendation=next_true_rerun_candidate",
+    "4. window_004: high-risk=6, max_dt=3.50s, max_trans=0.303m, drop_real=11, recommendation=next_true_rerun_candidate",
+    "5. window_007: high-risk=4, max_dt=12.30s, max_trans=0.458m, drop_real=13, recommendation=next_true_rerun_candidate",
+    "建议下一批先跑：`window_006`, `window_021`, `window_004`, `window_007`。这些 window 的风险足够高，同时 drop-high-risk 变体仍保留至少 10 个真帧。",
+    "下一步应生成这些 candidate 的研究 capture manifest，再跑同一条 DA3BASE_476x742_N35_pose CoreML + official postprocess 厚度审计。"
+  ]
+}

@@ -1,0 +1,527 @@
+{
+  "schema_version": "aether_official_da3_save_frame_downstream_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "official_save_frame_downstream_aligned",
+    "goal_complete": false,
+    "conclusion": "Dart refreshed da3_k_windows.json now carries officialSaveFrameIDs/downstreamFrameIDs, and the corrected official postprocess depth_index for window_016 keeps 17 official downstream frames instead of all 35 CoreML slots.",
+    "next_best_action": "Re-run thickness attribution on the corrected official-save depth_index and adjacent window_017 ownership; do not treat full-chunk tail slots as window_016 downstream evidence."
+  },
+  "inputs": {
+    "k_windows": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_k_windows.json",
+    "k_windows_sha256": "eb4af7a83394de7b2117363191c808755c4595de25fb8e985b49b17553eca891",
+    "old_full_chunk_postprocess_depth_index": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_postprocess_2026_06_05/depth_index.json",
+    "new_official_save_postprocess_depth_index": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_save_postprocess_2026_06_05/depth_index.json"
+  },
+  "official_window_policy": {
+    "kind": "official_streaming_ordered_image_chunks_v1",
+    "policy": "strict_official_da3_streaming_timestamp_sliding_window",
+    "officialStreamingDefaultMatch": true,
+    "officialStreamingDefault": "ordered image chunks with half-chunk overlap; no AR/VIO pose graph input",
+    "officialReference": "Depth-Anything-3 da3_streaming.py get_chunk_indices and save_depth_conf_result",
+    "officialSourceEvidence": {
+      "file": "Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "chunkLines": "308-320",
+      "saveDepthConfResultLines": "212-250",
+      "inferenceCallLine": "273"
+    },
+    "chunkSize": 35,
+    "overlap": 18,
+    "step": 17,
+    "targetBridgeOverlap": 18,
+    "stepEquivalent": 17,
+    "temporalOrderRole": "primary_topology",
+    "orderBasis": {
+      "manifest": "photo_bundle.json",
+      "field": "frames[].timestamp",
+      "tieBreak": "original manifest index",
+      "ascending": true
+    },
+    "runtimePadding": "only for fixed-N CoreML runtimes; officialChunkFrameIDs preserves unpadded PyTorch chunk semantics",
+    "downstreamRule": "Dart consumes only officialSaveFrameIDs, matching results_output/frame_*.npz core downstream instead of full-chunk merge",
+    "geometryContinuityAudit": "diagnostic only; does not use AR/VIO to select official chunks or feed official image-only DA3",
+    "estimatedWindowCount": 24,
+    "hardWindowLimit": null
+  },
+  "window016": {
+    "id": "window_016",
+    "chunkStartIndex": 272,
+    "chunkEndIndexExclusive": 307,
+    "frameCount": 35,
+    "officialChunkFrameCount": 35,
+    "officialSaveFrameCount": 17,
+    "withheldForNextOverlapFrameCount": 18,
+    "officialSaveFrameIDs": [
+      "cap-1346",
+      "cap-1354",
+      "cap-1356",
+      "cap-1358",
+      "cap-1360",
+      "cap-1361",
+      "cap-1363",
+      "cap-1365",
+      "cap-1367",
+      "cap-1369",
+      "cap-1396",
+      "cap-1413",
+      "cap-1417",
+      "cap-1429",
+      "cap-1437",
+      "cap-1441",
+      "cap-1448"
+    ],
+    "withheldForNextOverlapFrameIDs": [
+      "cap-1453",
+      "cap-1455",
+      "cap-1457",
+      "cap-1459",
+      "cap-1488",
+      "cap-1492",
+      "cap-1494",
+      "cap-1514",
+      "cap-1518",
+      "cap-1523",
+      "cap-1525",
+      "cap-1529",
+      "cap-1533",
+      "cap-1535",
+      "cap-1540",
+      "cap-1549",
+      "cap-1553",
+      "cap-1555"
+    ],
+    "continuityAudit": {
+      "schemaVersion": "aether_da3_frame_continuity_audit_v1",
+      "owner": "Flutter/Dart",
+      "role": "diagnostic and acceptance-gate input only; not an official DA3 image-only model input",
+      "status": "warning",
+      "frameCount": 35,
+      "stepCount": 34,
+      "thresholds": {
+        "timestampDeltaSecondsWarningGt": 2.0,
+        "translationStepMWarningGt": 0.25,
+        "azimuthDeltaRadWarningGt": 0.35,
+        "elevationDeltaRadWarningGt": 0.25,
+        "qualityScoreWarningLt": 0.5
+      },
+      "highRiskStepCount": 11,
+      "topTimestampSteps": [
+        {
+          "fromFrameID": "cap-1459",
+          "toFrameID": "cap-1488",
+          "toManifestIndex": 293,
+          "timestampDeltaSeconds": 5.000319208949804,
+          "translationStepM": 0.28040392679251686,
+          "azimuthDeltaRad": 0.39931817594903896,
+          "elevationDeltaRad": 0.0164456813579843,
+          "radiusDeltaM": 0.1050678882399303,
+          "toQualityScore": 0.5771856641623115,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1369",
+          "toFrameID": "cap-1396",
+          "toManifestIndex": 282,
+          "timestampDeltaSeconds": 4.4669542498886585,
+          "translationStepM": 0.41002378556831426,
+          "azimuthDeltaRad": 0.2828885886364847,
+          "elevationDeltaRad": 0.38718296732736246,
+          "radiusDeltaM": 0.025308815605312507,
+          "toQualityScore": 0.6869217112136229,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1494",
+          "toFrameID": "cap-1514",
+          "toManifestIndex": 296,
+          "timestampDeltaSeconds": 2.866849208017811,
+          "translationStepM": 0.37145495134770595,
+          "azimuthDeltaRad": 0.5459648012909133,
+          "elevationDeltaRad": 0.07108856787776208,
+          "radiusDeltaM": 0.21928109938283125,
+          "toQualityScore": 0.4587294398037571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1396",
+          "toFrameID": "cap-1413",
+          "toManifestIndex": 283,
+          "timestampDeltaSeconds": 2.833515833131969,
+          "translationStepM": 0.1714592400095311,
+          "azimuthDeltaRad": 0.0339267124834004,
+          "elevationDeltaRad": 0.19457861468106724,
+          "radiusDeltaM": 0.05519286300660753,
+          "toQualityScore": 0.8461429858422891,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1417",
+          "toFrameID": "cap-1429",
+          "toManifestIndex": 285,
+          "timestampDeltaSeconds": 2.100135040935129,
+          "translationStepM": 0.09281797211268006,
+          "azimuthDeltaRad": 0.004495798602842882,
+          "elevationDeltaRad": 0.10875601279783875,
+          "radiusDeltaM": 0.037838676931647885,
+          "toQualityScore": 0.6155519784390571,
+          "highRisk": true
+        }
+      ],
+      "topTranslationSteps": [
+        {
+          "fromFrameID": "cap-1369",
+          "toFrameID": "cap-1396",
+          "toManifestIndex": 282,
+          "timestampDeltaSeconds": 4.4669542498886585,
+          "translationStepM": 0.41002378556831426,
+          "azimuthDeltaRad": 0.2828885886364847,
+          "elevationDeltaRad": 0.38718296732736246,
+          "radiusDeltaM": 0.025308815605312507,
+          "toQualityScore": 0.6869217112136229,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1494",
+          "toFrameID": "cap-1514",
+          "toManifestIndex": 296,
+          "timestampDeltaSeconds": 2.866849208017811,
+          "translationStepM": 0.37145495134770595,
+          "azimuthDeltaRad": 0.5459648012909133,
+          "elevationDeltaRad": 0.07108856787776208,
+          "radiusDeltaM": 0.21928109938283125,
+          "toQualityScore": 0.4587294398037571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1429",
+          "toFrameID": "cap-1437",
+          "toManifestIndex": 286,
+          "timestampDeltaSeconds": 1.6334382500499487,
+          "translationStepM": 0.2947389048823436,
+          "azimuthDeltaRad": 0.35758199888413733,
+          "elevationDeltaRad": 0.15629917892685175,
+          "radiusDeltaM": 0.12618036132988464,
+          "toQualityScore": 0.5314556183733531,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1459",
+          "toFrameID": "cap-1488",
+          "toManifestIndex": 293,
+          "timestampDeltaSeconds": 5.000319208949804,
+          "translationStepM": 0.28040392679251686,
+          "azimuthDeltaRad": 0.39931817594903896,
+          "elevationDeltaRad": 0.0164456813579843,
+          "radiusDeltaM": 0.1050678882399303,
+          "toQualityScore": 0.5771856641623115,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1514",
+          "toFrameID": "cap-1518",
+          "toManifestIndex": 297,
+          "timestampDeltaSeconds": 1.0333992498926818,
+          "translationStepM": 0.19753672893068297,
+          "azimuthDeltaRad": 0.020545352204230927,
+          "elevationDeltaRad": 0.12813182040710347,
+          "radiusDeltaM": 0.049022911592959684,
+          "toQualityScore": 0.6182972776065352,
+          "highRisk": false
+        }
+      ],
+      "topElevationSteps": [
+        {
+          "fromFrameID": "cap-1369",
+          "toFrameID": "cap-1396",
+          "toManifestIndex": 282,
+          "timestampDeltaSeconds": 4.4669542498886585,
+          "translationStepM": 0.41002378556831426,
+          "azimuthDeltaRad": 0.2828885886364847,
+          "elevationDeltaRad": 0.38718296732736246,
+          "radiusDeltaM": 0.025308815605312507,
+          "toQualityScore": 0.6869217112136229,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1346",
+          "toFrameID": "cap-1354",
+          "toManifestIndex": 273,
+          "timestampDeltaSeconds": 1.3334190419409424,
+          "translationStepM": 0.18833908570053573,
+          "azimuthDeltaRad": 0.07478485754134434,
+          "elevationDeltaRad": 0.20527040595366713,
+          "radiusDeltaM": 0.02107131503634907,
+          "toQualityScore": 0.9430572653555771,
+          "highRisk": false
+        },
+        {
+          "fromFrameID": "cap-1396",
+          "toFrameID": "cap-1413",
+          "toManifestIndex": 283,
+          "timestampDeltaSeconds": 2.833515833131969,
+          "translationStepM": 0.1714592400095311,
+          "azimuthDeltaRad": 0.0339267124834004,
+          "elevationDeltaRad": 0.19457861468106724,
+          "radiusDeltaM": 0.05519286300660753,
+          "toQualityScore": 0.8461429858422891,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1429",
+          "toFrameID": "cap-1437",
+          "toManifestIndex": 286,
+          "timestampDeltaSeconds": 1.6334382500499487,
+          "translationStepM": 0.2947389048823436,
+          "azimuthDeltaRad": 0.35758199888413733,
+          "elevationDeltaRad": 0.15629917892685175,
+          "radiusDeltaM": 0.12618036132988464,
+          "toQualityScore": 0.5314556183733531,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1518",
+          "toFrameID": "cap-1523",
+          "toManifestIndex": 298,
+          "timestampDeltaSeconds": 0.4000254590064287,
+          "translationStepM": 0.05154936645241533,
+          "azimuthDeltaRad": 0.015157452313402597,
+          "elevationDeltaRad": 0.1438633691417539,
+          "radiusDeltaM": 0.012838002545415339,
+          "toQualityScore": 0.46416841900854544,
+          "highRisk": true
+        }
+      ],
+      "lowQualitySteps": [
+        {
+          "fromFrameID": "cap-1437",
+          "toFrameID": "cap-1441",
+          "toManifestIndex": 287,
+          "timestampDeltaSeconds": 0.30001916689798236,
+          "translationStepM": 0.031179250835062747,
+          "azimuthDeltaRad": 0.08630168228753554,
+          "elevationDeltaRad": 0.04771962579704925,
+          "radiusDeltaM": 0.01979142369358744,
+          "toQualityScore": 0.43892263017665784,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1494",
+          "toFrameID": "cap-1514",
+          "toManifestIndex": 296,
+          "timestampDeltaSeconds": 2.866849208017811,
+          "translationStepM": 0.37145495134770595,
+          "azimuthDeltaRad": 0.5459648012909133,
+          "elevationDeltaRad": 0.07108856787776208,
+          "radiusDeltaM": 0.21928109938283125,
+          "toQualityScore": 0.4587294398037571,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1518",
+          "toFrameID": "cap-1523",
+          "toManifestIndex": 298,
+          "timestampDeltaSeconds": 0.4000254590064287,
+          "translationStepM": 0.05154936645241533,
+          "azimuthDeltaRad": 0.015157452313402597,
+          "elevationDeltaRad": 0.1438633691417539,
+          "radiusDeltaM": 0.012838002545415339,
+          "toQualityScore": 0.46416841900854544,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1492",
+          "toFrameID": "cap-1494",
+          "toManifestIndex": 295,
+          "timestampDeltaSeconds": 0.8000510830897838,
+          "translationStepM": 0.12016821700270564,
+          "azimuthDeltaRad": 0.03517420250647696,
+          "elevationDeltaRad": 0.021630101488396836,
+          "radiusDeltaM": 0.015880349431376617,
+          "toQualityScore": 0.4713140429125801,
+          "highRisk": true
+        },
+        {
+          "fromFrameID": "cap-1553",
+          "toFrameID": "cap-1555",
+          "toManifestIndex": 306,
+          "timestampDeltaSeconds": 0.4666945419739932,
+          "translationStepM": 0.04169346413197118,
+          "azimuthDeltaRad": 0.004870784232309244,
+          "elevationDeltaRad": 0.009567226163710193,
+          "radiusDeltaM": 0.03298234717270554,
+          "toQualityScore": 0.48276962751951363,
+          "highRisk": true
+        }
+      ]
+    }
+  },
+  "depth_index_comparison": {
+    "old_full_chunk_frame_count": 35,
+    "old_full_chunk_ids_first_last": {
+      "count": 35,
+      "first": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360"
+      ],
+      "last": [
+        "cap-1535",
+        "cap-1540",
+        "cap-1549",
+        "cap-1553",
+        "cap-1555"
+      ]
+    },
+    "new_official_save_frame_count": 17,
+    "new_official_save_ids_first_last": {
+      "count": 17,
+      "first": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360"
+      ],
+      "last": [
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ]
+    },
+    "new_all_frames_marked_official_downstream": true
+  },
+  "global_coverage": {
+    "photo_bundle_frame_count": 414,
+    "official_saved_unique_frame_count": 414,
+    "uncoveredFrameCount": 0
+  },
+  "suspect_frame_roles": {
+    "cap-1396": [
+      {
+        "windowID": "window_015",
+        "localSlot": 27,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_016",
+        "localSlot": 10,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "cap-1459": [
+      {
+        "windowID": "window_016",
+        "localSlot": 20,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_017",
+        "localSlot": 3,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "cap-1488": [
+      {
+        "windowID": "window_016",
+        "localSlot": 21,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_017",
+        "localSlot": 4,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "cap-1514": [
+      {
+        "windowID": "window_016",
+        "localSlot": 24,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_017",
+        "localSlot": 7,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "cap-1529": [
+      {
+        "windowID": "window_016",
+        "localSlot": 28,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_017",
+        "localSlot": 11,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "cap-1555": [
+      {
+        "windowID": "window_016",
+        "localSlot": 34,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_017",
+        "localSlot": 17,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": true,
+        "coreFrame": false
+      },
+      {
+        "windowID": "window_018",
+        "localSlot": 0,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ]
+  },
+  "plain_language": [
+    "官方 CoreML/PyTorch chunk 可以算 35 帧，但官方 results_output 不把 35 帧全都交给 downstream。",
+    "window_016 的官方 downstream 只有前 17 帧：cap-1346 到 cap-1448；cap-1453 之后是 withheld overlap。",
+    "cap-1396 是 window_016 官方 downstream 帧，所以它仍然是 window_016 厚层/几何一致性嫌疑。",
+    "cap-1514/cap-1529 不是 window_016 官方 downstream；它们属于 window_016 full-chunk tail，并在 window_017 被官方 downstream 接收。",
+    "因此之前 full 35-slot 厚层分析不是废掉，而是要改口径：它说明模型在一个 K35 输入内会产生 tail inconsistency；产品/官方 downstream 应按 save-frame ownership 归因。"
+  ]
+}

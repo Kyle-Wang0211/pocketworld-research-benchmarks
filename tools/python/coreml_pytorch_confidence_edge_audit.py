@@ -41,7 +41,7 @@ def main() -> int:
     parser.add_argument("--glb-conf-thresh", type=float, default=1.05)
     parser.add_argument("--glb-conf-percentile", type=float, default=40.0)
     parser.add_argument("--glb-ensure-percentile", type=float, default=90.0)
-    parser.add_argument("--npz-conf-threshold-coef", type=float, default=0.75)
+    parser.add_argument("--npz-conf-threshold-coef", type=float, default=0.5)
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -86,6 +86,7 @@ def main() -> int:
             "glb_conf_percentile": args.glb_conf_percentile,
             "glb_ensure_percentile": args.glb_ensure_percentile,
             "npz_conf_threshold_coef": args.npz_conf_threshold_coef,
+            "npz_conf_threshold_coef_source": "npz_output_process.py CLI default is 0.5; DA3-Streaming Pointcloud_Save config uses 0.75 for full-chunk pcd export.",
         },
         "preprocess_contract": preprocess_report,
         "cases": case_reports,
