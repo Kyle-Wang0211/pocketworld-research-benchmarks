@@ -171,26 +171,14 @@ def main() -> int:
     )
     parser.add_argument(
         "--trace-device",
-        choices=["cpu", "mps", "cuda"],
+        choices=["cpu", "mps"],
         default="cpu",
         help=(
             "Device for torch.jit.trace's eager forward. 'cpu' is the historical default. "
-            "'mps' moves net+example to Apple Silicon GPU. 'cuda' moves to NVIDIA GPU "
-            "(e.g. A100/H100), which has native FlashAttention support and ample HBM, so "
-            "K>=60 traces without OOM. The traced graph is device-agnostic and converts to "
+            "'mps' moves net+example to Apple Silicon GPU before trace; MPS SDPA uses a fused "
+            "FlashAttention-style kernel (O(seq) memory) and avoids CPU dispatcher OOM for "
+            "window_size>=60. The resulting traced graph is device-agnostic and converts to "
             "the same CoreML mlpackage."
-        ),
-    )
-    parser.add_argument(
-        "--force-sdpa-backend",
-        choices=["default", "efficient", "math", "flash"],
-        default="default",
-        help=(
-            "Force PyTorch SDPA dispatcher to a specific backend during torch.jit.trace's "
-            "eager forward. 'efficient' = mem-efficient O(seq) memory. 'math' = naive K^2 "
-            "materialization. 'flash' = FlashAttention (CUDA only). 'default' = let dispatcher "
-            "choose. Use this to investigate whether K=60 trace dies because dispatcher silently "
-            "switches backend between K=50 and K=60."
         ),
     )
     parser.add_argument("--out-report", type=Path)
@@ -308,20 +296,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         }
 
     if args.convert:
-        if args.force_sdpa_backend != "default":
-            import torch.nn.attention as _attn
-            backend_map = {
-                "efficient": _attn.SDPBackend.EFFICIENT_ATTENTION,
-                "math": _attn.SDPBackend.MATH,
-                "flash": _attn.SDPBackend.FLASH_ATTENTION,
-            }
-            forced = backend_map[args.force_sdpa_backend]
-            print(f"[export] forcing SDPA backend = {args.force_sdpa_backend}", flush=True)
-            with _attn.sdpa_kernel([forced]):
-                report["conversion"] = convert_to_coreml(args, wrapper, example)
-            report["conversion"]["forced_sdpa_backend"] = args.force_sdpa_backend
-        else:
-            report["conversion"] = convert_to_coreml(args, wrapper, example)
+        report["conversion"] = convert_to_coreml(args, wrapper, example)
 
     report["elapsed_s"] = time.perf_counter() - started
     return report
