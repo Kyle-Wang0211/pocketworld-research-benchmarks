@@ -1,0 +1,43 @@
+Sim3solve of C++ Version failed, Will using Python Version.
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[resume] LoopDetector.find_loop_closures patched to NumPy exact IP search
+[resume] DA3_Streaming.process_single_chunk patched to load cached unaligned chunks
+[resume] DA3_Streaming.get_chunk_indices patched with last-chunk clamp
+oracle_frame_count 414
+oracle_input_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x392_oracle_2026_06_10/input_manifest_ordered_414
+oracle_output_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x392_oracle_2026_06_10
+oracle_da3_base_snapshot /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE
+oracle_salad_ckpt /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+oracle_align_lib numpy
+Using cache found in /Users/kaidongwang/.cache/torch/hub/facebookresearch_dinov2_main
+Loading model...
+[97m[INFO ] using MLP layer as FFN[0m
+Model loaded: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+init done.
+oracle_da3_device mps
+Loading images from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x392_oracle_2026_06_10/input_manifest_ordered_414...
+Found 414 images
+[resume] clamped last chunk to (324, 414) (static K=90 window, matches iPhone chunking)
+Processing 414 images in 9                 chunks of size 90 with 45 overlap
+[Progress]: 0/9
+[resume] load cached chunk_0 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x392_oracle_2026_06_10/_tmp_results_unaligned/chunk_0.npy
+[Progress]: 1/9
+[resume] load cached chunk_1 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x392_oracle_2026_06_10/_tmp_results_unaligned/chunk_1.npy
+Aligning 0 and 1 (Total 8)
+Traceback (most recent call last):
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3base_official_streaming_oracle_resume.py", line 475, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3base_official_streaming_oracle_resume.py", line 454, in main
+    runner.run()
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/vendor/official_da3_streaming/da3_streaming.py", line 712, in run
+    self.process_long_sequence()
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/vendor/official_da3_streaming/da3_streaming.py", line 575, in process_long_sequence
+    s, R, t = self.align_2pcds(
+              ^^^^^^^^^^^^^^^^^
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/vendor/official_da3_streaming/da3_streaming.py", line 351, in align_2pcds
+    s, R, t = weighted_align_point_maps(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/vendor/official_da3_streaming/loop_utils/sim3utils.py", line 1201, in weighted_align_point_maps
+    raise ValueError("No matching point pairs were found!")
+ValueError: No matching point pairs were found!

@@ -1,0 +1,433 @@
+Sim3solve of C++ Version failed, Will using Python Version.
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[resume] LoopDetector.find_loop_closures patched to NumPy exact IP search
+[resume] DA3_Streaming.process_single_chunk patched to load cached unaligned chunks
+[resume] DepthAnything3.inference pinned to process_res=406
+[resume] DA3_Streaming.get_chunk_indices patched with last-chunk clamp
+oracle_frame_count 414
+oracle_input_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/input_manifest_ordered_414
+oracle_output_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10
+oracle_da3_base_snapshot /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE
+oracle_salad_ckpt /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+oracle_align_lib numpy
+Using cache found in /Users/kaidongwang/.cache/torch/hub/facebookresearch_dinov2_main
+Loading model...
+[97m[INFO ] using MLP layer as FFN[0m
+Model loaded: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+init done.
+oracle_da3_device mps
+Loading images from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/input_manifest_ordered_414...
+Found 414 images
+[resume] clamped last chunk to (324, 414) (static K=90 window, matches iPhone chunking)
+Processing 414 images in 9                 chunks of size 90 with 45 overlap
+[Progress]: 0/9
+[resume] load cached chunk_0 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_0.npy
+[Progress]: 1/9
+[resume] load cached chunk_1 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_1.npy
+Aligning 0 and 1 (Total 8)
+The number of corresponding points matched: 2860848
+Residuals: 0.13464611768722534
+Residuals: 0.13450458645820618
+Residuals: 0.13456697762012482
+Residuals: 0.13457611203193665
+Residuals: 0.13457727432250977
+Alignment error statistics [using 2860848 points]: mean=0.1346, std=0.1035, median=0.1042, max=0.8736
+Mean error: 0.1345774531364441
+Estimated Scale: 0.8950175
+Estimated Rotation:
+ [[ 0.96863544  0.17475393  0.17665344]
+ [-0.22884423  0.35034314  0.9082346 ]
+ [ 0.09682825 -0.9201743   0.3793462 ]]
+Estimated Translation: [-0.01300469 -0.23596796  0.31379902]
+[Progress]: 2/9
+[resume] load cached chunk_2 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_2.npy
+Aligning 1 and 2 (Total 8)
+The number of corresponding points matched: 3126992
+Residuals: 0.547826886177063
+Residuals: 0.5509259104728699
+Residuals: 0.548242449760437
+Residuals: 0.5459831953048706
+Residuals: 0.5447385311126709
+Alignment error statistics [using 3126992 points]: mean=0.5442, std=0.4436, median=0.3701, max=2.4815
+Mean error: 0.5442119836807251
+Estimated Scale: 1.1085856
+Estimated Rotation:
+ [[ 0.9193388   0.17345889  0.35316896]
+ [-0.3576063   0.74273336  0.56609625]
+ [-0.16411595 -0.64672965  0.7448535 ]]
+Estimated Translation: [-0.27590877 -0.25166416  0.17418998]
+[Progress]: 3/9
+[resume] load cached chunk_3 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_3.npy
+Aligning 2 and 3 (Total 8)
+The number of corresponding points matched: 2432368
+Residuals: 0.5955758690834045
+Residuals: 0.5839625597000122
+Residuals: 0.5836942791938782
+Residuals: 0.5841137170791626
+Residuals: 0.5844047665596008
+Alignment error statistics [using 2432368 points]: mean=0.5845, std=0.3869, median=0.5843, max=1.6905
+Mean error: 0.5845441222190857
+Estimated Scale: 1.2497412
+Estimated Rotation:
+ [[ 0.85686433  0.04088135  0.5139185 ]
+ [-0.47238997 -0.3369765   0.8144289 ]
+ [ 0.20647347 -0.9406251  -0.26943117]]
+Estimated Translation: [-0.24370012 -0.68667233  0.8264131 ]
+[Progress]: 4/9
+[resume] load cached chunk_4 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_4.npy
+Aligning 3 and 4 (Total 8)
+The number of corresponding points matched: 2994163
+Residuals: 0.06652720272541046
+Residuals: 0.06649243831634521
+Residuals: 0.0664903074502945
+Residuals: 0.06649018824100494
+Residuals: 0.06649015843868256
+Alignment error statistics [using 2994163 points]: mean=0.0665, std=0.0376, median=0.0590, max=0.2990
+Mean error: 0.06649020314216614
+Estimated Scale: 1.082123
+Estimated Rotation:
+ [[ 0.9615934   0.19673656 -0.19139738]
+ [-0.17566955  0.9769118   0.12158786]
+ [ 0.21089917 -0.08329538  0.97395253]]
+Estimated Translation: [ 0.15316057 -0.01842711 -0.09930253]
+[Progress]: 5/9
+[resume] load cached chunk_5 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_5.npy
+Aligning 4 and 5 (Total 8)
+The number of corresponding points matched: 3368419
+Residuals: 0.05619350075721741
+Residuals: 0.056221526116132736
+Residuals: 0.05622284486889839
+Residuals: 0.05622290447354317
+Residuals: 0.05622290447354317
+Alignment error statistics [using 3368419 points]: mean=0.0562, std=0.0258, median=0.0538, max=0.2648
+Mean error: 0.05622290447354317
+Estimated Scale: 0.6833293
+Estimated Rotation:
+ [[ 0.77335167 -0.11877972  0.62275076]
+ [-0.3050747   0.7913603   0.52979076]
+ [-0.55574864 -0.5997001   0.5757632 ]]
+Estimated Translation: [-0.21435924 -0.20185849  0.5532931 ]
+[Progress]: 6/9
+[resume] load cached chunk_6 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_6.npy
+Aligning 5 and 6 (Total 8)
+The number of corresponding points matched: 2692756
+Residuals: 0.14969342947006226
+Residuals: 0.1496094912290573
+Residuals: 0.14984986186027527
+Residuals: 0.14994707703590393
+Residuals: 0.14997975528240204
+Alignment error statistics [using 2692756 points]: mean=0.1500, std=0.0779, median=0.1341, max=0.5695
+Mean error: 0.14999037981033325
+Estimated Scale: 1.2113409
+Estimated Rotation:
+ [[ 0.9914694   0.00439186  0.1302661 ]
+ [-0.12801194 -0.15524447  0.9795469 ]
+ [ 0.02452512 -0.98786634 -0.1533579 ]]
+Estimated Translation: [ 0.03663614 -0.5422239   0.5685896 ]
+[Progress]: 7/9
+[resume] load cached chunk_7 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_7.npy
+Aligning 6 and 7 (Total 8)
+The number of corresponding points matched: 2818323
+Residuals: 0.18932053446769714
+Residuals: 0.18943949043750763
+Residuals: 0.18992145359516144
+Residuals: 0.1900687962770462
+Residuals: 0.19010582566261292
+Alignment error statistics [using 2818323 points]: mean=0.1901, std=0.1293, median=0.1504, max=1.3088
+Mean error: 0.1901146024465561
+Estimated Scale: 1.1244495
+Estimated Rotation:
+ [[ 0.7858771   0.3042251   0.5383719 ]
+ [-0.5575588   0.7251271   0.40412736]
+ [-0.26744235 -0.6177684   0.73948413]]
+Estimated Translation: [-0.33687457 -0.2800833   0.08147365]
+[Progress]: 8/9
+[resume] load cached chunk_8 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_8.npy
+Aligning 7 and 8 (Total 8)
+The number of corresponding points matched: 2568357
+Residuals: 0.2808554470539093
+Residuals: 0.27842944860458374
+Residuals: 0.27825722098350525
+Residuals: 0.27833250164985657
+Residuals: 0.2783941924571991
+Alignment error statistics [using 2568357 points]: mean=0.2784, std=0.1884, median=0.2290, max=1.1612
+Mean error: 0.2784292697906494
+Estimated Scale: 0.99604064
+Estimated Rotation:
+ [[ 0.9253098   0.10316007 -0.36491054]
+ [-0.09739316  0.9946572   0.03422772]
+ [ 0.3664919   0.00386856  0.9304132 ]]
+Estimated Translation: [ 0.27994668 -0.02703626  0.09505486]
+Loading model...
+Found 414 image files
+Extracting features:   0%|          | 0/13 [00:00<?, ?it/s]Extracting features:   8%|▊         | 1/13 [00:54<10:55, 54.66s/it]Extracting features:  15%|█▌        | 2/13 [01:49<09:59, 54.52s/it]Extracting features:  23%|██▎       | 3/13 [02:44<09:07, 54.73s/it]Extracting features:  31%|███       | 4/13 [03:39<08:14, 54.93s/it]Extracting features:  38%|███▊      | 5/13 [04:35<07:23, 55.38s/it]Extracting features:  46%|████▌     | 6/13 [05:31<06:29, 55.65s/it]Extracting features:  54%|█████▍    | 7/13 [06:27<05:33, 55.57s/it]Extracting features:  62%|██████▏   | 8/13 [07:21<04:36, 55.36s/it]Extracting features:  69%|██████▉   | 9/13 [08:16<03:40, 55.18s/it]Extracting features:  77%|███████▋  | 10/13 [09:11<02:44, 54.95s/it]Extracting features:  85%|████████▍ | 11/13 [10:05<01:49, 54.77s/it]Extracting features:  92%|█████████▏| 12/13 [10:59<00:54, 54.63s/it]Extracting features: 100%|██████████| 13/13 [11:50<00:00, 53.36s/it]Extracting features: 100%|██████████| 13/13 [11:50<00:00, 54.64s/it]
+Found 5 loop pairs, results saved to /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/loop_closures.txt
+NMS filtering applied, threshold: 25
+
+Top 10 loop pairs:
+34, 23, similarity: 0.9312
+293, 104, similarity: 0.9238
+405, 382, similarity: 0.9197
+226, 215, similarity: 0.8851
+343, 145, similarity: 0.8840
+Loop SIM(3) estimating...
+[(6, (283, 303), 2, (94, 114)), (5, (225, 245), 4, (205, 225)), (8, (333, 353), 3, (135, 155))]
+Loaded 40 images
+[97m[INFO ] Processed Images Done taking 0.6244900226593018 seconds. Shape:  torch.Size([40, 3, 224, 406])[0m
+[97m[INFO ] Selecting reference view using strategy: saddle_balanced[0m
+oracle_mps_chunked_sdpa query_shape=(1, 12, 18600, 64) key_tokens=18600 estimated_score_buffer_gib=15.47 query_chunk=256
+[97m[INFO ] Model Forward Pass Done. Time: 8.709676027297974 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.39749598503112793 seconds[0m
+(40, 224, 406, 3)
+(40, 224, 406)
+(40, 224, 406)
+(40, 3, 4)
+(40, 3, 3)
+(6, (283, 303), 2, (94, 114))
+Loaded 40 images
+[97m[INFO ] Processed Images Done taking 0.7331602573394775 seconds. Shape:  torch.Size([40, 3, 224, 406])[0m
+[97m[INFO ] Selecting reference view using strategy: saddle_balanced[0m
+[97m[INFO ] Model Forward Pass Done. Time: 7.6896398067474365 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.45181918144226074 seconds[0m
+(40, 224, 406, 3)
+(40, 224, 406)
+(40, 224, 406)
+(40, 3, 4)
+(40, 3, 3)
+(5, (225, 245), 4, (205, 225))
+Loaded 40 images
+[97m[INFO ] Processed Images Done taking 0.6424241065979004 seconds. Shape:  torch.Size([40, 3, 224, 406])[0m
+[97m[INFO ] Selecting reference view using strategy: saddle_balanced[0m
+[97m[INFO ] Model Forward Pass Done. Time: 7.572458982467651 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.4539041519165039 seconds[0m
+(40, 224, 406, 3)
+(40, 224, 406)
+(40, 224, 406)
+(40, 3, 4)
+(40, 3, 3)
+(8, (333, 353), 3, (135, 155))
+chunk_a align
+(270, 360)
+(283, 303)
+13 33
+The number of corresponding points matched: 1404705
+Residuals: 0.12760525941848755
+Residuals: 0.13314321637153625
+Residuals: 0.13582485914230347
+Residuals: 0.13709691166877747
+Residuals: 0.1376848816871643
+Alignment error statistics [using 1404705 points]: mean=0.1380, std=0.0834, median=0.1219, max=0.7172
+Mean error: 0.13795578479766846
+Estimated Scale: 0.6895939
+Estimated Rotation:
+ [[ 0.97829163  0.01880382  0.20637754]
+ [-0.06051047  0.9783946   0.19769272]
+ [-0.1982013  -0.20588917  0.9582932 ]]
+Estimated Translation: [-0.2445499  -0.08241806  0.2515321 ]
+chunk_b align
+(90, 180)
+(94, 114)
+4 24
+The number of corresponding points matched: 1352646
+Residuals: 0.10781539231538773
+Residuals: 0.10966683179140091
+Residuals: 0.1099647730588913
+Residuals: 0.11001254618167877
+Residuals: 0.11002102494239807
+Alignment error statistics [using 1352646 points]: mean=0.1100, std=0.0733, median=0.0900, max=0.8690
+Mean error: 0.11002276092767715
+Estimated Scale: 0.615781
+Estimated Rotation:
+ [[ 0.9409796  -0.11951156 -0.31666127]
+ [ 0.09847143  0.9917809  -0.0816952 ]
+ [ 0.3238221   0.04569137  0.9450141 ]]
+Estimated Translation: [ 0.1853645  -0.02403691  0.1580025 ]
+a -> b SIM 3
+Estimated Scale: 0.8929618
+Estimated Rotation:
+ [[ 0.85295343 -0.23647021 -0.46535158]
+ [ 0.098123    0.948244   -0.30200204]
+ [ 0.5126813   0.21193197  0.8320113 ]]
+Estimated Translation: [0.45874578 0.13500996 0.09867914]
+chunk_a align
+(225, 315)
+(225, 245)
+0 20
+The number of corresponding points matched: 1554523
+Residuals: 0.13010576367378235
+Residuals: 0.13037773966789246
+Residuals: 0.1294178068637848
+Residuals: 0.1288299560546875
+Residuals: 0.12856636941432953
+Alignment error statistics [using 1554523 points]: mean=0.1285, std=0.0810, median=0.1037, max=0.7331
+Mean error: 0.1284601390361786
+Estimated Scale: 0.76575994
+Estimated Rotation:
+ [[ 0.7305252  -0.12332963 -0.6716567 ]
+ [-0.41672182  0.69868183 -0.5815381 ]
+ [ 0.54099524  0.7047222   0.45901054]]
+Estimated Translation: [0.53763616 0.32918945 0.29038805]
+chunk_b align
+(180, 270)
+(205, 225)
+25 45
+The number of corresponding points matched: 1452679
+Residuals: 0.08410552144050598
+Residuals: 0.084531269967556
+Residuals: 0.08462990075349808
+Residuals: 0.08464352041482925
+Residuals: 0.0846448615193367
+Alignment error statistics [using 1452679 points]: mean=0.0846, std=0.0511, median=0.0730, max=0.4703
+Mean error: 0.08464505523443222
+Estimated Scale: 0.5027149
+Estimated Rotation:
+ [[ 0.95644665  0.22974588 -0.18007408]
+ [-0.21446146  0.9715529   0.10045497]
+ [ 0.1980306  -0.05746087  0.97851014]]
+Estimated Translation: [ 0.18744802 -0.07302761  0.39854282]
+a -> b SIM 3
+Estimated Scale: 0.65649146
+Estimated Rotation:
+ [[ 0.7913218  -0.13333297  0.5966842 ]
+ [-0.343962    0.70975876  0.6147622 ]
+ [-0.5054699  -0.6917114   0.5157862 ]]
+Estimated Translation: [-0.17678747 -0.22220759  0.62810796]
+chunk_a align
+(324, 414)
+(333, 353)
+9 29
+The number of corresponding points matched: 1413464
+Residuals: 0.05758894234895706
+Residuals: 0.05753351002931595
+Residuals: 0.05753074213862419
+Residuals: 0.057530660182237625
+Residuals: 0.057530615478754044
+Alignment error statistics [using 1413464 points]: mean=0.0575, std=0.0427, median=0.0495, max=0.6762
+Mean error: 0.057530615478754044
+Estimated Scale: 0.6038459
+Estimated Rotation:
+ [[ 0.97678226 -0.168909    0.13178079]
+ [ 0.16543873  0.9855283   0.03693231]
+ [-0.13611192 -0.01427319  0.99059063]]
+Estimated Translation: [-0.08056866  0.01646243  0.2121318 ]
+chunk_b align
+(135, 225)
+(135, 155)
+0 20
+The number of corresponding points matched: 1198503
+Residuals: 0.13058191537857056
+Residuals: 0.13282276690006256
+Residuals: 0.13338641822338104
+Residuals: 0.13353589177131653
+Residuals: 0.13357685506343842
+Alignment error statistics [using 1198503 points]: mean=0.1336, std=0.0660, median=0.1251, max=0.7437
+Mean error: 0.13358747959136963
+Estimated Scale: 0.58748996
+Estimated Rotation:
+ [[ 0.9175737   0.3827324   0.10758495]
+ [-0.15400393  0.5916578  -0.79134303]
+ [-0.36652607  0.70954704  0.6018319 ]]
+Estimated Translation: [-0.02061114  0.29908007  0.41286072]
+a -> b SIM 3
+Estimated Scale: 0.97291374
+Estimated Rotation:
+ [[ 0.84580034  0.5329692  -0.02378288]
+ [-0.35464844  0.5283912  -0.77138007]
+ [-0.39855516  0.66086817  0.6359301 ]]
+Estimated Translation: [0.0420602  0.42201948 0.23978758]
+Starting optimization with 8 poses                 and 3 loop constraints
+Iteration 0: cost 0.12036190927029 -> 0.01418459694833 (accepted) | Time of solver (python):                     9.0251 ms
+Iteration 1: cost 0.01418459694833 -> 0.01346561219543 (accepted) | Time of solver (python):                     0.7381 ms
+Iteration 2: cost 0.01346561219543 -> 0.01345467381179 (accepted) | Time of solver (python):                     0.7660 ms
+Iteration 3: cost 0.01345467381179 -> 0.01345498953015 (rej)      | Time of solver (python):                     0.7000 ms
+Iteration 4: cost 0.01345467381179 -> 0.01345437858254 (accepted) | Time of solver (python):                     0.6993 ms
+Iteration 5: cost 0.01345437858254 -> 0.01345727965236 (rej)      | Time of solver (python):                     0.7007 ms
+Iteration 6: cost 0.01345437858254 -> 0.01345446705818 (rej)      | Time of solver (python):                     0.7010 ms
+Iteration 7: cost 0.01345437858254 -> 0.01345418207347 (accepted) | Time of solver (python):                     0.6809 ms
+Iteration 8: cost 0.01345418207347 -> 0.01345435716212 (rej)      | Time of solver (python):                     0.6630 ms
+Iteration 9: cost 0.01345418207347 -> 0.01345418207347 (rej)      | Time of solver (python):                     0.7279 ms
+Iteration 10: cost 0.01345418207347 -> 0.01345413550735 (accepted) | Time of solver (python):                     0.6199 ms
+Iteration 11: cost 0.01345413550735 -> 0.01345415227115 (rej)      | Time of solver (python):                     0.6788 ms
+Iteration 12: cost 0.01345413550735 -> 0.01345412433147 (accepted) | Time of solver (python):                     0.6878 ms
+Iteration 13: cost 0.01345412433147 -> 0.01345441211015 (rej)      | Time of solver (python):                     0.6080 ms
+Iteration 14: cost 0.01345412433147 -> 0.01345418486744 (rej)      | Time of solver (python):                     0.6740 ms
+Iteration 15: cost 0.01345412433147 -> 0.01345413085073 (rej)      | Time of solver (python):                     0.6800 ms
+Iteration 16: cost 0.01345412433147 -> 0.01345412619412 (rej)      | Time of solver (python):                     0.6170 ms
+Iteration 17: cost 0.01345412433147 -> 0.01345411874354 (accepted) | Time of solver (python):                     0.6711 ms
+Iteration 18: cost 0.01345411874354 -> 0.01345411688089 (accepted) | Time of solver (python):                     0.7041 ms
+Iteration 19: cost 0.01345411688089 -> 0.01345413085073 (rej)      | Time of solver (python):                     0.6049 ms
+Iteration 20: cost 0.01345411688089 -> 0.01345412153751 (rej)      | Time of solver (python):                     0.6671 ms
+Iteration 21: cost 0.01345411688089 -> 0.01345411688089 (rej)      | Time of solver (python):                     0.7119 ms
+Iteration 22: cost 0.01345411688089 -> 0.01345411688089 (rej)      | Time of solver (python):                     0.5701 ms
+Iteration 23: cost 0.01345411688089 -> 0.01345411874354 (rej)      | Time of solver (python):                     0.6738 ms
+Iteration 24: cost 0.01345411688089 -> 0.01345411967486 (rej)      | Time of solver (python):                     0.6850 ms
+Iteration 25: cost 0.01345411688089 -> 0.01345411967486 (rej)      | Time of solver (python):                     0.5841 ms
+Iteration 26: cost 0.01345411688089 -> 0.01345411874354 (rej)      | Time of solver (python):                     0.6869 ms
+Iteration 27: cost 0.01345411688089 -> 0.01345411501825 (accepted) | Time of solver (python):                     0.6862 ms
+Iteration 28: cost 0.01345411501825 -> 0.01345411688089 (rej)      | Time of solver (python):                     0.6011 ms
+Iteration 29: cost 0.01345411501825 -> 0.01345411688089 (rej)      | Time of solver (python):                     0.6721 ms
+Optimization completed. Final cost:                 0.013454115018248558
+Apply alignment
+Applying 1 -> 0 (Total 8)
+[save_depth_conf_result] save_indices:
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 
+[save_depth_conf_result] save_indices:
+45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 
+Applying 2 -> 1 (Total 8)
+[save_depth_conf_result] save_indices:
+90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 
+Applying 3 -> 2 (Total 8)
+[save_depth_conf_result] save_indices:
+135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 
+Applying 4 -> 3 (Total 8)
+[save_depth_conf_result] save_indices:
+180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 
+Applying 5 -> 4 (Total 8)
+[save_depth_conf_result] save_indices:
+225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 
+Applying 6 -> 5 (Total 8)
+[save_depth_conf_result] save_indices:
+270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 
+Applying 7 -> 6 (Total 8)
+[save_depth_conf_result] save_indices:
+315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 
+Applying 8 -> 7 (Total 8)
+[save_depth_conf_result] save_indices:
+324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 
+Saving all camera poses to txt file...
+Camera poses saved to /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/camera_poses.txt
+Camera intrinsics saved to /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/intrinsic.txt
+Camera poses visualization saved to /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/camera_poses.ply
+Done.
+Deleting the temp files under /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned
+Deleting the temp files under /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_aligned
+Deleting the temp files under /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_loop
+Deleting temp files done.
+Saved disk space: 2.1091 GiB
+Merging PLY files...
+Processing 0/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/0_pcd.ply
+Processing 1/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/1_pcd.ply
+Processing 2/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/2_pcd.ply
+Processing 3/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/3_pcd.ply
+Processing 4/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/4_pcd.ply
+Processing 5/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/5_pcd.ply
+Processing 6/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/6_pcd.ply
+Processing 7/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/7_pcd.ply
+Processing 8/9: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/8_pcd.ply
+Merge completed! Total points: 359169
+Output file: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/combined_pcd.ply
+oracle_combined_ply /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/combined_pcd.ply
+Read 414 camera poses
+Found 414 .npz files
+Processing frame 0/414...
+Processing frame 50/414...
+Processing frame 100/414...
+Processing frame 150/414...
+Processing frame 200/414...
+Processing frame 250/414...
+Processing frame 300/414...
+Processing frame 350/414...
+Processing frame 400/414...
+Original point cloud contains             37650816 points
+Downsampled point cloud saved to: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/unique_frame_npz_fusion.ply
+oracle_unique_frame_npz_fusion_ply /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/pcd/unique_frame_npz_fusion.ply
