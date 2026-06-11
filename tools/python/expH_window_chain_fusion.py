@@ -149,7 +149,7 @@ def main() -> int:
     parser.add_argument("--neighbors", type=int, default=4)
     parser.add_argument("--rel-thresh", type=float, default=0.01)
     parser.add_argument("--min-consistent", type=int, default=2)
-    parser.add_argument("--num-max-points", type=int, default=3_000_000)
+    parser.add_argument("--num-max-points", default="3000000", help="comma list of caps, e.g. 8000000,200000000")
     parser.add_argument("--seed", type=int, default=8121)
     args = parser.parse_args()
 
@@ -207,16 +207,19 @@ def main() -> int:
     # export: official GLB rules; threshold from unmasked conf, rejected conf -> 0
     threshold = official_glb_conf_threshold(conf, conf_thresh=1.05, conf_thresh_percentile=40.0, ensure_thresh_percentile=90.0)
     results = {}
+    caps = [int(v) for v in str(args.num_max_points).split(",")]
     for tag, conf_used in (("control", conf), ("filtered", np.where(keep, conf, 0.0).astype(np.float32))):
         points, colors = official_depths_to_world_points_with_colors(depth, intr, extr, rgb, conf_used, threshold)
         valid = int(points.shape[0])
         transform = official_glb_alignment_transform(extr[0], points)
         points = transform_points(points, transform)
-        points, colors = official_glb_filter_and_downsample(points, colors, num_max=args.num_max_points, seed=args.seed)
-        ply = args.out_dir / f"fused_{tag}_rgb.ply"
-        write_point_cloud(ply, points, colors)
-        results[tag] = {"valid_before_downsample": valid, "exported": int(points.shape[0]), "ply": str(ply)}
-        print(f"{tag}: valid {valid:,} -> exported {points.shape[0]:,}", flush=True)
+        for cap in caps:
+            pts, cols = official_glb_filter_and_downsample(points, colors, num_max=cap, seed=args.seed)
+            label = "full" if pts.shape[0] == valid or cap >= valid else f"{cap // 1_000_000}M"
+            ply = args.out_dir / f"fused_{tag}_{label}_rgb.ply"
+            write_point_cloud(ply, pts, cols)
+            results[f"{tag}_{label}"] = {"valid_before_downsample": valid, "exported": int(pts.shape[0]), "ply": str(ply)}
+            print(f"{tag}[{label}]: valid {valid:,} -> exported {pts.shape[0]:,}", flush=True)
 
     report = {
         "schema_version": "pocketworld_expH_window_chain_fusion_v1",
