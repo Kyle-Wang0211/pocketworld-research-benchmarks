@@ -1,0 +1,130 @@
+{
+  "schema_version": "pocketworld_official_pytorch_k_sweep_v1",
+  "inputs": {
+    "frames_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/kr_spike_window028_manifest.json",
+    "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "official_src": "/Users/kaidongwang/Developer/Aether3D-cross/.deps/Depth-Anything-3/src"
+  },
+  "parameters": {
+    "device": "mps",
+    "process_res": [
+      896
+    ],
+    "k_values": [
+      18
+    ],
+    "process_res_method": "upper_bound_resize",
+    "ref_view_strategy": "saddle_balanced",
+    "save_arrays": true
+  },
+  "runtime": {
+    "python": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "platform": "macOS-26.1-arm64-arm-64bit",
+    "torch": "2.12.0",
+    "load_ms": 2307.6540830006707
+  },
+  "attempts": [
+    {
+      "k": 18,
+      "process_res": 896,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps",
+      "rss_before_mb": 1176.359375,
+      "preprocess_ms": 1124.9973339981807,
+      "forward_ms": 42286.597207999876,
+      "elapsed_ms": 49593.71224999995,
+      "rss_after_mb": 1289.21875,
+      "processed_shape_nchw": [
+        18,
+        3,
+        504,
+        896
+      ],
+      "output_shapes": {
+        "depth": [
+          18,
+          504,
+          896
+        ],
+        "conf": [
+          18,
+          504,
+          896
+        ],
+        "intrinsics": [
+          18,
+          3,
+          3
+        ],
+        "extrinsics": [
+          18,
+          3,
+          4
+        ],
+        "processed_images": [
+          18,
+          504,
+          896,
+          3
+        ],
+        "aligned_extrinsics": [
+          18,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.8025896682934944,
+        "ransac": true
+      },
+      "depth": {
+        "count": 8128512,
+        "min": 0.4742386043071747,
+        "max": 6.005014896392822,
+        "mean": 1.696708252606722,
+        "median": 1.3454721570014954,
+        "p05": 0.6350399255752563,
+        "p95": 3.6037078499793997
+      },
+      "confidence": {
+        "count": 8128512,
+        "min": 1.0,
+        "max": 7.548218250274658,
+        "mean": 1.5395180118684755,
+        "median": 1.2138183116912842,
+        "p05": 1.0,
+        "p95": 3.993538630008696
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 18,
+          "min": 599.0877685546875,
+          "max": 604.10595703125,
+          "mean": 601.2397800021702,
+          "median": 601.0675659179688,
+          "p05": 599.3120971679688,
+          "p95": 604.0755035400391
+        },
+        "fy": {
+          "count": 18,
+          "min": 599.0877685546875,
+          "max": 604.10595703125,
+          "mean": 601.2397800021702,
+          "median": 601.0675659179688,
+          "p05": 599.3120971679688,
+          "p95": 604.0755035400391
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/external_pose_k_vs_res_2026_06_10/expM_kr_spike_w028/k18_res896_mps/pytorch_processed_images.npy"
+      }
+    }
+  ],
+  "elapsed_s": 62.367
+}
