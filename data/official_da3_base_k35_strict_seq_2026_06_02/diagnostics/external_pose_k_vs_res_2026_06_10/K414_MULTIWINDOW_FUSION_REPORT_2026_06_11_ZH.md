@@ -164,3 +164,39 @@ Apple OC "More Light Required" 文案基线；learned conf 拍摄门公开证据
 （越界 RangeError）②sRGB 顶点色需查表转线性再喂渲染器（否则双重伽马发白；
 官方 PLYLoader 内置此转换，自写解析器必须复刻）。viewer 快照：
 `spatial_easy_viewer_snapshot.html`。
+
+---
+
+## 附录 D（拍摄端 conf 内容门规格书，2026-06-11 grounded）
+
+### 门槛（expT：K=1@504×896 image-only conf 普查，全 414 帧）
+
+- K=1 conf 与 K=18 完全两个量级：全局分布 1.00~4.41（中位 1.85）——"10+"在
+  K=1 语境下会杀光所有帧（K=18 的 9.5~10 是窗级后验，不可移植）
+- 分层（按空间窗难易回填）：易区帧中位 2.12 / 中区 1.79 / 难区 1.56，
+  corr(帧conf, 窗conf)=0.372（cell 级 0.444）——分离存在但软
+- **定案：有效帧 = K=1 conf 中位 ≥ 1.5**（易区 95-96% 通过——不误杀弱纹理
+  差异化场景；难区拦截 ~50%）；**红 cell 环境引导线 = cell 中位 < 1.4 且
+  ≥3 次尝试无改善**（配 SigLIP 反光分流）
+- 定位：粗筛 + UX 助推器。漏网难帧由下游三道闸兜底（窗级 conf →
+  逐窗 P40 → 一致性过滤）。调研已证全行业无完美实时质量门
+  （RealityScan 的 SfM 覆盖门在反光区同样失效）
+- cell 状态机 = 有效帧计数：0 红 / 1-2 黄 / ≥3 绿（用户裁定）
+
+### 真机预算（expU：DA3BASE_504x896_N1_image_only，iPhone 14 Pro .cpuOnly）
+
+| 项 | 实测 |
+|---|---|
+| 包大小 | 261MB（fp16） |
+| 首窗（E5RT 编译+加载+首推理） | **4,223 ms**（一次性，藏进会话预热） |
+| 稳态单帧 | **median 1,351 ms**（p25 1,274 / p75 1,703 / max 2,448） |
+| RSS | ~515MB 稳态（jetsam 余量 ~3.97GB 不动） |
+
+cell 验收节奏：每帧落点后异步跑门，~1.4s 出判定；第 3 张有效帧落地后
+~1.5s cell 转绿。与 ARKit capture 会话共存的内存预算宽裕（待 W6 集成验证）。
+
+### 实施清单（产品侧）
+
+1. cell 邻接 planner 替换 timestamp policy（expQ/expS 双重背书）
+2. DomeView 三态着色接有效帧计数（dome_cell_state 状态机现成）
+3. N1 包入 app（ODR 或随包）+ 会话预热；门逻辑 = 光度门(现有) ∧ conf 门(新增)
