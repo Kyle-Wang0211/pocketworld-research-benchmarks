@@ -191,6 +191,10 @@ def main() -> int:
     parser.add_argument("--min-consistent", type=int, default=2)
     parser.add_argument("--num-max-points", default="8000000,200000000")
     parser.add_argument("--seed", type=int, default=8121)
+    parser.add_argument("--gate-percentile", type=float, default=40.0,
+                        help="per-window official threshold percentile (raise for stricter clouds)")
+    parser.add_argument("--export-windows", default="",
+                        help="comma list of window ids; only frames whose primary window is listed are exported")
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -284,7 +288,7 @@ def main() -> int:
 
     # 1) per-window official threshold
     win_thresholds = [
-        float(official_glb_conf_threshold(w["conf"], conf_thresh=1.05, conf_thresh_percentile=40.0, ensure_thresh_percentile=90.0))
+        float(official_glb_conf_threshold(w["conf"], conf_thresh=1.05, conf_thresh_percentile=args.gate_percentile, ensure_thresh_percentile=max(90.0, args.gate_percentile + 10.0)))
         for w in wins
     ]
     print(f"per-window thresholds: min {min(win_thresholds):.2f} max {max(win_thresholds):.2f}", flush=True)
@@ -309,6 +313,13 @@ def main() -> int:
     img_cache.clear()
 
     # 3) consistency filter on v3-scaled depths
+    export_set = set(int(v) for v in args.export_windows.split(",") if v != "")
+    if export_set:
+        for g, (wi, slot) in enumerate(primary):
+            if wi not in export_set:
+                conf[g] = 0.0
+        print(f"export restricted to windows {sorted(export_set)}", flush=True)
+
     keep = consistency_filter(
         depth, conf, intr, extr,
         neighbors=args.neighbors, rel_thresh=args.rel_thresh, min_consistent=args.min_consistent,
