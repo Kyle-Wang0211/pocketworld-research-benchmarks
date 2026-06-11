@@ -212,3 +212,20 @@ cell 验收节奏：每帧落点后异步跑门，~1.4s 出判定；第 3 张有
   LiDAR confMap）→ patch 满 K=6@504 探针 ≥4.0 定绿 → 持续不过 SigLIP 分流引导；
   覆盖可视化用 rawFeaturePoints 累积染色（RealityScan 同款信号，pose 白送
   三角化，append-only 点库保证状态不退）
+
+### 附录 D 勘误：RealityScan 拍摄 UI 机制官方查证（2026-06-11 二次核实）
+
+此前附录暗示其点云为本地计算——**勘误：全部在云端**。官方证据链：
+手机边拍边上传 AWS（S3/CloudFront + EC2 GPU），"Analyzing" = 云端解算相机位姿
++ 特征匹配生成稀疏 tie points，点云回传手机由 ARKit/ARCore 仅作 AR 叠加显示；
+颜色 = 照片覆盖度（"greener shades mean higher quality (good coverage)"）；
+拍满 20 张才出首批分析，上传/分析交错。维持成立的结论：纯 RGB 摄影测量、
+无 LiDAR 依赖（系统需求无 LiDAR 字样 + "No special hardware!" + 无 LiDAR
+Android 实测同款 UI）。
+
+**战略含义**：RealityScan 的质量反馈离网即死（裁判在 AWS）；我们的级联
+（ARKit pose + rawFeaturePoints 染色 + K=6@504 本地探针 2-4s）全本地——
+与 Plan G 全本地原则一致，是"它离线做不到"的差异化能力，而非同款复刻。
+出处：dev.epicgames.com Step by Step Guide / Application Settings /
+1.8 Release Notes；AWS Industries Blog 2022-12；App Store/Google Play 官方页；
+peterfalkingham.com Android 无 LiDAR 实测。
