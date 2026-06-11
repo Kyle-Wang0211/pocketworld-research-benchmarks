@@ -200,3 +200,15 @@ cell 验收节奏：每帧落点后异步跑门，~1.4s 出判定；第 3 张有
 1. cell 邻接 planner 替换 timestamp policy（expQ/expS 双重背书）
 2. DomeView 三态着色接有效帧计数（dome_cell_state 状态机现成）
 3. N1 包入 app（ODR 或随包）+ 会话预热；门逻辑 = 光度门(现有) ∧ conf 门(新增)
+
+### 附录 D 补遗：K=6@504 mini-window 探针（expV）取代 K=1 成为真裁判
+
+- **corr(探针, K18@896 真窗 conf) = 0.749**（K=1 帧级仅 0.372）——窗级机制对窗级
+  质量的预测力是单帧代理的 2 倍
+- 工作点：**探针 ≥ 4.0 → 好窗召回 91% / 非好窗误放 12%**（K=1 无双优点）；
+  唯一漏判 = 窗 0（真 10.10/探针 2.59，6 帧子集采样偶发）
+- 成本：4,326 token ≈ 手机 2-4 秒/次，patch（6 cell）填满时跑一次
+- 终版级联：每帧免费层（光度+trackingState+陀螺）→ 可选亚秒层（K=1@252 或
+  LiDAR confMap）→ patch 满 K=6@504 探针 ≥4.0 定绿 → 持续不过 SigLIP 分流引导；
+  覆盖可视化用 rawFeaturePoints 累积染色（RealityScan 同款信号，pose 白送
+  三角化，append-only 点库保证状态不退）
