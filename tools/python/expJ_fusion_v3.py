@@ -89,11 +89,14 @@ def solve_global_affine(wins, conf_meds, *, k: int, stride: int, anchor_bar: flo
             d1k, d2k = d1[keep], d2[keep]
             wgt = min(conf_meds[w], conf_meds[w + 1])
             # row: [d1, 1, -d2, -1] over (a_w, b_w, a_{w+1}, b_{w+1}) = 0
+            # mean-normalized so each edge block is O(d^2 * wgt) ~ O(20) and the
+            # identity anchors (weight^2 = 400) genuinely pin the gauge
             cols = [ia, ib, ja, jb]
             vals = [d1k, np.ones_like(d1k), -d2k, -np.ones_like(d2k)]
+            inv_n = 1.0 / max(len(d1k), 1)
             for p in range(4):
                 for q in range(4):
-                    ata[cols[p], cols[q]] += wgt * float(np.dot(vals[p], vals[q]))
+                    ata[cols[p], cols[q]] += wgt * inv_n * float(np.dot(vals[p], vals[q]))
         for w in range(n):
             if conf_meds[w] >= anchor_bar:
                 ata[2 * w, 2 * w] += anchor_weight**2
@@ -174,11 +177,14 @@ def main() -> int:
     )
     parser.add_argument(
         "--correction",
-        choices=["scale", "affine"],
+        choices=["scale", "affine", "scale_then_shift"],
         default="scale",
-        help="'affine' solves per-window (a, b) with depth' = a*depth + b via global"
-        " normal-equation LSQ over shared pixels (anchors prior a=1, b=0); captures"
-        " the monotone-with-depth layer structure exp L found on hard edges.",
+        help="'affine' = joint (a,b) normal-equation LSQ (known gauge weakness:"
+        " edge terms are O(d^2*pixels) so identity anchors under-pin absolute"
+        " scale). 'scale_then_shift' = two-step: proven log-LSQ scales first,"
+        " then per-window shift b solved by the same anchored LSQ on per-edge"
+        " median residuals (linear units, gauge pinned; captures exp L's"
+        " monotone layer structure without breaking metric scale).",
     )
     parser.add_argument("--neighbors", type=int, default=4)
     parser.add_argument("--rel-thresh", type=float, default=0.01)
@@ -241,6 +247,37 @@ def main() -> int:
         anchors = [w for w in range(n_windows) if conf_meds[w] >= args.anchor_bar]
         print(f"affine: a span [{scales.min():.4f}, {scales.max():.4f}]  "
               f"b span [{shifts.min():+.4f}, {shifts.max():+.4f}] m", flush=True)
+    elif args.correction == "scale_then_shift":
+        # step 2: per-edge median residual after v3 scales -> anchored LSQ on b
+        n_shared = args.k - args.stride
+        rows, rhs, wts = [], [], []
+        for w in range(n_windows - 1):
+            a, b = wins[w], wins[w + 1]
+            ca = np.maximum(a["conf"] - 1.0, 0.0)
+            cb = np.maximum(b["conf"] - 1.0, 0.0)
+            ta, tb = ca.mean() * 0.5, cb.mean() * 0.5
+            resid = []
+            for s in range(n_shared):
+                m = (ca[args.stride + s] >= ta) & (cb[s] >= tb)
+                resid.append(scales[w + 1] * b["depth"][s][m] - scales[w] * a["depth"][args.stride + s][m])
+            med = float(np.median(np.concatenate(resid)))  # b_w - b_{w+1} = med
+            row = np.zeros(n_windows)
+            row[w], row[w + 1] = 1.0, -1.0
+            rows.append(row)
+            rhs.append(med)
+            wts.append(min(conf_meds[w], conf_meds[w + 1]))
+        for w in range(n_windows):
+            if conf_meds[w] >= args.anchor_bar:
+                row = np.zeros(n_windows)
+                row[w] = 1.0
+                rows.append(row)
+                rhs.append(0.0)
+                wts.append(args.anchor_weight)
+        a_mat = np.asarray(rows) * np.asarray(wts)[:, None]
+        b_vec = np.asarray(rhs) * np.asarray(wts)
+        shifts, *_ = np.linalg.lstsq(a_mat, b_vec, rcond=None)
+        print(f"scale_then_shift: b span [{shifts.min():+.4f}, {shifts.max():+.4f}] m "
+              f"(scales 保持 v3 log-LSQ)", flush=True)
     print(f"anchors (conf>={args.anchor_bar}): {anchors}", flush=True)
     print(f"v3 scales: span [{scales.min():.4f}, {scales.max():.4f}] "
           f"|log| med {np.median(np.abs(np.log(scales))):.4f}", flush=True)
