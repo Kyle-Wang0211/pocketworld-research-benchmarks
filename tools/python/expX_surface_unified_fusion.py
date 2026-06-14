@@ -181,10 +181,31 @@ def main() -> int:
     img_cache.clear()
     print(f"subset frames: {n_f}", flush=True)
 
-    # 4) consistency filter (spatial frame order; run gaps -> fewer neighbors, fine)
+    # 4) consistency filter with run-gap-aware adaptive votes: a frame's required
+    # vote count is capped by how many of its array neighbors are genuinely
+    # spatially close (run-edge frames lost real neighbors to the subset cut and
+    # must not be starved into deletion).
     keep = consistency_filter(depth, conf, intr, extr, neighbors=args.neighbors,
-                              rel_thresh=args.rel_thresh, min_consistent=args.min_consistent)
-    conf_final = np.where(keep, conf, 0.0).astype(np.float32)
+                              rel_thresh=args.rel_thresh, min_consistent=1)
+    # keep here is a count>=1 mask; recompute counts for adaptive thresholding
+    from expH_window_chain_fusion import consistency_filter as _cf  # noqa
+    # cheap second pass: count close neighbors per frame
+    centers = np.stack([-extr[i, :3, :3].T @ extr[i, :3, 3] for i in range(n_f)])
+    close = np.zeros(n_f, dtype=int)
+    for i in range(n_f):
+        for dn in range(-args.neighbors, args.neighbors + 1):
+            j = i + dn
+            if dn != 0 and 0 <= j < n_f and np.linalg.norm(centers[i] - centers[j]) < 0.6:
+                close[i] += 1
+    required = np.minimum(args.min_consistent, np.maximum(close, 1))
+    keep_strict = consistency_filter(depth, conf, intr, extr, neighbors=args.neighbors,
+                                     rel_thresh=args.rel_thresh, min_consistent=args.min_consistent)
+    conf_final = np.empty_like(conf)
+    for i in range(n_f):
+        mask = keep_strict[i] if required[i] >= args.min_consistent else keep[i]
+        conf_final[i] = np.where(mask, conf[i], 0.0)
+    print(f"adaptive votes: {int((required < args.min_consistent).sum())}/{n_f} 帧降级为 1 票", flush=True)
+    conf_final = conf_final.astype(np.float32)
     print(f"gate {((conf>0).mean())*100:.1f}% -> +consistency {((conf_final>0).mean())*100:.1f}%", flush=True)
 
     points, colors = official_depths_to_world_points_with_colors(depth, intr, extr, rgb, conf_final, 1.05)
