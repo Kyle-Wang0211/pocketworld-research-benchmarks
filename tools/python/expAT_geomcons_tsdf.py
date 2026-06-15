@@ -53,7 +53,21 @@ OUT_TAG       = sys.argv[7]        if len(sys.argv) > 7 else "geomcons"
 STRIDE        = int(sys.argv[8])   if len(sys.argv) > 8 else 2       # 1 = dense (clean surface), 2 = fast
 WIN_SET       = sys.argv[9]        if len(sys.argv) > 9 else "all"   # all | new12 (ellipsoid 40-48°) | old11 (random 20-100°)
 CONF_BAR      = float(sys.argv[10]) if len(sys.argv) > 10 else 6.0   # window median-conf bar (lower = more windows -> more overlap)
+USE_BA        = int(sys.argv[11]) if len(sys.argv) > 11 else 0       # 1 = feed BA(scale+shift)-aligned depth (needs WIN_SET=new12 CONF_BAR=6)
+MESHER        = sys.argv[12]      if len(sys.argv) > 12 else "tsdf"  # tsdf | poisson (滤后点云 -> screened Poisson, 保细结构)
 DEPTH_TRUNC = 12.0
+
+
+def depth_normals(depth, K):
+    H, W = depth.shape
+    uu, vv = np.meshgrid(np.arange(W), np.arange(H))
+    x = (uu + 0.5 - K[0, 2]) / K[0, 0] * depth; y = (vv + 0.5 - K[1, 2]) / K[1, 1] * depth
+    P = np.stack([x, y, depth], -1); du = np.zeros_like(P); dv = np.zeros_like(P)
+    du[:, 1:-1] = P[:, 2:] - P[:, :-2]; dv[1:-1] = P[2:] - P[:-2]
+    n = np.cross(du, dv); ln = np.linalg.norm(n, axis=-1, keepdims=True)
+    n = np.divide(n, ln, out=np.zeros_like(n), where=ln > 1e-9)
+    n[(np.sum(n * P, -1) > 0)] *= -1
+    return n
 MAX_REPROJ2 = MAX_REPROJ_PX * MAX_REPROJ_PX
 
 
@@ -100,6 +114,12 @@ def load_windows():
 
 
 ws = load_windows()
+if USE_BA:
+    zz = np.load(EXPAC / "ba_scaleshift.npz"); A_ba, B_ba = zz["a"], zz["b"]
+    assert len(A_ba) == len(ws), f"BA has {len(A_ba)} windows but loaded {len(ws)} (use WIN_SET=new12 CONF_BAR=6)"
+    log(f"BA(scale+shift) applied: a[{A_ba.min():.3f},{A_ba.max():.3f}] b[{B_ba.min()*1000:.0f},{B_ba.max()*1000:.0f}]mm")
+else:
+    A_ba = np.ones(len(ws)); B_ba = np.zeros(len(ws))
 log(f"{len(ws)} windows | voxel {VOXEL*1000:.0f}mm trunc {SDF_TRUNC*1000:.0f}mm | "
     f"MIN_WIN {MIN_WIN} depth_err {MAX_DEPTH_ERR} reproj {MAX_REPROJ_PX}px N_CAND {N_CAND}")
 
@@ -109,7 +129,7 @@ for wid, (depth, conf, K, w2c, fidx, s) in enumerate(ws):
     n, H, W = depth.shape
     fl = np.percentile(conf, CONF_PCT)
     for i in range(n):
-        dk = (depth[i] * s).astype(np.float32)
+        dk = (A_ba[wid] * (depth[i] * s) + B_ba[wid]).astype(np.float32)   # FixB (a=1,b=0) or BA
         Ki = K[i].astype(np.float64); w2ci = w2c[i].astype(np.float64)
         Rwc = w2ci[:3, :3]; twc = w2ci[:3, 3]
         C = -Rwc.T @ twc                                   # camera center (world)
@@ -179,26 +199,51 @@ kept = sum(int(v["keep"].sum()) for v in views); tot = sum(len(v["X"]) for v in 
 log(f"geom-consistency done in {time.time()-t0:.0f}s | kept {kept/1e6:.1f}M / {tot/1e6:.1f}M px "
     f"({100*kept/max(tot,1):.0f}%)")
 
-# ---- surviving depths -> Open3D ScalableTSDFVolume ----
-vol = o3d.pipelines.integration.ScalableTSDFVolume(
-    voxel_length=VOXEL, sdf_trunc=SDF_TRUNC,
-    color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8)
-for rv in views:
-    if not len(rv["keep"]) or not rv["keep"].any():
-        continue
-    H, W = rv["H"], rv["W"]
-    dk2 = np.zeros((H, W), np.float32)
-    kv, ku = rv["vs"][rv["keep"]], rv["us"][rv["keep"]]
-    dk2[kv, ku] = rv["dk"][kv, ku]
-    img = cv2.imread(str(D / "capture_seq_k35_strict" / man[rv["fidx"]]["jpegPath"]))
-    img = np.ascontiguousarray(cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)[:, :, ::-1])
-    rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        o3d.geometry.Image(img), o3d.geometry.Image(dk2),
-        depth_scale=1.0, depth_trunc=DEPTH_TRUNC, convert_rgb_to_intensity=False)
-    Ki = rv["K"]
-    intr = o3d.camera.PinholeCameraIntrinsic(W, H, Ki[0, 0], Ki[1, 1], Ki[0, 2], Ki[1, 2])
-    vol.integrate(rgbd, intr, rv["w2c"])
-mesh = vol.extract_triangle_mesh(); mesh.compute_vertex_normals()
+# ---- surviving (consistency-kept) depths -> TSDF or screened Poisson ----
+if MESHER == "poisson":                         # 滤后点云 -> screened Poisson (保细结构,同 button3 但带过滤)
+    P, N, C = [], [], []
+    for rv in views:
+        if not len(rv["keep"]) or not rv["keep"].any(): continue
+        kv, ku = rv["vs"][rv["keep"]], rv["us"][rv["keep"]]
+        dk = rv["dk"]; Ki = rv["K"]
+        nrm = depth_normals(dk.astype(np.float64), Ki)
+        dd = dk[kv, ku].astype(np.float64)
+        x = (ku + 0.5 - Ki[0, 2]) / Ki[0, 0] * dd; y = (kv + 0.5 - Ki[1, 2]) / Ki[1, 1] * dd
+        cam = np.stack([x, y, dd, np.ones_like(dd)]); c2w = rv["invw2c"]
+        P.append((c2w @ cam)[:3].T)
+        nw = (c2w[:3, :3] @ nrm[kv, ku].T).T
+        N.append(nw / np.clip(np.linalg.norm(nw, axis=1, keepdims=True), 1e-9, None))
+        img = cv2.imread(str(D / "capture_seq_k35_strict" / man[rv["fidx"]]["jpegPath"]))
+        img = cv2.resize(img, (rv["W"], rv["H"]), interpolation=cv2.INTER_AREA)
+        C.append(img[kv, ku][:, ::-1].astype(np.float64) / 255.0)
+    P = np.concatenate(P); N = np.concatenate(N); C = np.concatenate(C)
+    log(f"kept cloud {len(P):,} pts -> screened Poisson")
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(P); pcd.normals = o3d.utility.Vector3dVector(N)
+    pcd.colors = o3d.utility.Vector3dVector(C); pcd = pcd.voxel_down_sample(0.003)
+    mesh, dens = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=10, linear_fit=True, n_threads=1)
+    dens = np.asarray(dens); mesh.remove_vertices_by_mask(dens <= np.quantile(dens, 0.04))
+    mesh.compute_vertex_normals()
+else:
+    vol = o3d.pipelines.integration.ScalableTSDFVolume(
+        voxel_length=VOXEL, sdf_trunc=SDF_TRUNC,
+        color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8)
+    for rv in views:
+        if not len(rv["keep"]) or not rv["keep"].any():
+            continue
+        H, W = rv["H"], rv["W"]
+        dk2 = np.zeros((H, W), np.float32)
+        kv, ku = rv["vs"][rv["keep"]], rv["us"][rv["keep"]]
+        dk2[kv, ku] = rv["dk"][kv, ku]
+        img = cv2.imread(str(D / "capture_seq_k35_strict" / man[rv["fidx"]]["jpegPath"]))
+        img = np.ascontiguousarray(cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)[:, :, ::-1])
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+            o3d.geometry.Image(img), o3d.geometry.Image(dk2),
+            depth_scale=1.0, depth_trunc=DEPTH_TRUNC, convert_rgb_to_intensity=False)
+        Ki = rv["K"]
+        intr = o3d.camera.PinholeCameraIntrinsic(W, H, Ki[0, 0], Ki[1, 1], Ki[0, 2], Ki[1, 2])
+        vol.integrate(rgbd, intr, rv["w2c"])
+    mesh = vol.extract_triangle_mesh(); mesh.compute_vertex_normals()
 log(f"raw mesh {len(mesh.vertices):,} verts {len(mesh.triangles):,} tris")
 tri_ids, n_tri, _ = mesh.cluster_connected_triangles()
 tri_ids = np.asarray(tri_ids); n_tri = np.asarray(n_tri)
