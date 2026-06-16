@@ -1,0 +1,204 @@
+diff --git a/models/diffusion.py b/models/diffusion.py
+index ebe1e3e..1ac9c4c 100644
+--- a/models/diffusion.py
++++ b/models/diffusion.py
+@@ -141,7 +141,7 @@ class CasDiffMVS(nn.Module):
+         disp_max = depth_values[:, -1].float().view(-1,1,1,1)
+         depth_max_ = 1. / disp_min
+         depth_min_ = 1. / disp_max
+-        depth_interval = 1.0 / depth_values.size(1)
++        depth_interval = 1.0 / float(depth_values.size(1))  # float() so tracing folds to a constant (CoreML can't inverse an int tensor)
+ 
+         self.scale_inv_depth = partial(disp_to_depth, min_depth=depth_min_, max_depth=depth_max_)
+ 
+diff --git a/models/module.py b/models/module.py
+index 9657c6d..05e42fe 100644
+--- a/models/module.py
++++ b/models/module.py
+@@ -4,7 +4,18 @@ import torch.nn.functional as F
+ import time
+ import sys
+ sys.path.append("..")
+-x = torch.inverse(torch.ones((1, 1), device="cuda:0"))
++# PocketWorld: original was torch.inverse(torch.ones((1,1),device="cuda:0")) — a
++# CUDA-only torch.inverse warmup workaround. Made device-agnostic for macOS MPS/CPU.
++_warm = torch.device("cuda:0") if torch.cuda.is_available() else (
++    torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu"))
++x = torch.inverse(torch.ones((1, 1), device=_warm))
++
++# When True (set only by the CoreML export script), InitialCost computes its
++# photometric confidence with a gather-free max proxy so coremltools doesn't hit
++# aten::Int/gather over a long index. PyTorch desktop path keeps EXPORT_MODE=False
++# => original behavior unchanged.
++EXPORT_MODE = False
++
+ 
+ def init_bn(module):
+     if module.weight is not None:
+@@ -136,7 +147,17 @@ class Deconv3d(nn.Module):
+         # self.init_weights(init_method)
+ 
+     def forward(self, x):
+-        x = self.conv(x)
++        op = getattr(self.conv, "output_padding", (0, 0, 0))
++        if EXPORT_MODE and any(o > 0 for o in op):
++            # CoreML has no output_padding for ConvTranspose3D. output_padding only
++            # selects a larger output size; reproduce as output_padding=0 + trailing
++            # pad (exact except a 1-voxel border -> negligible).
++            x = F.conv_transpose3d(x, self.conv.weight, self.conv.bias,
++                                   stride=self.conv.stride, padding=self.conv.padding,
++                                   output_padding=0)
++            x = F.pad(x, (0, op[2], 0, op[1], 0, op[0]))
++        else:
++            x = self.conv(x)
+         if self.bn is not None:
+             x = self.bn(x)
+         if self.relu:
+@@ -178,6 +199,35 @@ class SepConvGRU(nn.Module):
+ 
+         return h
+ 
++def _inv3x3(M):
++    """Analytic 3x3 inverse (cofactor/adjugate). CoreML-convertible — avoids
++    aten::inverse, which coremltools has no conversion for."""
++    a, b, c = M[:, 0, 0], M[:, 0, 1], M[:, 0, 2]
++    d, e, f = M[:, 1, 0], M[:, 1, 1], M[:, 1, 2]
++    g, h, i = M[:, 2, 0], M[:, 2, 1], M[:, 2, 2]
++    A = e * i - f * h; Bb = -(d * i - f * g); Cc = d * h - e * g
++    D = -(b * i - c * h); E = a * i - c * g; Ff = -(a * h - b * g)
++    G = b * f - c * e; H = -(a * f - c * d); I = a * e - b * d
++    det = a * A + b * Bb + c * Cc
++    inv_det = (1.0 / det).view(-1, 1, 1)
++    row0 = torch.stack([A, D, G], dim=-1)
++    row1 = torch.stack([Bb, E, H], dim=-1)
++    row2 = torch.stack([Cc, Ff, I], dim=-1)
++    return torch.stack([row0, row1, row2], dim=1) * inv_det
++
++
++def _invert_affine4x4(P):
++    """Inverse of a [B,4,4] whose bottom row is [0,0,0,1] (true for the K@[R|t]
++    projection matrices here). = [[M^-1, -M^-1 p],[0,0,0,1]]."""
++    M = P[:, :3, :3]; p = P[:, :3, 3:4]
++    Minv = _inv3x3(M)
++    pinv = -torch.matmul(Minv, p)
++    top = torch.cat([Minv, pinv], dim=2)                       # [B,3,4]
++    bottom = torch.zeros(P.shape[0], 1, 4, dtype=P.dtype, device=P.device)
++    bottom[:, 0, 3] = 1.0
++    return torch.cat([top, bottom], dim=1)
++
++
+ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+     """get warped source image features"""
+     B = src_fea.shape[0]
+@@ -185,7 +235,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+     height, width = src_fea.shape[2], src_fea.shape[3]
+ 
+     with torch.no_grad():
+-        proj = torch.matmul(src_proj, torch.inverse(ref_proj))
++        proj = torch.matmul(src_proj, _invert_affine4x4(ref_proj))
+         rot = proj[:, :3, :3]  # [B,3,3]
+         trans = proj[:, :3, 3:4]  # [B,3,1]
+ 
+@@ -196,6 +246,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+         y, x = y.contiguous(), x.contiguous()
+ 
+         y, x = y.view(height0 * width0), x.view(height0 * width0)
++        x = x.float(); y = y.float()  # consistent dtype so CoreML stack doesn't see int/double mix
+         xyz = torch.stack((x, y, torch.ones_like(x)))  # [3, H*W]
+         xyz = torch.unsqueeze(xyz, 0).repeat(B, 1, 1)  # [B, 3, H*W]
+         rot_xyz = torch.matmul(rot, xyz)  # [B, 3, H*W]
+@@ -237,6 +288,14 @@ def depth_to_disp(depth, min_depth, max_depth):
+ def upsample_depth(depth, mask, ratio = 8):
+     """upsample depth map using convex combination"""
+     N, _, H, W = depth.shape
++    if EXPORT_MODE:
++        # original uses rank-6/7 tensors (CoreML max 5). Equivalent rank<=5 form:
++        # softmax over the 9 neighbours, weighted unfold sum -> [N, r*r, H, W],
++        # then pixel_shuffle (== the original permute/reshape exactly).
++        m = torch.softmax(mask.view(N, 9, ratio * ratio, H, W), dim=1)
++        up = F.unfold(depth, [3, 3], padding=1).view(N, 9, 1, H, W)
++        up = torch.sum(m * up, dim=1)                      # [N, r*r, H, W]
++        return F.pixel_shuffle(up, ratio).reshape(N, ratio * H, ratio * W)
+     mask = mask.view(N, 1, 9, ratio, ratio, H, W)
+     mask = torch.softmax(mask, dim=2)
+ 
+@@ -526,9 +585,16 @@ class InitialCost(nn.Module):
+             warped_src = differentiable_warping(src_fea, src_proj_new,
+                                                 ref_proj_new, depth_values)
+ 
+-            warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-            ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-            cor_feat = (warped_src * ref_volume).mean(2)
++            if EXPORT_MODE:
++                # rank-6 [B,G,C/G,D,H,W] exceeds CoreML's max rank 5; fold (B,G) into
++                # the batch dim instead (B=1 here) -> identical group-wise correlation.
++                g = self.group_dim
++                prod = (warped_src * ref_volume).reshape(B * g, C // g, D, H, W)
++                cor_feat = prod.mean(1).reshape(B, g, D, H, W)
++            else:
++                warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                cor_feat = (warped_src * ref_volume).mean(2)
+ 
+             view_weight = self.pixel_view_weight(cor_feat)
+ 
+@@ -566,9 +632,14 @@ class InitialCost(nn.Module):
+                 pad=(0, 0, 0, 0, 1, 2)
+             ), (4, 1, 1), stride=1, padding=0).squeeze(1)
+ 
+-            index = index.long()
+-            index = index.clamp(min=0, max=num_depth-1)
+-            photometric_confidence = torch.gather(prob_volume_sum4, 1, index)
++            if EXPORT_MODE:
++                # gather over a long index -> aten::Int; CoreML can't convert it.
++                # max of the 4-neighbour prob mass is a near-identical, gather-free proxy.
++                photometric_confidence = prob_volume_sum4.max(dim=1, keepdim=True)[0]
++            else:
++                index = index.long()
++                index = index.clamp(min=0, max=num_depth-1)
++                photometric_confidence = torch.gather(prob_volume_sum4, 1, index)
+ 
+         return mask, normalized_depth, depth, view_weights.detach(), photometric_confidence
+ 
+@@ -641,9 +712,16 @@ class GetCost(nn.Module):
+             warped_src = differentiable_warping(src_fea, src_proj_new,
+                                                 ref_proj_new, depth_range_samples)
+ 
+-            warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-            ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-            cor_feat = (warped_src * ref_volume).mean(2)
++            if EXPORT_MODE:
++                # rank-6 [B,G,C/G,D,H,W] exceeds CoreML's max rank 5; fold (B,G) into
++                # the batch dim instead (B=1 here) -> identical group-wise correlation.
++                g = self.group_dim
++                prod = (warped_src * ref_volume).reshape(B * g, C // g, D, H, W)
++                cor_feat = prod.mean(1).reshape(B, g, D, H, W)
++            else:
++                warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                cor_feat = (warped_src * ref_volume).mean(2)
+             
+             del warped_src, src_proj, src_fea
+ 
+diff --git a/models/update.py b/models/update.py
+index 89122d5..456809d 100644
+--- a/models/update.py
++++ b/models/update.py
+@@ -466,8 +466,15 @@ class DiffusionUpdateBlockDepth(nn.Module):
+         else:
+             batch, device, total_timesteps, sampling_timesteps, eta = B, inv_depth.device, self.timesteps, self.sampling_timesteps, self.ddim_sampling_eta
+ 
+-            times = torch.linspace(-1, total_timesteps - 1, steps=sampling_timesteps + 1) 
+-            times = list(reversed(times.int().tolist()))
++            # pure-Python schedule so tracing folds it to constants — CoreML cannot
++            # convert aten::Int over a traced array (was: times.int().tolist()).
++            n = sampling_timesteps + 1
++            if n <= 1:
++                times = [-1]
++            else:
++                step = (total_timesteps - 1 - (-1)) / (n - 1)
++                times = [int(round(-1 + step * k)) for k in range(n)]
++            times = list(reversed(times))
+             time_pairs = list(zip(times[:-1], times[1:])) # [(T-1, T-2), ..., (1, 0), (0, -1)]
+             img = (self.scale * torch.randn_like(inv_depth)).float()
+             mask = .25 * self.mask(context)

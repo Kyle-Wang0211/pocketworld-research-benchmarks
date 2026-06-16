@@ -220,7 +220,9 @@ if MESHER == "poisson":                         # 滤后点云 -> screened Poiss
     log(f"kept cloud {len(P):,} pts -> screened Poisson")
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(P); pcd.normals = o3d.utility.Vector3dVector(N)
-    pcd.colors = o3d.utility.Vector3dVector(C); pcd = pcd.voxel_down_sample(0.003)
+    pcd.colors = o3d.utility.Vector3dVector(C)
+    o3d.io.write_point_cloud(str(OUT / f"kept_cloud_{OUT_TAG}.ply"), pcd)  # full-res cached cloud for Poisson-depth sweep
+    pcd = pcd.voxel_down_sample(0.003)
     mesh, dens = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=10, linear_fit=True, n_threads=1)
     dens = np.asarray(dens); mesh.remove_vertices_by_mask(dens <= np.quantile(dens, 0.04))
     mesh.compute_vertex_normals()
