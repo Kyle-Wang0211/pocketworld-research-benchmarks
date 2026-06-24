@@ -1,0 +1,17 @@
+# Raw bench results 2026-06-24/25 (key lines extracted from run logs)
+
+## Mac COLMAP CLUSTER (colmap396_cluster):
+ASYNC {"local_ms":144324,"local_reproj":1.0214,"local_reg":396,"local_pts":260926,"refine_ms":678704,"refined_reproj":0.9647,"refined_reg":396,"refined_pts":250175,"gref":5,"giter":50,"gloss":2,"drift_mean_pct":0.581,"drift_max_pct":1.835,"th_start":-1,"th_local":-1,"th_refine":-1,"done":1}
+## Mac COLMAP SPARSE+EIGEN run1 (repro):
+ASYNC {"local_ms":168958,"local_reproj":1.0250,"local_reg":396,"local_pts":262611,"refine_ms":538064,"refined_reproj":0.9600,"refined_reg":396,"refined_pts":249273,"gref":5,"giter":50,"gloss":2,"drift_mean_pct":0.736,"drift_max_pct":2.012,"th_start":-1,"th_local":-1,"th_refine":-1,"done":1}
+## Mac COLMAP SPARSE+EIGEN run2 confirm:
+ASYNC {"local_ms":168793,"local_reproj":1.0230,"local_reg":396,"local_pts":262687,"refine_ms":508651,"refined_reproj":0.9590,"refined_reg":396,"refined_pts":249920,"gref":5,"giter":50,"gloss":2,"drift_mean_pct":0.753,"drift_max_pct":1.885,"th_start":-1,"th_local":-1,"th_refine":-1,"done":1}
+## Mac COLMAP SPARSE+EIGEN mem (colmap_eigen_mem2): 878.52 real / 2885697536 RSS / 4045540976 peak footprint
+ASYNC {"local_ms":202166,"local_reproj":1.0207,"local_reg":396,"local_pts":261953,"refine_ms":676060,"refined_reproj":0.9606,"refined_reg":396,"refined_pts":250456,"gref":5,"giter":50,"gloss":2,"drift_mean_pct":0.804,"drift_max_pct":2.185,"th_start":-1,"th_local":-1,"th_refine":-1,"done":1}
+## Mac GLOMAP SPARSE+EIGEN (glomap396_eigen): 576.48 real / 4527837024 peak footprint
+## Mac GLOMAP full+reproj (glomap_reproj):
+RESULT {"db_load_ms":1543.3,"solve_ms":571316.6,"n_images":396,"n_registered":396,"n_pairs":71236,"n_tracks":223863,"n_cameras":1,"reproj":1.3485}
+## Device COLMAP SPARSE+EIGEN (real414, on-screen console):
+SFM_ASYNC cauchy_eigen rc=0 {"local_ms":260798,"local_reproj":1.0210,"local_reg":396,"local_pts":261924,"refine_ms":1044059,"refined_reproj":0.9606,"refined_reg":396,"refined_pts":250428,"gref":5,"giter":50,"gloss":2,"drift_mean_pct":0.803,"drift_max_pct":2.210,"th_start":1,"th_local":2,"th_refine":2,"done":1}
+SFM_ASYNC_PEAK_MEM_MB=3070.2
+## Device GLOMAP (real414): DIED at 'Solving the global positioner problem' (both SPARSE+EIGEN and ITERATIVE), no GLOMAP_BENCH result
