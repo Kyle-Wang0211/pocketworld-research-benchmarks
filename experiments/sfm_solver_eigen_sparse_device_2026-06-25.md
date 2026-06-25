@@ -52,7 +52,39 @@ Web-verified against the foundational literature and the toolchain authors:
 ## Decision
 **On-device SfM engine = COLMAP, SPARSE_SCHUR + EIGEN_SPARSE for the >200-frame finalize.** GLOMAP is out on device (GP OOM/crash, can't do selected-region efficiently, no capture-time incremental). The "global BA only polishes; local BA does the modeling" framing makes **local-BA optimization the top priority** going forward (capture-time, real-time, determines model quality; user accepts >2s/frame for a qualitative leap).
 
-## Open / next
-- Local BA qualitative leap (covisibility windows, drift suppression, intrinsics, retriangulation-in-loop) — priority.
-- Global BA quality-neutral speedups (dense-threshold 200→50 for selected regions; preconditioners; multithreading).
-- Front-end (DSP-SIFT extraction 5.4s/frame = real heat source) speed.
+## 2026-06-25 FINAL UPDATE — DENSE_SCHUR supersedes EIGEN_SPARSE; local-BA levers failed
+
+### Solver: DENSE_SCHUR is the final answer (not EIGEN_SPARSE)
+Dense-threshold sweep + device verify reversed the EIGEN_SPARSE decision. No SuiteSparse on
+iOS -> the only sparse backend is the slow simplicial EIGEN_SPARSE; AND object-centric
+capture makes the reduced camera matrix DENSE (all cameras see the object) -> the "sparse"
+Schur fills in -> dense Cholesky (fast BLAS, fixed O(n²) storage) wins on BOTH speed and memory.
+
+| | DENSE_SCHUR | SPARSE_SCHUR+EIGEN_SPARSE |
+|---|---|---|
+| Mac db.db 396 finalize | 450s / 2.91GB | 538s / 3.77GB |
+| db_50 / db_200 finalize | 14.8s / 113s | 16.9s / 146s |
+| **Device real414 396 finalize** | **635s / 2.30GB** | 959-1044s / 3.07GB |
+| reproj | 0.958-0.960 | 0.959-0.961 (same) |
+
+Device: DENSE 34-39% faster + 25% less memory + same reproj + no crash + cleanest license
+(pure Eigen dense MPL2). `incremental_pipeline.cc` CAUCHY dense threshold 200→1000 (commit 86e5eec0).
+EIGEN_SPARSE was the necessary stepping stone (ruled out the Accelerate crash) but DENSE is final.
+
+### Local-BA "qualitative leap" — tried, ablated, ABANDONED
+Implemented 5 local-BA levers (anchor frames, covis×baseline window, release intrinsics,
+retriangulation+long-tracks, more refinements) as toggleable options. Mac ablation on db.db
+(local_reproj / drift_mean / drift_max):
+- stock 0.987 / 0.50 / 1.87; all-on 1.049 / 1.15 / 3.09 (WORSE); ②④a 0.984 / 0.50 / 2.50 (neutral);
+  +① anchor 0.996 / 1.09 (drift doubled — ① is a culprit); release-intrinsics ③ = biggest reproj culprit.
+- **No lever delivers a win on clean data.** Local BA is already good (drift ~2%, reproj 0.99/0.95);
+  the aggressive levers (① anchor = wrong variant of loop-closure; ③ intrinsics = overfit) HURT.
+- Loop-closure (force first↔last match) ALSO doesn't apply: real414 is a DOME capture (cell_X_slot_Y),
+  matching already connects spatially-adjacent frames across the capture (id1↔333, id411↔7) -> seam
+  already closed -> drift already low. Levers reverted to bit-equal stock.
+- Lesson: drift correction is the GLOBAL BA's job (not "just polish"); local BA already does its job on
+  clean dome captures. Local-BA optimization only helps the worst (sparse/low-texture) captures.
+
+## Open / next (确定能赢)
+- Re-vendor latest COLMAP (analytical Jacobian / single pose block / deterministic seed) — free CPU speedup.
+- Front-end DSP-SIFT extraction (5.4s/frame = real heat source) speed.
