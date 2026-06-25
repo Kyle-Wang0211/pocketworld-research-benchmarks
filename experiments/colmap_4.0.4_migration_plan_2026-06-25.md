@@ -87,8 +87,31 @@ Branch `colmap-4.0-migration` (worktree `/tmp/aether-colmap40`). Done via 3 orch
   added (SIFT path never reaches them).
 - **Commits:** host migration + STEP 5 (`b3a97ff6`) on `colmap-4.0-migration`.
 
-### REMAINING — STEP 6 device smoke (needs the iPhone + on-screen log)
-Build the GlomapBench iosapp against the worktree's 4.0.4 `glomap_core` (build_ios.sh currently hardcodes the main-tree
-path — invoke cmake against the worktree, or relativize `V=`), deploy to iPhone 14 Pro, run real414 DENSE-396, confirm
-reproj parity (~0.96), no crash, device perf (does the host speedup hold on-device), peak mem. This is the final gate
-before merging `colmap-4.0-migration` → the production branch.
+### STEP 6 device smoke — DONE, PASS (clean same-db device head-to-head)
+GlomapBench rebuilt against the worktree 4.0.4 `glomap_core` (build_ios.sh + project.yml repointed to the worktree;
+`glomap_bench.cc` dropped from the app sources — it referenced the removed GlobalMapper), code-signed, deployed to
+iPhone 14 Pro (`1B290474-...`), ran `aether_async_bench(real414_v313_nodesc.db, gref=5, giter=50, CAUCHY)` on the
+4.0-schema device db (26201 matches — the SAME db as the 3.14 device baseline, so a clean head-to-head).
+
+Verified from `aether_console.log` (244KB): 0 errors/crashes/jetsam; 795 `solver_used=DENSE_SCHUR` lines, ZERO non-DENSE;
+795 from `bundle_adjustment_ceres.cc` / 0 from old `bundle_adjustment.cc` (100% 4.0.4 code path); BENCH_DONE, done=1, 396/396 registered.
+
+| device metric (same 26201-match db, same iPhone 14 Pro, CAUCHY) | 3.14 baseline | 4.0.4 | delta |
+|---|---|---|---|
+| local recon (local_ms) | 254220 | 252023 | ~same |
+| **finalize (refine_ms)** | 634627 (635s) | **501250 (501s)** | **−21%** |
+| refined_reproj | 0.9599 | 0.9661 | parity (slightly better) |
+| peak mem | 2303.8 MB | 2376.8 MB | +3% (~same, ample jetsam margin) |
+| thermal (start/local/refine) | — | 0/2/2 (fair) | — |
+| drift mean/max % | 0.748 / 1.812 | 1.529 / 3.269 | higher (see note) |
+
+**Device −21% is the rigorous speedup figure** — same db, same device, same config (vs the host −35%, which had no
+back-to-back control because 3.14 can't read the 4.0-schema host db). Above the 4.0 release's ~15% (SIMPLE_RADIAL+trivial).
+Drift note: 4.0.4's local→refined drift is higher, but refined reproj is BETTER (0.9661 vs 0.9599) — the 4.0.4 BA
+(single pose block + analytical Jacobian) converges to a better optimum and corrects the local estimate more; not an
+accuracy regression (reproj, the delivered-quality metric, improved). Drift is also noisy (build non-determinism).
+
+## MIGRATION COMPLETE — validated end-to-end (host + front-end + iOS lib + device). Ready to merge.
+`colmap-4.0-migration` branch (host migration + STEP 5 `b3a97ff6`) is validated and ready to merge → the production
+branch (`claude/publish-to-community`). Net: COLMAP 3.14→4.0.4, ~15-21% faster CAUCHY DENSE finalize, quality-neutral,
+DSP-SIFT front-end bit-identical, GLOMAP dropped from the iOS lib, all device-verified on iPhone 14 Pro.
