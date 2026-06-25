@@ -60,3 +60,35 @@ Each step has TWO checks the user requires: (A) "copied upstream correctly" = no
 ## Rollback
 The working 3.14 stays untouched on the main branch (`claude/publish-to-community`). The migration is isolated in
 the `/tmp/aether-colmap40` worktree on `colmap-4.0-migration`. If 4.0.4 underperforms or breaks, abandon the branch.
+
+## EXECUTION RESULTS (2026-06-25) — code-complete, host + iOS-lib validated; device smoke pending
+
+Branch `colmap-4.0-migration` (worktree `/tmp/aether-colmap40`). Done via 3 orchestrated agents + checks.
+
+- **STEP 0-1 source:** vendored 4.0.4 (latest stable, 2026-04-27). CHECK A: worktree colmap-src/colmap diffs upstream
+  4.0.4 ONLY in the 4 patched files + 1 build-fix + generated version.cc — independently re-verified, zero collateral.
+- **STEP 2-3 patches + host build:** 19 [AETHER] patches re-homed. KEY 4.0.4 refactor: BA loss/threshold config moved
+  into nested `CeresBundleAdjustmentOptions` (`options.ceres->...`); bundle_adjustment.cc split → the solver routing +
+  EIGEN_SPARSE force + solver_used log now live in **`bundle_adjustment_ceres.cc`** (`SolveWithGpuFallback`). Build fixes
+  (no behavior change): CHOLMOD strip in least_absolute_deviations.cc; CMake exclude `_test.cc`, add `estimators/solvers/*.cc`,
+  exclude `rotation_averaging_impl.cc`; `colmap_ios_stubs.cc` rewritten for 4.0.4 OIIO-backed Bitmap; bench adapted to the
+  new `IncrementalPipeline(opts, shared_ptr<Database>, ...)` ctor. Host `colmap_bench_exe` builds green.
+- **STEP 4 CHECK B (perf):** db.db (SIMPLE_RADIAL, qualifies for the analytical Jacobian) DENSE-396 CAUCHY finalize:
+  **4.0.4 = 292s / 2.60GB / reproj 0.962** vs documented 3.14 baseline 450s / 2.91GB / ~0.958. Faster + quality-neutral
+  + lower memory; `[AETHER] solver_used=DENSE_SCHUR` confirmed active in 4.0.4. Honest caveat: 3.14 binary CANNOT read
+  the 4.0-schema db.db (no back-to-back same-machine control), so the headline −35% is likely inflated by uncontrolled
+  thermal/load; the **confident claim is ≥15% faster, quality-neutral**.
+- **STEP 5 iOS (Option B):** GLOMAP dropped from `glomap_core` (production never consumed it — shipped .a had only the
+  defined `RetriangulateTracks` -force_load stub, now deleted). DSP-SIFT extractor ported to 4.0.4's `FeatureDescriptors`
+  struct (`{type,data}`); 2 AETHER covdet setters re-added (they were our own additions, not stock VLFeat; both VLFeat = v0.9.20).
+  **The feared front-end risk is DISPROVEN: `extract_selfcheck` is BIT-IDENTICAL (max_abs_desc_diff=0, nthreads 1/2/4/8),
+  re-verified independently** — the proven keypoints/descriptors did not drift. `libglomap_core.a` builds clean for
+  **arm64-iphoneos** (has the covdet setters + threaded extractor, zero glomap symbols). ALIKED/LightGlue-ONNX link stubs
+  added (SIFT path never reaches them).
+- **Commits:** host migration + STEP 5 (`b3a97ff6`) on `colmap-4.0-migration`.
+
+### REMAINING — STEP 6 device smoke (needs the iPhone + on-screen log)
+Build the GlomapBench iosapp against the worktree's 4.0.4 `glomap_core` (build_ios.sh currently hardcodes the main-tree
+path — invoke cmake against the worktree, or relativize `V=`), deploy to iPhone 14 Pro, run real414 DENSE-396, confirm
+reproj parity (~0.96), no crash, device perf (does the host speedup hold on-device), peak mem. This is the final gate
+before merging `colmap-4.0-migration` → the production branch.
