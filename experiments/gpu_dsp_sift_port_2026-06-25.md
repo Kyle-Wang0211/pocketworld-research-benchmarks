@@ -51,3 +51,14 @@ User requires <2s 4224 streaming (rejects 2048-only / two-tier). Researching whe
 faster SfM-grade extractors, GPU-opt SOTA beyond ~4×, real-time SfM/SLAM architectures (temporal track +
 keyframe extraction + async), keypoint-count/foveation strategies, hardware-floor analysis. See the
 follow-up synthesis.
+
+## ✅ BREAKTHROUGH (2026-06-26) — the "infeasible" verdict was a benchmark bug; <2s @4224 IS reachable
+The earlier "4224 streaming infeasible, iPhone ~4-6.5s/frame" was WRONG — inflated by a harness artifact, not real pipeline cost. Two independent agents + a hand-run confirmed:
+- The full-GPU e2e wall-clock 1657ms/frame was ~65-76% **per-frame Tint→Metal pipeline compilation** (10-11 `CreateComputePipeline` recompiled EVERY frame ≈ 1334ms) — a benchmark loop bug. A real app compiles shaders ONCE at init. The per-stage submit+wait was ~200ms real GPU work; the mid-pipeline count readbacks were only ~17-32ms (<2%).
+- Fix = **compile pipelines once (hoist out of per-frame loop) + single command buffer + indirect dispatch (count→indirect-args, no CPU readback) + the warp-fill→descriptor fusion.** Pure orchestration; kernels/math untouched.
+- **Measured (M3 Pro, clean GPU, warm, min-of-5, hand-verified): BATCHED = 240ms/frame** (vs fused 1657ms), 23.9× vs CPU. **iPhone A16 = ~697ms/frame @4224 → WITHIN the 2000ms budget (3× margin); A17 ~581ms; A18 ~498ms.**
+- Hard constraints ALL met: descriptor cosine median 1.0 (reproj unchanged), recall 0.9962-0.9982, **8192 keypoints exact (no reduction)**, peak GPU 329MB (down from 1900MB, 5.8×). No ROI, no point cut, no UI change.
+- Full streaming ①②③ on A16: extraction ~697ms + matching (ARKit-pose-prior) ~150ms + local-BA ~640ms ≈ 1.5s serial / ~800ms pipelined → **both <2s.**
+- Branch `gpu-sift-s1`: extract_fullgpu_batched.cc + sift_descriptor_fused.wgsl + sift_indirect_args_prep.wgsl + extract_fullgpu_prof.cc (the diagnosis).
+- REMAINING: production wiring (compile-once at app launch is THE fix) + the bounded queue (thermal) + matching/local-BA streaming integration + **on-device A16 measurement** (the ×2.9 M3→A16 is an estimate; needs a real iPhone 14 Pro run to confirm ~697ms).
+- Lesson: before declaring a perf limit "infeasible", rule out measurement artifacts (per-frame shader compilation, concurrent GPU contention).
