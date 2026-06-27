@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="utf-8"><title>tiled-GEMM 414帧 稀疏点云 · K 对比</title>
+<style>
+  body{margin:0;background:#1a1a1a;color:#eee;font-family:-apple-system,sans-serif}
+  #label{position:fixed;top:10px;left:0;right:0;text-align:center;font-size:15px;font-weight:600;color:#9f9;z-index:10;pointer-events:none}
+  #status{position:fixed;top:34px;left:0;right:0;text-align:center;font-size:13px;color:#ff9;z-index:10;pointer-events:none}
+  #btns{position:fixed;top:58px;left:0;right:0;text-align:center;z-index:11}
+  #btns button{margin:5px 6px;padding:8px 16px;font-size:14px;font-weight:600;border-radius:8px;border:1px solid #555;background:#222;color:#ccc;cursor:pointer}
+  #btns button.active{background:#2c6;color:#111;border-color:#2c6}
+  #ctl{position:fixed;bottom:34px;left:0;right:0;text-align:center;z-index:11;font-size:13px;color:#ccc}
+  #ctl input,#ctl select{vertical-align:middle}
+  #hint{position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:12px;color:#888;z-index:10;pointer-events:none}
+</style></head>
+<body>
+<div id="label">tiled-GEMM 414帧 真彩色稀疏点云 · 互检修复(★互检K8/K12 = 0 漂移,右下角错位团已消除)</div>
+<div id="status">加载中…</div>
+<div id="btns">
+  <button id="b_k3">K=3(流式·快)</button>
+  <button id="b_k6">K=6</button>
+  <button id="b_k8">K=8</button>
+  <button id="b_k10">K=10</button>
+  <button id="b_k12">K=12</button>
+  &nbsp;|&nbsp;
+  <button id="b_mk8" style="border-color:#2c6">★互检K8(0漂移·修复)</button>
+  <button id="b_mk12" style="border-color:#2c6">互检K12(更密·0漂移)</button>
+  &nbsp;|&nbsp;
+  <button id="b_wn" style="border-color:#6cf">近基线 K8</button>
+  <button id="b_w4" style="border-color:#6cf">★宽0.4(tri9.3°甜点)</button>
+  <button id="b_w7" style="border-color:#6cf">宽0.7(最平)</button>
+  &nbsp;|&nbsp;
+  <button id="b_fm" style="border-color:#f6f">★全分辨率4224 互检(质量基准·键f)</button>
+  <button id="b_f10" style="border-color:#f6f">全分辨率4224 旧单向(对照·键g)</button>
+  <button id="b_h32" style="border-color:#fd4">★全分辨率4224 K20/32k特征(密集·键h)</button>
+  <button id="b_b224" style="border-color:#4fd">★纯血COLMAP全批 224k(全分辨率·键b)</button>
+  <button id="b_d242" style="border-color:#fa4">★稠密图全批 242k(78k匹配·track6.9·键d)</button>
+</div>
+<div id="ctl">点大小 <input id="ps" type="range" min="1" max="40" step="1" value="10"><span id="psv">10</span>
+  &nbsp; 色调 <select id="tm"></select>
+  &nbsp; 曝光 <input id="exp" type="range" min="0.5" max="5" step="0.1" value="2.0"><span id="expv">2.0</span></div>
+<div id="hint">拖动旋转(360°)· 滚轮缩放 · 右键平移 · 键 1/2/3 切 K · 切换不跳视角,直接看同一处分层变化</div>
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(1);
+const TONEMAPS={'AgX':THREE.AgXToneMapping,'ACES':THREE.ACESFilmicToneMapping,'无':THREE.NoToneMapping};
+renderer.toneMapping=THREE.AgXToneMapping;renderer.toneMappingExposure=2.0;document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x1a1a1a);
+const cam=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.001,1000);cam.position.set(0,-2.2,1.4);cam.up.set(0,0,1);
+const controls=new OrbitControls(cam,renderer.domElement);controls.target.set(0,0,0.3);controls.enableDamping=true;controls.dampingFactor=0.1;
+controls.zoomToCursor=true;        // 朝光标缩放,放大不再卡、能钻进任意细节
+controls.minDistance=0.02;controls.maxDistance=80;
+controls.zoomSpeed=1.4;controls.rotateSpeed=0.9;
+const S2L=new Float32Array(256);for(let i=0;i<256;i++){const c=i/255;S2L[i]=c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+const st=document.getElementById('status');const loader=new PLYLoader();
+const FILES={k3:'cloud.ply',k6:'cloud_k6.ply',k8:'cloud_k8.ply',k10:'cloud_k10.ply',k12:'cloud_k12.ply',f10:'cloud_full_k10.ply',f18:'cloud_full_k18.ply',wn:'cloud_wide_off.ply',w4:'cloud_wf040.ply',w7:'cloud_wf070.ply',mk8:'cloud_mutual.ply',mk12:'cloud_k12_mutual.ply',fm:'cloud_full_k10_mutual.ply',h32:'cloud_full_k20_32k.ply',b224:'cloud_batch224k.ply',d242:'cloud_dense242k.ply'};
+const NAMES={k3:'K=3 · 流式(2112·match 99ms 最快)',k6:'K=6 · 2112',k8:'K=8 · 2112',k10:'K=10 · 2112',k12:'K=12 · 2112',f10:'全分辨率4224 旧单向 K=10(37%漂移对照·压缩前)',f18:'★压缩前 全分辨率4224 · K=18 · 裸基准(无任何压缩)',wn:'近基线 K=8(当前·tri 7.15°/139k点)',w4:'★宽基线 frac0.4(tri 9.26°+30% / 85k点·弱点最少)',w7:'宽基线 frac0.7(tri 8.93° / 72k点·surface最平)',mk8:'★互检K8 修复(0漂移 / reproj0.59 / 75k点)— 右下角错位团消除',mk12:'互检K12(0漂移 / reproj0.62 / tri8.9°更宽基线 / 78k点)',fm:'★全分辨率4224 互检 K=10(8192特征)',h32:'★全分辨率4224 K20 / 32768特征(密集·拼接感修复候选)',b224:'★纯血COLMAP全批 224k点(SIMPLE_RADIAL畸变+每帧相机+全分辨率4224·CPU匹配·球壳0.48%/地板0.40%)',d242:'★稠密图全批 242k点(78210匹配/track6.87/球点2.4×密·球壳0.61%/地板0.38%·密但壳略厚)'};
+let cur=null,curTag=null,FIT=null,busy=false,pointSize=10;
+function show(tag){
+  if(busy||tag===curTag)return;busy=true;
+  for(const x of document.querySelectorAll('#btns button'))x.classList.remove('active');
+  document.getElementById('b_'+tag).classList.add('active');st.textContent='加载 '+NAMES[tag]+' …';
+  loader.load(FILES[tag],g=>{
+    const col=g.attributes.color;
+    if(col){for(let i=0;i<col.count;i++){col.setXYZ(i,S2L[Math.round(col.getX(i)*255)],S2L[Math.round(col.getY(i)*255)],S2L[Math.round(col.getZ(i)*255)]);}col.needsUpdate=true;}
+    // fit 用 INLIER(median±8MAD)定中心+尺度(保证切换重叠),但 RENDER 全量点(离群/背景全显示)
+    const pos=g.attributes.position,n=pos.count;
+    const xs=new Float32Array(n),ys=new Float32Array(n),zs=new Float32Array(n);
+    for(let i=0;i<n;i++){xs[i]=pos.getX(i);ys[i]=pos.getY(i);zs[i]=pos.getZ(i);}
+    const med=a=>{const b=Array.from(a).sort((p,q)=>p-q);return b[b.length>>1];};
+    const mx=med(xs),my=med(ys),mz=med(zs);
+    const mad=(a,m)=>{const b=Array.from(a,v=>Math.abs(v-m)).sort((p,q)=>p-q);return b[b.length>>1]||1;};
+    const KX=8*mad(xs,mx),KY=8*mad(ys,my),KZ=8*mad(zs,mz);
+    let sx=0,sy=0,sz=0,cnt=0;
+    for(let i=0;i<n;i++){if(Math.abs(xs[i]-mx)>KX||Math.abs(ys[i]-my)>KY||Math.abs(zs[i]-mz)>KZ)continue;sx+=xs[i];sy+=ys[i];sz+=zs[i];cnt++;}
+    const cx=cnt?sx/cnt:mx,cy=cnt?sy/cnt:my,cz=cnt?sz/cnt:mz;
+    const dd=[];for(let i=0;i<n;i++){if(Math.abs(xs[i]-mx)>KX||Math.abs(ys[i]-my)>KY||Math.abs(zs[i]-mz)>KZ)continue;dd.push(Math.hypot(xs[i]-cx,ys[i]-cy,zs[i]-cz));}
+    dd.sort((a,b)=>a-b);const r=dd[Math.floor(dd.length*0.97)]||1;const s=1.5/r;
+    g.translate(-cx,-cy,-cz);g.scale(s,s,s);g.translate(0,0,0.3);
+    const m=new THREE.Points(g,new THREE.PointsMaterial({vertexColors:!!col,color:col?0xffffff:0x99bbff,size:pointSize*0.0009,sizeAttenuation:true}));
+    if(cur){scene.remove(cur);cur.geometry.dispose();cur.material.dispose();}
+    cur=m;scene.add(m);curTag=tag;st.textContent=NAMES[tag]+' · '+n.toLocaleString()+' 点(全量)';busy=false;
+  },xhr=>{if(xhr.total)st.textContent='加载 '+NAMES[tag]+' '+Math.round(100*xhr.loaded/xhr.total)+'%';},e=>{st.textContent='加载失败(可能还没跑完): '+FILES[tag];busy=false;});
+}
+for(const t of ['k3','k6','k8','k10','k12','mk8','mk12','wn','w4','w7','fm','f10','h32','b224','d242'])document.getElementById('b_'+t).onclick=()=>show(t);
+addEventListener('keydown',e=>{const k={'1':'k3','2':'k6','3':'k8','4':'k10','5':'k12','6':'mk8','7':'mk12','8':'wn','9':'w4','0':'w7','f':'fm','g':'f10','h':'h32','b':'b224','d':'d242'}[e.key];if(k)show(k);});
+const tmSel=document.getElementById('tm');for(const k of Object.keys(TONEMAPS)){const o=document.createElement('option');o.value=k;o.textContent=k;if(k==='AgX')o.selected=true;tmSel.appendChild(o);}
+tmSel.onchange=()=>{renderer.toneMapping=TONEMAPS[tmSel.value];if(cur)cur.material.needsUpdate=true;};
+const expEl=document.getElementById('exp'),expv=document.getElementById('expv');expEl.oninput=()=>{renderer.toneMappingExposure=parseFloat(expEl.value);expv.textContent=expEl.value;};
+document.getElementById('ps').oninput=e=>{pointSize=parseFloat(e.target.value);document.getElementById('psv').textContent=e.target.value;if(cur)cur.material.size=pointSize*0.0009;};
+show('mk8');
+(function r(){requestAnimationFrame(r);controls.update();renderer.render(scene,cam);})();
+</script></body></html>
