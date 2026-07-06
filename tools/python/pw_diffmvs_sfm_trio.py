@@ -112,6 +112,10 @@ MODELS = {
     "ofs3":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + FREESPACE_N=3
     "ofs4":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + FREESPACE_N=4(最保守)
     "ofsx":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # olite + FREESPACE_N=2(边缘门0.015+颜色0.06+看穿)ship候选
+    # ---- 重投影残差门(被 threshold 后丢弃的残差值)+ 法向已进输出 [2026-07-07]----
+    "oq004": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + REPROJ_ERR_MAX=0.004(隔离残差门)
+    "oq006": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + REPROJ_ERR_MAX=0.006
+    "ofsxq": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofsx + 残差门:边缘+颜色+看穿+残差 全信号 ship 终选
 }
 # CasDiffMVS 破局矩阵:每档 = (源模型, 渲染分辨率 W,H, checkpoint 域, 融合门)
 # 分辨率必须被 32 整除(级联 1/8 下采样 + base=32 对齐,见 datasets/mvs.py:104-115)。
@@ -182,6 +186,12 @@ STRICT = {
     # ship 候选:olite 两个外科门 + 看穿票(边缘0.015 + 颜色0.06 + free-space N=2)
     "ofsx": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3,
              "BOUND_REL": 0.015, "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1, "FREESPACE_N": 2},
+    # 重投影残差门(隔离 + 全信号组合)
+    "oq004": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "REPROJ_ERR_MAX": 0.004},
+    "oq006": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "REPROJ_ERR_MAX": 0.006},
+    "ofsxq": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3,
+              "BOUND_REL": 0.015, "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1,
+              "FREESPACE_N": 2, "REPROJ_ERR_MAX": 0.005},
 }
 # gate-sweep 复用哪个 BREAK 的冻结 cache + 该 cache 的渲染分辨率(用于 K 重缩放,
 # 因 pass2 反投影 K 必须与推理分辨率一致)。res15blend=1344x768,res2blend=1792x1024。
@@ -201,6 +211,7 @@ CACHE_SRC = {
     "olite": ("7full", 896, 512),
     "ofs2": ("7full", 896, 512), "ofs3": ("7full", 896, 512), "ofs4": ("7full", 896, 512),
     "ofsx": ("7full", 896, 512),
+    "oq004": ("7full", 896, 512), "oq006": ("7full", 896, 512), "ofsxq": ("7full", 896, 512),
 }
 VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol.ply",
               "f0b": "mvs_f0b.ply", "ft0": "mvs_ft0.ply", "r3": "mvs_r3.ply",
@@ -235,7 +246,8 @@ VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol
               "opc10": "mvs_opc10.ply", "opc06": "mvs_opc06.ply", "opc04": "mvs_opc04.ply",
               "oclean": "mvs_oclean.ply", "olite": "mvs_olite.ply",
               "ofs2": "mvs_ofs2.ply", "ofs3": "mvs_ofs3.ply", "ofs4": "mvs_ofs4.ply",
-              "ofsx": "mvs_ofsx.ply"}
+              "ofsx": "mvs_ofsx.ply",
+              "oq004": "mvs_oq004.ply", "oq006": "mvs_oq006.ply", "ofsxq": "mvs_ofsxq.ply"}
 OUTDIR = Path(os.path.expanduser("~/Desktop/tiled_414_viewer"))
 OUT = R.OUT
 FULL_W, FULL_H = 4224, 2376
@@ -363,18 +375,25 @@ def ref_depth_in_src(d_ref, K_ref, ext_ref, ext_src):
     return xyz_src[2].reshape(H, W).astype(np.float32)
 
 
-def write_ply(path, xyz, rgb):
+def write_ply(path, xyz, rgb, normals=None):
     n = len(xyz)
+    has_n = normals is not None
+    nprops = ("property float nx\nproperty float ny\nproperty float nz\n" if has_n else "")
     hdr = (f"ply\nformat binary_little_endian 1.0\nelement vertex {n}\n"
            "property float x\nproperty float y\nproperty float z\n"
+           f"{nprops}"
            "property uchar red\nproperty uchar green\nproperty uchar blue\nend_header\n")
-    rec = np.zeros(n, dtype=[('x', '<f4'), ('y', '<f4'), ('z', '<f4'),
-                             ('r', 'u1'), ('g', 'u1'), ('b', 'u1')])
+    fields = [('x', '<f4'), ('y', '<f4'), ('z', '<f4')]
+    if has_n: fields += [('nx', '<f4'), ('ny', '<f4'), ('nz', '<f4')]
+    fields += [('r', 'u1'), ('g', 'u1'), ('b', 'u1')]
+    rec = np.zeros(n, dtype=fields)
     rec['x'], rec['y'], rec['z'] = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+    if has_n: rec['nx'], rec['ny'], rec['nz'] = normals[:, 0], normals[:, 1], normals[:, 2]
     rec['r'], rec['g'], rec['b'] = rgb[:, 0], rgb[:, 1], rgb[:, 2]
     with open(path, 'wb') as f:
         f.write(hdr.encode()); f.write(rec.tobytes())
-    print(f"wrote {path}  {n:,} pts  {os.path.getsize(path)/1e6:.1f}MB", flush=True)
+    print(f"wrote {path}  {n:,} pts  {os.path.getsize(path)/1e6:.1f}MB "
+          f"{'(+normals)' if has_n else ''}", flush=True)
 
 
 def main():
@@ -389,6 +408,7 @@ def main():
     erode_px = 0            # final mask 腐蚀像素半径;0=关(现行行为)
     freespace_n = None      # free-space 看穿票阈值;None=关(现行行为)
     freespace_tau = 0.02    # free-space 相对深度容差
+    reproj_err_max = None   # 每点跨支持视图的平均相对深度残差上限;None=关(现行行为)
     if tag in STRICT:
         PHOTO = STRICT[tag]["PHOTO"]
         GEO_MASK = STRICT[tag]["GEO_MASK"]
@@ -402,6 +422,7 @@ def main():
         # 删被 >= FREESPACE_N 个 src 视图"看穿"的悬空飞点(正交于边缘位置)。缺省关。
         freespace_n = STRICT[tag].get("FREESPACE_N", None)
         freespace_tau = STRICT[tag].get("FREESPACE_TAU", 0.02)   # 相对深度容差(略> GEO_DEP)
+        reproj_err_max = STRICT[tag].get("REPROJ_ERR_MAX", None) # 平均相对深度残差门(< GEO_DEP=0.01)
         print(f"[{tag}] STRICT fusion sweep: src={STRICT[tag]['src']} "
               f"PHOTO={PHOTO} GEO_MASK={GEO_MASK} BOUND_REL={BOUND_REL} "
               f"NORMAL_COS={NORMAL_COS} PHOTO_COLOR={photo_color} "
@@ -556,7 +577,7 @@ def main():
     if erode_px and erode_px > 0:
         k = 2 * int(erode_px) + 1
         erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
-    pts, cols, kept = [], [], []
+    pts, cols, nrms, kept = [], [], [], []   # nrms: 世界系法向(现在写进输出,过去只做NORMAL_COS检查就扔了)
     for n in refs:
         d_ref = depth[n]; K_ref = K_of[n].astype(np.float64)
         ext_ref = w2c_of[n].astype(np.float64)
@@ -565,6 +586,7 @@ def main():
         geo_sum = np.zeros_like(d_ref, np.int32); depth_acc = d_ref.copy()
         color_agree_sum = np.zeros_like(d_ref, np.int32)
         freespace_sum = np.zeros_like(d_ref, np.int32)
+        rerr_acc = np.zeros_like(d_ref, np.float32)   # 累加支持视图的相对深度残差(过去被 threshold 后丢弃)
         d_ref_in_nb = None
         for nb in nearest(n, NEIGH, refs, min_base_fuse):
             mask, depth_reproj, x2d, y2d = check_geometric_consistency(
@@ -573,6 +595,9 @@ def main():
             nb_n = cv2.remap(getnrm(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
             mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
             geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
+            if reproj_err_max is not None:
+                # 支持视图上的相对深度残差(passed geo -> < GEO_DEP,残差值本身是精度信号)
+                rerr_acc += (np.abs(depth_reproj - d_ref) / np.maximum(d_ref, 1e-6)) * mask
             if photo_color is not None:
                 nb_rgb01 = cv2.remap(R.load_image(name2mi[nb]), x2d, y2d,
                                      interpolation=cv2.INTER_LINEAR)   # src RGB @ reproj
@@ -595,6 +620,9 @@ def main():
             final = final & (color_agree_sum >= photo_color_n)
         if freespace_n is not None:
             final = final & (freespace_sum < freespace_n)   # 看穿票 >= N 则删悬空飞点
+        if reproj_err_max is not None:
+            rerr_mean = rerr_acc / np.maximum(geo_sum, 1)    # 平均相对深度残差
+            final = final & (rerr_mean < reproj_err_max)     # 残差大=不精准/飞点,删
         if erode_kernel is not None:
             final = cv2.erode(final.astype(np.uint8), erode_kernel).astype(bool)
         kept.append(final.mean())
@@ -607,16 +635,20 @@ def main():
         Rr, t = ext_ref[:3, :3], ext_ref[:3, 3]
         pts.append(((Rr.T @ (cam.T - t[:, None])).T).astype(np.float32))
         cols.append(img[final])
-    P = np.concatenate(pts); Cc = np.concatenate(cols)
+        nrms.append(n_ref[final].astype(np.float32))   # 世界系法向(已 flip 朝相机),免费带出
+    P = np.concatenate(pts); Cc = np.concatenate(cols); Nn = np.concatenate(nrms)
     print(f"[{tag}] fused g{GEO_MASK} p{PHOTO} bnd{BOUND_REL} nrm{NORMAL_COS} "
           f"pc{photo_color}(N>={photo_color_n}) er{erode_px}: {len(P):,} raw pts "
           f"kept/frame={np.mean(kept)*100:.1f}% fuse={time.time()-t0:.1f}s", flush=True)
 
     # ---- align into ARKit metric frame, THEN metric cleanup (identical across models) ----
     Pa = (s_al * (R_al @ P.astype(np.float64).T).T + t_al)
+    Na = (R_al @ Nn.astype(np.float64).T).T   # 法向只旋转(不平移不缩放)进 ARKit 系
+    Na /= np.maximum(np.linalg.norm(Na, axis=1, keepdims=True), 1e-9)
     pc = o3d.geometry.PointCloud()
     pc.points = o3d.utility.Vector3dVector(Pa)
     pc.colors = o3d.utility.Vector3dVector(Cc.astype(np.float64) / 255.0)
+    pc.normals = o3d.utility.Vector3dVector(Na)   # 法向进输出(voxel/SOR 会一并保留平均)
     pc = pc.voxel_down_sample(0.005)
     pc, _ = pc.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
     print(f"[{tag}] after voxel5mm+outlier: {len(pc.points):,}", flush=True)
@@ -628,7 +660,8 @@ def main():
         OUTDIR.mkdir(exist_ok=True)
         xyz = np.asarray(pc.points, np.float64).astype(np.float32)
         rgb = np.clip(np.asarray(pc.colors) * 255 + 0.5, 0, 255).astype(np.uint8)
-        write_ply(OUTDIR / VIEWER_PLY[tag], xyz, rgb)
+        nrm = np.asarray(pc.normals, np.float32) if pc.has_normals() else None
+        write_ply(OUTDIR / VIEWER_PLY[tag], xyz, rgb, normals=nrm)
 
 
 if __name__ == "__main__":
