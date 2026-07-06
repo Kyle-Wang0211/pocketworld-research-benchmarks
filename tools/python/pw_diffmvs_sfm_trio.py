@@ -84,6 +84,34 @@ MODELS = {
     "blendp30": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "r15bp15":  Path("/private/tmp/knifeLAPcert/LAPa/0"), "r15bp20":  Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "r2bp15":   Path("/private/tmp/knifeLAPcert/LAPa/0"), "r2bp20":   Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    # ---- REF_STRIDE=1 全量覆盖版(每帧算深度图,像 RealityScan)[2026-07-06]----
+    # 唯一变量 = trio_refs.json refs 从 stride4(104)改 stride1(413);其余全同 STRICT o/gold。
+    # 效率:7full 建 lapa stride1 cache,ofull 复用同一 cache 只换 PHOTO 融合(零重推理)。
+    "1full": SCRATCH / "jfix/recon_gc",                    # 金 recon_gc + PHOTO0.3(金原配)
+    "7full": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # 冠军 lapa + PHOTO0.3(建 stride1 cache)
+    "ofull": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # 冠军 lapa + PHOTO0.5(复用 7full cache)
+    # ---- 边框/浮渣清理正交扫描(冠军 ofull=lapa stride1 PHOTO0.5,复用 7full 冻结 cache)----
+    # 唯一变量 = pass2 清理旋钮(BOUND_REL / NORMAL_COS / 光度颜色一致性 / 边缘腐蚀);
+    # 零 MPS 重推理(全走 CACHE_SRC 复用 7full stride1 cache)。[2026-07-06]
+    # A. BOUND_REL 边缘梯度门扫描:
+    "ob02":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + BOUND_REL 0.03->0.02
+    "ob015": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + BOUND_REL 0.03->0.015
+    "ob01":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + BOUND_REL 0.03->0.01
+    # A. NORMAL_COS 法向门扫描:
+    "on07":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + NORMAL_COS 0.5->0.7
+    "on08":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + NORMAL_COS 0.5->0.8
+    # B. 光度(颜色)一致性(Gipuma/Merrell 风格,反投影取 src 颜色 vs ref 颜色):
+    "opc10": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + color-consistency τ=0.10 (0-1) N>=1
+    "opc06": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + color-consistency τ=0.06 N>=1
+    "opc04": Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + color-consistency τ=0.04 N>=2
+    # C. 组合"o 清理版":最优边缘门 + 最优法向门 + 光度一致性 + 1px 腐蚀:
+    "oclean": Path("/private/tmp/knifeLAPcert/LAPa/0"),    # 组合清理版(候选 ship 配方)
+    "olite":  Path("/private/tmp/knifeLAPcert/LAPa/0"),    # 轻组合:只 BOUND_REL0.015 + PHOTO_COLOR0.06(不叠 NORMAL/erode)
+    # ---- free-space 看穿票去飞点(Merrell ICCV07,正交于边缘位置)[2026-07-06]----
+    "ofs2":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + FREESPACE_N=2(被2视图看穿则删)
+    "ofs3":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + FREESPACE_N=3
+    "ofs4":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # ofull + FREESPACE_N=4(最保守)
+    "ofsx":  Path("/private/tmp/knifeLAPcert/LAPa/0"),     # olite + FREESPACE_N=2(边缘门0.015+颜色0.06+看穿)ship候选
 }
 # CasDiffMVS 破局矩阵:每档 = (源模型, 渲染分辨率 W,H, checkpoint 域, 融合门)
 # 分辨率必须被 32 整除(级联 1/8 下采样 + base=32 对齐,见 datasets/mvs.py:104-115)。
@@ -119,6 +147,41 @@ STRICT = {
     # res2blend@1792 + 正确 blend 门:
     "r2bp15":   {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
     "r2bp20":   {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3},
+    # ---- REF_STRIDE=1 全量覆盖(413 refs via trio_refs.json)----
+    # 896x512 DTU GEO_MASK3;1full/7full 各自 FRESH MPS stride1 推理(own cache);
+    # ofull 走 CACHE_SRC 复用 7full 冻结 cache 只换 PHOTO0.5。
+    "1full": {"src": "base", "PHOTO": 0.3, "GEO_MASK": 3},
+    "7full": {"src": "lapa", "PHOTO": 0.3, "GEO_MASK": 3},
+    "ofull": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3},
+    # ---- 清理正交扫描(全部 = ofull 基线 lapa/PHOTO0.5/g3 + 一个清理旋钮变量)----
+    # 可选清理键(缺省=沿用 ofull 现行值,保 o 复现):
+    #   BOUND_REL(默认 0.03)/ NORMAL_COS(默认 0.5)/
+    #   PHOTO_COLOR(默认 None=关) = 反投影 src 颜色 vs ref 颜色 |Δ|<τ 的阈值(0-1 RGB L1/3)/
+    #   PHOTO_COLOR_N(默认 1) = 需要多少个 src 视图颜色一致 /
+    #   ERODE_PX(默认 0=关) = final mask 形态学腐蚀像素半径。
+    "ob02":  {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "BOUND_REL": 0.02},
+    "ob015": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "BOUND_REL": 0.015},
+    "ob01":  {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "BOUND_REL": 0.01},
+    "on07":  {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "NORMAL_COS": 0.7},
+    "on08":  {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "NORMAL_COS": 0.8},
+    "opc10": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "PHOTO_COLOR": 0.10, "PHOTO_COLOR_N": 1},
+    "opc06": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1},
+    "opc04": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "PHOTO_COLOR": 0.04, "PHOTO_COLOR_N": 2},
+    # 组合清理版(最优边缘门+法向门+光度一致性+1px 腐蚀;下方三值待 A/B 判读后回填最优)
+    "oclean": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3,
+               "BOUND_REL": 0.015, "NORMAL_COS": 0.7,
+               "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1, "ERODE_PX": 1},
+    # 轻组合清理版(比 oclean 少叠 NORMAL 收紧 + erode):只两个外科门,保满覆盖
+    # NORMAL_COS 保持默认 0.5,ERODE_PX 保持默认 0(不写=不叠)
+    "olite":   {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3,
+                "BOUND_REL": 0.015, "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1},
+    # free-space 看穿票去飞点(正交于边缘门):删被 >= N 个 src 视图看穿的悬空点
+    "ofs2": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "FREESPACE_N": 2},
+    "ofs3": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "FREESPACE_N": 3},
+    "ofs4": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "FREESPACE_N": 4},
+    # ship 候选:olite 两个外科门 + 看穿票(边缘0.015 + 颜色0.06 + free-space N=2)
+    "ofsx": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3,
+             "BOUND_REL": 0.015, "PHOTO_COLOR": 0.06, "PHOTO_COLOR_N": 1, "FREESPACE_N": 2},
 }
 # gate-sweep 复用哪个 BREAK 的冻结 cache + 该 cache 的渲染分辨率(用于 K 重缩放,
 # 因 pass2 反投影 K 必须与推理分辨率一致)。res15blend=1344x768,res2blend=1792x1024。
@@ -128,6 +191,16 @@ CACHE_SRC = {
     "blendp30": ("blend", 896, 512),
     "r15bp15":  ("res15blend", 1344, 768),  "r15bp20": ("res15blend", 1344, 768),
     "r2bp15":   ("res2blend", 1792, 1024),  "r2bp20":  ("res2blend", 1792, 1024),
+    # ofull 复用 7full 的 stride1 冻结 cache(896x512,冠军 lapa 深度图),只换 PHOTO0.5
+    "ofull":    ("7full", 896, 512),
+    # 清理正交扫描全部复用 7full stride1 冻结 cache(零 MPS 重推理),只改 pass2 清理旋钮
+    "ob02":  ("7full", 896, 512), "ob015": ("7full", 896, 512), "ob01": ("7full", 896, 512),
+    "on07":  ("7full", 896, 512), "on08":  ("7full", 896, 512),
+    "opc10": ("7full", 896, 512), "opc06": ("7full", 896, 512), "opc04": ("7full", 896, 512),
+    "oclean": ("7full", 896, 512),
+    "olite": ("7full", 896, 512),
+    "ofs2": ("7full", 896, 512), "ofs3": ("7full", 896, 512), "ofs4": ("7full", 896, 512),
+    "ofsx": ("7full", 896, 512),
 }
 VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol.ply",
               "f0b": "mvs_f0b.ply", "ft0": "mvs_ft0.ply", "r3": "mvs_r3.ply",
@@ -154,7 +227,15 @@ VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol
               "blendp10": "mvs_blendp10.ply", "blendp15": "mvs_blendp15.ply",
               "blendp20": "mvs_blendp20.ply", "blendp30": "mvs_blendp30.ply",
               "r15bp15": "mvs_r15bp15.ply", "r15bp20": "mvs_r15bp20.ply",
-              "r2bp15": "mvs_r2bp15.ply", "r2bp20": "mvs_r2bp20.ply"}
+              "r2bp15": "mvs_r2bp15.ply", "r2bp20": "mvs_r2bp20.ply",
+              "1full": "mvs_1full.ply", "7full": "mvs_7full.ply",
+              "ofull": "mvs_ofull.ply",
+              "ob02": "mvs_ob02.ply", "ob015": "mvs_ob015.ply", "ob01": "mvs_ob01.ply",
+              "on07": "mvs_on07.ply", "on08": "mvs_on08.ply",
+              "opc10": "mvs_opc10.ply", "opc06": "mvs_opc06.ply", "opc04": "mvs_opc04.ply",
+              "oclean": "mvs_oclean.ply", "olite": "mvs_olite.ply",
+              "ofs2": "mvs_ofs2.ply", "ofs3": "mvs_ofs3.ply", "ofs4": "mvs_ofs4.ply",
+              "ofsx": "mvs_ofsx.ply"}
 OUTDIR = Path(os.path.expanduser("~/Desktop/tiled_414_viewer"))
 OUT = R.OUT
 FULL_W, FULL_H = 4224, 2376
@@ -265,6 +346,23 @@ def boundary_keep(depth, rel=BOUND_REL):
     return (grad / np.maximum(depth, 1e-6) < rel) & (depth > 0)
 
 
+def ref_depth_in_src(d_ref, K_ref, ext_ref, ext_src):
+    """z-coord of each ref pixel's 3D point in the src camera frame (how far the
+    ref point is FROM the src camera). Same xyz_src[2] that reproject_with_depth
+    computes internally but discards. Used for free-space (seen-through) test:
+    a ref point is a flying pixel iff src sees a farther surface behind it, i.e.
+    sampled_depth_src > ref_depth_in_src + tau -> src's ray passes THROUGH it.
+    This cue is orthogonal to edge-location (gradient/normal/color) gates."""
+    H, W = d_ref.shape
+    xr, yr = np.meshgrid(np.arange(W), np.arange(H))
+    xr = xr.reshape(-1); yr = yr.reshape(-1)
+    xyz_ref = np.matmul(np.linalg.inv(K_ref),
+                        np.vstack((xr, yr, np.ones_like(xr))) * d_ref.reshape(-1))
+    xyz_src = np.matmul(np.matmul(ext_src, np.linalg.inv(ext_ref)),
+                        np.vstack((xyz_ref, np.ones_like(xr))))[:3]
+    return xyz_src[2].reshape(H, W).astype(np.float32)
+
+
 def write_ply(path, xyz, rgb):
     n = len(xyz)
     hdr = (f"ply\nformat binary_little_endian 1.0\nelement vertex {n}\n"
@@ -280,17 +378,36 @@ def write_ply(path, xyz, rgb):
 
 
 def main():
-    global PHOTO, GEO_MASK, PROC_W, PROC_H
+    global PHOTO, GEO_MASK, PROC_W, PROC_H, NORMAL_COS, BOUND_REL
     tag = sys.argv[1]
     ref_limit = int(sys.argv[2]) if len(sys.argv) > 2 else 0
     assert tag in MODELS, f"tag must be one of {list(MODELS)}"
     break_cfg = None
+    # --- 清理旋钮(缺省=沿用现行 ofull 值,保 o 复现)---
+    photo_color = None      # 光度颜色一致性阈值(0-1 RGB L1/3);None=关(现行行为)
+    photo_color_n = 1       # 需要多少 src 视图颜色一致
+    erode_px = 0            # final mask 腐蚀像素半径;0=关(现行行为)
+    freespace_n = None      # free-space 看穿票阈值;None=关(现行行为)
+    freespace_tau = 0.02    # free-space 相对深度容差
     if tag in STRICT:
         PHOTO = STRICT[tag]["PHOTO"]
         GEO_MASK = STRICT[tag]["GEO_MASK"]
+        # 可选清理键:缺省则保持模块默认(BOUND_REL=0.03, NORMAL_COS=0.5)
+        BOUND_REL = STRICT[tag].get("BOUND_REL", BOUND_REL)
+        NORMAL_COS = STRICT[tag].get("NORMAL_COS", NORMAL_COS)
+        photo_color = STRICT[tag].get("PHOTO_COLOR", None)
+        photo_color_n = STRICT[tag].get("PHOTO_COLOR_N", 1)
+        erode_px = STRICT[tag].get("ERODE_PX", 0)
+        # free-space violation (Merrell ICCV07 / OpenMVS AdjustConfidence 风格):
+        # 删被 >= FREESPACE_N 个 src 视图"看穿"的悬空飞点(正交于边缘位置)。缺省关。
+        freespace_n = STRICT[tag].get("FREESPACE_N", None)
+        freespace_tau = STRICT[tag].get("FREESPACE_TAU", 0.02)   # 相对深度容差(略> GEO_DEP)
         print(f"[{tag}] STRICT fusion sweep: src={STRICT[tag]['src']} "
-              f"PHOTO={PHOTO} GEO_MASK={GEO_MASK} (reusing frozen p1cache; "
-              f"NO MPS re-inference)", flush=True)
+              f"PHOTO={PHOTO} GEO_MASK={GEO_MASK} BOUND_REL={BOUND_REL} "
+              f"NORMAL_COS={NORMAL_COS} PHOTO_COLOR={photo_color} "
+              f"PHOTO_COLOR_N={photo_color_n} ERODE_PX={erode_px} "
+              f"FREESPACE_N={freespace_n} FREESPACE_TAU={freespace_tau} "
+              f"(reusing frozen p1cache; NO MPS re-inference)", flush=True)
     cache_src_tag = None
     if tag in CACHE_SRC:
         # blend-family gate sweep: reuse a BREAK run's frozen cache (raw depth+conf),
@@ -432,12 +549,23 @@ def main():
     def getnrm(m):
         return world_normals(depth[m], K_of[m].astype(np.float64), w2c_of[m].astype(np.float64))
 
+    # 光度颜色一致性(可选):Gipuma/Merrell 风格。ref 像素反投影到 src(x2d,y2d)取 src RGB,
+    # 与 ref RGB 比较 |Δ|<τ(0-1 空间 L1/3 平均通道差);仅在几何 mask 命中处计数,累加得
+    # color_agree_sum,要求 >= photo_color_n。占用已算好的 remap 坐标,近乎零成本。
+    erode_kernel = None
+    if erode_px and erode_px > 0:
+        k = 2 * int(erode_px) + 1
+        erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
     pts, cols, kept = [], [], []
     for n in refs:
         d_ref = depth[n]; K_ref = K_of[n].astype(np.float64)
         ext_ref = w2c_of[n].astype(np.float64)
         dmin, dmax = drng[n]; n_ref = getnrm(n)
+        ref_rgb01 = R.load_image(name2mi[n])                 # HxWx3 float [0,1]
         geo_sum = np.zeros_like(d_ref, np.int32); depth_acc = d_ref.copy()
+        color_agree_sum = np.zeros_like(d_ref, np.int32)
+        freespace_sum = np.zeros_like(d_ref, np.int32)
+        d_ref_in_nb = None
         for nb in nearest(n, NEIGH, refs, min_base_fuse):
             mask, depth_reproj, x2d, y2d = check_geometric_consistency(
                 d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
@@ -445,9 +573,30 @@ def main():
             nb_n = cv2.remap(getnrm(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
             mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
             geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
-        img = (R.load_image(name2mi[n]) * 255).astype(np.uint8)
+            if photo_color is not None:
+                nb_rgb01 = cv2.remap(R.load_image(name2mi[nb]), x2d, y2d,
+                                     interpolation=cv2.INTER_LINEAR)   # src RGB @ reproj
+                col_diff = np.abs(nb_rgb01 - ref_rgb01).mean(axis=2)   # mean-channel L1, 0-1
+                color_ok = mask & (col_diff < photo_color)
+                color_agree_sum += color_ok.astype(np.int32)
+            if freespace_n is not None:
+                # 看穿票:src 在该像素看到的表面(samp_src)明显比 ref 点到 src 的距离更远
+                # -> src 的视线穿过了 ref 点 -> ref 点悬空 = 飞点。正交于边缘位置线索。
+                samp_src = cv2.remap(depth[nb], x2d, y2d, interpolation=cv2.INTER_LINEAR)
+                d_ref_in_nb = ref_depth_in_src(d_ref, K_ref, ext_ref,
+                                               w2c_of[nb].astype(np.float64))
+                seen_through = (samp_src > 0) & (d_ref > 0) & \
+                    (samp_src - d_ref_in_nb > freespace_tau * np.maximum(d_ref_in_nb, 1e-6))
+                freespace_sum += seen_through.astype(np.int32)
+        img = (ref_rgb01 * 255).astype(np.uint8)
         final = (geo_sum >= GEO_MASK) & (conf[n].astype(np.float32) > PHOTO) \
-            & boundary_keep(d_ref)
+            & boundary_keep(d_ref, rel=BOUND_REL)
+        if photo_color is not None:
+            final = final & (color_agree_sum >= photo_color_n)
+        if freespace_n is not None:
+            final = final & (freespace_sum < freespace_n)   # 看穿票 >= N 则删悬空飞点
+        if erode_kernel is not None:
+            final = cv2.erode(final.astype(np.uint8), erode_kernel).astype(bool)
         kept.append(final.mean())
         d_avg = depth_acc / (geo_sum + 1)
         H, W = d_ref.shape
@@ -459,7 +608,8 @@ def main():
         pts.append(((Rr.T @ (cam.T - t[:, None])).T).astype(np.float32))
         cols.append(img[final])
     P = np.concatenate(pts); Cc = np.concatenate(cols)
-    print(f"[{tag}] fused g{GEO_MASK} p{PHOTO}: {len(P):,} raw pts "
+    print(f"[{tag}] fused g{GEO_MASK} p{PHOTO} bnd{BOUND_REL} nrm{NORMAL_COS} "
+          f"pc{photo_color}(N>={photo_color_n}) er{erode_px}: {len(P):,} raw pts "
           f"kept/frame={np.mean(kept)*100:.1f}% fuse={time.time()-t0:.1f}s", flush=True)
 
     # ---- align into ARKit metric frame, THEN metric cleanup (identical across models) ----
