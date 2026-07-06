@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import cv2
 import open3d as o3d
+import torch
 import pw_diffmvs_common as C
 import pw_diffmvs_run as R
 # NOTE: pycolmap is NOT imported here -- it cannot share a process with torch on
@@ -67,6 +68,32 @@ MODELS = {
     "strictgoldg4p4":  SCRATCH / "jfix/recon_gc",          # 金 recon_gc + PHOTO0.4 + GEO_MASK4
     "strictchampp5":   Path("/private/tmp/knifeLAPcert/LAPa/0"),   # 冠军 lapa + PHOTO0.5
     "strictchampg4p4": Path("/private/tmp/knifeLAPcert/LAPa/0"),   # 冠军 lapa + PHOTO0.4 + GEO_MASK4
+    # ---- 光度门甜点扫描(冠军 lapa,复用冻结 p1cache,GEO_MASK=3 保覆盖)----
+    "champp55": Path("/private/tmp/knifeLAPcert/LAPa/0"),          # 冠军 lapa + PHOTO0.55
+    "champp6":  Path("/private/tmp/knifeLAPcert/LAPa/0"),          # 冠军 lapa + PHOTO0.6
+    "champp7":  Path("/private/tmp/knifeLAPcert/LAPa/0"),          # 冠军 lapa + PHOTO0.7
+    # ---- CasDiffMVS 破局:冠军 lapa 稀疏,修复喂废的稠密网络(分辨率 + blend ckpt)----
+    # 全部强制 MPS 重推理(独立 p1cache),融合门 = 生产同款 g3 p0.5(o 档已验证更优)
+    "blend":       Path("/private/tmp/knifeLAPcert/LAPa/0"),  # 896x512 + casdiffmvs_blend(隔离 ckpt)
+    "res15":       Path("/private/tmp/knifeLAPcert/LAPa/0"),  # 1344x768(1.5x)+ DTU(隔离分辨率)
+    "res15blend":  Path("/private/tmp/knifeLAPcert/LAPa/0"),  # 1.5x + blend(合击 ship 候选)
+    "res2blend":   Path("/private/tmp/knifeLAPcert/LAPa/0"),  # 1792x1024(2x)+ blend(激进档)
+    # blend-family 融合门标定(复用冻结 cache,只扫 PHOTO):
+    "blendp10": Path("/private/tmp/knifeLAPcert/LAPa/0"), "blendp15": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "blendp20": Path("/private/tmp/knifeLAPcert/LAPa/0"), "blendp25": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "blendp30": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "r15bp15":  Path("/private/tmp/knifeLAPcert/LAPa/0"), "r15bp20":  Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "r2bp15":   Path("/private/tmp/knifeLAPcert/LAPa/0"), "r2bp20":   Path("/private/tmp/knifeLAPcert/LAPa/0"),
+}
+# CasDiffMVS 破局矩阵:每档 = (源模型, 渲染分辨率 W,H, checkpoint 域, 融合门)
+# 分辨率必须被 32 整除(级联 1/8 下采样 + base=32 对齐,见 datasets/mvs.py:104-115)。
+# K 从 dump(baked @896x512)按 (W/896, H/512) 重缩放;图像从原生 4224x2376 直接 resize
+# 到目标分辨率(远低于原生,无上采样)。融合门用 g3 p0.5(与冠军 o 档 strictchampp5 同)。
+BREAK = {
+    "blend":      {"src": "lapa", "W": 896,  "H": 512,  "CKPT": "blend", "PHOTO": 0.5, "GEO_MASK": 3},
+    "res15":      {"src": "lapa", "W": 1344, "H": 768,  "CKPT": "dtu",   "PHOTO": 0.5, "GEO_MASK": 3},
+    "res15blend": {"src": "lapa", "W": 1344, "H": 768,  "CKPT": "blend", "PHOTO": 0.5, "GEO_MASK": 3},
+    "res2blend":  {"src": "lapa", "W": 1792, "H": 1024, "CKPT": "blend", "PHOTO": 0.5, "GEO_MASK": 3},
 }
 # 严格度扫描的每档融合门(源自复用 base/lapa 的 p1cache,推理冻结;仅 pass2 变)
 STRICT = {
@@ -74,6 +101,33 @@ STRICT = {
     "strictgoldg4p4":  {"src": "base", "PHOTO": 0.4, "GEO_MASK": 4},
     "strictchampp5":   {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3},
     "strictchampg4p4": {"src": "lapa", "PHOTO": 0.4, "GEO_MASK": 4},
+    "champp55":        {"src": "lapa", "PHOTO": 0.55, "GEO_MASK": 3},
+    "champp6":         {"src": "lapa", "PHOTO": 0.6,  "GEO_MASK": 3},
+    "champp7":         {"src": "lapa", "PHOTO": 0.7,  "GEO_MASK": 3},
+    # ---- blend-checkpoint 融合门标定(blend conf 尺度 != DTU;p0.5 砍光点)----
+    # 复用 blend/res15blend/res2blend 的冻结 p1cache(raw depth+conf),只扫 PHOTO,零重推理。
+    # src 只用于取 K/w2c 模型 dump(全 lapa 稀疏);cache 由 CACHE_SRC 指定(见下)。
+    # blend@896 门扫:
+    "blendp10": {"src": "lapa", "PHOTO": 0.10, "GEO_MASK": 3},
+    "blendp15": {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
+    "blendp20": {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3},
+    "blendp25": {"src": "lapa", "PHOTO": 0.25, "GEO_MASK": 3},
+    "blendp30": {"src": "lapa", "PHOTO": 0.30, "GEO_MASK": 3},
+    # res15blend@1344 + 正确 blend 门(标定后填最优;先扫同档):
+    "r15bp15":  {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
+    "r15bp20":  {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3},
+    # res2blend@1792 + 正确 blend 门:
+    "r2bp15":   {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
+    "r2bp20":   {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3},
+}
+# gate-sweep 复用哪个 BREAK 的冻结 cache + 该 cache 的渲染分辨率(用于 K 重缩放,
+# 因 pass2 反投影 K 必须与推理分辨率一致)。res15blend=1344x768,res2blend=1792x1024。
+CACHE_SRC = {
+    "blendp10": ("blend", 896, 512),   "blendp15": ("blend", 896, 512),
+    "blendp20": ("blend", 896, 512),   "blendp25": ("blend", 896, 512),
+    "blendp30": ("blend", 896, 512),
+    "r15bp15":  ("res15blend", 1344, 768),  "r15bp20": ("res15blend", 1344, 768),
+    "r2bp15":   ("res2blend", 1792, 1024),  "r2bp20":  ("res2blend", 1792, 1024),
 }
 VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol.ply",
               "f0b": "mvs_f0b.ply", "ft0": "mvs_ft0.ply", "r3": "mvs_r3.ply",
@@ -89,14 +143,25 @@ VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol
               "strictgoldp5": "mvs_strictgoldp5.ply",
               "strictgoldg4p4": "mvs_strictgoldg4p4.ply",
               "strictchampp5": "mvs_strictchampp5.ply",
-              "strictchampg4p4": "mvs_strictchampg4p4.ply"}
+              "strictchampg4p4": "mvs_strictchampg4p4.ply",
+              "champp55": "mvs_champp55.ply",
+              "champp6": "mvs_champp6.ply",
+              "champp7": "mvs_champp7.ply",
+              "blend": "mvs_blend.ply",
+              "res15": "mvs_res15.ply",
+              "res15blend": "mvs_res15blend.ply",
+              "res2blend": "mvs_res2blend.ply",
+              "blendp10": "mvs_blendp10.ply", "blendp15": "mvs_blendp15.ply",
+              "blendp20": "mvs_blendp20.ply", "blendp30": "mvs_blendp30.ply",
+              "r15bp15": "mvs_r15bp15.ply", "r15bp20": "mvs_r15bp20.ply",
+              "r2bp15": "mvs_r2bp15.ply", "r2bp20": "mvs_r2bp20.ply"}
 OUTDIR = Path(os.path.expanduser("~/Desktop/tiled_414_viewer"))
 OUT = R.OUT
 FULL_W, FULL_H = 4224, 2376
 PROC_W, PROC_H = R.PROC_W, R.PROC_H            # 896 x 512
 METHOD = "casdiffmvs"
 NVIEW, NEIGH = 5, 8
-GEO_MASK, PHOTO, GEO_PIX, GEO_DEP = 3, 0.3, 1.0, 0.01
+GEO_MASK, PHOTO, GEO_PIX, GEO_DEP = 3, 0.5, 1.0, 0.01   # [CERTIFIED 2026-07-06] PHOTO 0.3->0.5 (o): +3-5% eyeball vs 0.3, full coverage, free; PHOTO>=0.5 is plateau
 NORMAL_COS, BOUND_REL = 0.5, 0.03
 MIN_BASE_SRC_M, MIN_BASE_FUSE_M = 0.06, 0.04   # metres (converted to model units)
 REF_STRIDE = 4
@@ -215,23 +280,60 @@ def write_ply(path, xyz, rgb):
 
 
 def main():
-    global PHOTO, GEO_MASK
+    global PHOTO, GEO_MASK, PROC_W, PROC_H
     tag = sys.argv[1]
     ref_limit = int(sys.argv[2]) if len(sys.argv) > 2 else 0
     assert tag in MODELS, f"tag must be one of {list(MODELS)}"
+    break_cfg = None
     if tag in STRICT:
         PHOTO = STRICT[tag]["PHOTO"]
         GEO_MASK = STRICT[tag]["GEO_MASK"]
         print(f"[{tag}] STRICT fusion sweep: src={STRICT[tag]['src']} "
               f"PHOTO={PHOTO} GEO_MASK={GEO_MASK} (reusing frozen p1cache; "
               f"NO MPS re-inference)", flush=True)
+    cache_src_tag = None
+    if tag in CACHE_SRC:
+        # blend-family gate sweep: reuse a BREAK run's frozen cache (raw depth+conf),
+        # only PHOTO varies. Must set the SAME render resolution so pass2 backprojection
+        # K matches the cached inference resolution.
+        cache_src_tag, cw, ch = CACHE_SRC[tag]
+        PROC_W, PROC_H = cw, ch
+        R.PROC_W, R.PROC_H = cw, ch
+        print(f"[{tag}] GATE-SWEEP: reuse cache of '{cache_src_tag}' @ {cw}x{ch}, "
+              f"PHOTO={PHOTO} GEO_MASK={GEO_MASK} (NO MPS re-inference)", flush=True)
+    if tag in BREAK:
+        break_cfg = BREAK[tag]
+        PHOTO = break_cfg["PHOTO"]
+        GEO_MASK = break_cfg["GEO_MASK"]
+        W, H = break_cfg["W"], break_cfg["H"]
+        assert W % 32 == 0 and H % 32 == 0, f"res must be /32-aligned, got {W}x{H}"
+        # 覆盖渲染分辨率:R.load_image 用 R.PROC_W/PROC_H 全局 resize 原生 jpeg;
+        # 同步 patch 使图像 + 后续 K 缩放一致。
+        PROC_W, PROC_H = W, H
+        R.PROC_W, R.PROC_H = W, H
+        # checkpoint 域(dtu/blend)通过 env 传给 C.build_model
+        os.environ["AETHER_CKPT"] = break_cfg["CKPT"]
+        print(f"[{tag}] BREAK: src={break_cfg['src']} res={W}x{H} "
+              f"ckpt={break_cfg['CKPT']} method={METHOD} PHOTO={PHOTO} "
+              f"GEO_MASK={GEO_MASK} (FRESH MPS inference, own p1cache)", flush=True)
     name2mi = name2mi_map()
     pool, refs = build_refs()
     if ref_limit:
         refs = refs[:ref_limit]
     ark = g.arkit_centers_and_R()
 
-    mnames, K_of, w2c_of, center_of, obs, pts_arr = load_model(tag)
+    # BREAK/STRICT/CACHE_SRC tags reuse a base model's dump (their own npz is never dumped).
+    model_tag = break_cfg["src"] if break_cfg else (STRICT[tag]["src"] if tag in STRICT else tag)
+    mnames, K_of, w2c_of, center_of, obs, pts_arr = load_model(model_tag)
+    if PROC_W != 896 or PROC_H != 512:
+        # dump K is baked @896x512; rescale to the render resolution (fx,cx by W/896,
+        # fy,cy by H/512). w2c is resolution-independent. Applies to BREAK res runs AND
+        # gate-sweep tags reusing a hi-res cache (res15blend/res2blend @ 1344/1792).
+        sx, sy = PROC_W / 896.0, PROC_H / 512.0
+        Ks = np.diag([sx, sy, 1.0]).astype(np.float32)
+        K_of = {n: (Ks @ K) for n, K in K_of.items()}
+        print(f"[{tag}] K rescaled from 896x512 dump by (sx={sx:.4f}, sy={sy:.4f}) "
+              f"-> {PROC_W}x{PROC_H}", flush=True)
     missing = [n for n in pool if n not in K_of]
     if missing:  # model did not register some pool frames -> drop them (DECLARE in report)
         print(f"[{tag}] WARNING: {len(missing)} pool frame(s) not in model, dropped: "
@@ -265,9 +367,14 @@ def main():
         return [m for dist, m in d if dist >= min_base][:k]
 
     # ---- pass 1: casdiffmvs depth+conf for each ref (poses/K/drange from this model) ----
-    p1cache = OUT / f"p1cache_trio_{tag}.npz"
+    # BREAK tags MUST re-run MPS inference at the new res/ckpt -> own cache path so a
+    # stale/frozen cache is never loaded and the champion 'lapa' cache is never poisoned.
+    # Gate-sweep tags read the SOURCE BREAK cache directly (frozen inference, no re-run).
+    p1cache = OUT / (f"p1cache_trio_{cache_src_tag}.npz" if cache_src_tag
+                     else f"p1cache_trio_{tag}.npz")
     depth, conf, drng = {}, {}, {}
     t_inf = 0.0
+    mps_peak_mb = 0.0; dt_list = []
     if p1cache.exists():
         z = np.load(p1cache, allow_pickle=True)
         fr = z["frames"].tolist(); zd, zc, zr = z["depth"], z["conf"], z["drange"]
@@ -278,6 +385,14 @@ def main():
     else:
         dev = C.pick_device("mps")
         model, _ = C.build_model(METHOD, dev)
+        _mps = dev.type == "mps"
+        def _mps_mb():
+            try:
+                return torch.mps.driver_allocated_memory() / 1e6
+            except Exception:
+                return 0.0
+        if _mps and hasattr(torch.mps, "empty_cache"):
+            torch.mps.empty_cache()
         t0 = time.time()
         for i, n in enumerate(refs):
             src = covis_select(n, pool, center_of, obs_set, obs, pts_arr, NVIEW - 1) \
@@ -289,15 +404,22 @@ def main():
             dmin, dmax = drange(n); drng[n] = (dmin, dmax)
             proj = C.make_proj_matrices(Ks, w2cs); dv = C.depth_values_tensor(dmin, dmax)
             d, c, dt = C.run_inference(model, imgs, proj, dv, dev)
-            t_inf += dt
+            t_inf += dt; dt_list.append(dt)
+            if _mps:
+                mps_peak_mb = max(mps_peak_mb, _mps_mb())
             depth[n] = d.astype(np.float32); conf[n] = c.astype(np.float16)
             if i % 20 == 0 or ref_limit:
                 dd = d[d > 0]
                 print(f"  [{tag}] {i}/{len(refs)} {n} src={src} drange=[{dmin:.2f},{dmax:.2f}] "
                       f"depth[med={np.median(dd):.2f} p5={np.percentile(dd,5):.2f} "
                       f"p95={np.percentile(dd,95):.2f}] conf%>{PHOTO}="
-                      f"{100*(c>PHOTO).mean():.0f} {dt:.2f}s", flush=True)
-        print(f"[{tag}] pass1 done wall={time.time()-t0:.1f}s infer_sum={t_inf:.1f}s", flush=True)
+                      f"{100*(c>PHOTO).mean():.0f} {dt:.2f}s "
+                      f"mps_peak={mps_peak_mb:.0f}MB", flush=True)
+        med_dt = float(np.median(dt_list)) if dt_list else 0.0
+        print(f"[{tag}] pass1 done wall={time.time()-t0:.1f}s infer_sum={t_inf:.1f}s "
+              f"MPS_PEAK={mps_peak_mb:.0f}MB INFER_MED={med_dt:.3f}s/frame "
+              f"INFER_MEAN={t_inf/max(1,len(dt_list)):.3f}s/frame N={len(dt_list)} "
+              f"res={PROC_W}x{PROC_H} ckpt={os.environ.get('AETHER_CKPT','dtu')}", flush=True)
         if not ref_limit:  # never poison the full-run cache with a smoke subset
             np.savez_compressed(p1cache,
                                 depth=np.stack([depth[n].astype(np.float16) for n in refs]),
