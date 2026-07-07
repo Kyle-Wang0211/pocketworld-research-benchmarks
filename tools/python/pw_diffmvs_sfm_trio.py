@@ -157,6 +157,7 @@ STRICT = {
     "1full": {"src": "base", "PHOTO": 0.3, "GEO_MASK": 3},
     "7full": {"src": "lapa", "PHOTO": 0.3, "GEO_MASK": 3},
     "ofull": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3},
+    "ofsonly": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "FREESPACE_N": 2},  # o + 只加看穿票飞点门(杀空中碎片不砍覆盖)
     # ---- 清理正交扫描(全部 = ofull 基线 lapa/PHOTO0.5/g3 + 一个清理旋钮变量)----
     # 可选清理键(缺省=沿用 ofull 现行值,保 o 复现):
     #   BOUND_REL(默认 0.03)/ NORMAL_COS(默认 0.5)/
@@ -400,6 +401,120 @@ def write_ply(path, xyz, rgb, normals=None):
           f"{'(+normals)' if has_n else ''}", flush=True)
 
 
+# ------------------------------------------------------------------------------
+# pass-2 fusion worker  (each ref is fully independent: only reads the shared
+# depth/conf/K/w2c/drange dicts + the ref's own depth map; concatenation order of
+# the returned per-ref points does NOT change the output point SET, only its row
+# order -- voxel/SOR/PLY are order-agnostic).  Refactored so one ref = one call so
+# the outer `for n in refs` loop can be farmed to a multiprocessing.Pool.
+# ------------------------------------------------------------------------------
+# _FUSE_CTX holds every read-only input the per-ref body needs.  In the serial
+# path (default) main() sets it directly; in the parallel path the Pool `fork`
+# initializer inherits it via copy-on-write (macOS spawn fallback repopulates it,
+# see _fuse_pool_init).  Keeping it a plain module global means the huge depth/conf
+# dicts are shared, never pickled per task.
+_FUSE_CTX: dict = {}
+
+
+def _getnrm_ctx(m):
+    ctx = _FUSE_CTX
+    return world_normals(ctx["depth"][m], ctx["K_of"][m].astype(np.float64),
+                         ctx["w2c_of"][m].astype(np.float64))
+
+
+def _nearest_ctx(n, k, cand, min_base):
+    ctx = _FUSE_CTX; center_of = ctx["center_of"]
+    c0 = center_of[n]
+    d = sorted((np.linalg.norm(center_of[m] - c0), m) for m in cand if m != n)
+    return [m for dist, m in d if dist >= min_base][:k]
+
+
+def _fuse_one_ref(n):
+    """Compute this ref's fused points/colours/normals. Verbatim body of the old
+    `for n in refs` loop -- must stay bit-identical so serial and parallel agree."""
+    ctx = _FUSE_CTX
+    depth = ctx["depth"]; conf = ctx["conf"]; drng = ctx["drng"]
+    K_of = ctx["K_of"]; w2c_of = ctx["w2c_of"]; refs = ctx["refs"]
+    name2mi = ctx["name2mi"]; NEIGH = ctx["NEIGH"]; min_base_fuse = ctx["min_base_fuse"]
+    GEO_PIX = ctx["GEO_PIX"]; GEO_DEP = ctx["GEO_DEP"]; NORMAL_COS = ctx["NORMAL_COS"]
+    GEO_MASK = ctx["GEO_MASK"]; PHOTO = ctx["PHOTO"]; BOUND_REL = ctx["BOUND_REL"]
+    photo_color = ctx["photo_color"]; photo_color_n = ctx["photo_color_n"]
+    erode_kernel = ctx["erode_kernel"]; freespace_n = ctx["freespace_n"]
+    freespace_tau = ctx["freespace_tau"]; reproj_err_max = ctx["reproj_err_max"]
+
+    d_ref = depth[n]; K_ref = K_of[n].astype(np.float64)
+    ext_ref = w2c_of[n].astype(np.float64)
+    dmin, dmax = drng[n]; n_ref = _getnrm_ctx(n)
+    ref_rgb01 = R.load_image(name2mi[n])                 # HxWx3 float [0,1]
+    geo_sum = np.zeros_like(d_ref, np.int32); depth_acc = d_ref.copy()
+    color_agree_sum = np.zeros_like(d_ref, np.int32)
+    freespace_sum = np.zeros_like(d_ref, np.int32)
+    rerr_acc = np.zeros_like(d_ref, np.float32)
+    d_ref_in_nb = None
+    for nb in _nearest_ctx(n, NEIGH, refs, min_base_fuse):
+        mask, depth_reproj, x2d, y2d = check_geometric_consistency(
+            d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
+            w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP)
+        nb_n = cv2.remap(_getnrm_ctx(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
+        mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
+        geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
+        if reproj_err_max is not None:
+            rerr_acc += (np.abs(depth_reproj - d_ref) / np.maximum(d_ref, 1e-6)) * mask
+        if photo_color is not None:
+            nb_rgb01 = cv2.remap(R.load_image(name2mi[nb]), x2d, y2d,
+                                 interpolation=cv2.INTER_LINEAR)   # src RGB @ reproj
+            col_diff = np.abs(nb_rgb01 - ref_rgb01).mean(axis=2)   # mean-channel L1, 0-1
+            color_ok = mask & (col_diff < photo_color)
+            color_agree_sum += color_ok.astype(np.int32)
+        if freespace_n is not None:
+            samp_src = cv2.remap(depth[nb], x2d, y2d, interpolation=cv2.INTER_LINEAR)
+            d_ref_in_nb = ref_depth_in_src(d_ref, K_ref, ext_ref,
+                                           w2c_of[nb].astype(np.float64))
+            seen_through = (samp_src > 0) & (d_ref > 0) & \
+                (samp_src - d_ref_in_nb > freespace_tau * np.maximum(d_ref_in_nb, 1e-6))
+            freespace_sum += seen_through.astype(np.int32)
+    img = (ref_rgb01 * 255).astype(np.uint8)
+    final = (geo_sum >= GEO_MASK) & (conf[n].astype(np.float32) > PHOTO) \
+        & boundary_keep(d_ref, rel=BOUND_REL)
+    if photo_color is not None:
+        final = final & (color_agree_sum >= photo_color_n)
+    if freespace_n is not None:
+        final = final & (freespace_sum < freespace_n)
+    if reproj_err_max is not None:
+        rerr_mean = rerr_acc / np.maximum(geo_sum, 1)
+        final = final & (rerr_mean < reproj_err_max)
+    if erode_kernel is not None:
+        final = cv2.erode(final.astype(np.uint8), erode_kernel).astype(bool)
+    kept = float(final.mean())
+    d_avg = depth_acc / (geo_sum + 1)
+    H, W = d_ref.shape
+    uu, vv = np.meshgrid(np.arange(W), np.arange(H))
+    x = (uu - K_ref[0, 2]) / K_ref[0, 0] * d_avg
+    y = (vv - K_ref[1, 2]) / K_ref[1, 1] * d_avg
+    cam = np.stack([x, y, d_avg], -1)[final]
+    Rr, t = ext_ref[:3, :3], ext_ref[:3, 3]
+    pts = ((Rr.T @ (cam.T - t[:, None])).T).astype(np.float32)
+    cols = img[final]
+    nrms = n_ref[final].astype(np.float32)
+    return pts, cols, nrms, kept
+
+
+def _fuse_pool_init(ctx):
+    """Pool worker initializer. Under the (default) fork context ctx is already
+    inherited via copy-on-write and this simply re-affirms the global; under a
+    spawn fallback the parent pickles ctx and hands it here so the worker has the
+    full depth/conf/K/w2c cache. Either way we pin every BLAS/OpenCV thread pool
+    to 1 so N worker processes don't oversubscribe the P cores (that both slows
+    things down and is the classic macOS libomp fork hang)."""
+    global _FUSE_CTX
+    if ctx is not None:
+        _FUSE_CTX = ctx
+    try:
+        cv2.setNumThreads(1)
+    except Exception:
+        pass
+
+
 def main():
     global PHOTO, GEO_MASK, PROC_W, PROC_H, NORMAL_COS, BOUND_REL
     tag = sys.argv[1]
@@ -570,80 +685,62 @@ def main():
                                 frames=np.array(refs))
 
     # ---- pass 2: geomcons fusion g3 p0.3 among the ref set (identical recipe) ----
-    t0 = time.time()
-    def getnrm(m):
-        return world_normals(depth[m], K_of[m].astype(np.float64), w2c_of[m].astype(np.float64))
-
     # 光度颜色一致性(可选):Gipuma/Merrell 风格。ref 像素反投影到 src(x2d,y2d)取 src RGB,
     # 与 ref RGB 比较 |Δ|<τ(0-1 空间 L1/3 平均通道差);仅在几何 mask 命中处计数,累加得
     # color_agree_sum,要求 >= photo_color_n。占用已算好的 remap 坐标,近乎零成本。
+    #
+    # 每个 ref 完全独立(只读 depth/conf/K/w2c/drng + 该 ref 自身深度图),故外层
+    # `for n in refs` 天然可并行。AETHER_FUSE_WORKERS>1 走 multiprocessing.Pool;
+    # 默认 1 = 串行,与历史逐位一致(仅 concat 顺序可变,点集/统计不变)。
+    t0 = time.time()
     erode_kernel = None
     if erode_px and erode_px > 0:
         k = 2 * int(erode_px) + 1
         erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
-    pts, cols, nrms, kept = [], [], [], []   # nrms: 世界系法向(现在写进输出,过去只做NORMAL_COS检查就扔了)
-    for n in refs:
-        d_ref = depth[n]; K_ref = K_of[n].astype(np.float64)
-        ext_ref = w2c_of[n].astype(np.float64)
-        dmin, dmax = drng[n]; n_ref = getnrm(n)
-        ref_rgb01 = R.load_image(name2mi[n])                 # HxWx3 float [0,1]
-        geo_sum = np.zeros_like(d_ref, np.int32); depth_acc = d_ref.copy()
-        color_agree_sum = np.zeros_like(d_ref, np.int32)
-        freespace_sum = np.zeros_like(d_ref, np.int32)
-        rerr_acc = np.zeros_like(d_ref, np.float32)   # 累加支持视图的相对深度残差(过去被 threshold 后丢弃)
-        d_ref_in_nb = None
-        for nb in nearest(n, NEIGH, refs, min_base_fuse):
-            mask, depth_reproj, x2d, y2d = check_geometric_consistency(
-                d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
-                w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP)
-            nb_n = cv2.remap(getnrm(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
-            mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
-            geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
-            if reproj_err_max is not None:
-                # 支持视图上的相对深度残差(passed geo -> < GEO_DEP,残差值本身是精度信号)
-                rerr_acc += (np.abs(depth_reproj - d_ref) / np.maximum(d_ref, 1e-6)) * mask
-            if photo_color is not None:
-                nb_rgb01 = cv2.remap(R.load_image(name2mi[nb]), x2d, y2d,
-                                     interpolation=cv2.INTER_LINEAR)   # src RGB @ reproj
-                col_diff = np.abs(nb_rgb01 - ref_rgb01).mean(axis=2)   # mean-channel L1, 0-1
-                color_ok = mask & (col_diff < photo_color)
-                color_agree_sum += color_ok.astype(np.int32)
-            if freespace_n is not None:
-                # 看穿票:src 在该像素看到的表面(samp_src)明显比 ref 点到 src 的距离更远
-                # -> src 的视线穿过了 ref 点 -> ref 点悬空 = 飞点。正交于边缘位置线索。
-                samp_src = cv2.remap(depth[nb], x2d, y2d, interpolation=cv2.INTER_LINEAR)
-                d_ref_in_nb = ref_depth_in_src(d_ref, K_ref, ext_ref,
-                                               w2c_of[nb].astype(np.float64))
-                seen_through = (samp_src > 0) & (d_ref > 0) & \
-                    (samp_src - d_ref_in_nb > freespace_tau * np.maximum(d_ref_in_nb, 1e-6))
-                freespace_sum += seen_through.astype(np.int32)
-        img = (ref_rgb01 * 255).astype(np.uint8)
-        final = (geo_sum >= GEO_MASK) & (conf[n].astype(np.float32) > PHOTO) \
-            & boundary_keep(d_ref, rel=BOUND_REL)
-        if photo_color is not None:
-            final = final & (color_agree_sum >= photo_color_n)
-        if freespace_n is not None:
-            final = final & (freespace_sum < freespace_n)   # 看穿票 >= N 则删悬空飞点
-        if reproj_err_max is not None:
-            rerr_mean = rerr_acc / np.maximum(geo_sum, 1)    # 平均相对深度残差
-            final = final & (rerr_mean < reproj_err_max)     # 残差大=不精准/飞点,删
-        if erode_kernel is not None:
-            final = cv2.erode(final.astype(np.uint8), erode_kernel).astype(bool)
-        kept.append(final.mean())
-        d_avg = depth_acc / (geo_sum + 1)
-        H, W = d_ref.shape
-        uu, vv = np.meshgrid(np.arange(W), np.arange(H))
-        x = (uu - K_ref[0, 2]) / K_ref[0, 0] * d_avg
-        y = (vv - K_ref[1, 2]) / K_ref[1, 1] * d_avg
-        cam = np.stack([x, y, d_avg], -1)[final]
-        Rr, t = ext_ref[:3, :3], ext_ref[:3, 3]
-        pts.append(((Rr.T @ (cam.T - t[:, None])).T).astype(np.float32))
-        cols.append(img[final])
-        nrms.append(n_ref[final].astype(np.float32))   # 世界系法向(已 flip 朝相机),免费带出
+    _FUSE_CTX.clear()
+    _FUSE_CTX.update(dict(
+        depth=depth, conf=conf, drng=drng, K_of=K_of, w2c_of=w2c_of,
+        center_of=center_of, refs=refs, name2mi=name2mi,
+        NEIGH=NEIGH, min_base_fuse=min_base_fuse, GEO_PIX=GEO_PIX, GEO_DEP=GEO_DEP,
+        NORMAL_COS=NORMAL_COS, GEO_MASK=GEO_MASK, PHOTO=PHOTO, BOUND_REL=BOUND_REL,
+        photo_color=photo_color, photo_color_n=photo_color_n, erode_kernel=erode_kernel,
+        freespace_n=freespace_n, freespace_tau=freespace_tau, reproj_err_max=reproj_err_max,
+    ))
+    n_workers = int(os.environ.get("AETHER_FUSE_WORKERS", "1"))
+    if n_workers <= 1:
+        results = [_fuse_one_ref(n) for n in refs]           # 串行(默认,保现状)
+    else:
+        import multiprocessing as _mp
+        # cpu-2 与 ref 数为安全上限。实测融合是内存带宽瓶颈:~6 workers 已打满内存总线
+        # (6w 68.7s ≈ 10w 70.2s),再加核几乎不提速,故 6-8 是效率甜点(串行 214s→~69s ≈3.1x)。
+        n_workers = min(n_workers, max(1, (os.cpu_count() or 2) - 2), len(refs))
+        # fork 让子进程零拷贝继承已加载的 depth/conf/... 全量 cache(COW);spawn 兜底
+        # 时由 initializer 收 pickle 后的 ctx。子进程内 BLAS/cv2 线程都锁 1,避免
+        # N 进程 × M 线程超订(既慢又是 macOS libomp fork 挂起的经典诱因)。
+        try:
+            _ctx = _mp.get_context("fork"); _init_arg = None      # COW 继承,无需传
+        except ValueError:                                        # 平台无 fork -> spawn
+            _ctx = _mp.get_context("spawn"); _init_arg = dict(_FUSE_CTX)
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+        os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+        cv2.setNumThreads(1)
+        print(f"[{tag}] fuse: parallel {n_workers} workers "
+              f"({_ctx.get_start_method()}) over {len(refs)} refs", flush=True)
+        with _ctx.Pool(processes=n_workers, initializer=_fuse_pool_init,
+                       initargs=(_init_arg,)) as _pool:
+            # chunksize>1 摊薄任务派发开销;结果按 refs 顺序回收(imap 保序,与串行
+            # 完全同序 -> 逐位一致,不只是集合一致)。
+            results = list(_pool.imap(_fuse_one_ref, refs,
+                                      chunksize=max(1, len(refs) // (n_workers * 4))))
+        cv2.setNumThreads(0)   # 恢复主进程默认线程数(供后续 o3d/cv2 用)
+    pts = [r[0] for r in results]; cols = [r[1] for r in results]
+    nrms = [r[2] for r in results]; kept = [r[3] for r in results]
     P = np.concatenate(pts); Cc = np.concatenate(cols); Nn = np.concatenate(nrms)
     print(f"[{tag}] fused g{GEO_MASK} p{PHOTO} bnd{BOUND_REL} nrm{NORMAL_COS} "
           f"pc{photo_color}(N>={photo_color_n}) er{erode_px}: {len(P):,} raw pts "
-          f"kept/frame={np.mean(kept)*100:.1f}% fuse={time.time()-t0:.1f}s", flush=True)
+          f"kept/frame={np.mean(kept)*100:.1f}% fuse={time.time()-t0:.1f}s "
+          f"workers={n_workers}", flush=True)
 
     # ---- align into ARKit metric frame, THEN metric cleanup (identical across models) ----
     Pa = (s_al * (R_al @ P.astype(np.float64).T).T + t_al)
