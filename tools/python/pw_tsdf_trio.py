@@ -37,8 +37,37 @@ from filter import check_geometric_consistency  # noqa: E402
 
 OUTDIR = Path(os.path.expanduser("~/Desktop/tiled_414_viewer"))
 OUT = R.OUT
+# Base viewer filenames at the DEFAULT 6mm voxel. Non-6mm voxels get a suffix
+# (e.g. mesh_o_tsdf.ply @6mm vs mesh_o_tsdf4.ply @4mm) so finer-voxel runs never
+# clobber the certified 6mm meshes. See viewer_ply_name().
 VIEWER_PLY = {"ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
-              "7full": "mesh_7full_tsdf.ply"}
+              "7full": "mesh_7full_tsdf.ply", "blend": "mesh_blend_tsdf.ply",
+              "ofsonly": "mesh_ofsonly_tsdf.ply"}
+
+# Which frozen p1cache each tag reads, and the pass-2 fusion config.
+# blend has its OWN stride1 MPS cache (casdiffmvs_blend.ckpt) + a blend-scale gate
+# (blend conf << DTU, so a matched-low PHOTO is required; see BLEND_CFG below).
+CACHE_FILE = {"ofull": "p1cache_trio_7full.npz", "ofsxq": "p1cache_trio_7full.npz",
+              "7full": "p1cache_trio_7full.npz", "blend": "p1cache_trio_blend.npz",
+              "ofsonly": "p1cache_trio_7full.npz"}
+# Calibrated blend fusion gate (src=lapa, blend ckpt @896x512). PHOTO is set to the
+# blend-scale value chosen from the conf-distribution probe (matched to o coverage).
+BLEND_CFG = {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3}
+
+
+def viewer_ply_name(tag: str, voxel_mm: float) -> str:
+    """6mm keeps the base name; any other voxel appends the mm as an int suffix
+    (4.0 -> '4', 4.5 -> '4p5'). Guarantees the certified 6mm meshes are never
+    overwritten by a finer-voxel experiment."""
+    base = VIEWER_PLY[tag]
+    if abs(voxel_mm - 6.0) < 1e-6:
+        return base
+    if abs(voxel_mm - round(voxel_mm)) < 1e-6:
+        suf = str(int(round(voxel_mm)))
+    else:
+        suf = ("%g" % voxel_mm).replace(".", "p")
+    stem, ext = os.path.splitext(base)
+    return f"{stem}{suf}{ext}"
 
 
 def compute_final_mask(n, refs, depth, conf, drng, K_of, w2c_of, center_of,
@@ -111,12 +140,42 @@ def compute_final_mask(n, refs, depth, conf, drng, K_of, w2c_of, center_of,
     return final, d_avg
 
 
+# ─── Parallel per-ref prep for TSDF (2026-07-07) ───
+# The heavy part of the integrate loop is compute_final_mask (per-ref geometric-
+# consistency over NEIGH neighbors) + image load — both fully independent per
+# ref. Parallelize THAT; keep vol.integrate serial in main, called in refs order
+# (a single ScalableTSDFVolume is not thread-safe, and same-order integrate keeps
+# the weighted-average FP accumulation bit-identical to the serial baseline).
+# Workers return numpy arrays only (picklable); main builds the o3d objects.
+_TSDF_CTX: dict = {}
+
+
+def _tsdf_prep_one(n):
+    c = _TSDF_CTX
+    final, d_avg = compute_final_mask(n, c["refs"], c["depth"], c["conf"], c["drng"],
+                                      c["K_of"], c["w2c_of"], c["center_of"],
+                                      c["cfg"], c["min_base_fuse"])
+    kf = float(final.mean())
+    dm = np.where(final, d_avg, 0.0).astype(np.float32)
+    if not np.any(dm > 0):
+        return (n, None, None, kf)
+    rgb = (R.load_image(T._name2mi[n]) * 255).astype(np.uint8)
+    return (n, dm, np.ascontiguousarray(rgb), kf)
+
+
+def _tsdf_pool_init(ctx):
+    if ctx is not None:                 # spawn fallback: receive pickled ctx
+        _TSDF_CTX.update(ctx)
+    cv2.setNumThreads(1)                # no thread oversubscription in workers
+
+
 def main():
     tag = sys.argv[1]
     voxel_mm = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
     ref_limit = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-    assert tag in ("ofull", "ofsxq", "7full"), "tag must be ofull/ofsxq/7full"
-    cfg = T.STRICT[tag]
+    assert tag in ("ofull","ofsxq","7full","blend","ofsonly"), \
+        "tag must be ofull/ofsxq/7full/blend"
+    cfg = BLEND_CFG if tag == "blend" else T.STRICT[tag]
     print(f"[{tag}] TSDF cfg={cfg} voxel={voxel_mm}mm(ARKit)", flush=True)
 
     # ---- load model dump, refs, ARKit alignment (same as pipeline) ----
@@ -142,8 +201,8 @@ def main():
         return [m for dist, m in d if dist >= min_base][:k]
     T._nearest = _nearest
 
-    # ---- load frozen 7full depth+conf cache (same as ofull/ofsxq) ----
-    p1cache = OUT / "p1cache_trio_7full.npz"
+    # ---- load frozen depth+conf cache (7full for o-family; blend's own cache) ----
+    p1cache = OUT / CACHE_FILE[tag]
     assert p1cache.exists(), f"missing {p1cache}"
     z = np.load(p1cache, allow_pickle=True)
     fr = z["frames"].tolist(); zd, zc, zr = z["depth"], z["conf"], z["drange"]
@@ -164,15 +223,16 @@ def main():
 
     W, H = T.PROC_W, T.PROC_H
     t0 = time.time(); n_int = 0; kept_frac = []
-    for i, n in enumerate(refs):
-        final, d_avg = compute_final_mask(n, refs, depth, conf, drng,
-                                          K_of, w2c_of, center_of, cfg, min_base_fuse)
-        kept_frac.append(float(final.mean()))
-        # masked metric depth (GLOMAP units): 0 where not kept -> ignored by TSDF
-        dm = np.where(final, d_avg, 0.0).astype(np.float32)
-        if not np.any(dm > 0):
-            continue
-        rgb = (R.load_image(name2mi[n]) * 255).astype(np.uint8)
+
+    # Integrate one prepped frame. Called in refs order (serial path AND the
+    # ordered imap below) -> the single-volume weighted-average FP accumulation
+    # is bit-identical to the pre-parallel baseline.
+    def _integrate(item, i):
+        nonlocal n_int
+        n, dm, rgb, kf = item
+        kept_frac.append(kf)
+        if dm is None:                                  # nothing kept this frame
+            return
         color_o3d = o3d.geometry.Image(np.ascontiguousarray(rgb))
         depth_o3d = o3d.geometry.Image(np.ascontiguousarray(dm))
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
@@ -185,8 +245,44 @@ def main():
         vol.integrate(rgbd, intr, extr)
         n_int += 1
         if i % 40 == 0 or ref_limit:
-            print(f"  [{tag}] {i}/{len(refs)} {n} kept={final.mean()*100:.0f}% "
+            print(f"  [{tag}] {i}/{len(refs)} {n} kept={kf*100:.0f}% "
                   f"integrated={n_int}", flush=True)
+
+    # [2026-07-07] Parallelize the heavy independent prep (compute_final_mask +
+    # image load); integrate stays serial. Default parallel; AETHER_TSDF_WORKERS=1
+    # forces serial (debug / bit-exact A/B).
+    _TSDF_CTX.clear()
+    _TSDF_CTX.update(dict(refs=refs, depth=depth, conf=conf, drng=drng, K_of=K_of,
+                          w2c_of=w2c_of, center_of=center_of, cfg=cfg,
+                          min_base_fuse=min_base_fuse))
+    _tsdf_default = str(min(8, max(1, (os.cpu_count() or 4) - 2)))
+    n_workers = int(os.environ.get("AETHER_TSDF_WORKERS", _tsdf_default))
+    if n_workers <= 1:
+        for i, n in enumerate(refs):                    # serial (env=1 explicit fallback)
+            _integrate(_tsdf_prep_one(n), i)
+    else:
+        import multiprocessing as _mp
+        n_workers = min(n_workers, max(1, (os.cpu_count() or 2) - 2), len(refs))
+        # OMP/BLAS pinned to 1 BEFORE forking so no multi-thread pool is live at
+        # fork (classic macOS libomp fork-hang guard); workers are single-thread.
+        for v in ("OMP_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "OPENBLAS_NUM_THREADS"):
+            os.environ.setdefault(v, "1")
+        cv2.setNumThreads(1)
+        try:
+            _ctx = _mp.get_context("fork"); _init = None      # COW-inherit cache + T/R
+        except ValueError:
+            _ctx = _mp.get_context("spawn"); _init = dict(_TSDF_CTX)
+        print(f"[{tag}] tsdf prep: parallel {n_workers} workers "
+              f"({_ctx.get_start_method()}) over {len(refs)} refs; integrate serial",
+              flush=True)
+        with _ctx.Pool(processes=n_workers, initializer=_tsdf_pool_init,
+                       initargs=(_init,)) as _pool:
+            # imap preserves refs order -> integrate order == serial -> bit-identical
+            for i, item in enumerate(_pool.imap(
+                    _tsdf_prep_one, refs,
+                    chunksize=max(1, len(refs) // (n_workers * 4)))):
+                _integrate(item, i)
+        cv2.setNumThreads(0)
     print(f"[{tag}] integrated {n_int} frames kept/frame={np.mean(kept_frac)*100:.1f}% "
           f"pass2+integrate={time.time()-t0:.1f}s", flush=True)
 
@@ -210,12 +306,13 @@ def main():
         print(f"[smoke] wrote {sp}", flush=True)
     if not ref_limit:
         OUTDIR.mkdir(exist_ok=True)
-        outp = OUTDIR / VIEWER_PLY[tag]
+        outp = OUTDIR / viewer_ply_name(tag, voxel_mm)
         o3d.io.write_triangle_mesh(str(outp), mesh, write_vertex_normals=True,
                                    write_vertex_colors=True, write_ascii=False)
         print(f"wrote {outp}  {os.path.getsize(outp)/1e6:.1f}MB", flush=True)
-        # also stash a copy next to the fused ply for provenance
-        o3d.io.write_triangle_mesh(str(OUT / f"tsdf_trio_{tag}.ply"), mesh,
+        # also stash a copy next to the fused ply for provenance (voxel-suffixed)
+        prov_stem = os.path.splitext(viewer_ply_name(tag, voxel_mm))[0]
+        o3d.io.write_triangle_mesh(str(OUT / f"tsdf_trio_{prov_stem}.ply"), mesh,
                                    write_vertex_normals=True, write_vertex_colors=True)
 
 

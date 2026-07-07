@@ -706,9 +706,13 @@ def main():
         photo_color=photo_color, photo_color_n=photo_color_n, erode_kernel=erode_kernel,
         freespace_n=freespace_n, freespace_tau=freespace_tau, reproj_err_max=reproj_err_max,
     ))
-    n_workers = int(os.environ.get("AETHER_FUSE_WORKERS", "1"))
+    # [2026-07-07] 默认翻并行:pass2 融合每 ref 完全独立,imap 保序 -> 逐位一致
+    # (已认证 bit-identical + 3.1x);默认吃满 6-8 核甜点,AETHER_FUSE_WORKERS=1 可
+    # 强制回串行(调试/对拍)。内层还会再 cap 到 min(., cpu-2, refs)。
+    _fuse_default = str(min(8, max(1, (os.cpu_count() or 4) - 2)))
+    n_workers = int(os.environ.get("AETHER_FUSE_WORKERS", _fuse_default))
     if n_workers <= 1:
-        results = [_fuse_one_ref(n) for n in refs]           # 串行(默认,保现状)
+        results = [_fuse_one_ref(n) for n in refs]           # 串行(env=1 显式回退)
     else:
         import multiprocessing as _mp
         # cpu-2 与 ref 数为安全上限。实测融合是内存带宽瓶颈:~6 workers 已打满内存总线
