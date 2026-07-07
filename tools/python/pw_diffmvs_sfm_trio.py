@@ -257,7 +257,11 @@ NVIEW, NEIGH = 5, 8
 GEO_MASK, PHOTO, GEO_PIX, GEO_DEP = 3, 0.5, 1.0, 0.01   # [CERTIFIED 2026-07-06] PHOTO 0.3->0.5 (o): +3-5% eyeball vs 0.3, full coverage, free; PHOTO>=0.5 is plateau
 NORMAL_COS, BOUND_REL = 0.5, 0.03
 MIN_BASE_SRC_M, MIN_BASE_FUSE_M = 0.06, 0.04   # metres (converted to model units)
-REF_STRIDE = 4
+# [PRODUCTION DEFAULT = "o", certified 2026-07-07] 冠军 lapa SfM + REF_STRIDE=1 全覆盖
+# (每帧算深度图,覆盖=稀疏全量,像 RealityScan) + PHOTO=0.5 融合门。清理(free-space/
+# 残差/边缘门)对点云交付有益但对 TSDF 网格是净损(TSDF 自身体素平均去噪),故默认关。
+# 研究期对照实验可显式传更大 stride 提速。
+REF_STRIDE = 1
 REFS_JSON = OUT / "trio_refs.json"
 
 
