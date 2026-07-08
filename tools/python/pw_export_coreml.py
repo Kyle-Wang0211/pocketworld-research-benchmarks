@@ -104,10 +104,14 @@ def main():
     ins = (*imgs, proj["stage1"], proj["stage2"], proj["stage3"], proj["stage4"], dv)
     with torch.no_grad():
         tr = torch.jit.trace(w, ins, check_trace=False)
-    _prec = ct.precision.FLOAT32 if os.environ.get("AETHER_COREML_FP32") else ct.precision.FLOAT16
+    # fp32 is the DEFAULT (lossless: CPU+GPU parity 1.88%, in the run-to-run band).
+    # fp16 (AETHER_COREML_FP16=1) is opt-in for a smaller/faster model at ~6% (fp16 floor).
+    # compute_units=CPU_AND_GPU only: NEVER the ANE (Apple-only -> breaks cross-platform,
+    # and it garbages 3D-conv/grid_sample -> 64%). CPU+GPU maps to Metal/Vulkan cross-platform.
+    _prec = ct.precision.FLOAT16 if os.environ.get("AETHER_COREML_FP16") else ct.precision.FLOAT32
     ml = ct.convert(tr, inputs=[ct.TensorType(name=n, shape=x.shape) for n, x in zip(names, ins)],
-                    minimum_deployment_target=ct.target.iOS17, compute_units=ct.ComputeUnit.ALL,
-                    compute_precision=_prec)
+                    minimum_deployment_target=ct.target.iOS17,
+                    compute_units=ct.ComputeUnit.CPU_AND_GPU, compute_precision=_prec)
     shutil.rmtree(OUT_PKG, ignore_errors=True); OUT_PKG.parent.mkdir(parents=True, exist_ok=True)
     ml.save(str(OUT_PKG))
     sz = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT_PKG) for f in fs) / 1e6

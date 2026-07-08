@@ -54,7 +54,45 @@ struct ContentView: View {
             }
             .navigationTitle("DiffMVS Bench")
         }
-        .onAppear { if !running { runOverlapProbe() } }   // auto-run DiffMVS CoreML CPU-idle sweep; writes JSON to container (unplug-safe)
+        .onAppear { if !running { runPrecisionCompare() } }   // auto-run casdiffmvs fp16-vs-fp32 @ CPU+GPU; writes JSON (unplug-safe)
+    }
+
+    /// fp16-vs-fp32 speed+memory on A16, casdiffmvs, CPU+GPU ONLY (never ANE:
+    /// Apple-only + garbages 3D-conv). Writes Documents/casdiffmvs_precision.json.
+    func runPrecisionCompare() {
+        running = true; result = nil
+        UIApplication.shared.isIdleTimerDisabled = true
+        let models: [(String, String)] = [("fp16", "CasDiffMVS_fp16"), ("fp32", "CasDiffMVS_fp32")]
+        let f = 20
+        DispatchQueue.global(qos: .userInitiated).async {
+            var arr: [[String: Any]] = []
+            var last: BenchResult?
+            func flush() {   // write INCREMENTALLY so an OOM/SIGKILL on a later model keeps earlier results
+                let payload: [String: Any] = ["device": UIDevice.current.name,
+                    "systemVersion": UIDevice.current.systemVersion, "results": arr]
+                if let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted]),
+                   let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                    try? data.write(to: dir.appendingPathComponent("casdiffmvs_precision.json"))
+                }
+            }
+            for (tag, name) in models {
+                arr.append(["precision": tag, "status": "STARTED"]); flush()   // mark start (survives crash)
+                let r = Benchmark.run(frames: f, computeUnits: .cpuAndGPU, modelNames: [name])
+                print(String(format: "PWPREC| %@ ok=%d median=%.1fms peakMB=%.0f", tag, r.ok ? 1 : 0, r.medianMs, r.peakMB))
+                NSLog("PWPREC %@ median=%.1fms peakMB=%.0f", tag, r.medianMs, r.peakMB)
+                arr[arr.count - 1] = ["precision": tag, "model": name, "ok": r.ok, "message": r.message,
+                            "frames": r.frames, "medianMs": r.medianMs, "p90Ms": r.p90Ms, "minMs": r.minMs,
+                            "totalSec": r.totalSec, "baselineMB": r.baselineMB, "peakMB": r.peakMB,
+                            "computeUnits": r.computeUnits, "input": r.inputSummary]
+                flush()
+                last = r
+            }
+            print("PWPREC| DONE")
+            DispatchQueue.main.async {
+                result = last; running = false
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
+        }
     }
 
     /// On-device GPU-CPU-overlap headroom probe. Runs the REAL DiffMVS CoreML model

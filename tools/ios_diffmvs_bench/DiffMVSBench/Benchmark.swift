@@ -98,9 +98,8 @@ enum Benchmark {
         return kr == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576.0 : -1
     }
 
-    /// Find a model in the bundle: prefer real DiffMVS, fall back to placeholder.
-    static func locateModel() -> URL? {
-        let names = ["DiffMVS", "DiffMVS_PLACEHOLDER"]
+    /// Find a model in the bundle by name(s), first match wins.
+    static func locateModel(_ names: [String] = ["DiffMVS", "DiffMVS_PLACEHOLDER"]) -> URL? {
         for n in names {
             if let u = Bundle.main.url(forResource: n, withExtension: "mlmodelc") { return u }
             if let u = Bundle.main.url(forResource: n, withExtension: "mlpackage") { return u }
@@ -138,7 +137,8 @@ enum Benchmark {
         return (try MLDictionaryFeatureProvider(dictionary: feats), summary.joined(separator: " "))
     }
 
-    static func run(frames: Int, computeUnits: MLComputeUnits, warmup: Int = 5) -> BenchResult {
+    static func run(frames: Int, computeUnits: MLComputeUnits, warmup: Int = 5,
+                    modelNames: [String] = ["DiffMVS", "DiffMVS_PLACEHOLDER"]) -> BenchResult {
         var r = BenchResult()
         r.frames = frames
         switch computeUnits {
@@ -147,7 +147,7 @@ enum Benchmark {
         case .cpuAndNeuralEngine: r.computeUnits = "CPU+ANE"
         default: r.computeUnits = "CPU only"
         }
-        guard let url = locateModel() else {
+        guard let url = locateModel(modelNames) else {
             r.message = "No model found. Add DiffMVS.mlpackage (or the placeholder) to the app target."
             return r
         }
