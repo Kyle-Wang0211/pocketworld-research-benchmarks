@@ -7,7 +7,7 @@ hardcodes .cuda()/cuda.synchronize() and the DTU file format; we feed tensors
 straight from PocketWorld's npz windows instead.
 """
 from __future__ import annotations
-import sys, time
+import os, sys, time
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
@@ -53,7 +53,15 @@ def _args_casdiffmvs() -> SimpleNamespace:
 
 def build_model(method: str, device: torch.device):
     args = _args_diffmvs() if method == "diffmvs" else _args_casdiffmvs()
-    ckpt = CKPT_DIR / (f"{method}_dtu.ckpt")
+    # Domain checkpoint selection: default DTU (historical behaviour, unchanged when
+    # the env is unset). Real-world captures should use BlendedMVS ("blend"); the
+    # official repo ships {method}_blend.ckpt for exactly this. AETHER_CKPT=blend
+    # flips the domain without touching the DTU path used by every existing caller.
+    dom = os.environ.get("AETHER_CKPT", "dtu").strip().lower()
+    assert dom in ("dtu", "blend"), f"AETHER_CKPT must be dtu|blend, got {dom!r}"
+    ckpt = CKPT_DIR / (f"{method}_{dom}.ckpt")
+    assert ckpt.exists(), f"checkpoint missing: {ckpt}"
+    print(f"[build_model] method={method} ckpt={ckpt.name}", flush=True)
     model = CasDiffMVS(args, test=True)
     state = torch.load(ckpt, map_location="cpu")
     model.load_state_dict(state["model"], strict=False)
@@ -82,15 +90,29 @@ def depth_values_tensor(depth_min: float, depth_max: float, numdepth: int = 384)
 
 
 @torch.no_grad()
-def run_inference(model, imgs_np, proj_ms, depth_values, device):
-    """imgs_np: list of (3,H,W) float32 [0,1] RGB. Returns (depth HxW, conf HxW, dt)."""
+def run_inference(model, imgs_np, proj_ms, depth_values, device,
+                  view_names=None, feat_cache=None):
+    """imgs_np: list of (3,H,W) float32 [0,1] RGB. Returns (depth HxW, conf HxW, dt).
+    view_names+feat_cache: optional per-frame FeatureNet cache. A frame recurs across
+    refs (ref once + source in ~4 neighbors); FeatureNet is a pure function of pixels,
+    so caching its output per frame is byte-identical and cuts ~5x FeatureNet calls to
+    ~1x/frame. feat_cache is a dict {name: features}; caller owns lifetime/eviction."""
     imgs = [torch.from_numpy(im[None]).float().to(device) for im in imgs_np]  # each (1,3,H,W)
     proj = {k: v.to(device) for k, v in proj_ms.items()}
     dv = depth_values.to(device)
     if device.type == "mps":
         torch.mps.synchronize()
     t0 = time.time()
-    out = model(imgs, proj, dv)
+    pf = None
+    if feat_cache is not None and view_names is not None:
+        pf = []
+        for i, nm in enumerate(view_names):
+            f = feat_cache.get(nm)
+            if f is None:
+                f = model.feature(imgs[i])          # compute once per unique frame
+                feat_cache[nm] = f
+            pf.append(f)
+    out = model(imgs, proj, dv, precomputed_features=pf)
     if device.type == "mps":
         torch.mps.synchronize()
     dt = time.time() - t0

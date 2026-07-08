@@ -654,6 +654,13 @@ def main():
                 return 0.0
         if _mps and hasattr(torch.mps, "empty_cache"):
             torch.mps.empty_cache()
+        # [AETHER 2026-07-08] FeatureNet cross-ref cache: byte-identical, cuts ~78% of
+        # FeatureNet calls — BUT measured only ~2% host-MPS wall (FeatureNet is ~2.6% of
+        # inference, not the 14% estimate; cost-volume+diffusion is the 97% bottleneck)
+        # AND costs ~2.6GB MPS. Default OFF; opt-in via AETHER_FEATCACHE=1 (e.g. a future
+        # device CoreML/ANE build where the FeatureNet fraction differs). Cap: AETHER_FEATCACHE_N.
+        _feat_cache = {} if os.environ.get("AETHER_FEATCACHE") else None
+        _fc_cap = int(os.environ.get("AETHER_FEATCACHE_N", "0"))
         t0 = time.time()
         for i, n in enumerate(refs):
             src = covis_select(n, pool, center_of, obs_set, obs, pts_arr, NVIEW - 1) \
@@ -664,7 +671,12 @@ def main():
             w2cs = np.stack([w2c_of[m] for m in view])
             dmin, dmax = drange(n); drng[n] = (dmin, dmax)
             proj = C.make_proj_matrices(Ks, w2cs); dv = C.depth_values_tensor(dmin, dmax)
-            d, c, dt = C.run_inference(model, imgs, proj, dv, dev)
+            d, c, dt = C.run_inference(model, imgs, proj, dv, dev,
+                                       view_names=view, feat_cache=_feat_cache)
+            if _feat_cache is not None and _fc_cap and len(_feat_cache) > _fc_cap:
+                for _k in list(_feat_cache.keys())[:len(_feat_cache) - _fc_cap]:
+                    if _k not in view:                       # never evict current view
+                        del _feat_cache[_k]
             t_inf += dt; dt_list.append(dt)
             if _mps:
                 mps_peak_mb = max(mps_peak_mb, _mps_mb())
