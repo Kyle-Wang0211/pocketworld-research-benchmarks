@@ -32,6 +32,12 @@ import pw_diffmvs_run as R
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "diffmvs"))
 from filter import check_geometric_consistency  # noqa: E402
+import inspect as _inspect  # noqa: E402
+# [#7 2026-07-08] free-space reuse of reproject_with_depth's xyz_src[2] needs a
+# patched filter.py (return_ref_depth_src kwarg). diffmvs/ is gitignored, so a fresh
+# clone has vanilla filter.py -> detect support and gracefully fall back to recompute.
+_CGC_HAS_REFDEPTH = ("return_ref_depth_src"
+                     in _inspect.signature(check_geometric_consistency).parameters)
 
 SCRATCH = Path("/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/"
                "7fc69efe-e09c-4359-8afb-04378874d3a1/scratchpad")
@@ -454,10 +460,24 @@ def _fuse_one_ref(n):
     freespace_sum = np.zeros_like(d_ref, np.int32)
     rerr_acc = np.zeros_like(d_ref, np.float32)
     d_ref_in_nb = None
+    # [2026-07-08] free-space only: reuse the ref-depth-in-src map that
+    # check_geometric_consistency's reproject_with_depth already computes internally
+    # (xyz_src[2]) instead of re-deriving the identical matmul chain via
+    # ref_depth_in_src(). Gated on want_freespace so the ofull default path calls CGC
+    # with the flag off -> byte-for-byte the original 4-tuple, zero extra work.
+    want_freespace = freespace_n is not None
+    _reuse_refdepth = want_freespace and _CGC_HAS_REFDEPTH
     for nb in _nearest_ctx(n, NEIGH, refs, min_base_fuse):
-        mask, depth_reproj, x2d, y2d = check_geometric_consistency(
-            d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
-            w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP)
+        if _reuse_refdepth:
+            mask, depth_reproj, x2d, y2d, *rest = check_geometric_consistency(
+                d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
+                w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP,
+                return_ref_depth_src=True)
+        else:
+            mask, depth_reproj, x2d, y2d = check_geometric_consistency(
+                d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
+                w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP)
+            rest = None
         nb_n = cv2.remap(_getnrm_ctx(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
         mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
         geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
@@ -471,8 +491,11 @@ def _fuse_one_ref(n):
             color_agree_sum += color_ok.astype(np.int32)
         if freespace_n is not None:
             samp_src = cv2.remap(depth[nb], x2d, y2d, interpolation=cv2.INTER_LINEAR)
-            d_ref_in_nb = ref_depth_in_src(d_ref, K_ref, ext_ref,
-                                           w2c_of[nb].astype(np.float64))
+            # rest[0] == old ref_depth_in_src(d_ref, K_ref, ext_ref, w2c_of[nb]): identical
+            # matmul chain (xyz_src[2]) reused from CGC when filter.py supports it; vanilla
+            # filter.py (fresh clone) -> recompute (byte-identical fallback).
+            d_ref_in_nb = rest[0] if rest else ref_depth_in_src(
+                d_ref, K_ref, ext_ref, w2c_of[nb].astype(np.float64))
             seen_through = (samp_src > 0) & (d_ref > 0) & \
                 (samp_src - d_ref_in_nb > freespace_tau * np.maximum(d_ref_in_nb, 1e-6))
             freespace_sum += seen_through.astype(np.int32)

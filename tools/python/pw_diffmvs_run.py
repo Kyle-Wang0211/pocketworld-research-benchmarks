@@ -8,7 +8,7 @@ metric depth range from the SfM anchors, runs DiffMVS, and writes:
 Usage: pw_diffmvs_run.py [WIN] [REF_LOCAL] [N_VIEW] [DEVICE] [METHOD]
 """
 from __future__ import annotations
-import sys, json
+import sys, json, functools
 from pathlib import Path
 import numpy as np
 import cv2
@@ -35,13 +35,26 @@ def _load_meta():
     return _man, _wdef, _anch
 
 
-def load_image(manifest_idx: int) -> np.ndarray:
+@functools.lru_cache(maxsize=512)
+def _decode_image(manifest_idx: int) -> np.ndarray:
+    """Deterministic JPEG decode -> (PROC_H,PROC_W,3) float32 [0,1] RGB. Cached:
+    the same frame is decoded ~5x across the pipeline (pass1 ref+sources, fusion
+    ref+neighbors, TSDF); imread+cvtColor+INTER_AREA resize is the cost. maxsize=512
+    covers all 414 frames so each is decoded exactly once (eviction only re-decodes,
+    never changes result). The cached array is PRIVATE and never handed out — callers
+    receive a copy via load_image so nothing can mutate the cache in place."""
     man, _, _ = _load_meta()
     p = CAP / man[manifest_idx]["jpegPath"]
     bgr = cv2.imread(str(p))
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
     rgb = cv2.resize(rgb, (PROC_W, PROC_H), interpolation=cv2.INTER_AREA)
     return (rgb.astype(np.float32) / 255.0)
+
+
+def load_image(manifest_idx: int) -> np.ndarray:
+    # Return a fresh copy every call (byte-identical to the old decode-every-time
+    # behaviour), so any downstream in-place write can never corrupt the cache.
+    return _decode_image(manifest_idx).copy()
 
 
 def scaled_K(K_npz: np.ndarray) -> np.ndarray:
