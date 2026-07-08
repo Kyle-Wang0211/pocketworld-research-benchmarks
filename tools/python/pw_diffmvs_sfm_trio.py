@@ -418,6 +418,9 @@ _FUSE_CTX: dict = {}
 
 def _getnrm_ctx(m):
     ctx = _FUSE_CTX
+    nc = ctx.get("normals")                       # per-frame cache (byte-identical)
+    if nc is not None and m in nc:
+        return nc[m]
     return world_normals(ctx["depth"][m], ctx["K_of"][m].astype(np.float64),
                          ctx["w2c_of"][m].astype(np.float64))
 
@@ -713,10 +716,17 @@ def main():
     if erode_px and erode_px > 0:
         k = 2 * int(erode_px) + 1
         erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    # [2026-07-08] normals cache: world_normals is a pure fn of (depth,K,w2c) — all
+    # frozen — yet a frame's normals were recomputed once as its own ref + once per
+    # ref that picks it as a NEIGH neighbor (~9x). Precompute once per ref frame here,
+    # COW-shared read-only to the fork workers. Byte-identical; pure numpy (cross-platform).
+    _norm_cache = None if os.environ.get("AETHER_NO_NORMCACHE") else {
+        m: world_normals(depth[m], K_of[m].astype(np.float64),
+                         w2c_of[m].astype(np.float64)) for m in refs}
     _FUSE_CTX.clear()
     _FUSE_CTX.update(dict(
         depth=depth, conf=conf, drng=drng, K_of=K_of, w2c_of=w2c_of,
-        center_of=center_of, refs=refs, name2mi=name2mi,
+        center_of=center_of, refs=refs, name2mi=name2mi, normals=_norm_cache,
         NEIGH=NEIGH, min_base_fuse=min_base_fuse, GEO_PIX=GEO_PIX, GEO_DEP=GEO_DEP,
         NORMAL_COS=NORMAL_COS, GEO_MASK=GEO_MASK, PHOTO=PHOTO, BOUND_REL=BOUND_REL,
         photo_color=photo_color, photo_color_n=photo_color_n, erode_kernel=erode_kernel,
