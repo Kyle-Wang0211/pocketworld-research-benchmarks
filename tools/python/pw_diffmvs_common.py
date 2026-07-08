@@ -103,16 +103,27 @@ def run_inference(model, imgs_np, proj_ms, depth_values, device,
     if device.type == "mps":
         torch.mps.synchronize()
     t0 = time.time()
-    pf = None
     if feat_cache is not None and view_names is not None:
+        # Build the per-view feature list from the frame cache (compute+store on miss;
+        # model.feature is a pure fn of pixels -> cached == recomputed, byte-identical).
         pf = []
         for i, nm in enumerate(view_names):
             f = feat_cache.get(nm)
             if f is None:
-                f = model.feature(imgs[i])          # compute once per unique frame
+                f = model.feature(imgs[i])
                 feat_cache[nm] = f
             pf.append(f)
-    out = model(imgs, proj, dv, precomputed_features=pf)
+        # Feed them WITHOUT touching the vendored net: the forward calls self.feature
+        # once per img in order, so temporarily serve the cached tensors in that order.
+        _orig_fwd = model.feature.forward
+        _it = iter(pf)
+        model.feature.forward = lambda _x, _it=_it: next(_it)
+        try:
+            out = model(imgs, proj, dv)
+        finally:
+            model.feature.forward = _orig_fwd
+    else:
+        out = model(imgs, proj, dv)
     if device.type == "mps":
         torch.mps.synchronize()
     dt = time.time() - t0
