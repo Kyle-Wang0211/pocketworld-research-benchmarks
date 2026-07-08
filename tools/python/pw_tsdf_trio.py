@@ -148,15 +148,23 @@ def compute_final_mask(n, refs, depth, conf, drng, K_of, w2c_of, center_of,
 # the weighted-average FP accumulation bit-identical to the serial baseline).
 # Workers return numpy arrays only (picklable); main builds the o3d objects.
 _TSDF_CTX: dict = {}
+# dm-cache: pw_diffmvs_sfm_trio's fusion writes the exact same masked depth this
+# stage would recompute. When a validated cache is loaded (main), skip the entire
+# compute_final_mask geometric-consistency pass — byte-identical, big TSDF win.
+_DM_CACHE: dict = {}
 
 
 def _tsdf_prep_one(n):
     c = _TSDF_CTX
-    final, d_avg = compute_final_mask(n, c["refs"], c["depth"], c["conf"], c["drng"],
-                                      c["K_of"], c["w2c_of"], c["center_of"],
-                                      c["cfg"], c["min_base_fuse"])
-    kf = float(final.mean())
-    dm = np.where(final, d_avg, 0.0).astype(np.float32)
+    dm = _DM_CACHE.get(n)
+    if dm is not None:                                   # cache hit: no recompute
+        kf = float((dm > 0).mean())                      # dm>0 <=> final (d_avg>0 where kept)
+    else:
+        final, d_avg = compute_final_mask(n, c["refs"], c["depth"], c["conf"], c["drng"],
+                                          c["K_of"], c["w2c_of"], c["center_of"],
+                                          c["cfg"], c["min_base_fuse"])
+        kf = float(final.mean())
+        dm = np.where(final, d_avg, 0.0).astype(np.float32)
     if not np.any(dm > 0):
         return (n, None, None, kf)
     rgb = (R.load_image(T._name2mi[n]) * 255).astype(np.uint8)
@@ -211,6 +219,27 @@ def main():
         depth[nm] = zd[i].astype(np.float32); conf[nm] = zc[i]; drng[nm] = tuple(zr[i])
     refs = [n for n in refs if n in depth]
     print(f"[{tag}] loaded cache {len(refs)} refs; align scale={s_al:.4f}", flush=True)
+
+    # ---- dm-cache: reuse fusion's masked depth (byte-identical) → skip the whole
+    # compute_final_mask geometric-consistency pass. Sig-guarded: mismatch = recompute.
+    _dmc = OUT / f"dmcache_trio_{tag}.npz"
+    _my_sig = (f"g{cfg['GEO_MASK']}_p{cfg['PHOTO']}_bnd{cfg.get('BOUND_REL', 0.03)}_"
+               f"nrm{cfg.get('NORMAL_COS', 0.5)}_pc{cfg.get('PHOTO_COLOR', None)}_"
+               f"pcn{cfg.get('PHOTO_COLOR_N', 1)}_fs{cfg.get('FREESPACE_N', None)}_"
+               f"fst{cfg.get('FREESPACE_TAU', 0.02)}_re{cfg.get('REPROJ_ERR_MAX', None)}_"
+               f"er{cfg.get('ERODE_PX', 0)}")
+    if not os.environ.get("AETHER_NO_DMCACHE") and _dmc.exists():
+        dz = np.load(_dmc, allow_pickle=True)
+        if str(dz["sig"]) == _my_sig:
+            dfr = [str(x) for x in dz["frames"].tolist()]
+            ddm = dz["dm"]
+            for i, nm in enumerate(dfr):
+                _DM_CACHE[nm] = ddm[i].astype(np.float32)
+            print(f"[{tag}] dm-cache HIT ({len(_DM_CACHE)} refs) — skip compute_final_mask", flush=True)
+        else:
+            print(f"[{tag}] dm-cache sig MISMATCH -> recompute ({str(dz['sig'])} != {_my_sig})", flush=True)
+    else:
+        print(f"[{tag}] dm-cache absent/disabled -> recompute", flush=True)
 
     # ---- TSDF setup (GLOMAP/camera metric frame; convert ARKit voxel by 1/s_al) ----
     voxel_len = (voxel_mm / 1000.0) / s_al          # GLOMAP units

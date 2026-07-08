@@ -496,7 +496,11 @@ def _fuse_one_ref(n):
     pts = ((Rr.T @ (cam.T - t[:, None])).T).astype(np.float32)
     cols = img[final]
     nrms = n_ref[final].astype(np.float32)
-    return pts, cols, nrms, kept
+    # dm = masked metric depth (0 where not kept). This is byte-identical to what
+    # pw_tsdf_trio.compute_final_mask recomputes from scratch — cache it so the
+    # TSDF stage can skip the entire geometric-consistency pass. [2026-07-08]
+    dm = np.where(final, d_avg, 0.0).astype(np.float32)
+    return pts, cols, nrms, kept, dm
 
 
 def _fuse_pool_init(ctx):
@@ -740,6 +744,16 @@ def main():
         cv2.setNumThreads(0)   # 恢复主进程默认线程数(供后续 o3d/cv2 用)
     pts = [r[0] for r in results]; cols = [r[1] for r in results]
     nrms = [r[2] for r in results]; kept = [r[3] for r in results]
+    # dm-cache: pw_tsdf_trio.compute_final_mask recomputes this exact masked depth
+    # from scratch — write it (byte-identical) so the TSDF stage can skip the whole
+    # geometric-consistency pass. Keyed by tag + a gate-signature guard. [2026-07-08]
+    _dm_sig = (f"g{GEO_MASK}_p{PHOTO}_bnd{BOUND_REL}_nrm{NORMAL_COS}_pc{photo_color}_"
+               f"pcn{photo_color_n}_fs{freespace_n}_fst{freespace_tau}_"
+               f"re{reproj_err_max}_er{erode_px}")
+    _dmc = OUT / f"dmcache_trio_{tag}.npz"
+    np.savez(_dmc, frames=np.array([str(n) for n in refs]),
+             dm=np.stack([r[4] for r in results]).astype(np.float32), sig=_dm_sig)
+    print(f"[{tag}] wrote dm-cache {_dmc.name} ({len(refs)} refs, sig={_dm_sig})", flush=True)
     P = np.concatenate(pts); Cc = np.concatenate(cols); Nn = np.concatenate(nrms)
     print(f"[{tag}] fused g{GEO_MASK} p{PHOTO} bnd{BOUND_REL} nrm{NORMAL_COS} "
           f"pc{photo_color}(N>={photo_color_n}) er{erode_px}: {len(P):,} raw pts "
