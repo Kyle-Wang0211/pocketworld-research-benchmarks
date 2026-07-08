@@ -1,3 +1,80 @@
+diff --git a/filter.py b/filter.py
+index 8b660ea..ede5380 100644
+--- a/filter.py
++++ b/filter.py
+@@ -11,7 +11,8 @@ def reproject_with_depth(
+     extrinsics_ref,
+     depth_src,
+     intrinsics_src,
+-    extrinsics_src
++    extrinsics_src,
++    return_ref_depth_src=False,
+ ):
+     """project the reference point cloud into the source view, then project back"""
+     width, height = depth_ref.shape[1], depth_ref.shape[0]
+@@ -26,6 +27,13 @@ def reproject_with_depth(
+     # coordniate transformation
+     xyz_src = np.matmul(np.matmul(extrinsics_src, np.linalg.inv(extrinsics_ref)),
+                         np.vstack((xyz_ref, np.ones_like(x_ref))))[:3]
++    # [2026-07-08] xyz_src[2] here IS the ref pixel's depth expressed in the src camera
++    # frame (how far the ref 3D point is from the src camera). It is already computed
++    # for the reprojection below, so callers needing the free-space cue can opt in via
++    # return_ref_depth_src instead of re-deriving the identical matmul chain. Captured
++    # now, before xyz_src is reassigned to the back-projected src points a few lines down.
++    ref_depth_src = (xyz_src[2].reshape([height, width]).astype(np.float32)
++                     if return_ref_depth_src else None)
+     K_xyz_src = np.matmul(intrinsics_src, xyz_src)
+     xy_src = K_xyz_src[:2] / K_xyz_src[2:3]
+     x_src = xy_src[0].reshape([height, width]).astype(np.float32)
+@@ -48,6 +56,8 @@ def reproject_with_depth(
+     x_reprojected = xy_reprojected[0].reshape([height, width]).astype(np.float32)
+     y_reprojected = xy_reprojected[1].reshape([height, width]).astype(np.float32)
+ 
++    if return_ref_depth_src:
++        return depth_reproj, x_reprojected, y_reprojected, x_src, y_src, ref_depth_src
+     return depth_reproj, x_reprojected, y_reprojected, x_src, y_src
+ 
+ 
+@@ -62,28 +72,36 @@ def check_geometric_consistency(
+     ref_depth_min,
+     geo_pixel_thres=1.0,
+     geo_depth_thres=0.01,
++    return_ref_depth_src=False,
+     ):
+     width, height = depth_ref.shape[1], depth_ref.shape[0]
+     x_ref, y_ref = np.meshgrid(np.arange(0, width), np.arange(0, height))
+-    depth_reproj, x2d_reproj, y2d_reproj, x2d_src, y2d_src = reproject_with_depth(
++    # When return_ref_depth_src is False (all existing callers) this is the exact
++    # original 5-tuple and the code below is byte-for-byte unchanged. When True we also
++    # surface reproject_with_depth's already-computed ref-depth-in-src map (6th element).
++    rep = reproject_with_depth(
+         depth_ref,
+         intrinsics_ref,
+         extrinsics_ref,
+         depth_src,
+         intrinsics_src,
+-        extrinsics_src
++        extrinsics_src,
++        return_ref_depth_src=return_ref_depth_src,
+     )
++    depth_reproj, x2d_reproj, y2d_reproj, x2d_src, y2d_src = rep[:5]
+ 
+     dist = np.sqrt((x2d_reproj - x_ref) ** 2 + (y2d_reproj - y_ref) ** 2)
+ 
+     depth_diff = np.abs(depth_reproj - depth_ref)
+     relative_depth_diff = depth_diff / depth_ref
+ 
+-    mask = np.logical_and(dist < geo_pixel_thres, 
++    mask = np.logical_and(dist < geo_pixel_thres,
+                             relative_depth_diff < geo_depth_thres)
+     mask2 = np.logical_and(depth_ref > ref_depth_min, depth_ref < ref_depth_max)
+     mask = np.logical_and(mask, mask2)
+     depth_reproj[~mask] = 0
++    if return_ref_depth_src:
++        return mask, depth_reproj, x2d_src, y2d_src, rep[5]
+     return mask, depth_reproj, x2d_src, y2d_src
+ 
+ 
 diff --git a/models/diffusion.py b/models/diffusion.py
 index ebe1e3e..1ac9c4c 100644
 --- a/models/diffusion.py
@@ -12,10 +89,10 @@ index ebe1e3e..1ac9c4c 100644
          self.scale_inv_depth = partial(disp_to_depth, min_depth=depth_min_, max_depth=depth_max_)
  
 diff --git a/models/module.py b/models/module.py
-index 9657c6d..05e42fe 100644
+index 9657c6d..1f6f9ce 100644
 --- a/models/module.py
 +++ b/models/module.py
-@@ -4,7 +4,18 @@ import torch.nn.functional as F
+@@ -4,7 +4,62 @@ import torch.nn.functional as F
  import time
  import sys
  sys.path.append("..")
@@ -32,29 +109,72 @@ index 9657c6d..05e42fe 100644
 +# => original behavior unchanged.
 +EXPORT_MODE = False
 +
++
++def _dilate_spatial(x, dim, s):
++    """Insert (s-1) zeros between elements along `dim` (L -> (L-1)*s+1) via a constant
++    dilation matrix: x[...,L] @ M[L, (L-1)*s+1] where M[i, i*s]=1. RANK-PRESERVING
++    (CoreML caps rank at 5, so stack/reshape tricks that add a dim fail on the rank-5
++    cost volume); matmul keeps rank. M is a trace-time constant. ConvTranspose3d helper."""
++    if s == 1:
++        return x
++    nd = x.dim()
++    perm = [i for i in range(nd) if i != dim] + [dim]   # bring `dim` to last (static list)
++    inv = [0] * nd
++    for i, p in enumerate(perm):
++        inv[p] = i
++    x = x.permute(*perm)
++    L = int(x.shape[-1]); Ls = (L - 1) * s + 1
++    # selector M[i,j]=1 iff j==i*s, built by broadcast-eq (a pure constant; NO index_put
++    # scatter -- the scatter folded in isolation but coremltools left it dynamic and
++    # mis-converted it inside the full cascade).
++    rows = torch.arange(L, device=x.device).unsqueeze(1)
++    cols = torch.arange(Ls, device=x.device).unsqueeze(0)
++    M = (cols == rows * s).to(x.dtype)                   # [L, Ls] constant
++    x = torch.matmul(x, M)                               # [..., L] -> [..., Ls], rank kept
++    return x.permute(*inv)
++
++
++def _convT3d_export(x, weight, bias, stride, padding, output_padding):
++    """Float-exact ConvTranspose3d WITHOUT the output_padding op (coremltools 9 only
++    supports output_padding for 1D/2D). Textbook identity: zero-dilate the input by
++    stride, apply asymmetric zero-pad (leading k-1-p, trailing k-1-p+output_padding),
++    then a stride-1 conv3d with the in/out-swapped, spatially-flipped weight. Matches
++    nn.ConvTranspose3d to ~1e-6. `weight` is [Cin, Cout, kD, kH, kW]."""
++    s = stride if isinstance(stride, tuple) else (stride,) * 3
++    p = padding if isinstance(padding, tuple) else (padding,) * 3
++    op = output_padding if isinstance(output_padding, tuple) else (output_padding,) * 3
++    k = weight.shape[2:]
++    for i, dim in enumerate((2, 3, 4)):
++        x = _dilate_spatial(x, dim, s[i])
++    pad = (k[2] - 1 - p[2], k[2] - 1 - p[2] + op[2],
++           k[1] - 1 - p[1], k[1] - 1 - p[1] + op[1],
++           k[0] - 1 - p[0], k[0] - 1 - p[0] + op[0])
++    x = F.pad(x, pad)
++    wc = weight.permute(1, 0, 2, 3, 4).flip(2, 3, 4)
++    return F.conv3d(x, wc, bias, stride=1, padding=0)
++
  
  def init_bn(module):
      if module.weight is not None:
-@@ -136,7 +147,17 @@ class Deconv3d(nn.Module):
+@@ -136,7 +191,16 @@ class Deconv3d(nn.Module):
          # self.init_weights(init_method)
  
      def forward(self, x):
 -        x = self.conv(x)
 +        op = getattr(self.conv, "output_padding", (0, 0, 0))
 +        if EXPORT_MODE and any(o > 0 for o in op):
-+            # CoreML has no output_padding for ConvTranspose3D. output_padding only
-+            # selects a larger output size; reproduce as output_padding=0 + trailing
-+            # pad (exact except a 1-voxel border -> negligible).
-+            x = F.conv_transpose3d(x, self.conv.weight, self.conv.bias,
-+                                   stride=self.conv.stride, padding=self.conv.padding,
-+                                   output_padding=0)
-+            x = F.pad(x, (0, op[2], 0, op[1], 0, op[0]))
++            # CoreML has no output_padding for ConvTranspose3D. Reformulate exactly via
++            # zero-dilation + flipped-kernel conv3d (float-exact). The old
++            # output_padding=0 + trailing zero-pad version wrongly ZEROED the computed
++            # trailing border -> ~8% depth deviation concentrated at edges (p90 42%).
++            x = _convT3d_export(x, self.conv.weight, self.conv.bias,
++                                self.conv.stride, self.conv.padding, op)
 +        else:
 +            x = self.conv(x)
          if self.bn is not None:
              x = self.bn(x)
          if self.relu:
-@@ -178,6 +199,35 @@ class SepConvGRU(nn.Module):
+@@ -178,6 +242,35 @@ class SepConvGRU(nn.Module):
  
          return h
  
@@ -90,7 +210,7 @@ index 9657c6d..05e42fe 100644
  def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
      """get warped source image features"""
      B = src_fea.shape[0]
-@@ -185,7 +235,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+@@ -185,7 +278,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
      height, width = src_fea.shape[2], src_fea.shape[3]
  
      with torch.no_grad():
@@ -99,7 +219,7 @@ index 9657c6d..05e42fe 100644
          rot = proj[:, :3, :3]  # [B,3,3]
          trans = proj[:, :3, 3:4]  # [B,3,1]
  
-@@ -196,6 +246,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+@@ -196,6 +289,7 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
          y, x = y.contiguous(), x.contiguous()
  
          y, x = y.view(height0 * width0), x.view(height0 * width0)
@@ -107,7 +227,7 @@ index 9657c6d..05e42fe 100644
          xyz = torch.stack((x, y, torch.ones_like(x)))  # [3, H*W]
          xyz = torch.unsqueeze(xyz, 0).repeat(B, 1, 1)  # [B, 3, H*W]
          rot_xyz = torch.matmul(rot, xyz)  # [B, 3, H*W]
-@@ -237,6 +288,14 @@ def depth_to_disp(depth, min_depth, max_depth):
+@@ -237,6 +331,14 @@ def depth_to_disp(depth, min_depth, max_depth):
  def upsample_depth(depth, mask, ratio = 8):
      """upsample depth map using convex combination"""
      N, _, H, W = depth.shape
@@ -122,7 +242,7 @@ index 9657c6d..05e42fe 100644
      mask = mask.view(N, 1, 9, ratio, ratio, H, W)
      mask = torch.softmax(mask, dim=2)
  
-@@ -526,9 +585,16 @@ class InitialCost(nn.Module):
+@@ -526,9 +628,16 @@ class InitialCost(nn.Module):
              warped_src = differentiable_warping(src_fea, src_proj_new,
                                                  ref_proj_new, depth_values)
  
@@ -142,7 +262,7 @@ index 9657c6d..05e42fe 100644
  
              view_weight = self.pixel_view_weight(cor_feat)
  
-@@ -566,9 +632,14 @@ class InitialCost(nn.Module):
+@@ -566,9 +675,14 @@ class InitialCost(nn.Module):
                  pad=(0, 0, 0, 0, 1, 2)
              ), (4, 1, 1), stride=1, padding=0).squeeze(1)
  
@@ -160,7 +280,7 @@ index 9657c6d..05e42fe 100644
  
          return mask, normalized_depth, depth, view_weights.detach(), photometric_confidence
  
-@@ -641,9 +712,16 @@ class GetCost(nn.Module):
+@@ -641,9 +755,16 @@ class GetCost(nn.Module):
              warped_src = differentiable_warping(src_fea, src_proj_new,
                                                  ref_proj_new, depth_range_samples)
  

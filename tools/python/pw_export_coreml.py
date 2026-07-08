@@ -13,7 +13,8 @@ import pw_diffmvs_run as R
 H, W, N, D = 512, 896, 5, 384
 FRAMES = int(sys.argv[1]) if len(sys.argv) > 1 else 414
 METHOD = sys.argv[2] if len(sys.argv) > 2 else "diffmvs"
-OUT_PKG = Path(__file__).resolve().parents[1] / "ios_diffmvs_bench/DiffMVSBench/DiffMVS.mlpackage"
+OUT_PKG = Path(os.environ.get("AETHER_COREML_OUT", str(
+    Path(__file__).resolve().parents[1] / "ios_diffmvs_bench/DiffMVSBench/DiffMVS.mlpackage")))
 
 
 def real_inputs():
@@ -103,8 +104,10 @@ def main():
     ins = (*imgs, proj["stage1"], proj["stage2"], proj["stage3"], proj["stage4"], dv)
     with torch.no_grad():
         tr = torch.jit.trace(w, ins, check_trace=False)
+    _prec = ct.precision.FLOAT32 if os.environ.get("AETHER_COREML_FP32") else ct.precision.FLOAT16
     ml = ct.convert(tr, inputs=[ct.TensorType(name=n, shape=x.shape) for n, x in zip(names, ins)],
-                    minimum_deployment_target=ct.target.iOS17, compute_units=ct.ComputeUnit.ALL)
+                    minimum_deployment_target=ct.target.iOS17, compute_units=ct.ComputeUnit.ALL,
+                    compute_precision=_prec)
     shutil.rmtree(OUT_PKG, ignore_errors=True); OUT_PKG.parent.mkdir(parents=True, exist_ok=True)
     ml.save(str(OUT_PKG))
     sz = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT_PKG) for f in fs) / 1e6
