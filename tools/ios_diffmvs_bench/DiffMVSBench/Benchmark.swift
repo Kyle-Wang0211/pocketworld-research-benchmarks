@@ -17,6 +17,72 @@ struct BenchResult {
     var baselineMB = 0.0
     var peakMB = 0.0
     var inputSummary = ""
+    // Device-normalized process CPU% DURING the timed inference loop (busy% of the
+    // whole device's logical cores). 100 - meanCpuNorm ≈ CPU headroom left for a
+    // concurrent CPU fusion stage — the on-device GPU-CPU-overlap headroom signal.
+    var cpuMeanNorm = 0.0
+    var cpuPeakNorm = 0.0
+    var cpuSamples = 0
+    var logicalCores = 0
+}
+
+/// Samples this process's CPU usage every 50ms on a background timer (verbatim
+/// pattern from Da3DepthPlugin.CpuSampler). One-core% = 100 per fully-busy core;
+/// device-normalized% divides by logical core count. TH_FLAGS_IDLE threads excluded.
+fileprivate final class CpuMonitor {
+    private let queue = DispatchQueue(label: "pocketworld.diffmvs.cpu_sampler")
+    private var timer: DispatchSourceTimer?
+    private var samples: [Double] = []
+
+    static func processCpuOneCorePercent() -> Double {
+        var threadList: thread_act_array_t?
+        var threadCount = mach_msg_type_number_t(0)
+        guard task_threads(mach_task_self_, &threadList, &threadCount) == KERN_SUCCESS,
+              let threadList else { return 0.0 }
+        defer {
+            vm_deallocate(mach_task_self_, vm_address_t(UInt(bitPattern: threadList)),
+                          vm_size_t(Int(threadCount) * MemoryLayout<thread_t>.stride))
+        }
+        var total = 0.0
+        for i in 0..<Int(threadCount) {
+            var info = thread_basic_info()
+            var count = mach_msg_type_number_t(THREAD_INFO_MAX)
+            let ok = withUnsafeMutablePointer(to: &info) { p in
+                p.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                    thread_info(threadList[i], thread_flavor_t(THREAD_BASIC_INFO), $0, &count)
+                }
+            }
+            guard ok == KERN_SUCCESS else { continue }
+            if (info.flags & TH_FLAGS_IDLE) == 0 {
+                total += Double(info.cpu_usage) / Double(TH_USAGE_SCALE) * 100.0
+            }
+        }
+        return total
+    }
+
+    func start() {
+        queue.sync {
+            samples.removeAll(keepingCapacity: true)
+            let t = DispatchSource.makeTimerSource(queue: queue)
+            t.schedule(deadline: .now(), repeating: .milliseconds(50))
+            t.setEventHandler { [weak self] in
+                self?.samples.append(CpuMonitor.processCpuOneCorePercent())
+            }
+            self.timer = t; t.resume()
+        }
+    }
+
+    /// Returns (meanNorm, peakNorm, count, cores) — norm = device-normalized busy%.
+    func stop() -> (Double, Double, Int, Int) {
+        queue.sync {
+            timer?.cancel(); timer = nil
+            let cores = max(1, ProcessInfo.processInfo.processorCount)
+            guard !samples.isEmpty else { return (0, 0, 0, cores) }
+            let peak = samples.max() ?? 0
+            let mean = samples.reduce(0, +) / Double(samples.count)
+            return (mean / Double(cores), peak / Double(cores), samples.count, cores)
+        }
+    }
 }
 
 enum Benchmark {
@@ -102,6 +168,7 @@ enum Benchmark {
 
             var times: [Double] = []
             var peak = physFootprintMB()
+            let mon = CpuMonitor(); mon.start()          // sample CPU busy% during inference
             let t0 = CFAbsoluteTimeGetCurrent()
             for _ in 0..<frames {
                 let s = CFAbsoluteTimeGetCurrent()
@@ -110,6 +177,9 @@ enum Benchmark {
                 peak = max(peak, physFootprintMB())
             }
             r.totalSec = CFAbsoluteTimeGetCurrent() - t0
+            let (cpuMean, cpuPeak, cpuN, cores) = mon.stop()
+            r.cpuMeanNorm = cpuMean; r.cpuPeakNorm = cpuPeak
+            r.cpuSamples = cpuN; r.logicalCores = cores
             times.sort()
             r.minMs = times.first ?? 0
             r.medianMs = times[times.count / 2]
