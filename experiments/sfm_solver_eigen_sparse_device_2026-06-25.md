@@ -88,3 +88,57 @@ retriangulation+long-tracks, more refinements) as toggleable options. Mac ablati
 ## Open / next (确定能赢)
 - Re-vendor latest COLMAP (analytical Jacobian / single pose block / deterministic seed) — free CPU speedup.
 - Front-end DSP-SIFT extraction (5.4s/frame = real heat source) speed.
+
+## 2026-07-12 UPDATE — host GLOMAP bench GP root cause: DENSE_SCHUR = 57 GB reduced matrix → SIGKILL; fix = SPARSE default
+
+Disambiguates the earlier "DIED at global positioning / OOM-vs-crash not 100% disambiguated"
+line for the **host full-chain bench** (`AETHER_HOST_GLOMAP_BENCH=ON` → `glomap_bench_full_exe`,
+homebrew ceres). Small DBs (db_50 / db_200 / cap47_live) were SIGKILLed (exit 137) at "Solving
+the global positioner problem"; db_300 / db.db-396 / sfm_dsp-414 ran. Not a memory-tier accident.
+
+**Root cause (measured, `global_positioning.cc` instrumentation):** GP routed
+`num_images <= 200 → DENSE_SCHUR`. That key was copied verbatim from the finalize-BA router
+(`bundle_adjustment.cc`), where the DENSE decision above is correct because BA eliminates the
+POINTS (e-block = points) so the reduced Schur matrix = cameras = num_images (object-centric →
+dense but small). **GP's elimination group 0 is the per-observation SCALES, not points** — so
+ALL points + camera positions stay in the reduced system. DENSE_SCHUR then materialises an
+explicit `reduced_dim × reduced_dim` matrix where `reduced_dim = 3·(points + frames)`:
+
+| DB | images | scales (e-block) | reduced points | reduced_dim | DENSE reduced matrix |
+|---|---|---|---|---|---|
+| db_50  | 50  | 158,838   | 29,233  | 87,849  | **57.5 GB** |
+| db_200 | 200 | 778,634   | 125,254 | 376,362 | **1,055 GB** |
+| db_300 | 300 | 1,159,437 | 172,219 | 517,557 | 1,996 GB |
+| db.db-396 | 396 | 1,765,409 | 223,863 | 672,777 | 3,372 GB |
+
+macOS SIGKILLs the tens-of-GB VM allocation. Big DBs (>200) only escaped because they already
+fell through to the non-dense branch — the num_images key never described GP's actual cost.
+
+**Fix (`global_positioning.cc`, host-bench-only file):** route DENSE_SCHUR on the ACTUAL
+reduced dimension (`reduced_dim ≤ 4096` → 128 MB ceiling; essentially never fires for real GP),
+and default the non-dense branch to **SPARSE_SCHUR + EIGEN_SPARSE** — the upstream GLOMAP GP
+solver family: a DIRECT sparse factorization, deterministic and exact, that never builds the
+dense reduced matrix. This REPLACES the former `ITERATIVE_SCHUR` default, which existed only as
+a **device-jetsam salvage** — irrelevant now that `glomap-src` is host-bench-only (shipping iOS
+lib `glomap_core` excludes `GLOMAP_SRC`; only `glomap_full`/bench compiles this file, so **iOS
+production is untouched**). ITERATIVE's cost is real on host: its parallel-CG is
+non-deterministic and on the weakly-triangulated db.db-396 it **metastably COLLAPSED to 3
+registered images on one run while a sibling run kept all 396** (same solver, bit-identical GP
+initial cost — pure run-to-run coin-flip in the downstream track filter). ITERATIVE stays
+available behind `AETHER_GP_ITERATIVE=1` (with `AETHER_SPSE`); `AETHER_DENSE_MAX` force-override
+and `AETHER_DENSE_LAPACK` hooks preserved; new `AETHER_GP_DENSE_MAXDIM` tunes the dense ceiling.
+
+**5-DB verification (Fix B, SPARSE default, host homebrew ceres) — all deterministic, RSS ≪ OOM:**
+| DB | before | after: registered / points / reproj_ba | peak RSS |
+|---|---|---|---|
+| db_50  | SIGKILL | 50 / 22,155 / 1.0216 | 0.48 GB |
+| db_200 | SIGKILL | 200 / 103,538 / 0.9761 | 2.27 GB |
+| cap47_live | SIGKILL | 97 / 36,482 / 1.3312 | 0.64 GB |
+| db_300 | ITERATIVE (299 / 1.0367) | 299 / 144,455 / **1.0366** (match) | 3.13 GB |
+| db.db-396 | ITERATIVE coin-flip (396 **or** collapse-to-3) | **396** / 197,552 / 1.2002 (stable) | 3.68 GB |
+| sfm_dsp-414 | ITERATIVE | 414 / 179,532 / 1.0941 | 3.37 GB |
+
+reproj_ba matches the healthy ITERATIVE runs to ≤0.05%; SPARSE additionally removes the collapse
+risk. Note this is orthogonal to the finalize-BA DENSE_SCHUR decision above (that path is correct:
+BA eliminates points, reduced = cameras = small dense). The bug was only the GP router reusing
+BA's `num_images` key against GP's scale-in-e-block structure.
