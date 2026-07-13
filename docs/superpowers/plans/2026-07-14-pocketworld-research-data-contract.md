@@ -225,7 +225,7 @@ Read exact values from `openspec/changes/freeze-pocketworld-research-contract/ev
 
 - [ ] **Step 2: Clone DB/WAL as one persistent batch and hash sources again**
 
-Do not open the scratch source through SQLite. If either persistent source changes between checks, delete only the new destination and stop. Open only the cloned pair (or a derived SQLite backup) for integrity checks. Never call the provisional pair a consistent snapshot, and never include SHM in replay-fixture identity.
+Do not open the scratch source through SQLite. If either persistent source changes between checks, delete only the new destination and stop. Open only a clone or derived SQLite backup in explicit read-only/query-only mode for integrity checks, then rehash its DB/WAL bytes after the query and record any derived logical-backup hash separately. Reject any checkpoint or mutation. Never call the provisional pair a consistent snapshot, and never include SHM in replay-fixture identity.
 
 - [ ] **Step 3: Preserve capture-archive metadata separately and generate exactly 105 unavailable image basenames**
 
