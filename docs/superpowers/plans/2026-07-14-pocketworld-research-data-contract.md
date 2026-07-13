@@ -114,7 +114,7 @@ Run `uv run pytest tests/test_manifest.py -q` after every red/green pair.
 
 - [ ] **Step 6: Add CLI commands and verify tooling**
 
-Expose `build ROOT --collection ID --license-status VALUE --platform-qualification VALUE --evidence-role VALUE [--lineage-contains-noncommercial] --output FILE`, `verify ROOT MANIFEST`, `verify-contract CONTRACT`, and `gate-verdict CONTRACT`. Run `uv run ruff format --check src tests`, `uv run ruff check src tests`, `uv run pytest -q`, and `uv lock --check --offline`.
+Expose `build ROOT --collection ID --license-status VALUE --platform-qualification VALUE --evidence-role VALUE [--lineage-contains-noncommercial] --output FILE`, `verify ROOT MANIFEST`, and `gate-verdict CONTRACT`. `verify-contract` is deliberately deferred until Task 2 defines the contract schema and semantics; Task 1 must not imply structural contract validation that it cannot perform. Run `uv run ruff format --check src tests`, `uv run ruff check src tests`, `uv run pytest -q`, and `uv lock --check --offline`.
 
 - [ ] **Step 7: Commit exact tool paths**
 
@@ -136,7 +136,7 @@ Require `schema_version`, `contract_id`, `status`, `git`, `upstream`, `collectio
 
 - [ ] **Step 2: Run RED, pin NumPy 2.4.2, then implement structural and NPZ validation**
 
-Run `uv add numpy==2.4.2`. Allowed status values are `preserved_incomplete_feed`, `provisional_not_verdict_eligible`, `verdict_eligible`, and `invalid`. Validate separate `license_status`, `platform_qualification`, `evidence_role`, and `lineage_contains_noncommercial` fields; never combine them into one eligibility enum. NPZ inspection uses `numpy.load(..., allow_pickle=False)` and rejects object dtype.
+Run `uv add numpy==2.4.2`. Allowed status values are `preserved_incomplete_feed`, `provisional_not_verdict_eligible`, `verdict_eligible`, and `invalid`. Validate separate `license_status`, `platform_qualification`, `evidence_role`, and `lineage_contains_noncommercial` fields; never combine them into one eligibility enum. NPZ inspection uses `numpy.load(..., allow_pickle=False)` and rejects object dtype. Only after this validation exists, expose `verify-contract CONTRACT` and test both accepted and rejected schema instances.
 
 - [ ] **Step 3: Add skeletons without fabricating missing facts**
 
