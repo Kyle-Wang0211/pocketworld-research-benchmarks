@@ -4,6 +4,7 @@ import importlib
 import io
 import os
 import stat
+import struct
 import zipfile
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -54,6 +55,42 @@ def _npy_header_bytes(*, shape: tuple[int, ...], dtype: np.dtype[object]) -> byt
 def _descriptor_identity(descriptor: int) -> tuple[int, int]:
     descriptor_stat = os.fstat(descriptor)
     return descriptor_stat.st_dev, descriptor_stat.st_ino
+
+
+def _classic_eocd_offset(archive: Path) -> int:
+    offset = archive.read_bytes().rfind(b"PK\x05\x06")
+    assert offset >= 0
+    return offset
+
+
+def _patch_eocd_u16(archive: Path, field_offset: int, value: int) -> None:
+    content = bytearray(archive.read_bytes())
+    struct.pack_into("<H", content, _classic_eocd_offset(archive) + field_offset, value)
+    archive.write_bytes(content)
+
+
+def _patch_eocd_u32(archive: Path, field_offset: int, value: int) -> None:
+    content = bytearray(archive.read_bytes())
+    struct.pack_into("<L", content, _classic_eocd_offset(archive) + field_offset, value)
+    archive.write_bytes(content)
+
+
+def _patch_first_central_u32(archive: Path, field_offset: int, value: int) -> None:
+    content = bytearray(archive.read_bytes())
+    eocd_offset = _classic_eocd_offset(archive)
+    central_offset = struct.unpack_from("<L", content, eocd_offset + 16)[0]
+    struct.pack_into("<L", content, central_offset + field_offset, value)
+    archive.write_bytes(content)
+
+
+def _forbid_zipfile_construction(
+    inspector: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def forbidden_zipfile(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("ZipFile must not be constructed before the raw EOCD gate passes")
+
+    monkeypatch.setattr(inspector.zipfile, "ZipFile", forbidden_zipfile)
 
 
 def test_inspect_npz_accepts_numeric_arrays_with_locked_numpy(tmp_path: Path) -> None:
@@ -189,6 +226,174 @@ def test_inspect_npz_rejects_archive_size_before_zip_parsing(
 
     with pytest.raises(inspector.ContractError, match=r"archive|limit|size"):
         inspector.inspect_npz(archive, max_archive_bytes=archive.stat().st_size - 1)
+
+
+def test_inspect_npz_rejects_declared_member_count_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "declared-member-count.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    _patch_eocd_u16(archive, 8, 3)
+    _patch_eocd_u16(archive, 10, 3)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"member|count|limit"):
+        inspector.inspect_npz(archive, max_members=2)
+
+
+def test_inspect_npz_rejects_declared_central_bytes_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "declared-central-size.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    _patch_eocd_u32(archive, 12, 257)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"central|metadata|limit"):
+        inspector.inspect_npz(archive, max_total_metadata_bytes=256)
+
+
+def test_inspect_npz_rejects_forged_declared_count_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "forged-count.npz"
+    np.savez(
+        archive,
+        first=np.arange(3, dtype=np.int32),
+        second=np.arange(4, dtype=np.int32),
+    )
+    _patch_eocd_u16(archive, 8, 1)
+    _patch_eocd_u16(archive, 10, 1)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"central|count|size|entry"):
+        inspector.inspect_npz(archive)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (lambda content, _offset: content[:-1], r"EOCD|truncat|corrupt"),
+        (lambda content, _offset: content + b"trailing-junk", r"EOCD|trailing|comment"),
+    ],
+)
+def test_inspect_npz_rejects_invalid_eocd_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mutation: object,
+    message: str,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "invalid-eocd.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    content = archive.read_bytes()
+    offset = _classic_eocd_offset(archive)
+    assert callable(mutation)
+    archive.write_bytes(mutation(content, offset))
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=message):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_ambiguous_eocd_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "ambiguous-eocd.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    content = archive.read_bytes()
+    offset = _classic_eocd_offset(archive)
+    fake_eocd = bytearray(content[offset:])
+    struct.pack_into("<H", fake_eocd, 20, len(content) - offset)
+    archive.write_bytes(content[:offset] + fake_eocd + content[offset:])
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"EOCD|unique|ambiguous"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_multidisk_eocd_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "multidisk.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    _patch_eocd_u16(archive, 4, 1)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"single.disk|multi.disk|disk"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_forged_central_boundary_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "central-boundary.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    content = archive.read_bytes()
+    offset = _classic_eocd_offset(archive)
+    central_offset = struct.unpack_from("<L", content, offset + 16)[0]
+    _patch_eocd_u32(archive, 16, central_offset + 1)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"central|offset|bound|size"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_zip64_sentinel_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "zip64-sentinel.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    _patch_eocd_u32(archive, 12, 0xFFFFFFFF)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"ZIP64|zip64"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_central_zip64_sentinel_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "central-zip64-sentinel.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    _patch_first_central_u32(archive, 20, 0xFFFFFFFF)
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"ZIP64|zip64"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_rejects_zip64_locator_before_zipfile_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "zip64-locator.npz"
+    np.savez(archive, values=np.arange(3, dtype=np.int32))
+    content = archive.read_bytes()
+    offset = _classic_eocd_offset(archive)
+    locator = struct.pack("<4sLQL", b"PK\x06\x07", 0, 0, 1)
+    archive.write_bytes(content[:offset] + locator + content[offset:])
+    _forbid_zipfile_construction(inspector, monkeypatch)
+
+    with pytest.raises(inspector.ContractError, match=r"ZIP64|zip64|locator"):
+        inspector.inspect_npz(archive)
 
 
 def test_inspect_npz_rejects_member_count_before_member_headers(

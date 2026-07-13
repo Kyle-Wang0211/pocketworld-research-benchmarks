@@ -4,6 +4,7 @@ import hashlib
 import math
 import os
 import stat
+import struct
 import tempfile
 import zipfile
 from dataclasses import dataclass
@@ -25,8 +26,17 @@ _COPY_CHUNK_BYTES = 4 * 1024 * 1024
 _MAX_NPY_HEADER_BYTES = 10_000
 _MAX_NPY_DIMENSIONS = 64
 _SNAPSHOT_MODE = stat.S_IRUSR | stat.S_IWUSR
+_ZIP_CLASSIC_EOCD = struct.Struct("<4s4H2LH")
+_ZIP_CENTRAL_DIRECTORY_HEADER = struct.Struct("<4s4B4HL2L5H2L")
 _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES = 46
+_ZIP_CENTRAL_DIRECTORY_SIGNATURE = b"PK\x01\x02"
+_ZIP_CLASSIC_EOCD_SIGNATURE = b"PK\x05\x06"
 _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES = 22
+_ZIP_MAX_COMMENT_BYTES = 0xFFFF
+_ZIP64_LOCATOR_BYTES = 20
+_ZIP64_LOCATOR_SIGNATURE = b"PK\x06\x07"
+_ZIP64_UINT16_SENTINEL = 0xFFFF
+_ZIP64_UINT32_SENTINEL = 0xFFFFFFFF
 _ZIP_CREATE_SYSTEM_DOS = 0
 _ZIP_CREATE_SYSTEM_UNIX = 3
 _ZIP_DOS_DIRECTORY_BIT = 0x10
@@ -50,6 +60,19 @@ class _Member:
     shape: tuple[int, ...]
     header_bytes: int
     array_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class _ClassicZipDirectory:
+    entry_count: int
+    central_size: int
+    central_offset: int
+    eocd_offset: int
+    comment: bytes
+
+    @property
+    def metadata_bytes(self) -> int:
+        return self.central_size + _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES + len(self.comment)
 
 
 def inspect_npz(  # noqa: PLR0913 - each independent resource budget is caller-controlled.
@@ -317,28 +340,200 @@ def _preflight_members(
     *,
     limits: _Limits,
 ) -> list[_Member]:
+    directory = _preflight_classic_directory(stream, limits)
     stream.seek(0)
     try:
         archive = zipfile.ZipFile(stream)
     except zipfile.BadZipFile as exc:
         raise ContractError("NPZ archive is corrupt or is not a ZIP file") from exc
     with archive:
-        entries = _bounded_archive_entries(archive, limits)
+        entries = _bounded_archive_entries(archive, limits, directory)
         validated_entries = _validate_member_entries(entries, limits)
         members = _preflight_validated_members(archive, validated_entries, limits)
     return sorted(members, key=lambda member: member.array_name)
 
 
+def _preflight_classic_directory(
+    stream: BinaryIO,
+    limits: _Limits,
+) -> _ClassicZipDirectory:
+    stream.seek(0, os.SEEK_END)
+    archive_size = stream.tell()
+    if archive_size < _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES:
+        raise ContractError("NPZ archive is corrupt: truncated classic EOCD")
+
+    tail_size = min(
+        archive_size,
+        _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES + _ZIP_MAX_COMMENT_BYTES,
+    )
+    tail_start = archive_size - tail_size
+    stream.seek(tail_start)
+    tail = _read_exact(stream, tail_size, "NPZ classic EOCD search window")
+    candidate_offsets = _terminal_eocd_offsets(tail)
+    if len(candidate_offsets) != 1:
+        raise ContractError("NPZ archive must contain one unique terminal classic EOCD")
+
+    relative_offset = candidate_offsets[0]
+    fields = _ZIP_CLASSIC_EOCD.unpack_from(tail, relative_offset)
+    directory = _validate_classic_eocd_fields(
+        stream,
+        fields=fields,
+        eocd_offset=tail_start + relative_offset,
+        comment=tail[relative_offset + _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES :],
+        limits=limits,
+    )
+    _scan_classic_central_directory(stream, directory)
+    return directory
+
+
+def _terminal_eocd_offsets(tail: bytes) -> list[int]:
+    candidates: list[int] = []
+    search_offset = 0
+    while True:
+        offset = tail.find(_ZIP_CLASSIC_EOCD_SIGNATURE, search_offset)
+        if offset < 0:
+            return candidates
+        fixed_end = offset + _ZIP_END_OF_CENTRAL_DIRECTORY_BYTES
+        if fixed_end <= len(tail):
+            comment_length = struct.unpack_from("<H", tail, fixed_end - 2)[0]
+            if fixed_end + comment_length == len(tail):
+                candidates.append(offset)
+        search_offset = offset + 1
+
+
+def _validate_classic_eocd_fields(
+    stream: BinaryIO,
+    *,
+    fields: tuple[bytes, int, int, int, int, int, int, int],
+    eocd_offset: int,
+    comment: bytes,
+    limits: _Limits,
+) -> _ClassicZipDirectory:
+    (
+        signature,
+        disk_number,
+        central_disk,
+        disk_entries,
+        total_entries,
+        central_size,
+        central_offset,
+        comment_length,
+    ) = fields
+    if signature != _ZIP_CLASSIC_EOCD_SIGNATURE or comment_length != len(comment):
+        raise ContractError("NPZ archive has a forged classic EOCD")
+    if _has_zip64_locator(stream, eocd_offset) or _uses_zip64_eocd_sentinel(fields):
+        raise ContractError("ZIP64 EOCD records are forbidden for bounded NPZ inspection")
+    if disk_number != 0 or central_disk != 0 or disk_entries != total_entries:
+        raise ContractError("NPZ archive must use one classic ZIP disk")
+    if total_entries > limits.members:
+        raise ContractError("NPZ archive exceeds the configured member count limit")
+    if total_entries == 0:
+        raise ContractError("NPZ archive contains no arrays")
+
+    directory = _ClassicZipDirectory(
+        entry_count=total_entries,
+        central_size=central_size,
+        central_offset=central_offset,
+        eocd_offset=eocd_offset,
+        comment=comment,
+    )
+    if directory.metadata_bytes > limits.total_metadata_bytes:
+        raise ContractError("NPZ central metadata exceeds the configured limit")
+    if central_offset + central_size != eocd_offset:
+        raise ContractError("NPZ central directory offset and size do not meet the EOCD boundary")
+    minimum_central_bytes = total_entries * _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES
+    if minimum_central_bytes > central_size:
+        raise ContractError("NPZ central directory is too small for its declared entry count")
+    return directory
+
+
+def _has_zip64_locator(stream: BinaryIO, eocd_offset: int) -> bool:
+    if eocd_offset < _ZIP64_LOCATOR_BYTES:
+        return False
+    stream.seek(eocd_offset - _ZIP64_LOCATOR_BYTES)
+    return stream.read(len(_ZIP64_LOCATOR_SIGNATURE)) == _ZIP64_LOCATOR_SIGNATURE
+
+
+def _uses_zip64_eocd_sentinel(
+    fields: tuple[bytes, int, int, int, int, int, int, int],
+) -> bool:
+    (
+        _signature,
+        disk_number,
+        central_disk,
+        disk_entries,
+        total_entries,
+        central_size,
+        central_offset,
+        _comment_length,
+    ) = fields
+    return _ZIP64_UINT16_SENTINEL in {
+        disk_number,
+        central_disk,
+        disk_entries,
+        total_entries,
+    } or _ZIP64_UINT32_SENTINEL in {central_size, central_offset}
+
+
+def _scan_classic_central_directory(
+    stream: BinaryIO,
+    directory: _ClassicZipDirectory,
+) -> None:
+    stream.seek(directory.central_offset)
+    consumed_bytes = 0
+    for _index in range(directory.entry_count):
+        if consumed_bytes + _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES > directory.central_size:
+            raise ContractError("NPZ central directory is truncated before an entry header")
+        fixed_header = _read_exact(
+            stream,
+            _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES,
+            "NPZ central directory header",
+        )
+        fields = _ZIP_CENTRAL_DIRECTORY_HEADER.unpack(fixed_header)
+        if fields[0] != _ZIP_CENTRAL_DIRECTORY_SIGNATURE:
+            raise ContractError("NPZ central directory has an invalid entry signature")
+        filename_bytes, extra_bytes, comment_bytes = fields[12:15]
+        disk_number = fields[15]
+        local_header_offset = fields[18]
+        if (
+            _ZIP64_UINT32_SENTINEL in {fields[10], fields[11], local_header_offset}
+            or disk_number == _ZIP64_UINT16_SENTINEL
+        ):
+            raise ContractError("ZIP64 central directory entries are forbidden")
+        if disk_number != 0:
+            raise ContractError("NPZ central directory entry must use the single archive disk")
+        if local_header_offset >= directory.central_offset:
+            raise ContractError("NPZ central directory entry has an invalid local-header offset")
+        variable_bytes = filename_bytes + extra_bytes + comment_bytes
+        entry_bytes = _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES + variable_bytes
+        consumed_bytes += entry_bytes
+        if consumed_bytes > directory.central_size:
+            raise ContractError("NPZ central directory entry exceeds its declared size")
+        stream.seek(variable_bytes, os.SEEK_CUR)
+    if consumed_bytes != directory.central_size or stream.tell() != directory.eocd_offset:
+        raise ContractError("NPZ central directory count and size declarations disagree")
+
+
+def _read_exact(stream: BinaryIO, byte_count: int, context: str) -> bytes:
+    data = stream.read(byte_count)
+    if len(data) != byte_count:
+        raise ContractError(f"{context} is truncated")
+    return data
+
+
 def _bounded_archive_entries(
     archive: zipfile.ZipFile,
     limits: _Limits,
+    directory: _ClassicZipDirectory,
 ) -> list[zipfile.ZipInfo]:
     entries = archive.infolist()
-    if len(entries) > limits.members:
-        raise ContractError("NPZ archive exceeds the configured member count limit")
+    if len(entries) != directory.entry_count or len(entries) > limits.members:
+        raise ContractError("NPZ central directory entry count changed after raw preflight")
+    if archive.start_dir != directory.central_offset or archive.comment != directory.comment:
+        raise ContractError("NPZ central directory identity changed after raw preflight")
     metadata_bytes = _central_directory_metadata_bytes(archive, entries)
-    if metadata_bytes > limits.total_metadata_bytes:
-        raise ContractError("NPZ central metadata exceeds the configured limit")
+    if metadata_bytes != directory.metadata_bytes or metadata_bytes > limits.total_metadata_bytes:
+        raise ContractError("NPZ central metadata changed after raw preflight")
     archive_names = [entry.filename for entry in entries]
     if len(archive_names) != len(set(archive_names)):
         raise ContractError("NPZ archive contains duplicate member names")
