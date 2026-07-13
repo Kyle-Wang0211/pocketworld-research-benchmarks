@@ -15,6 +15,9 @@ uv run pocketworld-contract verify ROOT MANIFEST
 uv run pocketworld-contract gate-verdict CONTRACT
 ```
 
+`FILE` must resolve outside `ROOT`; otherwise the generated manifest would
+immediately become an unverified extra collection file.
+
 Collection manifests use canonical UTF-8 JSON and list every regular file by
 safe POSIX-relative path, byte count, SHA-256 digest, deterministic role, and
 caller-supplied license status, platform qualification, evidence role, and

@@ -192,6 +192,26 @@ def test_verify_collection_rejects_duplicate_manifest_path(tmp_path: Path) -> No
         manifest.verify_collection(root, collection)
 
 
+def test_verify_collection_rejects_noncanonical_asset_order(tmp_path: Path) -> None:
+    manifest = _manifest_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "a.bin").write_bytes(b"a")
+    (root / "b.bin").write_bytes(b"b")
+    collection = manifest.build_collection(
+        root,
+        "fixture",
+        license_status="license-reviewed",
+        platform_qualification="local-only",
+        evidence_role="diagnostic",
+        lineage_contains_noncommercial=False,
+    )
+    collection["assets"].reverse()
+
+    with pytest.raises(manifest.ContractError, match=r"canonical|sorted"):
+        manifest.verify_collection(root, collection)
+
+
 def test_verify_collection_rejects_unsafe_manifest_path(tmp_path: Path) -> None:
     manifest = _manifest_module()
     root, collection = _sample_collection(tmp_path)
@@ -338,6 +358,77 @@ def test_verify_rejects_nested_file_added_after_scan(
     monkeypatch.setattr(manifest, "_scan_regular_files", scan_then_add)
 
     with pytest.raises(manifest.ContractError, match=r"changed|extra|scan"):
+        manifest.verify_collection(root, collection)
+
+
+def test_build_rejects_earlier_file_mutated_while_later_file_hashes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "a.bin").write_bytes(b"aaaa")
+    earlier = root / "b.bin"
+    earlier.write_bytes(b"bbbb")
+    (root / "c.bin").write_bytes(b"cccc")
+    original_hash = manifest._hash_descriptor  # noqa: SLF001 - deterministic race injection.
+    hash_calls = 0
+
+    def hash_then_mutate(descriptor: int) -> str:
+        nonlocal hash_calls
+        hash_calls += 1
+        digest = original_hash(descriptor)
+        if hash_calls == 3:
+            earlier.write_bytes(b"zzzz")
+        return digest
+
+    monkeypatch.setattr(manifest, "_hash_descriptor", hash_then_mutate)
+
+    with pytest.raises(manifest.ContractError, match="changed"):
+        manifest.build_collection(
+            root,
+            "fixture",
+            license_status="license-reviewed",
+            platform_qualification="local-only",
+            evidence_role="diagnostic",
+            lineage_contains_noncommercial=False,
+        )
+
+
+def test_verify_rejects_earlier_file_mutated_while_later_file_hashes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "a.bin").write_bytes(b"aaaa")
+    earlier = root / "b.bin"
+    earlier.write_bytes(b"bbbb")
+    (root / "c.bin").write_bytes(b"cccc")
+    collection = manifest.build_collection(
+        root,
+        "fixture",
+        license_status="license-reviewed",
+        platform_qualification="local-only",
+        evidence_role="diagnostic",
+        lineage_contains_noncommercial=False,
+    )
+    original_hash = manifest._hash_descriptor  # noqa: SLF001 - deterministic race injection.
+    hash_calls = 0
+
+    def hash_then_mutate(descriptor: int) -> str:
+        nonlocal hash_calls
+        hash_calls += 1
+        digest = original_hash(descriptor)
+        if hash_calls == 3:
+            earlier.write_bytes(b"zzzz")
+        return digest
+
+    monkeypatch.setattr(manifest, "_hash_descriptor", hash_then_mutate)
+
+    with pytest.raises(manifest.ContractError, match="changed"):
         manifest.verify_collection(root, collection)
 
 

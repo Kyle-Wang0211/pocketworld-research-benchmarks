@@ -4,6 +4,8 @@ import importlib
 import json
 from typing import TYPE_CHECKING
 
+import pytest
+
 if TYPE_CHECKING:
     from pathlib import Path
     from types import ModuleType
@@ -53,3 +55,39 @@ def test_cli_build_verify_and_gate_verdict(tmp_path: Path) -> None:
     contract = tmp_path / "contract.json"
     contract.write_text('{"status":"verdict_eligible"}\n', encoding="utf-8")
     assert cli.main(["gate-verdict", str(contract)]) == 0
+
+
+@pytest.mark.parametrize("output_route", ["direct", "symlink"])
+def test_cli_build_rejects_output_inside_collection_root(
+    tmp_path: Path,
+    output_route: str,
+) -> None:
+    cli = _cli_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "capture.jpg").write_bytes(b"fixture")
+    output_parent = root
+    if output_route == "symlink":
+        output_parent = tmp_path / "asset-alias"
+        output_parent.symlink_to(root, target_is_directory=True)
+    output = output_parent / "manifest.json"
+
+    result = cli.main(
+        [
+            "build",
+            str(root),
+            "--collection",
+            "fixture",
+            "--license-status",
+            "license-reviewed",
+            "--platform-qualification",
+            "local-only",
+            "--evidence-role",
+            "diagnostic",
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 2
+    assert not (root / "manifest.json").exists()

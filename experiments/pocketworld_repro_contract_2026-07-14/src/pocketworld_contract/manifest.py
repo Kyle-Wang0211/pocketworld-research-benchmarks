@@ -54,7 +54,7 @@ class _ExpectedAsset:
 
 @dataclass(frozen=True, slots=True)
 class _CollectionSnapshot:
-    files: dict[str, Path]
+    files: dict[str, os.stat_result]
     directories: dict[str, os.stat_result]
 
 
@@ -216,7 +216,7 @@ def _validated_root(root: str | os.PathLike[str]) -> Path:
 
 def _scan_regular_files(root: str | os.PathLike[str]) -> _CollectionSnapshot:
     root_path = _validated_root(root)
-    discovered: list[tuple[str, Path]] = []
+    discovered: list[tuple[str, os.stat_result]] = []
     directories: dict[str, os.stat_result] = {}
 
     for current_root, directory_names, file_names in os.walk(
@@ -261,7 +261,7 @@ def _scan_regular_files(root: str | os.PathLike[str]) -> _CollectionSnapshot:
                 relative_path = asset_path.relative_to(root_path).as_posix()
                 raise ContractError(f"collection entry is not a regular file: {relative_path}")
             relative_path = safe_relative_path(asset_path.relative_to(root_path).as_posix())
-            discovered.append((relative_path, asset_path))
+            discovered.append((relative_path, asset_stat))
 
     return _CollectionSnapshot(
         files=dict(sorted(discovered, key=lambda item: item[0])),
@@ -316,6 +316,14 @@ def _assert_snapshot_unchanged(
         if not _same_file(recorded, current) or not _same_metadata(recorded, current):
             display_path = relative_path or "."
             raise ContractError(f"collection directory changed after scan: {display_path}")
+    for relative_path, recorded in snapshot.files.items():
+        descriptor = _open_relative_regular_file(root_descriptor, relative_path)
+        try:
+            current = os.fstat(descriptor)
+        finally:
+            os.close(descriptor)
+        if not _same_file(recorded, current) or not _same_metadata(recorded, current):
+            raise ContractError(f"collection file changed after scan: {relative_path}")
 
 
 def _safe_open_flags(*, directory: bool) -> int:
@@ -499,6 +507,31 @@ def _validate_collection_axes(
 
 
 def _validate_manifest(manifest: Mapping[str, object]) -> dict[str, _ExpectedAsset]:
+    raw_assets = _validated_manifest_assets(manifest)
+
+    expected: dict[str, _ExpectedAsset] = {}
+    manifest_paths: list[str] = []
+    for index, raw_asset in enumerate(raw_assets):
+        if not isinstance(raw_asset, Mapping):
+            raise ContractError(f"manifest asset {index} must be an object")
+        if set(raw_asset) != _ASSET_KEYS:
+            raise ContractError(f"manifest asset {index} must contain exactly the contract fields")
+        path = _validated_asset_path(raw_asset, index)
+        if path in expected:
+            raise ContractError(f"duplicate manifest asset path: {path}")
+        manifest_paths.append(path)
+        _validate_asset_metadata(raw_asset, index, path)
+        expected[path] = _ExpectedAsset(
+            path=path,
+            byte_count=_asset_bytes(raw_asset, index),
+            sha256=_asset_sha256(raw_asset, index),
+        )
+    if manifest_paths != sorted(manifest_paths):
+        raise ContractError("manifest assets must use canonical sorted path order")
+    return expected
+
+
+def _validated_manifest_assets(manifest: Mapping[str, object]) -> list[object]:
     if not isinstance(manifest, Mapping):
         raise ContractError("manifest must be a JSON object")
     if set(manifest) != _MANIFEST_KEYS:
@@ -515,23 +548,7 @@ def _validate_manifest(manifest: Mapping[str, object]) -> dict[str, _ExpectedAss
     raw_assets = manifest.get("assets")
     if not isinstance(raw_assets, list):
         raise ContractError("manifest assets must be a list")
-
-    expected: dict[str, _ExpectedAsset] = {}
-    for index, raw_asset in enumerate(raw_assets):
-        if not isinstance(raw_asset, Mapping):
-            raise ContractError(f"manifest asset {index} must be an object")
-        if set(raw_asset) != _ASSET_KEYS:
-            raise ContractError(f"manifest asset {index} must contain exactly the contract fields")
-        path = _validated_asset_path(raw_asset, index)
-        if path in expected:
-            raise ContractError(f"duplicate manifest asset path: {path}")
-        _validate_asset_metadata(raw_asset, index, path)
-        expected[path] = _ExpectedAsset(
-            path=path,
-            byte_count=_asset_bytes(raw_asset, index),
-            sha256=_asset_sha256(raw_asset, index),
-        )
-    return expected
+    return raw_assets
 
 
 def _validated_asset_path(asset: Mapping[str, object], index: int) -> str:

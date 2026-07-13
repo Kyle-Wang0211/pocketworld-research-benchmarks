@@ -25,6 +25,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if arguments.command == "build":
+            _require_output_outside_collection(arguments.root, arguments.output)
             manifest = build_collection(
                 arguments.root,
                 arguments.collection,
@@ -46,6 +47,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 0
+
+
+def _require_output_outside_collection(root: Path, output: Path) -> None:
+    try:
+        resolved_root = root.resolve(strict=True)
+        resolved_output = output.resolve(strict=False)
+    except (OSError, RuntimeError) as exc:
+        raise ContractError("unable to resolve collection root and output path") from exc
+    if resolved_output == resolved_root or resolved_output.is_relative_to(resolved_root):
+        raise ContractError("build output must be outside the collection root")
 
 
 def _build_parser() -> argparse.ArgumentParser:
