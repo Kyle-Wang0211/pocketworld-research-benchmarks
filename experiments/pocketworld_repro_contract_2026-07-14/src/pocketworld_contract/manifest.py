@@ -12,6 +12,7 @@ from typing import TypeAlias
 
 HASH_CHUNK_BYTES = 4 * 1024 * 1024
 SCHEMA_VERSION = 1
+_SCANDIR_SUPPORTS_FD = os.scandir in os.supports_fd
 
 JsonObject: TypeAlias = dict[str, object]
 
@@ -55,7 +56,13 @@ class _ExpectedAsset:
 @dataclass(frozen=True, slots=True)
 class _CollectionSnapshot:
     files: dict[str, os.stat_result]
-    directories: dict[str, os.stat_result]
+    directories: dict[str, _DirectorySnapshot]
+
+
+@dataclass(frozen=True, slots=True)
+class _DirectorySnapshot:
+    file_stat: os.stat_result
+    names: tuple[str, ...]
 
 
 def canonical_json(value: object) -> str:
@@ -112,6 +119,7 @@ def build_collection(  # noqa: PLR0913 - the contract intentionally exposes four
     platform_qualification: str,
     evidence_role: str,
     lineage_contains_noncommercial: bool,
+    _expected_root: os.stat_result | None = None,
 ) -> JsonObject:
     """Build a deterministic manifest for every regular file under ``root``."""
     if not isinstance(collection_id, str) or not collection_id:
@@ -125,7 +133,12 @@ def build_collection(  # noqa: PLR0913 - the contract intentionally exposes four
 
     root_path, root_descriptor = _open_collection_root(root)
     try:
-        snapshot = _scan_regular_files(root_path)
+        if _expected_root is not None and not _same_file(
+            _expected_root,
+            os.fstat(root_descriptor),
+        ):
+            raise ContractError(f"collection root changed before scan: {root_path}")
+        snapshot = _scan_regular_files(root_descriptor)
         _assert_root_unchanged(root_path, root_descriptor)
         _assert_snapshot_unchanged(root_descriptor, snapshot)
         assets: list[JsonObject] = []
@@ -163,7 +176,7 @@ def verify_collection(
     expected = _validate_manifest(manifest)
     root_path, root_descriptor = _open_collection_root(root)
     try:
-        snapshot = _scan_regular_files(root_path)
+        snapshot = _scan_regular_files(root_descriptor)
         _assert_root_unchanged(root_path, root_descriptor)
         _assert_snapshot_unchanged(root_descriptor, snapshot)
 
@@ -214,64 +227,94 @@ def _validated_root(root: str | os.PathLike[str]) -> Path:
     return root_path
 
 
-def _scan_regular_files(root: str | os.PathLike[str]) -> _CollectionSnapshot:
-    root_path = _validated_root(root)
-    discovered: list[tuple[str, os.stat_result]] = []
-    directories: dict[str, os.stat_result] = {}
-
-    for current_root, directory_names, file_names in os.walk(
-        root_path,
-        onerror=_raise_walk_error,
-        followlinks=False,
-    ):
-        directory_names.sort()
-        file_names.sort()
-        current_path = Path(current_root)
-        try:
-            current_stat = current_path.lstat()
-        except OSError as exc:
-            raise ContractError(
-                f"collection directory changed during scan: {current_path}"
-            ) from exc
-        if stat.S_ISLNK(current_stat.st_mode) or not stat.S_ISDIR(current_stat.st_mode):
-            raise ContractError(f"collection directory is not a stable directory: {current_path}")
-        directory_path = (
-            "" if current_path == root_path else current_path.relative_to(root_path).as_posix()
-        )
-        if directory_path:
-            safe_relative_path(directory_path)
-        directories[directory_path] = current_stat
-
-        for entry_name in [*directory_names, *file_names]:
-            entry_path = current_path / entry_name
-            try:
-                entry_stat = entry_path.lstat()
-            except FileNotFoundError as exc:
-                raise ContractError(
-                    f"collection entry disappeared during scan: {entry_path}"
-                ) from exc
-            if stat.S_ISLNK(entry_stat.st_mode):
-                relative_path = entry_path.relative_to(root_path).as_posix()
-                raise ContractError(f"symlink is forbidden in collection: {relative_path}")
-
-        for file_name in file_names:
-            asset_path = current_path / file_name
-            asset_stat = asset_path.lstat()
-            if not stat.S_ISREG(asset_stat.st_mode):
-                relative_path = asset_path.relative_to(root_path).as_posix()
-                raise ContractError(f"collection entry is not a regular file: {relative_path}")
-            relative_path = safe_relative_path(asset_path.relative_to(root_path).as_posix())
-            discovered.append((relative_path, asset_stat))
-
+def _scan_regular_files(root_descriptor: int) -> _CollectionSnapshot:
+    discovered: dict[str, os.stat_result] = {}
+    directories: dict[str, _DirectorySnapshot] = {}
+    _scan_directory(root_descriptor, "", discovered, directories)
     return _CollectionSnapshot(
-        files=dict(sorted(discovered, key=lambda item: item[0])),
+        files=dict(sorted(discovered.items())),
         directories=dict(sorted(directories.items())),
     )
 
 
-def _raise_walk_error(error: OSError) -> None:
-    location = error.filename or "<unknown>"
-    raise ContractError(f"unable to scan collection directory: {location}") from error
+def _scan_directory(
+    directory_descriptor: int,
+    directory_path: str,
+    discovered: dict[str, os.stat_result],
+    directories: dict[str, _DirectorySnapshot],
+) -> None:
+    listing = _enumerate_directory(directory_descriptor, directory_path)
+    directories[directory_path] = listing
+
+    for entry_name in listing.names:
+        relative_path = safe_relative_path(
+            f"{directory_path}/{entry_name}" if directory_path else entry_name
+        )
+        try:
+            entry_stat = os.stat(
+                entry_name,
+                dir_fd=directory_descriptor,
+                follow_symlinks=False,
+            )
+        except OSError as exc:
+            raise ContractError(f"collection entry changed during scan: {relative_path}") from exc
+        if stat.S_ISLNK(entry_stat.st_mode):
+            raise ContractError(f"symlink is forbidden in collection: {relative_path}")
+        if stat.S_ISDIR(entry_stat.st_mode):
+            try:
+                child_descriptor = _open_relative_component(
+                    directory_descriptor,
+                    entry_name,
+                    directory=True,
+                )
+            except ContractError as exc:
+                raise ContractError(
+                    f"unable to scan collection directory: {relative_path}"
+                ) from exc
+            try:
+                _scan_directory(
+                    child_descriptor,
+                    relative_path,
+                    discovered,
+                    directories,
+                )
+            finally:
+                os.close(child_descriptor)
+        elif stat.S_ISREG(entry_stat.st_mode):
+            discovered[relative_path] = entry_stat
+        else:
+            raise ContractError(f"collection entry is not a regular file: {relative_path}")
+
+    current = os.fstat(directory_descriptor)
+    if not _same_file(listing.file_stat, current) or not _same_metadata(
+        listing.file_stat,
+        current,
+    ):
+        display_path = directory_path or "."
+        raise ContractError(f"collection directory changed during scan: {display_path}")
+
+
+def _enumerate_directory(
+    directory_descriptor: int,
+    directory_path: str,
+) -> _DirectorySnapshot:
+    if not _SCANDIR_SUPPORTS_FD or os.stat not in os.supports_dir_fd:
+        raise ContractError("platform cannot securely enumerate collection directories")
+    before = os.fstat(directory_descriptor)
+    if not stat.S_ISDIR(before.st_mode):
+        display_path = directory_path or "."
+        raise ContractError(f"collection directory is not stable: {display_path}")
+    try:
+        with os.scandir(directory_descriptor) as entries:
+            names = tuple(sorted(entry.name for entry in entries))
+    except OSError as exc:
+        display_path = directory_path or "."
+        raise ContractError(f"unable to enumerate collection directory: {display_path}") from exc
+    after = os.fstat(directory_descriptor)
+    if not _same_file(before, after) or not _same_metadata(before, after):
+        display_path = directory_path or "."
+        raise ContractError(f"collection directory changed during enumeration: {display_path}")
+    return _DirectorySnapshot(file_stat=after, names=names)
 
 
 def _open_collection_root(root: str | os.PathLike[str]) -> tuple[Path, int]:
@@ -310,10 +353,14 @@ def _assert_snapshot_unchanged(
     for relative_path, recorded in snapshot.directories.items():
         descriptor = _open_relative_directory(root_descriptor, relative_path)
         try:
-            current = os.fstat(descriptor)
+            current = _enumerate_directory(descriptor, relative_path)
         finally:
             os.close(descriptor)
-        if not _same_file(recorded, current) or not _same_metadata(recorded, current):
+        if (
+            not _same_file(recorded.file_stat, current.file_stat)
+            or not _same_metadata(recorded.file_stat, current.file_stat)
+            or recorded.names != current.names
+        ):
             display_path = relative_path or "."
             raise ContractError(f"collection directory changed after scan: {display_path}")
     for relative_path, recorded in snapshot.files.items():

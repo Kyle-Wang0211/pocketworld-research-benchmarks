@@ -3,13 +3,42 @@ from __future__ import annotations
 import hashlib
 import importlib
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import pytest
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
     from pathlib import Path
-    from types import ModuleType
+    from types import ModuleType, TracebackType
+
+
+class _ScandirInjection:
+    def __init__(self, entries: object, inject: Callable[[], None]) -> None:
+        self._entries = entries
+        self._inject = inject
+
+    def __enter__(self) -> Self:
+        self._entries.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exception_type: type[BaseException] | None,
+        exception: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        return self._entries.__exit__(exception_type, exception, traceback)
+
+    def __iter__(self) -> Iterator[os.DirEntry[str]]:
+        return self
+
+    def __next__(self) -> os.DirEntry[str]:
+        try:
+            return next(self._entries)
+        except StopIteration:
+            self._inject()
+            raise
 
 
 def _manifest_module() -> ModuleType:
@@ -30,6 +59,40 @@ def _sample_collection(tmp_path: Path) -> tuple[Path, dict[str, object]]:
         lineage_contains_noncommercial=False,
     )
     return root, collection
+
+
+def _inject_extra_immediately_after_directory_enumeration(
+    manifest: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    root: Path,
+) -> None:
+    original_scandir = manifest.os.scandir
+    injected = False
+
+    def scandir_then_inject(path: object = None) -> _ScandirInjection:
+        nonlocal injected
+
+        def inject() -> None:
+            nonlocal injected
+            if not injected:
+                if isinstance(path, int):
+                    descriptor = os.open(
+                        "extra.bin",
+                        os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                        0o600,
+                        dir_fd=path,
+                    )
+                    try:
+                        os.write(descriptor, b"persistent extra")
+                    finally:
+                        os.close(descriptor)
+                else:
+                    (root / "extra.bin").write_bytes(b"persistent extra")
+                injected = True
+
+        return _ScandirInjection(original_scandir(path), inject)
+
+    monkeypatch.setattr(manifest.os, "scandir", scandir_then_inject)
 
 
 def test_canonical_json_is_sorted_compact_utf8_and_newline_terminated() -> None:
@@ -359,6 +422,53 @@ def test_verify_rejects_nested_file_added_after_scan(
 
     with pytest.raises(manifest.ContractError, match=r"changed|extra|scan"):
         manifest.verify_collection(root, collection)
+
+
+def test_build_rejects_entry_added_immediately_after_directory_enumeration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "asset.bin").write_bytes(b"fixture")
+    _inject_extra_immediately_after_directory_enumeration(manifest, monkeypatch, root)
+
+    with pytest.raises(manifest.ContractError, match=r"changed|enumeration|scan"):
+        manifest.build_collection(
+            root,
+            "fixture",
+            license_status="license-reviewed",
+            platform_qualification="local-only",
+            evidence_role="diagnostic",
+            lineage_contains_noncommercial=False,
+        )
+
+    assert (root / "extra.bin").exists()
+
+
+def test_verify_rejects_entry_added_immediately_after_directory_enumeration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = _manifest_module()
+    root = tmp_path / "assets"
+    root.mkdir()
+    (root / "asset.bin").write_bytes(b"fixture")
+    collection = manifest.build_collection(
+        root,
+        "fixture",
+        license_status="license-reviewed",
+        platform_qualification="local-only",
+        evidence_role="diagnostic",
+        lineage_contains_noncommercial=False,
+    )
+    _inject_extra_immediately_after_directory_enumeration(manifest, monkeypatch, root)
+
+    with pytest.raises(manifest.ContractError, match=r"changed|enumeration|scan"):
+        manifest.verify_collection(root, collection)
+
+    assert (root / "extra.bin").exists()
 
 
 def test_build_rejects_earlier_file_mutated_while_later_file_hashes(
