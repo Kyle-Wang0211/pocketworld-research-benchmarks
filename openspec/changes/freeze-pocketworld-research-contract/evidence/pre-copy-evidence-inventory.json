@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "inventory_id": "pocketworld-pre-copy-audit-2026-07-14-v1",
+  "source_snapshot": "handoff scratchpad b3b899a4-8125-4eb7-a21a-eb3d48c3d2a8 plus ignored files in research checkout at 0a1931658ffff4d2e606b87b197656fe8a14025d",
+  "policy": {
+    "copy_allowed_only_after_per_file_manifest_commit": true,
+    "hash_algorithm": "sha256",
+    "paths_are_source_relative": true,
+    "no_hash_prefix_is_acceptable": true
+  },
+  "tree_collections": [
+    {
+      "source_relative_path": "cap50_frames/photos_highres/*.jpg",
+      "file_count": 115,
+      "bytes": 203426041,
+      "audited_normalized_tree_sha256": "e3ed6a95d910c5e2a49adcd08deaf67c9e484d2eb5d8bf2e207831554561b8c7",
+      "producer": "PocketWorld cap50 capture; exact producer revision not yet proven",
+      "consumer": "cap50 selected reconstruction and plane-sweep evidence",
+      "evidence_role": "raw_capture_input",
+      "inclusion_reason": "Irreplaceable 115-frame selected 4K input closure; 24 additional live-fed images are absent"
+    },
+    {
+      "source_relative_path": "cap50_frames/photos_highres/*.json",
+      "file_count": 115,
+      "bytes": 1736250,
+      "audited_normalized_tree_sha256": "3e56142095f5b11b3921cdacf324d28e4f80caaa6b6307823d92d409a52828cc",
+      "producer": "PocketWorld cap50 capture; exact producer revision not yet proven",
+      "consumer": "pose/intrinsics/plane metadata reconstruction",
+      "evidence_role": "raw_capture_sidecar",
+      "inclusion_reason": "One-to-one sidecars for all 115 preserved JPEG stems"
+    },
+    {
+      "source_relative_path": "cap50_full_build/images_full/*.png",
+      "file_count": 115,
+      "bytes": 96336651,
+      "audited_normalized_tree_sha256": "4cb23e0152ef593a0235727d7c1a6254d2ae8c15582777fda500fd8a5ceac2d0",
+      "producer": "Historical cap50 1024x576 preprocessing; exact command absent",
+      "consumer": "Historical LoFTR and plane-sweep analysis",
+      "evidence_role": "exact_preprocessed_input",
+      "inclusion_reason": "Exact expanded preprocessing input; tar and AppleDouble duplicate representation excluded"
+    }
+  ],
+  "assets": [
+    {
+      "source_relative_path": "cap50_diag/sfm_fed_frames.jsonl",
+      "bytes": 84167,
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b",
+      "producer": "PocketWorld cap50 live SfM feed",
+      "consumer": "139/115/24 archive-closure audit",
+      "evidence_role": "capture_event_log",
+      "inclusion_reason": "Authoritative live-fed denominator"
+    },
+    {
+      "source_relative_path": "cap50_full_build/subset_meta_cap50full.json",
+      "bytes": 68706,
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324",
+      "producer": "Historical cap50 preprocessing",
+      "consumer": "115-frame selected closure",
+      "evidence_role": "selection_manifest",
+      "inclusion_reason": "Binds 115 raw images to 115 exact work PNGs"
+    },
+    {
+      "source_relative_path": "cap50_diag/ghost_mask.json",
+      "bytes": 374,
+      "sha256": "ac8a41bbf1bc097327e0c10508d4fbeaf55a95631fb5c90b2540338f1b0dd83e",
+      "producer": "Historical cap50 diagnostics",
+      "consumer": "production_floor.ply derivation",
+      "evidence_role": "geometry_config",
+      "inclusion_reason": "Defines the audited floor/ghost mask used by the preserved result"
+    },
+    {
+      "source_relative_path": "cap50_pull/sfm_sparse.ply",
+      "bytes": 1392980,
+      "sha256": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df",
+      "producer": "PocketWorld cap50 sparse SfM",
+      "consumer": "production_floor.ply and coverage baselines",
+      "evidence_role": "direct_sparse_input",
+      "inclusion_reason": "Direct point-cloud input to floor evidence"
+    },
+    {
+      "source_relative_path": "experiments/floor_plane_sweep_densifier_2026-07-13/poses.json",
+      "bytes": 243557,
+      "sha256": "8f627b3483e2426e5d3d735b3afdd6dd53e47a49501ad06777395b13859efef4",
+      "producer": "build_floor_rescue.py historical run",
+      "consumer": "plane-sweep and matcher geometry",
+      "evidence_role": "tracked_pose_config",
+      "inclusion_reason": "Already Git-tracked; referenced by hash rather than duplicated"
+    },
+    {
+      "source_relative_path": "experiments/floor_plane_sweep_densifier_2026-07-13/floor_frame_ids.json",
+      "bytes": 24898,
+      "sha256": "f48a891aff57af427e66eed39f77e79f8670bb85d3e02df65806f2a5a08b059d",
+      "producer": "Historical floor-frame selection",
+      "consumer": "plane-sweep view selection",
+      "evidence_role": "tracked_selection_config",
+      "inclusion_reason": "Already Git-tracked; binds the 66 floor views"
+    },
+    {
+      "source_relative_path": "cap51_diag/sfm_fed_frames.jsonl",
+      "bytes": 63442,
+      "sha256": "d86ac0c44a9e5ae154f286cc9fc6baf215f949c5335b4bf9210e87c6d018770c",
+      "producer": "PocketWorld cap51 live SfM feed",
+      "consumer": "sfm_replay_bench pose JSONL and archive audit",
+      "evidence_role": "replay_pose_input",
+      "inclusion_reason": "105 contiguous frame IDs with complete ARKit pose fields"
+    },
+    {
+      "source_relative_path": "cap51_diag/photo_bundle.json",
+      "bytes": 164416,
+      "sha256": "e2a6c57b215ad1641e73c76b0adcaba8f6c77f563c70ea62c17ca15a55743caf",
+      "producer": "PocketWorld cap51 bundle selection",
+      "consumer": "capture archive",
+      "evidence_role": "selection_manifest",
+      "inclusion_reason": "Records 81 selected frames within the 105 live-fed set"
+    },
+    {
+      "source_relative_path": "cap51_diag/sfm_sparse.ply",
+      "bytes": 966125,
+      "sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7",
+      "producer": "PocketWorld cap51 sparse SfM",
+      "consumer": "cap51 diagnostics",
+      "evidence_role": "diagnostic_output",
+      "inclusion_reason": "Binds the provisional capture result to the DB/pose evidence"
+    },
+    {
+      "source_relative_path": "cap51_livedb/sfm_live.db",
+      "bytes": 134975488,
+      "sha256": "af1bd571d81cf27228e6b1bd8faa9617a1734bf0d32c1c67ec849c4bc7f5ba97",
+      "producer": "PocketWorld cap51 live SfM; source revision and quiescence unproven",
+      "consumer": "sfm_replay_bench",
+      "evidence_role": "provisional_replay_database",
+      "inclusion_reason": "Contains 105 image/keypoint/descriptor rows; fresh device replacement required for verdict"
+    },
+    {
+      "source_relative_path": "cap51_livedb/sfm_live.db-shm",
+      "bytes": 32768,
+      "sha256": "4378012510ee558e6863a5d184315967f667a5695e1945bab16eca4b08082eeb",
+      "producer": "SQLite sidecar for provisional cap51 DB",
+      "consumer": "provisional DB state preservation",
+      "evidence_role": "sqlite_shm",
+      "inclusion_reason": "Preserve source triplet bytes without claiming atomic snapshot"
+    },
+    {
+      "source_relative_path": "cap51_livedb/sfm_live.db-wal",
+      "bytes": 4152,
+      "sha256": "4cda3e63ad1604ac94724ee4f24327ee4fec7d86fa97056edca25ea76d85fa72",
+      "producer": "SQLite sidecar for provisional cap51 DB",
+      "consumer": "provisional DB state preservation",
+      "evidence_role": "sqlite_wal",
+      "inclusion_reason": "Preserve source triplet bytes without claiming atomic snapshot"
+    },
+    {
+      "source_relative_path": "floor_rescue/production_floor.ply",
+      "bytes": 87853,
+      "sha256": "3eaabe2b21c3d17116943ab0600e43901eaa76984b5bc15cef3d1d113f2ecb92",
+      "producer": "Historical cap50 floor extraction",
+      "consumer": "plane-sweep region and production baseline",
+      "evidence_role": "requested_output_and_input",
+      "inclusion_reason": "One of four user-requested PLY artifacts; 5845 vertices"
+    },
+    {
+      "source_relative_path": "floor_rescue/floor_rescue_band_colored.ply",
+      "bytes": 56714,
+      "sha256": "043536cc2b24fa23e8ebc8dd1121425cd02b1e7315893f8508078686db260130",
+      "producer": "Historical LoFTR-indoor rescue",
+      "consumer": "coverage comparison",
+      "evidence_role": "requested_noncommercial_output",
+      "inclusion_reason": "One of four user-requested PLY artifacts; 1435 vertices"
+    },
+    {
+      "source_relative_path": "floor_rescue/floor_planesweep.ply",
+      "bytes": 866456,
+      "sha256": "1113af4a446b9b2f7a3c624c2663134eb6afc1c748a8494bbdee9020d46cefab",
+      "producer": "Historical pure photometric plane-sweep point generation",
+      "consumer": "pure-A metrics and merged upper bound",
+      "evidence_role": "requested_output_license_pending_audit",
+      "inclusion_reason": "One of four user-requested PLY artifacts; 12672 vertices"
+    },
+    {
+      "source_relative_path": "floor_rescue/floor_maxed_colored.ply",
+      "bytes": 718810,
+      "sha256": "81dc1bc4814191d58cd30a46562be609598e6bee75e0b14cffb0b24551704514",
+      "producer": "Historical A+B+C merge containing LoFTR-indoor lineage",
+      "consumer": "research upper-bound visualization",
+      "evidence_role": "requested_noncommercial_upper_bound",
+      "inclusion_reason": "One of four user-requested PLY artifacts; 18222 vertices"
+    },
+    {
+      "source_relative_path": "floor_rescue/floor_rescue_D_band.ply",
+      "bytes": 137809,
+      "sha256": "3569d38245231e4fe74b409b7bed034b90f434a1a7efcf3fac20b79aed9822ee",
+      "producer": "Historical LoFTR native-1024 route",
+      "consumer": "floor_maxed_colored.ply merge",
+      "evidence_role": "noncommercial_merge_input",
+      "inclusion_reason": "Required to reconstruct merged upper-bound lineage"
+    },
+    {
+      "source_relative_path": "floor_rescue/floor_rescue_band_improved.ply",
+      "bytes": 204014,
+      "sha256": "74d3a66947732672fa0af21ba001869cee5ac42480aae02b9cb93245c2572717",
+      "producer": "Historical LoFTR improved route",
+      "consumer": "floor_maxed_colored.ply merge",
+      "evidence_role": "noncommercial_merge_input",
+      "inclusion_reason": "Required to reconstruct merged upper-bound lineage"
+    },
+    {
+      "source_relative_path": "cap50_pull/_shell_cache.npz",
+      "bytes": 2137483,
+      "sha256": "873fadcfa7b18f67dd66c164b7bddd4610775b87c8cf813a2c0e2a16dfa1219a",
+      "producer": "Historical sparse-shell diagnostic; exact command absent",
+      "consumer": "No tracked floor script reference found",
+      "evidence_role": "diagnostic_cache",
+      "inclusion_reason": "Discovered irreproducible NPZ; preserved for complete inclusion/exclusion audit"
+    },
+    {
+      "source_relative_path": "floor_rescue/fr_matches.npz",
+      "bytes": 5741052,
+      "sha256": "ddbeeedc0da95da9193bf6bc1ab596f4456857a756be2aa6a8df51bbfea42660",
+      "producer": "fr_match_loftr.py default historical run",
+      "consumer": "fr_improved.py, fr_triangulate.py, and analysis scripts",
+      "evidence_role": "noncommercial_match_intermediate",
+      "inclusion_reason": "Default 306-pair LoFTR match archive used by tracked consumers"
+    },
+    {
+      "source_relative_path": "floor_rescue/fr_matches_A.npz",
+      "bytes": 8037200,
+      "sha256": "a94358e1a2cc2737bdd6b8f1640d98be12a5d8034980a7562fe1da832fa84189",
+      "producer": "Historical LoFTR Lever A variant; exact command absent",
+      "consumer": "Lever comparison evidence",
+      "evidence_role": "noncommercial_match_intermediate",
+      "inclusion_reason": "589-pair variant is not reproducible from tracked bytes alone"
+    },
+    {
+      "source_relative_path": "floor_rescue/fr_matches_B.npz",
+      "bytes": 11331880,
+      "sha256": "64e3449abf90fd38d2a2f0dc5dd65c1441236b98f09e506c2da93b3a7b3dc01a",
+      "producer": "Historical LoFTR Lever B variant; exact command absent",
+      "consumer": "Lever comparison evidence",
+      "evidence_role": "noncommercial_match_intermediate",
+      "inclusion_reason": "589-pair variant is not reproducible from tracked bytes alone"
+    },
+    {
+      "source_relative_path": "floor_rescue/fr_matches_C.npz",
+      "bytes": 8526172,
+      "sha256": "6186eb60ce97faf9e5f74761632285ca8b35e49b62ef7f2cf2484a3ea5c5b807",
+      "producer": "Historical LoFTR Lever C variant; exact command absent",
+      "consumer": "Lever comparison evidence",
+      "evidence_role": "noncommercial_match_intermediate",
+      "inclusion_reason": "306-pair variant is not reproducible from tracked bytes alone"
+    },
+    {
+      "source_relative_path": "floor_rescue/fr_matches_D.npz",
+      "bytes": 9127312,
+      "sha256": "76b55bcadcd6535b482dc220727767efe6959bc0fc1ab739ab6079eb57eeec83",
+      "producer": "Historical LoFTR Lever D native-1024 variant; exact command absent",
+      "consumer": "Lever comparison and native-1024 rescue evidence",
+      "evidence_role": "noncommercial_match_intermediate",
+      "inclusion_reason": "306-pair native-resolution variant is not reproducible from tracked bytes alone"
+    },
+    {
+      "source_relative_path": "floor_rescue/xsec_data.npz",
+      "bytes": 1511660,
+      "sha256": "15aff75724a4140657262d6b6027fbb668dcedfede9e754646f4dfc130274667",
+      "producer": "ghost_xsec.py",
+      "consumer": "ghost_render.py",
+      "evidence_role": "diagnostic_archive",
+      "inclusion_reason": "Preserves ghost cross-section diagnostics"
+    },
+    {
+      "source_relative_path": "experiments/floor_plane_sweep_densifier_2026-07-13/fr_planesweep.py",
+      "bytes": 13342,
+      "sha256": "4db7157c85b35ae1a2f61271e67fff526e066cff20854a9beece2dbbd1ed8556",
+      "producer": "Git commit 0a1931658ffff4d2e606b87b197656fe8a14025d",
+      "consumer": "historical pure-A evidence",
+      "evidence_role": "tracked_code",
+      "inclusion_reason": "Code identity; currently evidence-only because it hard-codes scratch paths and reads LoFTR-derived coverage input"
+    },
+    {
+      "source_relative_path": "experiments/floor_plane_sweep_densifier_2026-07-13/fr_common.py",
+      "bytes": 4498,
+      "sha256": "4fa5d85e3e55ce6404f1eee099899eccc9bbe1dad44df6a2eefdccc461aaf7fc",
+      "producer": "Git commit 0a1931658ffff4d2e606b87b197656fe8a14025d",
+      "consumer": "historical floor experiment scripts",
+      "evidence_role": "tracked_code",
+      "inclusion_reason": "Shared config/code identity; currently not directly runnable"
+    },
+    {
+      "source_relative_path": "experiments/floor_plane_sweep_densifier_2026-07-13/fr_planesweep_stats.json",
+      "bytes": 820,
+      "sha256": "c320e08ef75f1cf723d92968cfe08ef4c031674cdb1f78027a063c992c0c5529",
+      "producer": "Historical fr_planesweep.py run",
+      "consumer": "effective grid/gate evidence",
+      "evidence_role": "metrics_config",
+      "inclusion_reason": "Proves effective grid_m=0.01 despite script default 0.02"
+    }
+  ]
+}

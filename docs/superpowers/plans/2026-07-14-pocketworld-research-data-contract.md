@@ -40,7 +40,14 @@ Run `uv init --package --python /opt/homebrew/bin/python3.11 experiments/pocketw
 def test_build_collection_orders_paths(tmp_path: Path) -> None:
     (tmp_path / "b.bin").write_bytes(b"b")
     (tmp_path / "a.bin").write_bytes(b"a")
-    manifest = build_collection(tmp_path, "fixture", "input_only")
+    manifest = build_collection(
+        tmp_path,
+        "fixture",
+        license_status="unknown_pending_audit",
+        platform_qualification="mac_only",
+        evidence_role="input",
+        lineage_contains_noncommercial=False,
+    )
     assert [item["path"] for item in manifest["assets"]] == ["a.bin", "b.bin"]
 
 
@@ -48,7 +55,11 @@ def test_build_collection_orders_paths(tmp_path: Path) -> None:
 def test_verify_rejects_unsafe_paths(tmp_path: Path, unsafe: str) -> None:
     manifest = {"schema_version": 1, "collection_id": "fixture", "assets": [{
         "path": unsafe, "role": "input_only", "bytes": 0,
-        "sha256": "0" * 64, "commercial_eligibility": "input_only",
+        "sha256": "0" * 64,
+        "license_status": "unknown_pending_audit",
+        "platform_qualification": "mac_only",
+        "evidence_role": "input",
+        "lineage_contains_noncommercial": False,
     }]}
     with pytest.raises(ContractError, match="unsafe relative path"):
         verify_collection(tmp_path, manifest)
@@ -95,7 +106,7 @@ def safe_relative_path(value: str) -> PurePosixPath:
     return path
 ```
 
-`build_collection` SHALL sort regular files, reject symlinks, and stream one file at a time. `verify_collection` SHALL reject duplicate/extra/missing paths and compare bytes and SHA-256. `require_verdict_eligible` SHALL accept only exact status `verdict_eligible`.
+`build_collection` SHALL accept keyword-only `license_status`, `platform_qualification`, `evidence_role`, and `lineage_contains_noncommercial`; it sorts regular files, rejects symlinks, and streams one file at a time. `verify_collection` SHALL reject duplicate/extra/missing paths and compare bytes and SHA-256. `require_verdict_eligible` SHALL accept only exact status `verdict_eligible`.
 
 - [ ] **Step 5: Add one failing test at a time for mutation, missing/extra file, duplicate path, and symlink; make each GREEN**
 
@@ -103,7 +114,7 @@ Run `uv run pytest tests/test_manifest.py -q` after every red/green pair.
 
 - [ ] **Step 6: Add CLI commands and verify tooling**
 
-Expose `build ROOT --collection ID --eligibility LABEL --output FILE`, `verify ROOT MANIFEST`, `verify-contract CONTRACT`, and `gate-verdict CONTRACT`. Run `uv run ruff format --check src tests`, `uv run ruff check src tests`, `uv run pytest -q`, and `uv lock --check --offline`.
+Expose `build ROOT --collection ID --license-status VALUE --platform-qualification VALUE --evidence-role VALUE [--lineage-contains-noncommercial] --output FILE`, `verify ROOT MANIFEST`, `verify-contract CONTRACT`, and `gate-verdict CONTRACT`. Run `uv run ruff format --check src tests`, `uv run ruff check src tests`, `uv run pytest -q`, and `uv lock --check --offline`.
 
 - [ ] **Step 7: Commit exact tool paths**
 
@@ -163,7 +174,7 @@ First verify reflink-only succeeds, then restore ordered fallback. Inspect confi
 
 Commit `.dvc/.gitignore`, `.dvc/config`, and the exact root ignore change as `chore(research): configure local-only DVC ownership`.
 
-### Task 4: Preserve cap50 in four bounded collections
+### Task 4: Commit complete pre-copy inventory, then preserve cap50
 
 **Files:**
 
@@ -173,9 +184,9 @@ Commit `.dvc/.gitignore`, `.dvc/config`, and the exact root ignore change as `ch
 - Create/DVC: `data/pocketworld_captures/cap50/sfm/`
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap50-*.json`
 
-- [ ] **Step 1: Build source manifests before copying**
+- [ ] **Step 1: Build, review, and commit complete source manifests before copying**
 
-Assert raw `230 files / 205162291 bytes`, work PNG `115 files / 96336651 bytes`, sparse PLY SHA `a41bd10f...f36df`, feed ledger SHA `d3970be1...1603b`, and subset SHA `bd082ce5...c324`.
+Generate per-file relative path, bytes, full SHA-256, producer/consumer, evidence role, and inclusion reason. Reconcile it with committed `pre-copy-evidence-inventory.json`; no ellipsis or hash prefix is accepted. Expected collection totals and all discrete full hashes are in that inventory.
 
 - [ ] **Step 2: Re-check gates, APFS-clone only the 115 JPEG/JSON pairs, and immediately re-check disk**
 
@@ -208,9 +219,9 @@ Write a deterministic missing-frame list. Do not shrink the live denominator.
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-archive-provisional.json`
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-fixture-provisional.json`
 
-- [ ] **Step 1: Assert pre-copy hashes for DB/WAL/SHM, feed ledger, bundle, and sparse PLY**
+- [ ] **Step 1: Assert the six full pre-copy hashes from committed inventory**
 
-Use the six hashes in the OpenSpec evidence; fail before copying on any mismatch.
+Read exact values from `openspec/changes/freeze-pocketworld-research-contract/evidence/pre-copy-evidence-inventory.json`; fail before copying on any mismatch.
 
 - [ ] **Step 2: Clone DB/WAL/SHM as one batch and hash sources again**
 
@@ -237,9 +248,9 @@ Record SQLite `integrity_check=ok`, 105 image/keypoint/descriptor rows, image ID
 
 - [ ] **Step 1: Clone four requested PLY files from the original checkout and assert hashes/vertex counts**
 
-Expected hashes begin `3eaabe2b`, `043536cc`, `1113af4a`, `81dc1bc4`; expected vertices are `5845`, `1435`, `12672`, `18222`.
+Use the four complete hashes from committed inventory; expected vertices are `5845`, `1435`, `12672`, `18222`. Hash prefixes are not acceptable evidence.
 
-- [ ] **Step 2: Preserve merge inputs with hashes `3569d382...22ee` and `74d3a669...717d`**
+- [ ] **Step 2: Preserve both merge inputs using their complete committed SHA-256 values**
 
 - [ ] **Step 3: Inventory and preserve five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz` serially**
 
