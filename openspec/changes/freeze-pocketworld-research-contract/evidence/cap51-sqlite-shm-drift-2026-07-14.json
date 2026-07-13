@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "event_id": "cap51-sqlite-shm-drift-2026-07-14T040032+0800",
+  "source_relative_path": "cap51_livedb/sfm_live.db-shm",
+  "first_observed": {
+    "bytes": 32768,
+    "sha256": "4378012510ee558e6863a5d184315967f667a5695e1945bab16eca4b08082eeb"
+  },
+  "second_observed": {
+    "bytes": 32768,
+    "sha256": "7f2ab24bea9c7734ce7397f9b1c8b985a9a7d46bf65985a1b70effec19680c64",
+    "mtime": "2026-07-14T03:24:12+08:00"
+  },
+  "detected_at": "2026-07-14T04:00:32+08:00",
+  "persistent_neighbors": {
+    "sfm_live.db": "af1bd571d81cf27228e6b1bd8faa9617a1734bf0d32c1c67ec849c4bc7f5ba97",
+    "sfm_live.db-wal": "4cda3e63ad1604ac94724ee4f24327ee4fec7d86fa97056edca25ea76d85fa72"
+  },
+  "open_handles_at_detection": 0,
+  "cause": "unknown; no writer is attributed without process evidence",
+  "decision": "fail closed; exclude SHM from persistent fixture identity and run future SQLite reads only on a stable clone or backup",
+  "authority": "https://www.sqlite.org/walformat.html#the_wal_index_or_shm_file"
+}

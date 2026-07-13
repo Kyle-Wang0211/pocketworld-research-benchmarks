@@ -219,13 +219,13 @@ Write a deterministic missing-frame list. Do not shrink the live denominator.
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-archive-provisional.json`
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-fixture-provisional.json`
 
-- [ ] **Step 1: Assert the six full pre-copy hashes from committed inventory**
+- [ ] **Step 1: Assert the five persistent/metadata pre-copy hashes and record the SHM drift evidence**
 
-Read exact values from `openspec/changes/freeze-pocketworld-research-contract/evidence/pre-copy-evidence-inventory.json`; fail before copying on any mismatch.
+Read exact values from `openspec/changes/freeze-pocketworld-research-contract/evidence/pre-copy-evidence-inventory.json`; fail before copying on any persistent DB/WAL, feed-ledger, bundle, or sparse-PLY mismatch. The SHM entry is explicitly volatile and cannot unlock copying or verdict eligibility.
 
-- [ ] **Step 2: Clone DB/WAL/SHM as one batch and hash sources again**
+- [ ] **Step 2: Clone DB/WAL as one persistent batch and hash sources again**
 
-If any source changes between checks, delete only the new destination and stop. Never call it a consistent snapshot.
+Do not open the scratch source through SQLite. If either persistent source changes between checks, delete only the new destination and stop. Open only the cloned pair (or a derived SQLite backup) for integrity checks. Never call the provisional pair a consistent snapshot, and never include SHM in replay-fixture identity.
 
 - [ ] **Step 3: Preserve capture-archive metadata separately and generate exactly 105 unavailable image basenames**
 

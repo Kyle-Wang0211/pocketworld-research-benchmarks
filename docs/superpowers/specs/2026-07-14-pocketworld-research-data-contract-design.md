@@ -19,6 +19,7 @@ This was chosen over normal Git/LFS, which would bloat or upload sensitive histo
 
 - cap50 is a complete 115-frame selected closure but an incomplete 139-frame live feed; the missing 24 identifiers remain explicit.
 - cap51 capture archive has no image bytes tonight, but replay depends on DB plus pose JSONL, not photos. Current DB/pose alignment is provisional; fresh pull, capture binding and quiescence are the verdict gate.
+- cap51's SQLite `-shm` wal-index is volatile and reconstructible; it is drift evidence, not persistent fixture identity. Only stable DB/WAL source bytes are preserved, and integrity work runs on a clone/backup so a normal WAL reader cannot mutate the scratch source's SHM.
 - Historical pure-A is Mac-only and license-unknown pending removal of its LoFTR-derived statistics dependency and a clean rerun.
 - LoFTR-indoor B/C and every merged output containing them are non-commercial research upper bounds.
 - The preserved pure-A result uses effective `grid_m=0.01`; the script default `0.02` is not the run identity.

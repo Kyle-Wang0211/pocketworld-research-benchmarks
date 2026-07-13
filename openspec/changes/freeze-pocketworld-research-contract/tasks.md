@@ -22,7 +22,7 @@
 ## 4. Cap51 Archive and Replay Fixture
 
 - [ ] 4.1 Preserve the photo archive gap, bundle, feed ledger, and sparse PLY as capture-archive evidence.
-- [ ] 4.2 Preserve DB/WAL/SHM and the feed ledger as pose JSONL with pre/post source stability checks.
+- [ ] 4.2 Preserve persistent DB/WAL bytes and the feed ledger as pose JSONL with pre/post source stability checks; record SHM drift but exclude SHM from fixture identity.
 - [ ] 4.3 Record SQLite integrity, 105 DB image/keypoint/descriptor rows, image IDs 1–105, pose IDs 0–104, and capture binding.
 - [ ] 4.4 Prove replay remains `provisional_not_verdict_eligible` only because fresh pull/quiescence identity is missing.
 

@@ -111,7 +111,7 @@ The system SHALL create a repository-relative `effective-config.json`, record hi
 - **THEN** it contains no `/private/tmp` or mobile-container path while immutable raw evidence may retain original bytes
 
 ### Requirement: Source stability and SQLite consistency are explicit
-Provisional DB/WAL/SHM copy SHALL use pre/post hash and stat checks. Canonical fixture SHALL require producer quiescence or consistent backup/checkpoint plus read-only integrity and DB/pose alignment checks.
+Provisional persistent DB/WAL copy SHALL use pre/post hash and stat checks. The transient SHM wal-index SHALL be excluded from replay-fixture identity and retained only as drift evidence. Canonical fixture SHALL require producer quiescence or a consistent backup/checkpoint, followed by read-only integrity and DB/pose alignment checks on a clone rather than the scratch source.
 
 #### Scenario: Source changes during copy
 - **WHEN** any source stat or hash changes

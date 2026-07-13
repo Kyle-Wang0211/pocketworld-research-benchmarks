@@ -134,11 +134,15 @@
     {
       "source_relative_path": "cap51_livedb/sfm_live.db-shm",
       "bytes": 32768,
-      "sha256": "4378012510ee558e6863a5d184315967f667a5695e1945bab16eca4b08082eeb",
-      "producer": "SQLite sidecar for provisional cap51 DB",
-      "consumer": "provisional DB state preservation",
-      "evidence_role": "sqlite_shm",
-      "inclusion_reason": "Preserve source triplet bytes without claiming atomic snapshot"
+      "sha256": "7f2ab24bea9c7734ce7397f9b1c8b985a9a7d46bf65985a1b70effec19680c64",
+      "previous_observed_sha256": "4378012510ee558e6863a5d184315967f667a5695e1945bab16eca4b08082eeb",
+      "current_source_mtime": "2026-07-14T03:24:12+08:00",
+      "drift_detected_at": "2026-07-14T04:00:32+08:00",
+      "identity_status": "volatile_not_copy_eligible",
+      "producer": "SQLite transient wal-index for provisional cap51 DB; exact writer is unproven",
+      "consumer": "forensic drift audit only; excluded from replay fixture identity",
+      "evidence_role": "volatile_sqlite_wal_index",
+      "inclusion_reason": "The first observed hash drifted while DB and WAL remained byte-stable; preserve both observations as evidence and do not copy SHM as persistent database state"
     },
     {
       "source_relative_path": "cap51_livedb/sfm_live.db-wal",

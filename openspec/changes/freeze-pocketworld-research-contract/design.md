@@ -57,7 +57,7 @@ experiments/floor_plane_sweep_densifier_2026-07-13/
 
 Cap50 preserves 115 JPEG/JSON pairs, 115 exact PNG inputs, the 139-frame feed ledger, subset metadata, ghost mask, sparse PLY, and references to tracked poses/floor IDs.
 
-Cap51 capture archive records 0/105 image bytes, the 81-frame bundle, feed ledger, and sparse PLY. Cap51 replay fixture preserves DB/WAL/SHM plus the feed ledger as pose JSONL, with explicit DB-image/pose alignment evidence. Pre/post source hash and stat stability are required; DVC grouping identifies final bytes but does not prove source-time atomicity.
+Cap51 capture archive records 0/105 image bytes, the 81-frame bundle, feed ledger, and sparse PLY. Cap51 replay fixture preserves persistent DB/WAL bytes plus the feed ledger as pose JSONL, with explicit DB-image/pose alignment evidence. The `-shm` wal-index is transient coordination/cache state, not replay input or persistent database identity; its observed drift is retained as audit evidence rather than copied into the fixture. Pre/post source hash and stat stability are required. Integrity queries run only against a stable clone or SQLite backup, never the scratch source. DVC grouping identifies final bytes but does not prove source-time atomicity. See SQLite's official [WAL-mode file format](https://www.sqlite.org/walformat.html#the_wal_index_or_shm_file), which states that the wal-index is transient and reconstructible from the WAL.
 
 The experiment inventory preserves four requested outputs, two merge inputs, five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz`. The last two are diagnostic/cache roles, not automatic run dependencies. The inventory records producer, consumer, inclusion reason, and evidence role for every NPZ.
 
@@ -102,7 +102,7 @@ The factor of two covers worst-case workspace plus cache copies even though APFS
 ## Risks / Trade-offs
 
 - **Same-disk loss remains open** → State it in every verdict; later authorize an encrypted external-drive remote.
-- **Cap51 source triplet may not be a single SQLite moment** → Preserve pre/post stable bytes as provisional; canonical fixture requires quiescent/checkpointed pull plus integrity/alignment checks.
+- **Cap51 DB/WAL pair may not be a single SQLite moment** → Preserve only pre/post stable persistent bytes as provisional; exclude volatile SHM from fixture identity. Canonical fixture requires a quiescent pull or a consistent SQLite backup/checkpoint plus integrity/alignment checks on a clone.
 - **Sparse/ignore rules can tempt force-add** → Probe exact ignored suffixes first; staged payload guard rejects JPEG, DB, PLY, NPZ, or photo bytes.
 - **Historical pure-A claim can be misread** → Mark license unknown and add a prominent README boundary before any product gate.
 - **Target stack can overwrite historical truth** → Store producer and consumer target stacks separately.
@@ -114,7 +114,7 @@ The factor of two covers worst-case workspace plus cache copies even though APFS
 2. TDD the streaming verifier and locked NPZ inspector.
 3. Expand sparse checkout only to the new capture root; initialize DVC and probe ignored suffix behavior/reflink.
 4. Compute predictive disk budgets and source manifests.
-5. Clone, hash, and DVC-add each bounded ownership unit serially.
+5. Clone, hash, and DVC-add each bounded ownership unit serially; never open the original SQLite source with a normal WAL reader.
 6. Generate all three contracts, NPZ inventory, normalized config, DVC/network/resource reports, and README license boundary.
 7. Run tests, DVC/OpenSpec/Git payload checks, then independent spec and quality reviews.
 8. Commit only metadata and pointers. On failure, remove only newly materialized worktree data/pointers after evidence review; never auto-delete cache or source bytes.
