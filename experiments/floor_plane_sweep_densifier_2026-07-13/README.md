@@ -2,21 +2,34 @@
 
 **All experiments run on Mac (M3 Pro, torch-MPS) — no remote GPU box. No production code touched.**
 
+> [!WARNING]
+> **Commercial-use boundary:** the table and images below are historical research evidence,
+> not a shipment gate. `floor_rescue_band_colored.ply`, the B/C routes, and every
+> `maxed`/merged result contain LoFTR-indoor/ScanNet non-commercial lineage and may only
+> be described as a non-commercial research upper bound. The plane-sweep algorithm core
+> is model-free photometric geometry, but the historical `fr_planesweep.py` run still
+> reads a LoFTR-derived rescue PLY for coverage statistics; therefore even the historical
+> pure-A result remains `license_status=unknown_pending_audit` until it is rerun from
+> first-party inputs under the clean contract. No result in this README is currently
+> product-qualified.
+
 ## Problem
 cap50's floor is weakly textured → production SIFT leaves holes + a "ghost layer"
 (sub-floor double-floor shell from depth ambiguity). Goal: densify the floor with
 **more good points, no quality drop**, purely photometric (Android/HarmonyOS have no LiDAR).
 
-## Headline result
+## Historical headline result (research only)
 
-| | SIFT (prod) | LoFTR rescue | **plane-sweep + maxed** |
+| | SIFT (prod baseline) | LoFTR rescue (non-commercial) | **plane-sweep + maxed (non-commercial merged upper bound)** |
 |---|---|---|---|
 | Floor coverage | 2.75 m² | +0.70 m² (+25%) | **5.84 m² (+112%)** |
 | Good points | 5845 | 1435 | **18,076 (1cm) / 55,192 (5mm)** |
 | New holes filled (SIFT=0) | — | 0.70 m² | **3.09 m² (4.4×)** |
 | Sub-floor ghost points | 3540 (4.7%) | (inherits) | **0** |
 
-Every point passes strict gates — no quality relaxation (see below).
+The historical scripts report that retained points pass the gates below, without quality
+relaxation. These numbers have not yet been regenerated from the new hashed data contract,
+so they must not be promoted to a production or commercial claim.
 
 ## The winner: plane-sweep on the known ARKit floor plane
 
@@ -37,9 +50,10 @@ only by photometric consistency → arbitrarily dense (ZNCC median stays 0.79 at
    no bas-relief shell / double-wall / fuzzy contour. Cross-section proof
    (`ghost_crosssection.png`): production has a thick ±60mm slab + sub-floor ghost band;
    plane-sweep is a razor-thin single plane, zero sub-floor points.
-2. **Ship-friendly**: pure geometry/shader, **zero license**, cross-platform (C++/Dawn/WGSL),
-   multi-view NCC is embarrassingly-parallel → ideal A16 GPU load. Closest compliant
-   pure-photometric replica of competitor LiDAR density.
+2. **Potentially ship-friendly algorithm core**: pure geometry/shader with no learned-model
+   dependency, cross-platform in principle (C++/Dawn/WGSL), and embarrassingly-parallel
+   multi-view NCC. Commercial eligibility still requires a clean-room rerun that removes
+   all LoFTR-derived statistics inputs, audits every dependency, and passes A16 validation.
 3. **Generalizes to any known plane** (walls, ceiling — ARKit plane anchors on-device).
 
 ## Honest limits
@@ -65,10 +79,12 @@ only by photometric consistency → arbitrarily dense (ZNCC median stays 0.79 at
   (+142%), quality up (nview≥3 0.24→0.44), survives 2px stricter gate.
 - Dead ends: conf<0.2 (stored data exhausted, = noise), track-completion 3rd view (floor 21 pts).
 
-## Matcher licensing (for the non-planar detector-free rescue branch)
+## Matcher licensing (separate non-planar detector-free branch)
 - ⚠️ Current Kornia **LoFTR-indoor = ScanNet-trained = non-commercial ToU = SHIP BLOCKER.**
-- Ship path: **ELoFTR / MatchAnything (Apache-2.0, MegaDepth-outdoor weights, fp16 opt)** —
-  only speed+cross-platform(MNN/CoreML)+license triple-clean semi-dense option.
+- Candidate audit path: **ELoFTR / MatchAnything with Apache-2.0 code and
+  MegaDepth-outdoor weights**. Repository license, exact weight provenance/terms,
+  transitive dependencies, export/runtime behavior, and mobile quality all require
+  independent verification before this may be called commercially eligible.
 - RoMa-outdoor (MIT/MegaDepth): strongest recall, keep as Mac offline branch (DINOv2 CoreML hard).
 - GIM (MIT, cleanest license/best zero-shot). MASt3R/DUSt3R = CC-BY-NC → rejected.
 - RoMa/DKM **indoor/ScanNet weights are non-commercial** — only use outdoor/MegaDepth.
