@@ -1,0 +1,21 @@
+{
+ "lever": "B (expand candidate pool: more pairs + higher LoFTR resolution)",
+ "metric_defs": {
+  "new_cells": "5cm floor cells covered by rescue band but NOT by SIFT production floor (same u,v plane basis + integer grid as build_floor_rescue.py)",
+  "band": "abs(floor_dist) < 20mm; all points pass cheirality + reproj<3px + tri-angle>=2deg + MAGSAC<3 + ARKit-Sampson<3"
+ },
+ "production_sift_floor": {"cells": 1101, "area_m2": 2.75},
+ "runs": {
+  "baseline_306p_640x360": {"match_wall_s": 82,  "band_pts": 1435, "cells": 793,  "new_cells": 279, "new_area_m2": 0.698, "tri_med_deg": 11.31, "reproj_med_px": 1.093, "frac_ge2deg": 1.0},
+  "A_pairs_only_589p_640":  {"match_wall_s": 160, "band_pts": 1289, "cells": 743,  "new_cells": 257, "new_area_m2": 0.643, "tri_med_deg": 11.59, "reproj_med_px": 1.084, "frac_ge2deg": 1.0},
+  "B_both_589p_896x504":    {"match_wall_s": 327, "band_pts": 2303, "cells": 1025, "new_cells": 387, "new_area_m2": 0.968, "tri_med_deg": 12.07, "reproj_med_px": 1.128, "frac_ge2deg": 1.0},
+  "C_res_only_306p_896x504":{"match_wall_s": 165, "band_pts": 2446, "cells": 1058, "new_cells": 396, "new_area_m2": 0.990, "tri_med_deg": 11.56, "reproj_med_px": 1.108, "frac_ge2deg": 1.0},
+  "D_res_only_306p_1024x576_NATIVE": {"match_wall_s": 197, "band_pts": 2350, "cells": 1019, "new_cells": 413, "new_area_m2": 1.033, "tri_med_deg": 10.98, "reproj_med_px": 0.911, "frac_ge2deg": 1.0}
+ },
+ "attribution": {
+  "resolution_lever": "THE lever. new_cells monotone 279(640)->396(896)->413(1024). Native 1024 also improves reproj 1.09->0.91px (no downscale->upscale keypoint quantization).",
+  "pair_expansion_lever": "REJECTED. 306->589 pairs is net-negative at every resolution (A<baseline; B<C). Wide/oblique extra pairs inject #12 grid-merge noise, cost a few net cells, and double compute."
+ },
+ "winner": "D: keep original 306 pairs, match at native 1024x576",
+ "verdict": "Adopt resolution bump 640x360 -> native 1024x576. +134 new cells (+48% vs 279), +0.335 m2 genuinely-new floor, quality IMPROVED (reproj 1.09->0.91px), all identical gates. Cost 82s->197s match (offline finalize path, trivial). Drop pair expansion entirely."
+}
