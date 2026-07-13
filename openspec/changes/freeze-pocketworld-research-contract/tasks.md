@@ -1,39 +1,42 @@
-## 1. Contract Tooling
+## 1. Contract Tooling and Schema
 
-- [ ] 1.1 Add the Python 3.11 contract package metadata and generate a repository-local `uv.lock` with no unreviewed runtime dependency.
-- [ ] 1.2 Write failing tests for canonical ordering, missing/mutated files, duplicate/absolute/parent-traversal paths, symlinks, and provisional cap51 verdict rejection.
-- [ ] 1.3 Implement the streaming manifest verifier until all contract tests pass with one-file-at-a-time memory use.
-- [ ] 1.4 Add JSON schema and eligibility vocabulary for asset identity, DVC identity, privacy, commercial scope, effective config, metrics, deviations, and verdict.
+- [ ] 1.1 TDD a Python 3.11 streaming verifier for canonical ordering, exact file sets, path/symlink safety, mutation, and provisional verdict gates.
+- [ ] 1.2 Add locked NumPy 2.4.2 NPZ inspection and reject pickle/object dtype with failing-first tests.
+- [ ] 1.3 Add schema/tests for full reproducibility truth and separate license/platform/role/lineage axes.
+- [ ] 1.4 Create normalized cap50, cap51 archive, and cap51 replay-fixture skeletons with null+deviation for missing evidence.
 
-## 2. Local DVC Safety Setup
+## 2. Sparse and DVC Safety Setup
 
-- [ ] 2.1 Record disk and memory baselines and abort if free disk is below 15 GiB or free-memory pressure is below 20%.
-- [ ] 2.2 Initialize DVC only in the isolated research worktree, disable analytics, configure a user-local cache and tracked `reflink,hardlink,copy` preference, and confirm there is no remote.
-- [ ] 2.3 Run a small APFS materialization fixture and verify hash equality, link behavior, DVC status, and bounded disk growth before copying capture assets.
+- [ ] 2.1 Expand sparse checkout only to `data/pocketworld_captures` and record baseline disk/memory.
+- [ ] 2.2 Initialize DVC at the isolated research root, use dedicated local cache, tracked `reflink,hardlink,copy`, analytics disabled, and no remote.
+- [ ] 2.3 Probe ignored photos/DB/PLY/NPZ plus reflink behavior on tiny fixtures; prove no binary force-add is needed.
+- [ ] 2.4 Compute each real batch byte count and enforce `15 GiB + 2×batch + 256 MiB` and 20% memory gates.
 
 ## 3. Cap50 Preservation
 
-- [ ] 3.1 Clone and hash the 115 paired 4K JPEG/sidecar files into `data/pocketworld_captures/cap50/raw/photos_highres` without rewriting bytes.
-- [ ] 3.2 Clone and hash the 115 exact 1024×576 PNG inputs into `data/pocketworld_captures/cap50/derived/work_1024x576`, excluding the tar and AppleDouble duplicate representation.
-- [ ] 3.3 Preserve the 139-frame live ledger, selected-subset metadata, poses, 66 floor-frame IDs, ghost mask, and direct sparse PLY; generate the exact 24-frame missing list.
-- [ ] 3.4 Add cap50 ownership units to DVC separately and verify source/destination/DVC identities.
+- [ ] 3.1 Clone/hash 115 JPEG/sidecar pairs and 115 exact PNG inputs in separate serial DVC units.
+- [ ] 3.2 Preserve private feed/subset/ghost metadata and sparse PLY; reference tracked poses/floor IDs by Git SHA.
+- [ ] 3.3 Generate and test the exact 139/115/24 relation and normalized effective config.
+- [ ] 3.4 Record DVC OIDs and verify `preserved_incomplete_feed` without upgrading historical claims.
 
-## 4. Cap51 Provisional Preservation
+## 4. Cap51 Archive and Replay Fixture
 
-- [ ] 4.1 Clone the DB/WAL/SHM triplet as one provisional raw unit and preserve the 105-frame feed ledger, 81-frame bundle, and sparse PLY.
-- [ ] 4.2 Generate a cap51 manifest that records `0/105` referenced image bytes available and status `provisional_not_verdict_eligible`.
-- [ ] 4.3 Add the provisional unit to DVC and prove the verifier blocks incremental-BA verdict use.
+- [ ] 4.1 Preserve the photo archive gap, bundle, feed ledger, and sparse PLY as capture-archive evidence.
+- [ ] 4.2 Preserve DB/WAL/SHM and the feed ledger as pose JSONL with pre/post source stability checks.
+- [ ] 4.3 Record SQLite integrity, 105 DB image/keypoint/descriptor rows, image IDs 1–105, pose IDs 0–104, and capture binding.
+- [ ] 4.4 Prove replay remains `provisional_not_verdict_eligible` only because fresh pull/quiescence identity is missing.
 
-## 5. Plane-Sweep Evidence Preservation
+## 5. Plane-Sweep PLY and NPZ Evidence
 
-- [ ] 5.1 Preserve the four requested output PLY files and verify their pre-copy SHA-256 and vertex metadata.
-- [ ] 5.2 Preserve the two merge-input PLY files, five match NPZ files, and `xsec_data.npz`; verify every NPZ with `allow_pickle=False` and no object dtype.
-- [ ] 5.3 Record pure-A as `candidate_unproven_cross_platform`, B/C and merged evidence as `noncommercial_research_upper_bound`, and effective `grid_m=0.01` as authoritative over the script default.
-- [ ] 5.4 Add experiment ownership units to DVC separately and verify no duplicate tar, duplicate PLY copy, or `_shell_cache.npz` entered the closure.
+- [ ] 5.1 Preserve/verify four outputs and two merge inputs with names, hashes, formats, and vertices.
+- [ ] 5.2 Inventory and preserve all seven NPZ files with producer/consumer/role/inclusion evidence and locked safe-load checks.
+- [ ] 5.3 Record effective `grid_m=0.01`, historical producer versus COLMAP 4.1.0 target, and hard-coded scripts as non-runnable evidence sources.
+- [ ] 5.4 Record historical pure-A as license unknown pending audit and B/C/merged evidence as non-commercial upper bounds.
+- [ ] 5.5 Add a prominent README boundary separating pure-A and merged metrics before product use.
 
-## 6. Final Verification and Handoff
+## 6. Final Verification and Review
 
-- [ ] 6.1 Verify both contracts, canonical JSON stability, DVC status, empty DVC remote list, `uv lock --check --offline`, and a clean OpenSpec validation.
-- [ ] 6.2 Scan tracked/staged files for large binary payloads and scan runnable config for `/private/tmp` or mobile-container absolute paths.
-- [ ] 6.3 Record final disk/memory state, DVC OIDs, artifact hashes, deviations, same-disk backup limitation, and exact recovery commands.
-- [ ] 6.4 Run an independent read-only review against the specification and correct every material finding before committing the metadata-only change.
+- [ ] 6.1 Verify three contracts, tests/lint/offline lock, DVC status/no remote, OpenSpec, Git payload, normalized paths, and resource/network logs.
+- [ ] 6.2 Record cache path, DVC OIDs, hashes, deviations, same-disk risk, and non-destructive cleanup/recovery commands.
+- [ ] 6.3 Complete independent spec review followed by code-quality review and resolve all findings.
+- [ ] 6.4 Commit exact metadata/pointer paths only; leave fresh cap51 pull and experiment A blocked for morning device authorization.

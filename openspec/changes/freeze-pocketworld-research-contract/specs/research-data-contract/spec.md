@@ -1,111 +1,143 @@
 ## ADDED Requirements
 
-### Requirement: Repository-scoped data ownership
-The system SHALL initialize and use DVC only in the independent `pocketworld_research_benchmarks` Git root and SHALL NOT add the aggregate Aether3D repository, the whole research `data/` tree, or the whole scratchpad.
+### Requirement: Repository and sparse ownership are exact
+The system SHALL use DVC only in the isolated `pocketworld_research_benchmarks` worktree, SHALL extend sparse checkout only to the new `data/pocketworld_captures` subtree, and SHALL reject repository-root, historical top-level `data`, or scratchpad-root selections.
 
-#### Scenario: DVC root is verified
-- **WHEN** preservation begins
-- **THEN** the resolved Git root and DVC root are the isolated research worktree based on commit `0a1931658ffff4d2e606b87b197656fe8a14025d`
+#### Scenario: Exact root is accepted
+- **WHEN** preservation starts
+- **THEN** Git and DVC resolve to the isolated research root based on `0a1931658ffff4d2e606b87b197656fe8a14025d`
 
-#### Scenario: Broad add is rejected
-- **WHEN** an input selection resolves to the repository root, the top-level historical `data/` tree, or the scratchpad root
-- **THEN** preservation stops without adding any asset
+#### Scenario: Broad selection is rejected
+- **WHEN** a requested add resolves to a broad or historical root
+- **THEN** no data is copied or added
 
-### Requirement: Local-only sensitive storage
-The system SHALL keep capture images, camera metadata, databases, PLY, and NPZ bytes on the encrypted local volume, SHALL configure no DVC remote, and SHALL keep large bytes out of Git.
+### Requirement: Sensitive storage remains local
+Capture and experiment bytes SHALL remain on the encrypted local volume, SHALL use a dedicated local DVC cache, SHALL configure no DVC remote, and SHALL remain outside Git payloads. Empty remote state and absence of sensitive network transfer SHALL be verified as separate facts.
 
-#### Scenario: No remote is configured
-- **WHEN** the completed contract is verified
-- **THEN** `dvc remote list` is empty and no network transfer occurred
+#### Scenario: Local-only DVC verifies
+- **WHEN** preservation completes
+- **THEN** `dvc remote list` is empty and the command log contains no sensitive-data network operation
 
-#### Scenario: Git contains only metadata
-- **WHEN** Git-staged files are inspected
-- **THEN** only DVC pointers, manifests, schema, small configuration, tests, and documentation are present
+#### Scenario: Git payload is safe
+- **WHEN** staged files are inspected
+- **THEN** no JPEG, DB, WAL, SHM, PLY, NPZ, or capture payload is staged, including by force-add
 
-### Requirement: Deterministic ordered asset identity
-Every preserved asset SHALL have a unique POSIX relative path, role, byte count, lowercase SHA-256, eligibility label, and DVC identity in an ordered manifest. Verification SHALL stream one file at a time and fail closed on an absolute path, symlink, duplicate path, missing file, byte mismatch, or hash mismatch.
+### Requirement: Ignored asset behavior is proven before real copy
+The system SHALL use a tiny fixture matching existing ignored `photos_highres`, DB, PLY, and NPZ patterns to prove DVC pointer behavior without force-adding binary bytes.
 
-#### Scenario: Unmodified asset verifies
-- **WHEN** every destination file matches its recorded byte count and SHA-256
-- **THEN** the verifier emits a deterministic success report with stable canonical JSON
+#### Scenario: Ignore probe passes
+- **WHEN** the fixture is DVC-added
+- **THEN** only pointer/ignore metadata is Git-visible and the binary fixture remains untracked by Git
 
-#### Scenario: Asset mutation is detected
-- **WHEN** one preserved byte changes
-- **THEN** verification fails and identifies the relative path without updating the expected hash
+### Requirement: Asset identity is deterministic and fail closed
+Every asset SHALL have a unique POSIX relative path, role, bytes, lowercase SHA-256, DVC OID, license status, platform qualification, evidence role, and non-commercial-lineage flag. Verification SHALL stream one file at a time and reject absolute/traversal paths, symlinks, duplicates, missing/extra files, or content mismatch.
 
-#### Scenario: Unsafe path is rejected
-- **WHEN** a manifest contains an absolute path, parent traversal, duplicate path, or symlinked asset
-- **THEN** verification fails before accepting the contract
+#### Scenario: Exact collection verifies
+- **WHEN** file set, bytes, and hashes match
+- **THEN** canonical JSON output is stable across repeated runs
+
+#### Scenario: Unsafe or changed collection fails
+- **WHEN** any unsafe path, symlink, duplicate, extra, missing, or changed byte is present
+- **THEN** verification fails without updating expected identity
+
+### Requirement: Full reproducibility truth is mandatory
+Each contract SHALL record Git root/branch/commit/dirty-diff hash; code/script hashes; producer stack; consumer target stack; ordered inputs; effective config and hash; command; seeds/determinism; Python/uv lock and hardware/backend; model source/revision/weight hash/license evidence; metrics/thresholds; exclusions; stopping rules; output hashes; deviations; and verdict.
+
+#### Scenario: Historical and target stacks differ
+- **WHEN** an old artifact predates COLMAP 4.1.0
+- **THEN** its producer stack remains historical/unknown and 4.1.0 appears only as consumer target policy
+
+#### Scenario: Required evidence is absent
+- **WHEN** a required field is unknown
+- **THEN** the contract records `null` plus a deviation and cannot upgrade the related verdict
 
 ### Requirement: Cap50 closure is explicit
-The cap50 contract SHALL preserve 115 paired 3840×2160 JPEG/sidecar records, 115 exact 1024×576 PNG preprocessing inputs, the live feed manifest, selected-subset metadata, poses, floor-frame IDs, ghost mask, and direct sparse PLY. It SHALL report that 24 of 139 live-fed frames are unavailable and SHALL bind any reproduction claim to the 115-frame selection.
+The cap50 contract SHALL preserve 115 paired 3840×2160 JPEG/sidecars, 115 exact 1024×576 PNG inputs, live ledger, subset metadata, poses, floor IDs, ghost mask, and direct sparse PLY. It SHALL enumerate 24 unavailable names from the 139-frame feed.
 
-#### Scenario: Cap50 selected closure is complete
-- **WHEN** the cap50 contract is verified
-- **THEN** all 115 JPEG stems have one sidecar, all 115 preprocessing images exist, and the selected-subset manifest resolves exactly those 115 inputs
+#### Scenario: Selected closure verifies
+- **WHEN** cap50 is checked
+- **THEN** 115 pairs and 115 PNG inputs resolve exactly and the status is `preserved_incomplete_feed`
 
-#### Scenario: Missing live frames remain visible
-- **WHEN** the 139-frame live ledger is compared with preserved raw inputs
-- **THEN** the contract lists exactly 24 unavailable frame identifiers and does not redefine the live denominator as 115
+#### Scenario: Live denominator is retained
+- **WHEN** the live ledger is compared to raw inputs
+- **THEN** exactly 24 missing names are reported and 139 is not redefined as 115
 
-### Requirement: Cap51 remains provisional until fresh device copy
-The available cap51 DB/WAL/SHM triplet, 105-frame live ledger, 81-frame bundle, and sparse PLY SHALL be preserved as one provisional evidence unit. The contract SHALL record that 105 of 105 referenced image bytes are absent and SHALL be ineligible for an incremental-BA verdict.
+### Requirement: Cap51 archive and replay fixture are separate
+The system SHALL create a capture-archive contract for missing photos and a replay-fixture contract for DB plus pose JSONL. Photo absence SHALL NOT by itself decide replay eligibility.
 
-#### Scenario: Provisional cap51 verifies
-- **WHEN** the existing metadata and DB triplet match their recorded hashes
-- **THEN** preservation succeeds with status `provisional_not_verdict_eligible`
+#### Scenario: Capture archive records photo gap
+- **WHEN** cap51 archive is verified
+- **THEN** it records 0/105 photo bytes independently of replay status
 
-#### Scenario: A/B execution is requested with provisional cap51
-- **WHEN** a run attempts to use the provisional contract as its canonical fixture
-- **THEN** the run is blocked before metrics are produced
+#### Scenario: Current provisional replay pair is inspected
+- **WHEN** scratch DB and pose JSONL are checked
+- **THEN** DB image IDs, keypoint/descriptor rows, pose frame IDs, SQLite integrity, hashes, and capture identity are recorded
 
-#### Scenario: Fresh device fixture arrives
-- **WHEN** cap51 is freshly copied from the named iPhone after user authorization
-- **THEN** a new canonical contract ID and new SHA-256 values are required rather than mutating the provisional contract
+#### Scenario: A/B requests current provisional fixture
+- **WHEN** the DB/pose bytes lack a fresh user-authorized pull and quiescence/capture-binding evidence
+- **THEN** status remains `provisional_not_verdict_eligible` before metrics run
 
-### Requirement: Requested PLY and NPZ evidence is preserved without duplication
-The system SHALL preserve the four requested output PLY files, the two merge-input PLY files required by the merged output, five match NPZ files, and the diagnostic `xsec_data.npz`. It SHALL NOT preserve duplicate tar/expanded images, duplicate benchmark/scratch PLY copies, or unreferenced `_shell_cache.npz` as part of the minimal closure.
+#### Scenario: Fresh canonical fixture arrives
+- **WHEN** a fresh quiescent device pull passes integrity and DB/pose alignment
+- **THEN** a new immutable contract ID and hashes are created rather than mutating provisional evidence
 
-#### Scenario: Four requested outputs are present
-- **WHEN** the experiment artifact unit is verified
-- **THEN** `production_floor.ply`, `floor_rescue_band_colored.ply`, `floor_planesweep.ply`, and `floor_maxed_colored.ply` match their pre-copy SHA-256 values
+### Requirement: PLY and complete NPZ inventory are preserved
+The system SHALL preserve four requested output PLY files, two merge-input PLY files, five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz`. Each NPZ SHALL record filename, bytes, SHA, producer, consumer, role, and inclusion reason.
 
-#### Scenario: NPZ safety is checked
-- **WHEN** each preserved NPZ is inspected
-- **THEN** it can be loaded with `allow_pickle=False` and contains no object dtype
+#### Scenario: Requested PLY outputs verify
+- **WHEN** outputs are checked
+- **THEN** all four names, hashes, formats, and vertex counts match pre-copy evidence
 
-### Requirement: Commercial evidence scope is fail closed
-Every model-derived input and output SHALL record commercial eligibility. LoFTR-indoor/ScanNet B/C evidence and any merged artifact containing it SHALL be labeled `noncommercial_research_upper_bound` and SHALL NOT support a production, open-source-commercial, or cross-platform qualification claim.
+#### Scenario: NPZ archives are safe
+- **WHEN** all seven NPZ files are inspected with locked NumPy
+- **THEN** `allow_pickle=False` succeeds and no object dtype is present
 
-#### Scenario: Pure-A output is reported
+### Requirement: License, platform, role, and lineage are independent
+Every artifact SHALL record separate license status, platform qualification, evidence role, and non-commercial lineage. Historical pure-A SHALL remain `unknown_pending_audit` until its LoFTR-derived statistics dependency is removed and a clean rerun is audited. B/C and merged evidence SHALL be commercially ineligible research upper bounds.
+
+#### Scenario: Historical pure-A is reported
 - **WHEN** `floor_planesweep.ply` is summarized
-- **THEN** it is labeled `candidate_unproven_cross_platform` and not labeled delivered or production-qualified
+- **THEN** it is Mac-only, license-unknown pending audit, and not product-qualified
 
-#### Scenario: Merged output is reported
-- **WHEN** `floor_maxed_colored.ply` or B/C match evidence is summarized
-- **THEN** the report includes the non-commercial upper-bound label and excludes it from product gates
+#### Scenario: Non-commercial lineage is reported
+- **WHEN** B/C or merged evidence is summarized
+- **THEN** LoFTR-indoor/ScanNet lineage is explicit and excluded from commercial gates
 
-### Requirement: Effective configuration outranks defaults
-The contract SHALL record the effective run configuration, code revision and script hashes. For the preserved pure-A result it SHALL record `grid_m=0.01` and SHALL flag the script default `0.02` as non-authoritative.
+### Requirement: Effective configuration is normalized
+The system SHALL create a repository-relative `effective-config.json`, record historical `grid_m=0.01` over script default `0.02`, and mark hard-coded scratch scripts as evidence sources that are not directly runnable.
 
-#### Scenario: Config drift is evaluated
-- **WHEN** the script default differs from the preserved metrics/config evidence
-- **THEN** the effective recorded value is used and the deviation is explicit
+#### Scenario: Runnable metadata is scanned
+- **WHEN** versioned contract/config is checked
+- **THEN** it contains no `/private/tmp` or mobile-container path while immutable raw evidence may retain original bytes
 
-### Requirement: Resource gates prevent host exhaustion
-Preservation SHALL run serially, SHALL stop before free disk falls below 15 GiB, SHALL stop when host free-memory pressure is below 20%, and SHALL test APFS link behavior before copying the full selection.
+### Requirement: Source stability and SQLite consistency are explicit
+Provisional DB/WAL/SHM copy SHALL use pre/post hash and stat checks. Canonical fixture SHALL require producer quiescence or consistent backup/checkpoint plus read-only integrity and DB/pose alignment checks.
 
-#### Scenario: Disk floor would be crossed
-- **WHEN** the next preservation batch could reduce free disk below 15 GiB
-- **THEN** the batch is not started and existing preserved units remain verifiable
+#### Scenario: Source changes during copy
+- **WHEN** any source stat or hash changes
+- **THEN** the new destination is rejected and no snapshot claim is made
 
-#### Scenario: Memory pressure is unsafe
-- **WHEN** the pre-batch memory check reports less than 20% free
-- **THEN** hashing/materialization pauses without loading the next payload
+### Requirement: Predictive resource gates prevent exhaustion
+Before every batch, the system SHALL know batch bytes and require free disk of at least `15 GiB + 2×batch_bytes + 256 MiB`, free memory of at least 20%, and serial one-file-at-a-time processing.
 
-### Requirement: Same-disk limitation is explicit
-The contract SHALL state that local DVC on the same volume is not a disaster-recovery backup and SHALL provide recovery commands only for the current local cache.
+#### Scenario: Worst-case budget fails
+- **WHEN** predicted workspace-plus-cache amplification crosses the disk floor
+- **THEN** the batch is not started
 
-#### Scenario: Preservation is complete
-- **WHEN** all selected units verify locally
-- **THEN** the verdict says scratchpad-loss risk is reduced but single-disk-loss risk remains open
+#### Scenario: Memory gate fails
+- **WHEN** system-wide free memory is below 20%
+- **THEN** processing pauses before loading the next file
+
+### Requirement: Same-disk limitation and cache rollback are safe
+The contract SHALL state that local DVC is not disaster recovery. Rollback SHALL NOT automatically prune or delete dedicated content-addressed cache objects.
+
+#### Scenario: Preservation completes or fails
+- **WHEN** a handoff is written
+- **THEN** single-disk risk and user-reviewed cache cleanup instructions remain explicit
+
+### Requirement: README cannot imply commercial qualification
+Before any product gate, the experiment README SHALL visibly separate pure-A metrics from LoFTR-derived upper-bound metrics and SHALL state that historical pure-A is pending a standalone license audit/rerun.
+
+#### Scenario: Reader sees headline metrics
+- **WHEN** README performance claims are displayed
+- **THEN** no `+112%` merged result is presented as zero-license or commercially shippable

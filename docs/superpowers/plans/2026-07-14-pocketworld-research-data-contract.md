@@ -4,7 +4,7 @@
 
 **Goal:** Preserve available cap50/cap51 and plane-sweep evidence as local-only, content-addressed, fail-closed research contracts without exhausting the Mac or overstating incomplete/non-commercial evidence.
 
-**Architecture:** A sparse isolated worktree holds OpenSpec, deterministic Python tooling, manifests, and DVC pointers. Selected bytes are APFS-cloned into bounded collections and content-addressed by a user-local DVC cache with no remote; SHA-256 contract verification remains independent of DVC. Cap50 and cap51 use separate typed contracts so provisional cap51 can never unlock experiment A.
+**Architecture:** A sparse isolated worktree holds OpenSpec, deterministic Python tooling, manifests, and DVC pointers. Selected bytes are APFS-cloned into bounded collections and content-addressed by a dedicated local cache with no remote. Cap50, cap51 capture archive, and cap51 DB/pose replay fixture use separate typed contracts so photo absence is not confused with replay eligibility.
 
 **Tech Stack:** Git worktree, OpenSpec 1.6.0, DVC 3.67.1, uv 0.11.14, Python 3.11, pytest, Ruff, encrypted APFS, SHA-256.
 
@@ -17,7 +17,7 @@
 - Scratch source: `/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/b3b899a4-8125-4eb7-a21a-eb3d48c3d2a8/scratchpad`
 - Original research checkout is a read-only source for four ignored PLY files.
 - Python: `/opt/homebrew/bin/python3.11`.
-- Hard stop: less than 15 GiB free disk or less than 20% system-wide free memory.
+- Hard stop per batch: free bytes below `15 GiB + 2×batch bytes + 256 MiB`, or less than 20% system-wide free memory.
 - Prohibited: device access, DVC remote, upload, `git add -A`, whole-tree DVC add, experiment execution, model download, and edits to the original checkout.
 
 ### Task 1: Contract verifier via TDD
@@ -116,25 +116,26 @@ Commit as `test(research): add deterministic asset contract verifier`.
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/schemas/contract-v1.schema.json`
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/tests/test_contract_schema.py`
 - Create: `experiments/pocketworld_repro_contract_2026-07-14/contracts/cap50-floor-plane-sweep-v1.json`
-- Create: `experiments/pocketworld_repro_contract_2026-07-14/contracts/cap51-incremental-ba-provisional-v1.json`
+- Create: `experiments/pocketworld_repro_contract_2026-07-14/contracts/cap51-capture-archive-provisional-v1.json`
+- Create: `experiments/pocketworld_repro_contract_2026-07-14/contracts/cap51-incremental-ba-fixture-provisional-v1.json`
 
-- [ ] **Step 1: Write failing tests for the required truth surface**
+- [ ] **Step 1: Write failing tests for the required truth surface and unsafe NPZ archives**
 
-Require `schema_version`, `contract_id`, `status`, `git`, `upstream`, `collections`, `code`, `environment`, `models`, `effective_config`, `seeds`, `command`, `metrics`, `exclusions`, `stopping_rules`, `artifacts`, `deviations`, `privacy`, `product_qualification`, and `verdict`. Reject runnable config containing `/private/tmp` or `/var/mobile/Containers`.
+Require `schema_version`, `contract_id`, `status`, `git`, `upstream`, `collections`, `code`, `environment`, `models`, `effective_config`, `seeds`, `command`, `metrics`, `exclusions`, `stopping_rules`, `artifacts`, `deviations`, `privacy`, `product_qualification`, and `verdict`. Reject runnable config containing `/private/tmp` or `/var/mobile/Containers`. Add generated numeric and object-dtype NPZ fixtures; the latter must fail safe-load inspection.
 
-- [ ] **Step 2: Run RED, then implement explicit structural and enum validation**
+- [ ] **Step 2: Run RED, pin NumPy 2.4.2, then implement structural and NPZ validation**
 
-Allowed status values are `preserved_incomplete_feed`, `provisional_not_verdict_eligible`, `verdict_eligible`, and `invalid`. Allowed eligibility values are `input_only`, `candidate_unproven_cross_platform`, `commercially_eligible`, and `noncommercial_research_upper_bound`.
+Run `uv add numpy==2.4.2`. Allowed status values are `preserved_incomplete_feed`, `provisional_not_verdict_eligible`, `verdict_eligible`, and `invalid`. Validate separate `license_status`, `platform_qualification`, `evidence_role`, and `lineage_contains_noncommercial` fields; never combine them into one eligibility enum. NPZ inspection uses `numpy.load(..., allow_pickle=False)` and rejects object dtype.
 
 - [ ] **Step 3: Add skeletons without fabricating missing facts**
 
-Cap50 records `selected=115`, `live_fed=139`, `missing=24`, `grid_m=0.01`, and `preserved_incomplete_feed`. Cap51 records `live_fed=105`, `selected=81`, `available_images=0`, `provisional_not_verdict_eligible`, and `fresh_device_pull_required`. Unknown command/seed/model/DVC values remain `null` with explicit deviations.
+Cap50 records `selected=115`, `live_fed=139`, `missing=24`, `grid_m=0.01`, and `preserved_incomplete_feed`. Cap51 archive records `available_images=0`; the separate fixture records 105 DB images aligned to pose frame IDs 0–104 but remains provisional because fresh pull/quiescence identity is absent. Unknown command/seed/model/DVC values remain `null` with explicit deviations.
 
 - [ ] **Step 4: Run GREEN and commit**
 
 Run all tests/lint/lock checks and commit as `spec(research): define typed PocketWorld experiment contracts`.
 
-### Task 3: Local DVC safety probe
+### Task 3: Sparse/DVC safety probe
 
 **Files:**
 
@@ -142,21 +143,21 @@ Run all tests/lint/lock checks and commit as `spec(research): define typed Pocke
 - Create: `.dvc/.gitignore`
 - Local only: `.dvc/config.local`
 
-- [ ] **Step 1: Record `df -h .`, `memory_pressure -Q`, and `du -sh .`; stop outside gates**
+- [ ] **Step 1: Extend sparse checkout only to `data/pocketworld_captures`, compute probe bytes, and record resource gates**
 
 - [ ] **Step 2: Initialize only the isolated research root**
 
 ```bash
 DVC_NO_ANALYTICS=true dvc init
 DVC_NO_ANALYTICS=true dvc config cache.type reflink,hardlink,copy
-DVC_NO_ANALYTICS=true dvc config --local cache.dir \
-  /Users/kaidongwang/.cache/dvc/pocketworld_research_benchmarks
+DVC_NO_ANALYTICS=true dvc cache dir --local \
+  /Users/kaidongwang/.cache/dvc/pocketworld-research-contract-20260714
 test -z "$(DVC_NO_ANALYTICS=true dvc remote list)"
 ```
 
-- [ ] **Step 3: DVC-add a 4 KiB deterministic probe created through `apply_patch`**
+- [ ] **Step 3: DVC-add tiny ignored `photos_highres`, DB, PLY, and NPZ probes created through `apply_patch`**
 
-Inspect `dvc doctor`, `dvc status --json`, free-disk delta, and configured cache types. Remove only the probe and pointer after the test; keep DVC config.
+First verify reflink-only succeeds, then restore ordered fallback. Inspect config origin, status, free-disk delta, and prove no binary `git add -f` is needed. Remove only workspace probes/pointers; never prune the dedicated cache automatically.
 
 - [ ] **Step 4: Commit DVC metadata only**
 
@@ -198,14 +199,14 @@ Write a deterministic missing-frame list. Do not shrink the live denominator.
 
 - [ ] **Step 7: Update DVC OIDs and verify cap50 remains `preserved_incomplete_feed`**
 
-### Task 5: Preserve cap51 as provisional evidence
+### Task 5: Preserve separate cap51 archive and replay-fixture evidence
 
 **Files:**
 
-- Create/DVC: `data/pocketworld_captures/cap51/private_manifests/`
-- Create/DVC: `data/pocketworld_captures/cap51/sfm/live_snapshot_provisional/`
-- Create/DVC: `data/pocketworld_captures/cap51/sfm/sfm_sparse.ply`
-- Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-provisional.json`
+- Create/DVC: `data/pocketworld_captures/cap51/capture_archive_provisional/`
+- Create/DVC: `data/pocketworld_captures/cap51/incremental_ba_fixture_provisional/`
+- Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-archive-provisional.json`
+- Create: `experiments/pocketworld_repro_contract_2026-07-14/manifests/cap51-fixture-provisional.json`
 
 - [ ] **Step 1: Assert pre-copy hashes for DB/WAL/SHM, feed ledger, bundle, and sparse PLY**
 
@@ -215,13 +216,13 @@ Use the six hashes in the OpenSpec evidence; fail before copying on any mismatch
 
 If any source changes between checks, delete only the new destination and stop. Never call it a consistent snapshot.
 
-- [ ] **Step 3: Preserve metadata and sparse PLY; generate exactly 105 unavailable image basenames**
+- [ ] **Step 3: Preserve capture-archive metadata separately and generate exactly 105 unavailable image basenames**
 
-Do not fabricate `raw/photos_highres`.
+Do not fabricate `raw/photos_highres`. Photo absence is an archive gap, not the replay blocker.
 
-- [ ] **Step 4: DVC-add and prove the verdict gate is closed**
+- [ ] **Step 4: Verify the replay closure and keep its verdict gate closed**
 
-Structural verification must pass, while `gate-verdict` exits non-zero with `fresh_device_pull_required`.
+Record SQLite `integrity_check=ok`, 105 image/keypoint/descriptor rows, image IDs 1–105, pose IDs 0–104, and capture path binding. Structural verification passes, while `gate-verdict` exits non-zero because fresh pull/quiescence evidence is missing.
 
 ### Task 6: Preserve plane-sweep PLY/NPZ evidence
 
@@ -240,15 +241,19 @@ Expected hashes begin `3eaabe2b`, `043536cc`, `1113af4a`, `81dc1bc4`; expected v
 
 - [ ] **Step 2: Preserve merge inputs with hashes `3569d382...22ee` and `74d3a669...717d`**
 
-- [ ] **Step 3: Preserve five match NPZ files plus `xsec_data.npz` serially**
+- [ ] **Step 3: Inventory and preserve five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz` serially**
 
-Verify each with `numpy.load(path, allow_pickle=False)` and reject object dtype. Exclude `_shell_cache.npz`.
+Pin NumPy 2.4.2 in `uv.lock`; verify each with `allow_pickle=False`, reject object dtype, and record producer/consumer/role/inclusion reason.
 
 - [ ] **Step 4: Write eligibility/effective config before DVC add**
 
-Record `grid_m=0.01`. Pure-A is `candidate_unproven_cross_platform`; B/C and merged evidence are `noncommercial_research_upper_bound` because they contain LoFTR-indoor/ScanNet evidence.
+Record `grid_m=0.01`, producer stack separately from COLMAP 4.1.0 target, and hard-coded scripts as evidence-only. Historical pure-A is Mac-only and license-unknown pending audit because its statistics read LoFTR-derived input; B/C and merged evidence are commercially ineligible research upper bounds.
 
-- [ ] **Step 5: DVC-add outputs, merge inputs, and matches separately, checking free disk after each**
+- [ ] **Step 5: Add a prominent README boundary before any product gate**
+
+Separate pure-A point metrics from merged `+112%` metrics and state that historical pure-A still needs a standalone license-clean rerun; never present the merged result as zero-license.
+
+- [ ] **Step 6: DVC-add outputs, merge inputs, and matches separately, checking the predictive disk gate after each**
 
 ### Task 7: Full deterministic verification
 
@@ -281,4 +286,4 @@ Do not call nonexistent `dvc cache verify` in DVC 3.67.1.
 
 - [ ] **Step 5: Leave experiment A blocked for the morning fresh device pull**
 
-The handoff names iPhone `1B290474-D354-5B4C-AAB0-0805AC5DC832`, app `com.kyle.PocketWorld`, the expected 105-frame set, and the rule that the fresh fixture gets a new contract ID and new hashes. It SHALL NOT invoke `devicectl` tonight.
+The handoff names iPhone `1B290474-D354-5B4C-AAB0-0805AC5DC832`, app `com.kyle.PocketWorld`, the expected fresh DB plus pose JSONL, quiescence/integrity/alignment proof, and the rule that the fixture gets a new contract ID and hashes. It SHALL NOT invoke `devicectl` tonight.
