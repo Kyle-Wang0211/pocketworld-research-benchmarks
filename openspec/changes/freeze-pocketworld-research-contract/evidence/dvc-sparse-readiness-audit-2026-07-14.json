@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "audit_id": "pocketworld-dvc-sparse-readiness-2026-07-14-v1",
+  "audited_at": "2026-07-14T05:23:21+08:00",
+  "mode": "read_only_no_network",
+  "git": {
+    "root": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714",
+    "git_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/.git/worktrees/pocketworld-repro-contract-20260714",
+    "common_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/.git",
+    "head": "4b4ed5f88d950cc351a4016463767a36c49f4c4a",
+    "branch": "codex/pocketworld-repro-contract-20260714",
+    "sparse_checkout_cone": true,
+    "worktree_config": true,
+    "sparse_roots": [
+      "docs",
+      "experiments",
+      "openspec",
+      "tools"
+    ],
+    "target_tree_was_empty": true
+  },
+  "dvc": {
+    "version": "3.67.1",
+    "wrapper": "/opt/homebrew/bin/dvc",
+    "wrapper_sha256": "42bc19f55aec05fdbfed3c27a89c412328e7f84d89756c812c60f8453a47212e",
+    "tool_project": "/Users/kaidongwang/.codex/research-tools",
+    "tool_pyproject_sha256": "9b999a94a11380cbf74a1ff495203dd7138c17f77e81a63a94fbc42f3b588c45",
+    "tool_uv_lock_sha256": "210a0d579fc0d7ffd1b49d33fa880f944de1e4b85dc9423185a774b0244a1aaf",
+    "initialized": false,
+    "global_config": {
+      "core.analytics": false
+    },
+    "system_config_empty": true,
+    "remote_configured": false,
+    "dedicated_cache": "/Users/kaidongwang/.cache/dvc/pocketworld-research-contract-20260714",
+    "dedicated_cache_existed": false
+  },
+  "resource_observation": {
+    "available_disk_bytes": 21639565312,
+    "system_wide_memory_free_percent": 49,
+    "disk_gate_formula": "15*1024^3 + 2*batch_bytes + 256*1024^2",
+    "memory_gate_percent": 20,
+    "largest_static_batch": {
+      "name": "cap50-raw-jpeg-plus-json",
+      "bytes": 205162291,
+      "required_available_disk_bytes": 16784887398
+    }
+  },
+  "planned_fail_closed_sequence": [
+    "require a clean expected worktree and recheck root, branch, HEAD, disk, and memory",
+    "run git sparse-checkout add data/pocketworld_captures and reject any broader data root",
+    "initialize only repository-local DVC metadata without hooks or remotes",
+    "set the exact dedicated cache as local config before any dvc add",
+    "run a tiny ignored-suffix and APFS reflink/hardlink/copy probe",
+    "stage only an explicit metadata allowlist and reject binary payloads",
+    "recheck empty dvc remote list before any real preservation batch"
+  ],
+  "prohibited": [
+    "git sparse-checkout add data",
+    "git add -A",
+    "git add -f",
+    "dvc install",
+    "dvc gc",
+    "dvc cache prune",
+    "global or system DVC configuration writes",
+    "network remotes",
+    "real payload copy before the tiny probe and resource gates pass"
+  ]
+}
