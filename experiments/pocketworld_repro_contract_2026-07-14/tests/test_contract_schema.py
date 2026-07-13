@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import importlib.resources
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +18,9 @@ if TYPE_CHECKING:
 REQUIRED_TOP_LEVEL_FIELDS = {
     "schema_version",
     "contract_id",
+    "contract_kind",
+    "validation_scope",
+    "replay_qualification",
     "status",
     "git",
     "upstream",
@@ -123,6 +127,7 @@ NESTED_REQUIRED_FIELDS = [
     ("environment/producer", "backend"),
     ("environment/verifier", "python_version"),
     ("environment/verifier", "numpy_version"),
+    ("environment/verifier", "uv_lock_path"),
     ("environment/verifier", "uv_lock_sha256"),
     ("environment/verifier", "hardware"),
     ("environment/verifier", "backend"),
@@ -168,6 +173,9 @@ def _minimal_contract() -> dict[str, object]:
     return {
         "schema_version": 1,
         "contract_id": "fixture-v1",
+        "contract_kind": "general_research",
+        "validation_scope": "decision_contract",
+        "replay_qualification": {"applicable": False},
         "status": "verdict_eligible",
         "git": {
             "repository": ".",
@@ -189,8 +197,38 @@ def _minimal_contract() -> dict[str, object]:
                 "ceres_version": "2.2-submodule",
             },
         },
-        "collections": [],
-        "code": {"entries": []},
+        "collections": [
+            {
+                "evidence_id": "fixture-input",
+                "identity_status": "preserved",
+                "path": "inputs/fixture.bin",
+                "bytes": 7,
+                "sha256": "e" * 64,
+                "dvc_oid": "md5:0123456789abcdef0123456789abcdef",
+                "producer": "fixture producer",
+                "consumer": "fixture consumer",
+                "inclusion_reason": "fixture verdict input",
+                "license_status": "user_owned_private_input",
+                "platform_qualification": "fixture-platform",
+                "evidence_role": "verdict_input",
+                "lineage_contains_noncommercial": False,
+                "noncommercial_lineage_sources": [],
+                "commercial_gate_included": False,
+                "commercial_gate_exclusion_reason": "Research-only fixture input.",
+                "replay_identity_included": False,
+                "details": {},
+            }
+        ],
+        "code": {
+            "entries": [
+                {
+                    "path": "scripts/run.py",
+                    "sha256": "9" * 64,
+                    "execution_status": "runnable",
+                    "role": "fixture verdict implementation",
+                }
+            ]
+        },
         "environment": {
             "producer": {
                 "python_version": "3.11",
@@ -201,6 +239,7 @@ def _minimal_contract() -> dict[str, object]:
             "verifier": {
                 "python_version": "3.11",
                 "numpy_version": "2.4.2",
+                "uv_lock_path": "uv.lock",
                 "uv_lock_sha256": "f" * 64,
                 "hardware": "fixture",
                 "backend": "cpu",
@@ -219,10 +258,20 @@ def _minimal_contract() -> dict[str, object]:
             "argv": ["python", "scripts/run.py", "--config", "configs/fixture.json"],
             "cwd": ".",
         },
-        "metrics": {"definitions": [], "thresholds": [], "observed": []},
+        "metrics": {
+            "definitions": [
+                {"metric_id": "quality", "unit": "ratio", "direction": "higher_is_better"}
+            ],
+            "thresholds": [{"metric_id": "quality", "operator": ">=", "value": 0.9}],
+            "observed": [
+                {"metric_id": "quality", "value": 0.95, "artifact_id": "fixture-artifact"}
+            ],
+        },
         "exclusions": [],
-        "stopping_rules": [],
-        "artifacts": [],
+        "stopping_rules": [
+            {"rule_id": "quality-stop", "condition": "quality < 0.9", "action": "fail"}
+        ],
+        "artifacts": [_evidence_item()],
         "deviations": [],
         "privacy": {
             "classification": "private_indoor_capture",
@@ -232,8 +281,8 @@ def _minimal_contract() -> dict[str, object]:
             "constraints": ["no remote transfer"],
         },
         "product_qualification": {
-            "status": "commercial_evaluation_candidate",
-            "commercial_open_source_dependencies_verified": True,
+            "status": "not_assessed",
+            "commercial_open_source_dependencies_verified": False,
             "dependencies": [
                 {
                     "dependency_id": "fixture-dependency",
@@ -243,6 +292,9 @@ def _minimal_contract() -> dict[str, object]:
                     "license_identifier": "Apache-2.0",
                     "license_evidence_sha256": "1" * 64,
                     "license_status": "verified_commercial_open_source",
+                    "audit_verdict": "allow",
+                    "intended_use": "fixture product integration",
+                    "obligations": ["preserve notices"],
                     "lineage_contains_noncommercial": False,
                     "noncommercial_lineage_sources": [],
                 }
@@ -266,13 +318,28 @@ def _evidence_item() -> dict[str, object]:
         "inclusion_reason": "fixture evidence",
         "license_status": "user_owned_private_input",
         "platform_qualification": "mac_only",
-        "evidence_role": "diagnostic",
+        "evidence_role": "verdict_output",
         "lineage_contains_noncommercial": False,
         "noncommercial_lineage_sources": [],
         "commercial_gate_included": False,
         "commercial_gate_exclusion_reason": "Private inputs are not open-source dependencies.",
+        "replay_identity_included": False,
         "details": {},
     }
+
+
+def _make_commercial_candidate(document: dict[str, object]) -> None:
+    for item, license_status in (
+        (document["collections"][0], "user_owned_private_input"),
+        (document["artifacts"][0], "user_owned_derived_output"),
+    ):
+        item["license_status"] = license_status
+        item["commercial_gate_included"] = True
+        item.pop("commercial_gate_exclusion_reason", None)
+        item["rights_basis"] = "The user owns this fixture evidence."
+        item["rights_evidence_sha256"] = "8" * 64
+    document["product_qualification"]["status"] = "commercial_evaluation_candidate"
+    document["product_qualification"]["commercial_open_source_dependencies_verified"] = True
 
 
 @pytest.mark.parametrize("missing_field", sorted(REQUIRED_TOP_LEVEL_FIELDS))
@@ -456,8 +523,8 @@ def test_included_verified_dependency_omits_exclusion_reason() -> None:
     item.update(
         {
             "license_status": "verified_commercial_open_source",
-            "evidence_role": "open_source_dependency",
             "commercial_gate_included": True,
+            "license_evidence_sha256": "2" * 64,
         }
     )
     del item["commercial_gate_exclusion_reason"]
@@ -495,7 +562,7 @@ def test_commercial_gate_inclusion_requires_clean_verified_open_source(
     del item["commercial_gate_exclusion_reason"]
     document["artifacts"] = [item]
 
-    with pytest.raises(contract.ContractError, match=r"commercial|open.source|lineage"):
+    with pytest.raises(contract.ContractError, match=r"commercial|open.source|lineage|rights"):
         contract.validate_contract(document)
 
 
@@ -516,6 +583,13 @@ def test_noncommercial_upper_bound_can_only_be_excluded_with_a_reason() -> None:
         }
     )
     document["artifacts"] = [item]
+    document["status"] = "preserved_incomplete_feed"
+    document["validation_scope"] = "preservation_record"
+    document["verdict"] = {
+        "eligible": False,
+        "decision": "preservation_only",
+        "blockers": ["noncommercial upper bound"],
+    }
 
     contract.validate_contract(document)
 
@@ -551,6 +625,7 @@ def test_unknown_evidence_axis_is_null_with_exact_deviation(unknown_axis: str) -
 def test_commercial_candidate_rejects_empty_dependency_evidence() -> None:
     contract = _contract_module()
     document = _minimal_contract()
+    _make_commercial_candidate(document)
     document["product_qualification"]["dependencies"] = []
 
     with pytest.raises(contract.ContractError, match=r"dependenc"):
@@ -560,6 +635,7 @@ def test_commercial_candidate_rejects_empty_dependency_evidence() -> None:
 def test_commercial_candidate_rejects_unverified_dependency_license() -> None:
     contract = _contract_module()
     document = _minimal_contract()
+    _make_commercial_candidate(document)
     dependency = document["product_qualification"]["dependencies"][0]
     dependency["license_status"] = "unknown_pending_audit"
 
@@ -570,6 +646,7 @@ def test_commercial_candidate_rejects_unverified_dependency_license() -> None:
 def test_commercial_candidate_rejects_unknown_dependency_lineage() -> None:
     contract = _contract_module()
     document = _minimal_contract()
+    _make_commercial_candidate(document)
     dependency = document["product_qualification"]["dependencies"][0]
     dependency["lineage_contains_noncommercial"] = None
     document["deviations"] = [
@@ -588,21 +665,45 @@ def test_commercial_candidate_rejects_unknown_dependency_lineage() -> None:
         "blockers": ["dependency lineage is not proven"],
     }
 
-    with pytest.raises(contract.ContractError, match=r"dependenc|lineage"):
+    with pytest.raises(contract.ContractError, match=r"verdict|dependenc|lineage"):
         contract.validate_contract(document)
 
 
 def test_commercial_candidate_rejects_model_without_immutable_identity() -> None:
     contract = _contract_module()
     document = _minimal_contract()
+    _make_commercial_candidate(document)
+    model_dependency = {
+        **deepcopy(document["product_qualification"]["dependencies"][0]),
+        "dependency_id": "fixture-model-dependency",
+        "kind": "model",
+        "source": "https://example.invalid/model",
+        "revision": "v1",
+        "intended_use": "fixture inference",
+    }
+    dataset_dependency = {
+        **deepcopy(document["product_qualification"]["dependencies"][0]),
+        "dependency_id": "fixture-dataset-dependency",
+        "kind": "dataset",
+        "source": "https://example.invalid/dataset",
+        "revision": "v1",
+        "intended_use": "fixture model training lineage",
+    }
+    document["product_qualification"]["dependencies"].extend([model_dependency, dataset_dependency])
     document["models"] = [
         {
             "model_id": "fixture-model",
-            "source": None,
-            "revision": None,
+            "model_dependency_id": "fixture-model-dependency",
+            "training_dataset_dependency_ids": ["fixture-dataset-dependency"],
+            "runtime_dependency_ids": [],
+            "source": "https://example.invalid/model",
+            "revision": "v1",
             "weights_sha256": None,
-            "license_evidence_sha256": None,
+            "license_evidence_sha256": "1" * 64,
             "license_status": "verified_commercial_open_source",
+            "audit_verdict": "allow",
+            "intended_use": "fixture inference",
+            "obligations": ["preserve notices"],
             "usage": "fixture inference",
         }
     ]
@@ -614,7 +715,7 @@ def test_commercial_candidate_rejects_model_without_immutable_identity() -> None
             "blocks_verdict": True,
             "resolution": "Bind immutable model identity before qualification.",
         }
-        for field in ("source", "revision", "weights_sha256", "license_evidence_sha256")
+        for field in ("weights_sha256",)
     ]
     document["status"] = "provisional_not_verdict_eligible"
     document["verdict"] = {
@@ -623,7 +724,10 @@ def test_commercial_candidate_rejects_model_without_immutable_identity() -> None
         "blockers": ["model identity is incomplete"],
     }
 
-    with pytest.raises(contract.ContractError, match=r"model|identity|source|revision|weight"):
+    with pytest.raises(
+        contract.ContractError,
+        match=r"model|identity|source|revision|weight|commercial|verdict",
+    ):
         contract.validate_contract(document)
 
 
@@ -633,10 +737,16 @@ def test_model_requires_immutable_license_evidence_hash() -> None:
     document["models"] = [
         {
             "model_id": "fixture-model",
+            "model_dependency_id": "fixture-model-dependency",
+            "training_dataset_dependency_ids": ["fixture-dataset-dependency"],
+            "runtime_dependency_ids": [],
             "source": "https://example.invalid/model",
             "revision": "v1",
             "weights_sha256": "2" * 64,
             "license_status": "verified_commercial_open_source",
+            "audit_verdict": "allow",
+            "intended_use": "fixture inference",
+            "obligations": ["preserve notices"],
             "usage": "fixture inference",
         }
     ]
@@ -871,6 +981,17 @@ def test_cap50_license_and_lineage_boundaries_are_explicit() -> None:
         item = evidence[evidence_id]
         assert item["license_status"] is None
         assert item["lineage_contains_noncommercial"] is None
+
+    dependencies = {
+        item["dependency_id"]: item for item in document["product_qualification"]["dependencies"]
+    }
+    assert dependencies["loftr-apache-code"]["audit_verdict"] == "insufficient-evidence"
+    assert dependencies["loftr-indoor-scannet-weights"]["audit_verdict"] == "block"
+    assert dependencies["scannet-v2-training-dataset"]["audit_verdict"] == "block"
+    model = document["models"][0]
+    assert model["model_dependency_id"] == "loftr-indoor-scannet-weights"
+    assert model["training_dataset_dependency_ids"] == ["scannet-v2-training-dataset"]
+    assert model["runtime_dependency_ids"] == ["loftr-apache-code"]
 
 
 def test_cap50_contract_reverifies_every_referenced_git_file() -> None:

@@ -43,6 +43,8 @@ Every asset SHALL have a unique POSIX relative path, role, bytes, lowercase SHA-
 ### Requirement: Full reproducibility truth is mandatory
 Each contract SHALL record Git root/branch/commit/dirty-diff hash; code/script hashes; producer stack; consumer target stack; ordered inputs; effective config and hash; command; seeds/determinism; Python/uv lock and hardware/backend; model source/revision/weight hash/license evidence; metrics/thresholds; exclusions; stopping rules; output hashes; deviations; and verdict.
 
+A verdict-eligible contract SHALL declare `contract_kind` and `validation_scope=decision_contract`, use closed unique identifiers and evidence roles, contain nonempty runnable code/config/command, finite metric thresholds and observations, stopping rules, and preserved `verdict_input`/`verdict_output` evidence. Contract JSON SHALL be canonical and SHALL reject duplicate keys and non-finite numbers. Verification SHALL rehash repository-local code, config, verifier lock, verdict evidence, and single-file DVC OIDs without opening provisional raw evidence.
+
 #### Scenario: Historical and target stacks differ
 - **WHEN** an old artifact predates COLMAP 4.1.0
 - **THEN** its producer stack remains historical/unknown and 4.1.0 appears only as consumer target policy
@@ -81,6 +83,8 @@ The system SHALL create a capture-archive contract for missing photos and a repl
 - **WHEN** a fresh quiescent device pull passes integrity and DB/pose alignment
 - **THEN** a new immutable contract ID and hashes are created rather than mutating provisional evidence
 
+The replay decision SHALL be typed in `replay_qualification`; freshness, pull time, device/app/revision, source and ledger capture directories, quiescence or consistent backup, atomic DB/WAL, integrity, alignment, and DB/WAL/pose/SHM references SHALL NOT be hidden in free-form details. SHM SHALL be `excluded_volatile` with `replay_identity_included=false`.
+
 ### Requirement: PLY and complete NPZ inventory are preserved
 The system SHALL preserve four requested output PLY files, two merge-input PLY files, five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz`. Each NPZ SHALL record filename, bytes, SHA, producer, consumer, role, and inclusion reason.
 
@@ -94,6 +98,8 @@ The system SHALL preserve four requested output PLY files, two merge-input PLY f
 
 ### Requirement: License, platform, role, and lineage are independent
 Every artifact SHALL record separate license status, platform qualification, evidence role, and non-commercial lineage. Historical pure-A SHALL remain `unknown_pending_audit` until its LoFTR-derived statistics dependency is removed and a clean rerun is audited. B/C and merged evidence SHALL be commercially ineligible research upper bounds.
+
+Code, model weights, training data, and tools SHALL be separate dependency records with exact `audit_verdict`, intended use, obligations, and immutable license evidence. A used model SHALL reference one model dependency and all training-dataset dependencies; unrelated source-code evidence SHALL NOT back model identity. Commercial candidates SHALL accept only `allow` dependencies. Clean user-owned private inputs and derived outputs MAY be included only with a rights basis and rights-evidence SHA-256.
 
 #### Scenario: Historical pure-A is reported
 - **WHEN** `floor_planesweep.ply` is summarized

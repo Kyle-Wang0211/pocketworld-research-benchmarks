@@ -4,6 +4,8 @@
 - [x] 1.2 Add locked NumPy 2.4.2 NPZ inspection and reject pickle/object dtype with failing-first tests.
 - [x] 1.3 Add schema/tests for full reproducibility truth and separate license/platform/role/lineage axes.
 - [x] 1.4 Create normalized cap50, cap51 archive, and cap51 replay-fixture skeletons with null+deviation for missing evidence.
+- [x] 1.5 Harden canonical JSON loading, generic verdict closure, actual repository rehash, and single-file DVC identity checks.
+- [x] 1.6 Type cap51 replay qualification and separate code/model/dataset commercial-audit surfaces without upgrading provisional contracts.
 
 ## 2. Sparse and DVC Safety Setup
 

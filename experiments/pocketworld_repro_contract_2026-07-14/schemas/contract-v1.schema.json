@@ -7,6 +7,9 @@
   "required": [
     "schema_version",
     "contract_id",
+    "contract_kind",
+    "validation_scope",
+    "replay_qualification",
     "status",
     "git",
     "upstream",
@@ -29,6 +32,13 @@
   "properties": {
     "schema_version": {"const": 1},
     "contract_id": {"type": "string", "minLength": 1},
+    "contract_kind": {
+      "enum": ["general_research", "capture_archive", "replay_fixture"]
+    },
+    "validation_scope": {
+      "enum": ["preservation_record", "provisional_fixture", "decision_contract"]
+    },
+    "replay_qualification": {"$ref": "#/$defs/replay_qualification"},
     "status": {
       "enum": [
         "preserved_incomplete_feed",
@@ -69,6 +79,65 @@
     "nonempty_string_or_null": {
       "type": ["string", "null"],
       "minLength": 1
+    },
+    "replay_qualification": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicable"],
+          "properties": {"applicable": {"const": false}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "applicable",
+            "fixture_contract_id",
+            "fresh_authorized_pull",
+            "pull_timestamp",
+            "source_device_id",
+            "source_app_id",
+            "source_app_revision",
+            "source_capture_directory",
+            "ledger_capture_directory",
+            "source_quiescence_proven",
+            "consistent_backup_proven",
+            "atomic_db_wal_snapshot_proven",
+            "capture_binding_proven",
+            "integrity_check_passed",
+            "db_pose_alignment_passed",
+            "db_evidence_id",
+            "wal_evidence_id",
+            "pose_evidence_id",
+            "shm_evidence_id"
+          ],
+          "properties": {
+            "applicable": {"const": true},
+            "fixture_contract_id": {"type": "string", "minLength": 1},
+            "fresh_authorized_pull": {"type": "boolean"},
+            "pull_timestamp": {
+              "type": ["string", "null"],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            "source_device_id": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "source_app_id": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "source_app_revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "source_capture_directory": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "ledger_capture_directory": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "source_quiescence_proven": {"type": "boolean"},
+            "consistent_backup_proven": {"type": "boolean"},
+            "atomic_db_wal_snapshot_proven": {"type": "boolean"},
+            "capture_binding_proven": {"type": "boolean"},
+            "integrity_check_passed": {"type": "boolean"},
+            "db_pose_alignment_passed": {"type": "boolean"},
+            "db_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "wal_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "pose_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "shm_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"}
+          }
+        }
+      ]
     },
     "git": {
       "type": "object",
@@ -153,6 +222,7 @@
       "required": [
         "python_version",
         "numpy_version",
+        "uv_lock_path",
         "uv_lock_sha256",
         "hardware",
         "backend"
@@ -160,6 +230,7 @@
       "properties": {
         "python_version": {"const": "3.11"},
         "numpy_version": {"const": "2.4.2"},
+        "uv_lock_path": {"type": "string", "minLength": 1},
         "uv_lock_sha256": {"$ref": "#/$defs/sha256_or_null"},
         "hardware": {"type": "string", "minLength": 1},
         "backend": {"type": "string", "minLength": 1}
@@ -179,15 +250,33 @@
       "additionalProperties": false,
       "required": [
         "model_id",
+        "model_dependency_id",
+        "training_dataset_dependency_ids",
+        "runtime_dependency_ids",
         "source",
         "revision",
         "weights_sha256",
         "license_evidence_sha256",
         "license_status",
+        "audit_verdict",
+        "intended_use",
+        "obligations",
         "usage"
       ],
       "properties": {
         "model_id": {"type": "string", "minLength": 1},
+        "model_dependency_id": {"type": "string", "minLength": 1},
+        "training_dataset_dependency_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "runtime_dependency_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
         "source": {"$ref": "#/$defs/nonempty_string_or_null"},
         "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
         "weights_sha256": {"$ref": "#/$defs/sha256_or_null"},
@@ -200,6 +289,15 @@
             "not_applicable",
             null
           ]
+        },
+        "audit_verdict": {
+          "enum": ["allow", "conditional", "conflict", "block", "insufficient-evidence"]
+        },
+        "intended_use": {"type": "string", "minLength": 1},
+        "obligations": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
         },
         "usage": {"type": "string", "minLength": 1}
       }
@@ -390,6 +488,9 @@
         "license_identifier",
         "license_evidence_sha256",
         "license_status",
+        "audit_verdict",
+        "intended_use",
+        "obligations",
         "lineage_contains_noncommercial",
         "noncommercial_lineage_sources"
       ],
@@ -407,6 +508,15 @@
             "unknown_pending_audit",
             null
           ]
+        },
+        "audit_verdict": {
+          "enum": ["allow", "conditional", "conflict", "block", "insufficient-evidence"]
+        },
+        "intended_use": {"type": "string", "minLength": 1},
+        "obligations": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
         },
         "lineage_contains_noncommercial": {"type": ["boolean", "null"]},
         "noncommercial_lineage_sources": {
@@ -461,6 +571,7 @@
         "lineage_contains_noncommercial",
         "noncommercial_lineage_sources",
         "commercial_gate_included",
+        "replay_identity_included",
         "details"
       ],
       "properties": {
@@ -474,19 +585,23 @@
             "excluded_volatile"
           ]
         },
-        "path": {"type": ["string", "null"]},
+        "path": {"type": ["string", "null"], "minLength": 1},
         "bytes": {"type": ["integer", "null"], "minimum": 0},
         "sha256": {
           "type": ["string", "null"],
           "pattern": "^[0-9a-f]{64}$"
         },
-        "dvc_oid": {"type": ["string", "null"]},
-        "producer": {"type": ["string", "null"]},
-        "consumer": {"type": ["string", "null"]},
+        "dvc_oid": {
+          "type": ["string", "null"],
+          "pattern": "^(md5:[0-9a-f]{32}(\\.dir)?|sha256:[0-9a-f]{64})$"
+        },
+        "producer": {"type": ["string", "null"], "minLength": 1},
+        "consumer": {"type": ["string", "null"], "minLength": 1},
         "inclusion_reason": {"type": "string", "minLength": 1},
         "license_status": {
           "enum": [
             "user_owned_private_input",
+            "user_owned_derived_output",
             "verified_commercial_open_source",
             "noncommercial_ineligible",
             "unknown_pending_audit",
@@ -495,7 +610,33 @@
           ]
         },
         "platform_qualification": {"$ref": "#/$defs/nonempty_string_or_null"},
-        "evidence_role": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "evidence_role": {
+          "enum": [
+            "capture_event_log",
+            "closure_audit",
+            "diagnostic",
+            "diagnostic_output",
+            "direct_sparse_input",
+            "geometry_config",
+            "intermediate",
+            "missing_raw_capture_input",
+            "noncommercial_intermediate",
+            "ordered_input_manifest",
+            "open_source_dependency",
+            "provisional_replay_database",
+            "replay_pose_input",
+            "research_output_pending_clean_rerun",
+            "research_upper_bound",
+            "selection_manifest",
+            "sqlite_wal",
+            "tracked_pose_config",
+            "tracked_selection_config",
+            "verdict_input",
+            "verdict_output",
+            "volatile_sqlite_wal_index",
+            null
+          ]
+        },
         "lineage_contains_noncommercial": {"type": ["boolean", "null"]},
         "noncommercial_lineage_sources": {
           "type": "array",
@@ -504,6 +645,16 @@
         },
         "commercial_gate_included": {"type": "boolean"},
         "commercial_gate_exclusion_reason": {"type": "string", "minLength": 1},
+        "replay_identity_included": {"type": "boolean"},
+        "rights_basis": {"type": "string", "minLength": 1},
+        "rights_evidence_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "license_evidence_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
         "details": {"type": "object"}
       },
       "allOf": [

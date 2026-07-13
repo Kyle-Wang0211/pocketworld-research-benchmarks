@@ -67,6 +67,12 @@ The experiment inventory preserves four requested outputs, two merge inputs, fiv
 - `cap51-capture-archive-provisional-v1`: records the photo archive gap; it says nothing by itself about replay executability.
 - `cap51-incremental-ba-fixture-provisional-v1`: records current DB/pose alignment but is `provisional_not_verdict_eligible` because the bytes were not freshly pulled from a quiescent producer under the new contract. A morning pull creates a new immutable contract ID and hashes.
 
+Each contract declares `contract_kind` and `validation_scope`. Replay truth is a
+typed top-level qualification, not a collection of booleans in evidence
+`details`. A valid replay decision binds a new contract ID to fresh authorized
+DB/WAL/pose bytes, app/capture identity, quiescence or consistent backup,
+integrity, and alignment; SHM is always excluded from replay identity.
+
 ### 4. Separate license, platform, role, and lineage axes
 
 Each asset/run records:
@@ -78,6 +84,13 @@ Each asset/run records:
 
 Historical pure-A is `unknown_pending_audit`, `mac_only`, and has non-commercial statistics lineage because `fr_planesweep.py` reads a LoFTR-derived rescue PLY. B/C and merged outputs are `ineligible` for commercial shipment and `research_upper_bound`. No report may collapse these axes into one optimistic label.
 
+Commercial auditing is layered on the generic research verdict. Code, model
+weights, training datasets, and tools have separate dependency identities,
+`audit_verdict`, intended use, obligations, and immutable evidence. Only
+`allow` dependencies qualify a candidate. The cap50 LoFTR Apache code surface is
+not evidence for the indoor weights or ScanNet dataset; those surfaces remain
+blocked/insufficient and explicitly linked by the model record.
+
 ### 5. Producer truth is distinct from target policy
 
 Contracts record the actual historical producer stack without rewriting it to the user's new target. `producer_stack` may contain 4.0.4/3.14-dev/unknown with deviations. `consumer_target_stack` records COLMAP 4.1.0. Future A binds algorithm identity `0a8b8428`; future Ceres source-of-truth is submodule tag 2.2. Neither target is retroactively assigned to old artifacts.
@@ -87,6 +100,11 @@ Contracts record the actual historical producer stack without rewriting it to th
 The base verifier uses Python 3.11 and streams hashes in fixed chunks. The repository-local `uv.lock` also pins NumPy 2.4.2 for `allow_pickle=False` and object-dtype inspection of NPZ evidence. Tests precede implementation for path safety, exact file sets, deterministic JSON, contract gates, and NPZ rejection.
 
 Normalized `effective-config.json` uses only repository-relative asset IDs. Historical scripts with hard-coded scratch paths are explicitly `evidence_source_not_runnable`; parameterizing them is a later change.
+
+Contract loading rejects duplicate keys, non-finite JSON, and noncanonical
+bytes. Verdict verification rehashes the repository-local code, effective
+config, verifier lock, preserved input/output evidence, and single-file DVC OID
+using no-follow, mutation-detecting reads.
 
 ### 7. Predictive resource and privacy gates
 

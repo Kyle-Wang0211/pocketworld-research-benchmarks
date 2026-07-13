@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -19,6 +20,7 @@ from pocketworld_contract.manifest import (
     build_collection,
     canonical_json,
     require_verdict_eligible,
+    safe_relative_path,
     verify_collection,
 )
 
@@ -68,9 +70,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             contract = _load_json_object(arguments.contract)
             validate_contract(contract)
             require_verdict_eligible(contract)
+            _verify_repository_verdict_closure(arguments.contract, contract)
             print("verdict_eligible")
         elif arguments.command == "verify-contract":
-            validate_contract(_load_json_object(arguments.contract))
+            contract = _load_json_object(arguments.contract)
+            validate_contract(contract)
+            _verify_repository_verdict_closure(arguments.contract, contract)
             print("contract_verified")
         else:  # pragma: no cover - argparse restricts command choices.
             parser.error(f"unknown command: {arguments.command}")
@@ -252,7 +257,164 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _load_json_object(path: Path) -> Mapping[str, object]:
-    loaded = json.loads(path.read_text(encoding="utf-8"))
+    raw = _read_pinned_regular_file(path)
+    loaded = json.loads(
+        raw.decode("utf-8"),
+        object_pairs_hook=_reject_duplicate_json_keys,
+        parse_constant=_reject_nonfinite_json_constant,
+    )
     if not isinstance(loaded, dict):
         raise ContractError(f"JSON document must be an object: {path}")
+    if raw != canonical_json(loaded).encode("utf-8"):
+        raise ContractError(f"JSON document is not canonical: {path}")
     return loaded
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ContractError(f"duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite_json_constant(value: str) -> object:
+    raise ContractError(f"non-finite JSON number is forbidden: {value}")
+
+
+def _read_pinned_regular_file(path: Path) -> bytes:
+    try:
+        before = path.lstat()
+    except OSError as exc:
+        raise ContractError(f"unable to inspect file: {path}") from exc
+    if stat.S_ISLNK(before.st_mode):
+        raise ContractError(f"symlink is forbidden: {path}")
+    if not stat.S_ISREG(before.st_mode):
+        raise ContractError(f"expected a regular file: {path}")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise ContractError(f"unable to open file safely: {path}") from exc
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode) or _file_identity(before) != _file_identity(opened):
+            raise ContractError(f"file changed before read: {path}")
+        chunks: list[bytes] = []
+        while chunk := os.read(descriptor, 4 * 1024 * 1024):
+            chunks.append(chunk)
+        after = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    try:
+        current = path.lstat()
+    except OSError as exc:
+        raise ContractError(f"file changed during read: {path}") from exc
+    if not _same_regular_snapshot(before, opened, after, current):
+        raise ContractError(f"file changed during read: {path}")
+    return b"".join(chunks)
+
+
+def _same_regular_snapshot(*states: os.stat_result) -> bool:
+    first = states[0]
+    identity = _file_identity(first)
+    metadata = (first.st_size, first.st_mtime_ns, first.st_ctime_ns)
+    return all(
+        stat.S_ISREG(item.st_mode)
+        and _file_identity(item) == identity
+        and (item.st_size, item.st_mtime_ns, item.st_ctime_ns) == metadata
+        for item in states[1:]
+    )
+
+
+def _verify_repository_verdict_closure(
+    contract_path: Path,
+    document: Mapping[str, object],
+) -> None:
+    if document.get("status") != "verdict_eligible":
+        return
+    repository_root = _find_repository_root(contract_path)
+    for expectation in _repository_expected_files(document):
+        _verify_expected_repository_file(repository_root, expectation)
+
+
+def _repository_expected_files(
+    document: Mapping[str, object],
+) -> list[tuple[object, object, object, object]]:
+    evidence = [*document["collections"], *document["artifacts"]]
+    expected_files = [
+        (item["path"], item["bytes"], item["sha256"], item["dvc_oid"])
+        for item in evidence
+        if (
+            item["identity_status"] == "preserved"
+            and item["evidence_role"] in {"verdict_input", "verdict_output"}
+        )
+    ]
+    expected_files.extend(
+        (entry["path"], None, entry["sha256"], None) for entry in document["code"]["entries"]
+    )
+    config = document["effective_config"]
+    expected_files.append((config["path"], None, config["sha256"], None))
+    verifier = document["environment"]["verifier"]
+    expected_files.append((verifier["uv_lock_path"], None, verifier["uv_lock_sha256"], None))
+    return expected_files
+
+
+def _verify_expected_repository_file(
+    repository_root: Path,
+    expectation: tuple[object, object, object, object],
+) -> None:
+    relative_path, expected_bytes, expected_sha256, expected_dvc_oid = expectation
+    if not isinstance(relative_path, str) or not isinstance(expected_sha256, str):
+        raise ContractError("verdict closure contains incomplete repository file identity")
+    safe_relative_path(relative_path)
+    payload = _read_repo_relative_file(repository_root, relative_path)
+    if expected_bytes is not None and len(payload) != expected_bytes:
+        raise ContractError(f"verdict closure byte count mismatch: {relative_path}")
+    actual_sha256 = hashlib.sha256(payload).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise ContractError(f"verdict closure SHA-256 mismatch: {relative_path}")
+    if expected_dvc_oid is None:
+        return
+    if not isinstance(expected_dvc_oid, str):
+        raise ContractError(f"verdict closure has invalid DVC OID: {relative_path}")
+    actual_dvc_oid = _dvc_oid_for_payload(payload, expected_dvc_oid)
+    if actual_dvc_oid != expected_dvc_oid:
+        raise ContractError(f"verdict closure DVC OID mismatch: {relative_path}")
+
+
+def _find_repository_root(contract_path: Path) -> Path:
+    try:
+        start = contract_path.parent.resolve(strict=True)
+    except OSError as exc:
+        raise ContractError(f"unable to resolve contract parent: {contract_path}") from exc
+    for candidate in (start, *start.parents):
+        marker = candidate / ".git"
+        if marker.exists() or marker.is_file():
+            return candidate
+    raise ContractError(f"contract is not inside a Git repository: {contract_path}")
+
+
+def _read_repo_relative_file(repository_root: Path, relative_path: str) -> bytes:
+    current = repository_root
+    parts = relative_path.split("/")
+    for component in parts[:-1]:
+        current = current / component
+        try:
+            state = current.lstat()
+        except OSError as exc:
+            raise ContractError(f"verdict closure path is unavailable: {relative_path}") from exc
+        if stat.S_ISLNK(state.st_mode) or not stat.S_ISDIR(state.st_mode):
+            raise ContractError(f"verdict closure path contains a symlink: {relative_path}")
+    return _read_pinned_regular_file(current / parts[-1])
+
+
+def _dvc_oid_for_payload(payload: bytes, expected: str) -> str:
+    if expected.startswith("md5:"):
+        suffix = ".dir" if expected.endswith(".dir") else ""
+        digest = hashlib.md5(payload, usedforsecurity=False).hexdigest()
+        return f"md5:{digest}{suffix}"
+    if expected.startswith("sha256:"):
+        return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+    raise ContractError(f"unsupported DVC OID algorithm: {expected}")

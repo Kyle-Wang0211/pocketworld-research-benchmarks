@@ -36,6 +36,10 @@ def test_cap51_contracts_are_canonical_and_validate_fail_closed() -> None:
         validate_contract(document)
         assert document["contract_id"] == contract_id
         assert document["status"] == "provisional_not_verdict_eligible"
+        assert document["validation_scope"] in {
+            "preservation_record",
+            "provisional_fixture",
+        }
         assert document["verdict"]["eligible"] is False
         assert document["upstream"]["producer_stack"] == {
             "ceres_version": None,
@@ -112,10 +116,7 @@ def test_cap51_fixture_pins_db_wal_pose_and_clone_only_integrity() -> None:
         "af1bd571d81cf27228e6b1bd8faa9617a1734bf0d32c1c67ec849c4bc7f5ba97"
     )
     assert database["details"] == {
-        "atomic_db_wal_snapshot_proven": False,
-        "capture_binding_proven": False,
         "descriptor_row_count": 105,
-        "fresh_device_pull": False,
         "image_count": 105,
         "image_id_contiguous": True,
         "image_id_max": 105,
@@ -125,32 +126,37 @@ def test_cap51_fixture_pins_db_wal_pose_and_clone_only_integrity() -> None:
         "keypoint_row_count": 105,
         "planned_fresh_pull_app_identifier": "com.kyle.PocketWorld",
         "planned_fresh_pull_device_id": "1B290474-D354-5B4C-AAB0-0805AC5DC832",
-        "replay_identity_included": True,
-        "source_app_revision_proven": False,
-        "source_quiescence_proven": False,
     }
     assert database["details"]["planned_fresh_pull_device_id"] == (
         "1B290474-D354-5B4C-AAB0-0805AC5DC832"
     )
     assert database["details"]["planned_fresh_pull_app_identifier"] == ("com.kyle.PocketWorld")
-    assert database["details"]["fresh_device_pull"] is False
-    assert database["details"]["capture_binding_proven"] is False
+    qualification = document["replay_qualification"]
+    assert document["contract_kind"] == "replay_fixture"
+    assert qualification["fresh_authorized_pull"] is False
+    assert qualification["capture_binding_proven"] is False
+    assert qualification["source_app_revision"] is None
+    assert qualification["source_quiescence_proven"] is False
+    assert qualification["consistent_backup_proven"] is False
+    assert qualification["atomic_db_wal_snapshot_proven"] is False
+    assert qualification["integrity_check_passed"] is False
+    assert qualification["db_pose_alignment_passed"] is False
+    assert database["replay_identity_included"] is True
     assert wal["bytes"] == 4152
     assert wal["sha256"] == ("4cda3e63ad1604ac94724ee4f24327ee4fec7d86fa97056edca25ea76d85fa72")
-    assert wal["details"]["replay_identity_included"] is True
+    assert wal["replay_identity_included"] is True
     assert feed["bytes"] == 63442
     assert feed["sha256"] == ("d86ac0c44a9e5ae154f286cc9fc6baf215f949c5335b4bf9210e87c6d018770c")
     assert feed["details"] == {
-        "capture_binding_proven": False,
         "complete_pose_fields": True,
         "db_image_id_equals_pose_frame_id_plus_one": True,
         "frame_id_contiguous": True,
         "frame_id_max": 104,
         "frame_id_min": 0,
-        "ledger_capture_directory": "cap_1783933521157217",
         "pose_record_count": 105,
-        "replay_identity_included": True,
     }
+    assert feed["replay_identity_included"] is True
+    assert qualification["ledger_capture_directory"] == "cap_1783933521157217"
 
 
 def test_cap51_fixture_excludes_volatile_shm_from_replay_identity() -> None:
@@ -164,14 +170,14 @@ def test_cap51_fixture_excludes_volatile_shm_from_replay_identity() -> None:
     assert shm["details"]["previous_observed_sha256"] == (
         "4378012510ee558e6863a5d184315967f667a5695e1945bab16eca4b08082eeb"
     )
-    assert shm["details"]["replay_identity_included"] is False
+    assert shm["replay_identity_included"] is False
     assert shm["details"]["cause"] is None
     assert "/artifacts/0/details/cause" in _deviation_fields(document)
 
     identity_ids = {
         item["evidence_id"]
         for item in [*document["collections"], *document["artifacts"]]
-        if item["details"].get("replay_identity_included") is True
+        if item["replay_identity_included"] is True
     }
     assert identity_ids == {
         "cap51-replay-db",

@@ -32,6 +32,14 @@ relative lookup. Contract JSON is canonical UTF-8 (sorted, compact, one trailing
 newline). Unknown truth is represented as `null` plus an exact JSON-pointer
 deviation; placeholders such as `unknown` are rejected.
 
+Contract commands reject duplicate JSON keys, `NaN`/infinities, noncanonical
+whitespace, and a missing final newline. A `verdict_eligible` contract must use
+`validation_scope=decision_contract` and close runnable code/config/command,
+finite preregistered metrics, stopping rules, preserved `verdict_input` and
+`verdict_output` evidence, and every referenced ID. Verification then rehashes
+the repository-local code, config, verifier `uv.lock`, and preserved verdict
+evidence, including each single-file DVC OID; symlinks are rejected.
+
 The three immutable skeleton identities are:
 
 - `contracts/cap50-floor-plane-sweep-v1.json` — preservation-only evidence for
@@ -42,6 +50,13 @@ The three immutable skeleton identities are:
 - `contracts/cap51-incremental-ba-fixture-provisional-v1.json` — the current
   DB/pose evidence, blocked until a fresh capture-bound, quiescent pull creates
   a new immutable identity.
+
+The replay fixture uses typed `replay_qualification` fields rather than truth
+hidden in `details`. A future replay verdict requires a new non-provisional ID,
+a fresh authorized pull, source app/capture identity, quiescence or a consistent
+backup, an atomic DB/WAL snapshot, integrity and DB/pose alignment, and preserved
+DB/WAL/pose identities. SQLite SHM remains `excluded_volatile` and is never part
+of replay identity.
 
 The consumer target is COLMAP 4.1.0 plus a Ceres 2.2 source submodule. A target
 version is never retroactively written into historical producer truth.
@@ -57,8 +72,15 @@ evidence is explicitly noncommercial research-upper-bound evidence. Metadata
 records marked `not_applicable` do not replace the underlying private capture
 license axes, which remain embedded in each referenced source manifest.
 
-Only dependencies with immutable license evidence, commercially permissive
-status, and clean noncommercial lineage may enter a future product gate.
+Code, model weights, training datasets, and tools are separate dependency
+surfaces. Each records the exact audit verdict (`allow`, `conditional`,
+`conflict`, `block`, or `insufficient-evidence`), intended use, obligations, and
+immutable license evidence. Only `allow` dependencies with verified commercial
+open-source status and clean lineage may enter a product candidate. Preserved
+user-owned private inputs and derived outputs may support that gate only with an
+explicit rights basis and rights-evidence hash. The cap50 LoFTR code remains
+insufficiently evidenced, while LoFTR-indoor weights and ScanNet training lineage
+are explicitly blocked; an Apache code license does not qualify either one.
 
 ## NPZ inspection and resource limits
 
