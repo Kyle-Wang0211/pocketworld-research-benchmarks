@@ -1,0 +1,570 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import TypeAlias
+
+HASH_CHUNK_BYTES = 4 * 1024 * 1024
+SCHEMA_VERSION = 1
+
+JsonObject: TypeAlias = dict[str, object]
+
+_ROLE_BY_SUFFIX = {
+    ".jpg": "capture_image",
+    ".jpeg": "capture_image",
+    ".png": "derived_image",
+    ".json": "metadata",
+    ".jsonl": "event_log",
+    ".ply": "point_cloud",
+    ".npz": "numpy_archive",
+    ".db": "sqlite_database",
+}
+_SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+_MANIFEST_KEYS = frozenset({"schema_version", "collection_id", "assets"})
+_ASSET_KEYS = frozenset(
+    {
+        "path",
+        "role",
+        "bytes",
+        "sha256",
+        "license_status",
+        "platform_qualification",
+        "evidence_role",
+        "lineage_contains_noncommercial",
+    }
+)
+
+
+class ContractError(ValueError):
+    """Raised when an asset collection violates the local research contract."""
+
+
+@dataclass(frozen=True, slots=True)
+class _ExpectedAsset:
+    path: str
+    byte_count: int
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class _CollectionSnapshot:
+    files: dict[str, Path]
+    directories: dict[str, os.stat_result]
+
+
+def canonical_json(value: object) -> str:
+    """Serialize a JSON-compatible value canonically, preserving Unicode."""
+    return (
+        json.dumps(
+            value,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        + "\n"
+    )
+
+
+def sha256_file(path: str | os.PathLike[str]) -> str:
+    """Hash a file without loading more than four MiB per read."""
+    _byte_count, digest = _inspect_regular_file(Path(path))
+    return digest
+
+
+def _hash_descriptor(descriptor: int) -> str:
+    digest = hashlib.sha256()
+    while chunk := os.read(descriptor, HASH_CHUNK_BYTES):
+        digest.update(chunk)
+    return digest.hexdigest()
+
+
+def safe_relative_path(path: str) -> str:
+    """Return an unambiguous normalized POSIX relative path or raise."""
+    if not isinstance(path, str):
+        raise ContractError("asset path must be a string")
+    if not path:
+        raise ContractError("asset path must not be empty")
+    if "\\" in path:
+        raise ContractError("asset path must use POSIX separators, not backslashes")
+    if "\x00" in path:
+        raise ContractError("asset path must not contain NUL")
+    if PurePosixPath(path).is_absolute() or PureWindowsPath(path).drive:
+        raise ContractError(f"asset path must be relative: {path!r}")
+
+    parts = path.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ContractError(f"asset path must be normalized without dot traversal: {path!r}")
+    return path
+
+
+def build_collection(  # noqa: PLR0913 - the contract intentionally exposes four separate axes.
+    root: str | os.PathLike[str],
+    collection_id: str,
+    *,
+    license_status: str,
+    platform_qualification: str,
+    evidence_role: str,
+    lineage_contains_noncommercial: bool,
+) -> JsonObject:
+    """Build a deterministic manifest for every regular file under ``root``."""
+    if not isinstance(collection_id, str) or not collection_id:
+        raise ContractError("collection_id must be a non-empty string")
+    _validate_collection_axes(
+        license_status=license_status,
+        platform_qualification=platform_qualification,
+        evidence_role=evidence_role,
+        lineage_contains_noncommercial=lineage_contains_noncommercial,
+    )
+
+    root_path, root_descriptor = _open_collection_root(root)
+    try:
+        snapshot = _scan_regular_files(root_path)
+        _assert_root_unchanged(root_path, root_descriptor)
+        _assert_snapshot_unchanged(root_descriptor, snapshot)
+        assets: list[JsonObject] = []
+        for relative_path in snapshot.files:
+            byte_count, digest = _inspect_relative_regular_file(root_descriptor, relative_path)
+            assets.append(
+                {
+                    "path": relative_path,
+                    "role": _role_for_path(relative_path),
+                    "bytes": byte_count,
+                    "sha256": digest,
+                    "license_status": license_status,
+                    "platform_qualification": platform_qualification,
+                    "evidence_role": evidence_role,
+                    "lineage_contains_noncommercial": lineage_contains_noncommercial,
+                }
+            )
+        _assert_snapshot_unchanged(root_descriptor, snapshot)
+        _assert_root_unchanged(root_path, root_descriptor)
+    finally:
+        os.close(root_descriptor)
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "collection_id": collection_id,
+        "assets": assets,
+    }
+
+
+def verify_collection(
+    root: str | os.PathLike[str],
+    manifest: Mapping[str, object],
+) -> None:
+    """Verify that ``root`` has exactly the safe, unchanged manifest file set."""
+    expected = _validate_manifest(manifest)
+    root_path, root_descriptor = _open_collection_root(root)
+    try:
+        snapshot = _scan_regular_files(root_path)
+        _assert_root_unchanged(root_path, root_descriptor)
+        _assert_snapshot_unchanged(root_descriptor, snapshot)
+
+        expected_paths = set(expected)
+        actual_paths = set(snapshot.files)
+        missing = sorted(expected_paths - actual_paths)
+        extra = sorted(actual_paths - expected_paths)
+        if missing or extra:
+            details: list[str] = []
+            if missing:
+                details.append(f"missing files: {', '.join(missing)}")
+            if extra:
+                details.append(f"extra files: {', '.join(extra)}")
+            raise ContractError("; ".join(details))
+
+        for relative_path in sorted(expected):
+            expectation = expected[relative_path]
+            byte_count, digest = _inspect_relative_regular_file(
+                root_descriptor,
+                relative_path,
+            )
+            if byte_count != expectation.byte_count:
+                raise ContractError(f"mutated file size: {relative_path}")
+            if digest != expectation.sha256:
+                raise ContractError(f"mutated file digest: {relative_path}")
+        _assert_snapshot_unchanged(root_descriptor, snapshot)
+        _assert_root_unchanged(root_path, root_descriptor)
+    finally:
+        os.close(root_descriptor)
+
+
+def require_verdict_eligible(contract: Mapping[str, object]) -> None:
+    """Reject any research contract that is not explicitly verdict eligible."""
+    if not isinstance(contract, Mapping) or contract.get("status") != "verdict_eligible":
+        raise ContractError("contract status must be verdict_eligible")
+
+
+def _validated_root(root: str | os.PathLike[str]) -> Path:
+    root_path = Path(root)
+    try:
+        root_stat = root_path.lstat()
+    except FileNotFoundError as exc:
+        raise ContractError(f"collection root does not exist: {root_path}") from exc
+    if stat.S_ISLNK(root_stat.st_mode):
+        raise ContractError(f"collection root must not be a symlink: {root_path}")
+    if not stat.S_ISDIR(root_stat.st_mode):
+        raise ContractError(f"collection root must be a directory: {root_path}")
+    return root_path
+
+
+def _scan_regular_files(root: str | os.PathLike[str]) -> _CollectionSnapshot:
+    root_path = _validated_root(root)
+    discovered: list[tuple[str, Path]] = []
+    directories: dict[str, os.stat_result] = {}
+
+    for current_root, directory_names, file_names in os.walk(
+        root_path,
+        onerror=_raise_walk_error,
+        followlinks=False,
+    ):
+        directory_names.sort()
+        file_names.sort()
+        current_path = Path(current_root)
+        try:
+            current_stat = current_path.lstat()
+        except OSError as exc:
+            raise ContractError(
+                f"collection directory changed during scan: {current_path}"
+            ) from exc
+        if stat.S_ISLNK(current_stat.st_mode) or not stat.S_ISDIR(current_stat.st_mode):
+            raise ContractError(f"collection directory is not a stable directory: {current_path}")
+        directory_path = (
+            "" if current_path == root_path else current_path.relative_to(root_path).as_posix()
+        )
+        if directory_path:
+            safe_relative_path(directory_path)
+        directories[directory_path] = current_stat
+
+        for entry_name in [*directory_names, *file_names]:
+            entry_path = current_path / entry_name
+            try:
+                entry_stat = entry_path.lstat()
+            except FileNotFoundError as exc:
+                raise ContractError(
+                    f"collection entry disappeared during scan: {entry_path}"
+                ) from exc
+            if stat.S_ISLNK(entry_stat.st_mode):
+                relative_path = entry_path.relative_to(root_path).as_posix()
+                raise ContractError(f"symlink is forbidden in collection: {relative_path}")
+
+        for file_name in file_names:
+            asset_path = current_path / file_name
+            asset_stat = asset_path.lstat()
+            if not stat.S_ISREG(asset_stat.st_mode):
+                relative_path = asset_path.relative_to(root_path).as_posix()
+                raise ContractError(f"collection entry is not a regular file: {relative_path}")
+            relative_path = safe_relative_path(asset_path.relative_to(root_path).as_posix())
+            discovered.append((relative_path, asset_path))
+
+    return _CollectionSnapshot(
+        files=dict(sorted(discovered, key=lambda item: item[0])),
+        directories=dict(sorted(directories.items())),
+    )
+
+
+def _raise_walk_error(error: OSError) -> None:
+    location = error.filename or "<unknown>"
+    raise ContractError(f"unable to scan collection directory: {location}") from error
+
+
+def _open_collection_root(root: str | os.PathLike[str]) -> tuple[Path, int]:
+    root_path = _validated_root(root)
+    before_open = root_path.lstat()
+    flags = _safe_open_flags(directory=True)
+    try:
+        descriptor = os.open(root_path, flags)
+    except OSError as exc:
+        raise ContractError(f"unable to open collection root safely: {root_path}") from exc
+    opened = os.fstat(descriptor)
+    if not stat.S_ISDIR(opened.st_mode) or not _same_file(before_open, opened):
+        os.close(descriptor)
+        raise ContractError(f"collection root changed before scan: {root_path}")
+    return root_path, descriptor
+
+
+def _assert_root_unchanged(root_path: Path, descriptor: int) -> None:
+    try:
+        current_path = root_path.lstat()
+    except OSError as exc:
+        raise ContractError(f"collection root changed during scan: {root_path}") from exc
+    opened = os.fstat(descriptor)
+    if (
+        not stat.S_ISDIR(current_path.st_mode)
+        or not _same_file(opened, current_path)
+        or not _same_metadata(opened, current_path)
+    ):
+        raise ContractError(f"collection root changed during scan: {root_path}")
+
+
+def _assert_snapshot_unchanged(
+    root_descriptor: int,
+    snapshot: _CollectionSnapshot,
+) -> None:
+    for relative_path, recorded in snapshot.directories.items():
+        descriptor = _open_relative_directory(root_descriptor, relative_path)
+        try:
+            current = os.fstat(descriptor)
+        finally:
+            os.close(descriptor)
+        if not _same_file(recorded, current) or not _same_metadata(recorded, current):
+            display_path = relative_path or "."
+            raise ContractError(f"collection directory changed after scan: {display_path}")
+
+
+def _safe_open_flags(*, directory: bool) -> int:
+    flags = os.O_RDONLY
+    flags |= getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    if directory:
+        flags |= getattr(os, "O_DIRECTORY", 0)
+    return flags
+
+
+def _inspect_relative_regular_file(root_descriptor: int, relative_path: str) -> tuple[int, str]:
+    descriptor = _open_relative_regular_file(root_descriptor, relative_path)
+    try:
+        opened = os.fstat(descriptor)
+        digest = _hash_descriptor(descriptor)
+        after_hash = os.fstat(descriptor)
+        if not _same_file(opened, after_hash) or not _same_metadata(opened, after_hash):
+            raise ContractError(f"asset changed during hashing: {relative_path}")
+
+        verification_descriptor = _open_relative_regular_file(root_descriptor, relative_path)
+        try:
+            current_path = os.fstat(verification_descriptor)
+        finally:
+            os.close(verification_descriptor)
+        if not _same_file(after_hash, current_path) or not _same_metadata(
+            after_hash,
+            current_path,
+        ):
+            raise ContractError(f"asset changed during hashing: {relative_path}")
+        return after_hash.st_size, digest
+    finally:
+        os.close(descriptor)
+
+
+def _open_relative_regular_file(root_descriptor: int, relative_path: str) -> int:
+    parts = safe_relative_path(relative_path).split("/")
+    directory_descriptor = os.dup(root_descriptor)
+    try:
+        for part in parts[:-1]:
+            next_descriptor = _open_relative_component(
+                directory_descriptor,
+                part,
+                directory=True,
+            )
+            os.close(directory_descriptor)
+            directory_descriptor = next_descriptor
+        return _open_relative_component(
+            directory_descriptor,
+            parts[-1],
+            directory=False,
+        )
+    finally:
+        os.close(directory_descriptor)
+
+
+def _open_relative_directory(root_descriptor: int, relative_path: str) -> int:
+    if not relative_path:
+        return os.dup(root_descriptor)
+    parts = safe_relative_path(relative_path).split("/")
+    directory_descriptor = os.dup(root_descriptor)
+    try:
+        for part in parts:
+            next_descriptor = _open_relative_component(
+                directory_descriptor,
+                part,
+                directory=True,
+            )
+            os.close(directory_descriptor)
+            directory_descriptor = next_descriptor
+        return os.dup(directory_descriptor)
+    finally:
+        os.close(directory_descriptor)
+
+
+def _open_relative_component(parent_descriptor: int, name: str, *, directory: bool) -> int:
+    if os.open not in os.supports_dir_fd or os.stat not in os.supports_dir_fd:
+        raise ContractError("platform cannot securely open collection-relative paths")
+    try:
+        before_open = os.stat(
+            name,
+            dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+    except OSError as exc:
+        raise ContractError(f"unable to inspect collection path component safely: {name}") from exc
+    expected_type = stat.S_ISDIR if directory else stat.S_ISREG
+    if not expected_type(before_open.st_mode):
+        raise ContractError(f"symlink or changed collection path component is forbidden: {name}")
+
+    try:
+        descriptor = os.open(
+            name,
+            _safe_open_flags(directory=directory),
+            dir_fd=parent_descriptor,
+        )
+    except OSError as exc:
+        raise ContractError(f"unable to open collection path component safely: {name}") from exc
+    opened = os.fstat(descriptor)
+    if not expected_type(opened.st_mode) or not _same_file(before_open, opened):
+        os.close(descriptor)
+        raise ContractError(f"collection path component changed before open: {name}")
+    return descriptor
+
+
+def _inspect_regular_file(path: Path) -> tuple[int, str]:
+    try:
+        before_open = path.lstat()
+    except OSError as exc:
+        raise ContractError(f"unable to inspect asset safely: {path}") from exc
+    if stat.S_ISLNK(before_open.st_mode):
+        raise ContractError(f"symlink is forbidden in collection: {path}")
+    if not stat.S_ISREG(before_open.st_mode):
+        raise ContractError(f"collection entry is not a regular file: {path}")
+
+    try:
+        descriptor = os.open(path, _safe_open_flags(directory=False))
+    except OSError as exc:
+        raise ContractError(f"unable to open asset safely without following links: {path}") from exc
+
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode) or not _same_file(before_open, opened):
+            raise ContractError(f"asset changed before hashing: {path}")
+        digest = _hash_descriptor(descriptor)
+        after_hash = os.fstat(descriptor)
+        try:
+            current_path = path.lstat()
+        except OSError as exc:
+            raise ContractError(f"asset changed during hashing: {path}") from exc
+        if (
+            not _same_file(opened, after_hash)
+            or not _same_file(after_hash, current_path)
+            or not _same_metadata(opened, after_hash)
+        ):
+            raise ContractError(f"asset changed during hashing: {path}")
+        return after_hash.st_size, digest
+    finally:
+        os.close(descriptor)
+
+
+def _same_file(first: os.stat_result, second: os.stat_result) -> bool:
+    return first.st_dev == second.st_dev and first.st_ino == second.st_ino
+
+
+def _same_metadata(first: os.stat_result, second: os.stat_result) -> bool:
+    return (
+        first.st_size == second.st_size
+        and first.st_mtime_ns == second.st_mtime_ns
+        and first.st_ctime_ns == second.st_ctime_ns
+    )
+
+
+def _role_for_path(relative_path: str) -> str:
+    name = PurePosixPath(relative_path).name.lower()
+    if name.endswith("-wal"):
+        return "sqlite_wal"
+    if name.endswith("-shm"):
+        return "sqlite_shm"
+    return _ROLE_BY_SUFFIX.get(PurePosixPath(name).suffix, "asset")
+
+
+def _validate_collection_axes(
+    *,
+    license_status: object,
+    platform_qualification: object,
+    evidence_role: object,
+    lineage_contains_noncommercial: object,
+) -> None:
+    string_axes = {
+        "license_status": license_status,
+        "platform_qualification": platform_qualification,
+        "evidence_role": evidence_role,
+    }
+    for field, value in string_axes.items():
+        if not isinstance(value, str):
+            raise ContractError(f"{field} must be a string")
+    if type(lineage_contains_noncommercial) is not bool:
+        raise ContractError("lineage_contains_noncommercial must be a bool")
+
+
+def _validate_manifest(manifest: Mapping[str, object]) -> dict[str, _ExpectedAsset]:
+    if not isinstance(manifest, Mapping):
+        raise ContractError("manifest must be a JSON object")
+    if set(manifest) != _MANIFEST_KEYS:
+        raise ContractError(
+            "manifest must contain exactly schema_version, collection_id, and assets"
+        )
+    schema_version = manifest.get("schema_version")
+    if type(schema_version) is not int or schema_version != SCHEMA_VERSION:
+        raise ContractError(f"manifest schema_version must be {SCHEMA_VERSION}")
+    collection_id = manifest.get("collection_id")
+    if not isinstance(collection_id, str) or not collection_id:
+        raise ContractError("manifest collection_id must be a non-empty string")
+
+    raw_assets = manifest.get("assets")
+    if not isinstance(raw_assets, list):
+        raise ContractError("manifest assets must be a list")
+
+    expected: dict[str, _ExpectedAsset] = {}
+    for index, raw_asset in enumerate(raw_assets):
+        if not isinstance(raw_asset, Mapping):
+            raise ContractError(f"manifest asset {index} must be an object")
+        if set(raw_asset) != _ASSET_KEYS:
+            raise ContractError(f"manifest asset {index} must contain exactly the contract fields")
+        path = _validated_asset_path(raw_asset, index)
+        if path in expected:
+            raise ContractError(f"duplicate manifest asset path: {path}")
+        _validate_asset_metadata(raw_asset, index, path)
+        expected[path] = _ExpectedAsset(
+            path=path,
+            byte_count=_asset_bytes(raw_asset, index),
+            sha256=_asset_sha256(raw_asset, index),
+        )
+    return expected
+
+
+def _validated_asset_path(asset: Mapping[str, object], index: int) -> str:
+    raw_path = asset.get("path")
+    if not isinstance(raw_path, str):
+        raise ContractError(f"manifest asset {index} path must be a string")
+    return safe_relative_path(raw_path)
+
+
+def _asset_bytes(asset: Mapping[str, object], index: int) -> int:
+    byte_count = asset.get("bytes")
+    if type(byte_count) is not int or byte_count < 0:
+        raise ContractError(f"manifest asset {index} bytes must be a non-negative integer")
+    return byte_count
+
+
+def _asset_sha256(asset: Mapping[str, object], index: int) -> str:
+    digest = asset.get("sha256")
+    if not isinstance(digest, str) or _SHA256_PATTERN.fullmatch(digest) is None:
+        raise ContractError(f"manifest asset {index} sha256 must be lowercase hexadecimal")
+    return digest
+
+
+def _validate_asset_metadata(asset: Mapping[str, object], index: int, path: str) -> None:
+    role = asset.get("role")
+    expected_role = _role_for_path(path)
+    if role != expected_role:
+        raise ContractError(f"manifest asset {index} role must be {expected_role}")
+    _validate_collection_axes(
+        license_status=asset.get("license_status"),
+        platform_qualification=asset.get("platform_qualification"),
+        evidence_role=asset.get("evidence_role"),
+        lineage_contains_noncommercial=asset.get("lineage_contains_noncommercial"),
+    )
+    _asset_bytes(asset, index)
+    _asset_sha256(asset, index)
