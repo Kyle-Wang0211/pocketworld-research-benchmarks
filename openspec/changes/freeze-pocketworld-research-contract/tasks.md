@@ -1,9 +1,9 @@
 ## 1. Contract Tooling and Schema
 
-- [ ] 1.1 TDD a Python 3.11 streaming verifier for canonical ordering, exact file sets, path/symlink safety, mutation, and provisional verdict gates.
-- [ ] 1.2 Add locked NumPy 2.4.2 NPZ inspection and reject pickle/object dtype with failing-first tests.
-- [ ] 1.3 Add schema/tests for full reproducibility truth and separate license/platform/role/lineage axes.
-- [ ] 1.4 Create normalized cap50, cap51 archive, and cap51 replay-fixture skeletons with null+deviation for missing evidence.
+- [x] 1.1 TDD a Python 3.11 streaming verifier for canonical ordering, exact file sets, path/symlink safety, mutation, and provisional verdict gates.
+- [x] 1.2 Add locked NumPy 2.4.2 NPZ inspection and reject pickle/object dtype with failing-first tests.
+- [x] 1.3 Add schema/tests for full reproducibility truth and separate license/platform/role/lineage axes.
+- [x] 1.4 Create normalized cap50, cap51 archive, and cap51 replay-fixture skeletons with null+deviation for missing evidence.
 
 ## 2. Sparse and DVC Safety Setup
 

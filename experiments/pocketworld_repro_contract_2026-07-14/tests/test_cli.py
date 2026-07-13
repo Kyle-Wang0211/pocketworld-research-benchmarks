@@ -55,7 +55,29 @@ def test_cli_build_verify_and_gate_verdict(tmp_path: Path) -> None:
 
     contract = tmp_path / "contract.json"
     contract.write_text('{"status":"verdict_eligible"}\n', encoding="utf-8")
-    assert cli.main(["gate-verdict", str(contract)]) == 0
+    assert cli.main(["gate-verdict", str(contract)]) == 2
+
+
+def test_cli_verify_contract_loads_and_validates_json(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cli = _cli_module()
+    contract = tmp_path / "contract.json"
+    contract.write_text('{"schema_version":1}\n', encoding="utf-8")
+    observed: list[object] = []
+    monkeypatch.setattr(cli, "validate_contract", observed.append, raising=False)
+
+    assert cli.main(["verify-contract", str(contract)]) == 0
+    assert observed == [{"schema_version": 1}]
+
+
+def test_cli_verify_contract_fails_closed_on_invalid_contract(tmp_path: Path) -> None:
+    cli = _cli_module()
+    contract = tmp_path / "invalid-contract.json"
+    contract.write_text('{"schema_version":1}\n', encoding="utf-8")
+
+    assert cli.main(["verify-contract", str(contract)]) == 2
 
 
 @pytest.mark.parametrize("output_route", ["direct", "symlink"])

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+from pocketworld_contract.contract import validate_contract
 from pocketworld_contract.manifest import (
     ContractError,
     build_collection,
@@ -64,8 +65,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             verify_collection(arguments.root, _load_json_object(arguments.manifest))
             print("verified")
         elif arguments.command == "gate-verdict":
-            require_verdict_eligible(_load_json_object(arguments.contract))
+            contract = _load_json_object(arguments.contract)
+            validate_contract(contract)
+            require_verdict_eligible(contract)
             print("verdict_eligible")
+        elif arguments.command == "verify-contract":
+            validate_contract(_load_json_object(arguments.contract))
+            print("contract_verified")
         else:  # pragma: no cover - argparse restricts command choices.
             parser.error(f"unknown command: {arguments.command}")
     except (ContractError, OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -236,6 +242,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="require a verdict-eligible research contract",
     )
     gate_parser.add_argument("contract", type=Path)
+
+    contract_parser = subparsers.add_parser(
+        "verify-contract",
+        help="validate a complete research contract and its fail-closed semantic gates",
+    )
+    contract_parser.add_argument("contract", type=Path)
     return parser
 
 

@@ -1,0 +1,521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pocketworld.local/schemas/contract-v1.schema.json",
+  "title": "PocketWorld research contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "status",
+    "git",
+    "upstream",
+    "collections",
+    "code",
+    "environment",
+    "models",
+    "effective_config",
+    "seeds",
+    "command",
+    "metrics",
+    "exclusions",
+    "stopping_rules",
+    "artifacts",
+    "deviations",
+    "privacy",
+    "product_qualification",
+    "verdict"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract_id": {"type": "string", "minLength": 1},
+    "status": {
+      "enum": [
+        "preserved_incomplete_feed",
+        "provisional_not_verdict_eligible",
+        "verdict_eligible",
+        "invalid"
+      ]
+    },
+    "git": {"$ref": "#/$defs/git"},
+    "upstream": {"$ref": "#/$defs/upstream"},
+    "collections": {"type": "array", "items": {"$ref": "#/$defs/evidence_item"}},
+    "code": {"$ref": "#/$defs/code"},
+    "environment": {"$ref": "#/$defs/environment"},
+    "models": {"type": "array", "items": {"$ref": "#/$defs/model"}},
+    "effective_config": {"$ref": "#/$defs/effective_config"},
+    "seeds": {"$ref": "#/$defs/seeds"},
+    "command": {"$ref": "#/$defs/command"},
+    "metrics": {"$ref": "#/$defs/metrics"},
+    "exclusions": {"type": "array", "items": {"$ref": "#/$defs/exclusion"}},
+    "stopping_rules": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/stopping_rule"}
+    },
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/evidence_item"}},
+    "deviations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/deviation"}
+    },
+    "privacy": {"$ref": "#/$defs/privacy"},
+    "product_qualification": {"$ref": "#/$defs/product_qualification"},
+    "verdict": {"$ref": "#/$defs/verdict"}
+  },
+  "$defs": {
+    "sha256_or_null": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonempty_string_or_null": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "branch", "commit", "dirty_diff_sha256"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "branch": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "commit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "dirty_diff_sha256": {"$ref": "#/$defs/sha256_or_null"}
+      }
+    },
+    "stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "revision", "colmap_version", "ceres_version"],
+      "properties": {
+        "identity": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "colmap_version": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "ceres_version": {"$ref": "#/$defs/nonempty_string_or_null"}
+      }
+    },
+    "consumer_target_stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "revision", "colmap_version", "ceres_version"],
+      "properties": {
+        "identity": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1},
+        "colmap_version": {"const": "4.1.0"},
+        "ceres_version": {"const": "2.2-submodule"}
+      }
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer_stack", "consumer_target_stack"],
+      "properties": {
+        "producer_stack": {"$ref": "#/$defs/stack"},
+        "consumer_target_stack": {"$ref": "#/$defs/consumer_target_stack"}
+      }
+    },
+    "code_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "execution_status", "role"],
+      "properties": {
+        "path": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "execution_status": {
+          "enum": ["runnable", "evidence_source_not_runnable"]
+        },
+        "role": {"type": "string", "minLength": 1}
+      }
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "entries": {"type": "array", "items": {"$ref": "#/$defs/code_entry"}}
+      }
+    },
+    "runtime_environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python_version", "uv_lock_sha256", "hardware", "backend"],
+      "properties": {
+        "python_version": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "uv_lock_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "hardware": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "backend": {"$ref": "#/$defs/nonempty_string_or_null"}
+      }
+    },
+    "verifier_environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "python_version",
+        "numpy_version",
+        "uv_lock_sha256",
+        "hardware",
+        "backend"
+      ],
+      "properties": {
+        "python_version": {"const": "3.11"},
+        "numpy_version": {"const": "2.4.2"},
+        "uv_lock_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "hardware": {"type": "string", "minLength": 1},
+        "backend": {"type": "string", "minLength": 1}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "verifier"],
+      "properties": {
+        "producer": {"$ref": "#/$defs/runtime_environment"},
+        "verifier": {"$ref": "#/$defs/verifier_environment"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "source",
+        "revision",
+        "weights_sha256",
+        "license_evidence_sha256",
+        "license_status",
+        "usage"
+      ],
+      "properties": {
+        "model_id": {"type": "string", "minLength": 1},
+        "source": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "weights_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "license_evidence_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "license_status": {
+          "enum": [
+            "verified_commercial_open_source",
+            "noncommercial_ineligible",
+            "unknown_pending_audit",
+            "not_applicable",
+            null
+          ]
+        },
+        "usage": {"type": "string", "minLength": 1}
+      }
+    },
+    "effective_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "path", "sha256", "values"],
+      "properties": {
+        "status": {
+          "enum": ["runnable", "evidence_source_not_runnable", "not_applicable"]
+        },
+        "path": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "values": {"type": "object"}
+      }
+    },
+    "seeds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["random_seed", "deterministic", "notes"],
+      "properties": {
+        "random_seed": {"type": ["integer", "null"]},
+        "deterministic": {"type": ["boolean", "null"]},
+        "notes": {"$ref": "#/$defs/nonempty_string_or_null"}
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "argv", "cwd"],
+      "properties": {
+        "status": {"enum": ["known", "not_recorded", "not_applicable"]},
+        "argv": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {"type": "string", "minLength": 1}
+            }
+          ]
+        },
+        "cwd": {"$ref": "#/$defs/nonempty_string_or_null"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "known"}}},
+          "then": {
+            "properties": {
+              "argv": {"type": "array", "minItems": 1},
+              "cwd": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "not_recorded"}}},
+          "then": {
+            "properties": {"argv": {"type": "null"}, "cwd": {"type": "null"}}
+          }
+        }
+      ]
+    },
+    "metric_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric_id", "unit", "direction"],
+      "properties": {
+        "metric_id": {"type": "string", "minLength": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "direction": {"enum": ["higher_is_better", "lower_is_better", "target"]}
+      }
+    },
+    "metric_threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric_id", "operator", "value"],
+      "properties": {
+        "metric_id": {"type": "string", "minLength": 1},
+        "operator": {"enum": [">", ">=", "<", "<=", "=="]},
+        "value": {"type": "number"}
+      }
+    },
+    "metric_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric_id", "value", "artifact_id"],
+      "properties": {
+        "metric_id": {"type": "string", "minLength": 1},
+        "value": {"type": ["number", "string", "boolean"]},
+        "artifact_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitions", "thresholds", "observed"],
+      "properties": {
+        "definitions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/metric_definition"}
+        },
+        "thresholds": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/metric_threshold"}
+        },
+        "observed": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/metric_observation"}
+        }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exclusion_id", "rule", "rationale"],
+      "properties": {
+        "exclusion_id": {"type": "string", "minLength": 1},
+        "rule": {"type": "string", "minLength": 1},
+        "rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "stopping_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "condition", "action"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "condition": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1}
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "storage",
+        "remote_allowed",
+        "same_disk_only",
+        "constraints"
+      ],
+      "properties": {
+        "classification": {"type": "string", "minLength": 1},
+        "storage": {"type": "string", "minLength": 1},
+        "remote_allowed": {"type": "boolean"},
+        "same_disk_only": {"type": "boolean"},
+        "constraints": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "product_qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "commercial_open_source_dependencies_verified",
+        "dependencies",
+        "reasons"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["not_assessed", "not_qualified", "commercial_evaluation_candidate"]
+        },
+        "commercial_open_source_dependencies_verified": {"type": "boolean"},
+        "dependencies": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/product_dependency"}
+        },
+        "reasons": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "product_dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependency_id",
+        "kind",
+        "source",
+        "revision",
+        "license_identifier",
+        "license_evidence_sha256",
+        "license_status",
+        "lineage_contains_noncommercial",
+        "noncommercial_lineage_sources"
+      ],
+      "properties": {
+        "dependency_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["source_code", "model", "dataset", "tool"]},
+        "source": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "license_identifier": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "license_evidence_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "license_status": {
+          "enum": [
+            "verified_commercial_open_source",
+            "noncommercial_ineligible",
+            "unknown_pending_audit",
+            null
+          ]
+        },
+        "lineage_contains_noncommercial": {"type": ["boolean", "null"]},
+        "noncommercial_lineage_sources": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "deviation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deviation_id", "field", "reason", "blocks_verdict", "resolution"],
+      "properties": {
+        "deviation_id": {"type": "string", "minLength": 1},
+        "field": {"type": "string", "pattern": "^/"},
+        "reason": {"type": "string", "minLength": 1},
+        "blocks_verdict": {"type": "boolean"},
+        "resolution": {"type": "string", "minLength": 1}
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "decision", "blockers"],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "decision": {"type": "string", "minLength": 1},
+        "blockers": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "evidence_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "identity_status",
+        "path",
+        "bytes",
+        "sha256",
+        "dvc_oid",
+        "producer",
+        "consumer",
+        "inclusion_reason",
+        "license_status",
+        "platform_qualification",
+        "evidence_role",
+        "lineage_contains_noncommercial",
+        "noncommercial_lineage_sources",
+        "commercial_gate_included",
+        "details"
+      ],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "identity_status": {
+          "enum": [
+            "preserved",
+            "source_evidence_only",
+            "expected_identity",
+            "missing",
+            "excluded_volatile"
+          ]
+        },
+        "path": {"type": ["string", "null"]},
+        "bytes": {"type": ["integer", "null"], "minimum": 0},
+        "sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "dvc_oid": {"type": ["string", "null"]},
+        "producer": {"type": ["string", "null"]},
+        "consumer": {"type": ["string", "null"]},
+        "inclusion_reason": {"type": "string", "minLength": 1},
+        "license_status": {
+          "enum": [
+            "user_owned_private_input",
+            "verified_commercial_open_source",
+            "noncommercial_ineligible",
+            "unknown_pending_audit",
+            "not_applicable",
+            null
+          ]
+        },
+        "platform_qualification": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "evidence_role": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "lineage_contains_noncommercial": {"type": ["boolean", "null"]},
+        "noncommercial_lineage_sources": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "commercial_gate_included": {"type": "boolean"},
+        "commercial_gate_exclusion_reason": {"type": "string", "minLength": 1},
+        "details": {"type": "object"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"commercial_gate_included": {"const": false}},
+            "required": ["commercial_gate_included"]
+          },
+          "then": {"required": ["commercial_gate_exclusion_reason"]},
+          "else": {"not": {"required": ["commercial_gate_exclusion_reason"]}}
+        }
+      ]
+    }
+  }
+}
