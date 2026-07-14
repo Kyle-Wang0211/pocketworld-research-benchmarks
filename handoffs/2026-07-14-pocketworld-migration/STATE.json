@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-14T10:26:41+08:00",
+  "status": "safe_checkpoint_incomplete",
+  "source_task_runtime": {
+    "configured_agents_max_threads": 32,
+    "configured_agents_max_depth": 1,
+    "observed_total_slot_cap": 4,
+    "target_runtime_unverified_until_new_task": true,
+    "reason_for_new_task": "The existing task retained a four-slot runtime despite app restart; a new task is required to test whether the 32-thread configuration is applied.",
+    "config_sha256": "17060d0493770432bd3f09dbfe212f2b4864140ce3dde7681a880829837c7b78"
+  },
+  "host": {
+    "model": "Mac15,6",
+    "description": "Apple M3 Pro, 18 GB unified memory",
+    "memory_bytes": 19327352832,
+    "macos_version": "26.1",
+    "macos_build": "25B78",
+    "python": "/opt/homebrew/bin/python3.11",
+    "python_constraint": "Do not use system Python 3.14 cv2/vtk environment for experiments."
+  },
+  "instruction_files": [
+    {
+      "path": "/Users/kaidongwang/Documents/progecttwo/AGENTS.md",
+      "sha256": "f7efaa6c4ec8c39601a167f4c765891a0d29b4b731585898d84d8c05d9658923"
+    },
+    {
+      "path": "/Users/kaidongwang/.codex/AGENT_STACK_LOCK.md",
+      "sha256": "fe4003e24017594b6b74b0751f3fe84283e1af50071237406032d4408b4b3a36"
+    },
+    {
+      "path": "/Users/kaidongwang/.claude/projects/-Users-kaidongwang-Documents-progecttwo/memory/MEMORY.md",
+      "sha256": "04369d17222a0d0fedbc64fd2c23d9406e0301f1cf8faa6d8a0e992eb6f93bc7"
+    },
+    {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/CLAUDE.md",
+      "sha256": "f48286083cdda4f1ca44566dbe6c2596f2596b9b4f6d8de132b4d07245507206"
+    },
+    {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/AGENTS.md",
+      "sha256": "6a44905136a88fa0503f0fae32590639231ead1760161e4788214d6ef7fff0b8"
+    },
+    {
+      "path": "/Users/kaidongwang/.codex/attachments/13077ff1-e4cb-4e94-8745-85c31a72b78a/pasted-text.txt",
+      "sha256": "72e7a100447195ae3dd0d064cc5cfecf70db4fb5378e2855f65e55cd7805972a"
+    }
+  ],
+  "route": [
+    "research_data_contract",
+    "E_shutter_v2_and_sustained_thermal_P0",
+    "A_cap51_incremental_global_BA_OFF_ON",
+    "B_pure_A_wall_ceiling_plane_sweep",
+    "C_A16_tiled_streaming_shader",
+    "D_commercially_clean_detector_free"
+  ],
+  "repositories": {
+    "research_contract_worktree": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714",
+      "branch": "codex/pocketworld-repro-contract-20260714",
+      "evidence_base_commit": "eeb258c980c18193b3dbb64432bca89e480e4ddb",
+      "evidence_base_tree": "2537226353aba3d20f5fce7b053fced53332c83b",
+      "remote": "git@github.com:Kyle-Wang0211/pocketworld-research-benchmarks.git",
+      "openspec_change": "openspec/changes/freeze-pocketworld-research-contract",
+      "status_before_handoff_package": "clean"
+    },
+    "product_E_worktree": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714",
+      "branch": "codex/shutter-v2-thermal-p0-20260714",
+      "head": "58d7f47ede6295f6d0bcb9d422bce17f44301647",
+      "base": "1626543232eff47d1bd3664dad065165e472e1d7",
+      "remote": "https://github.com/Kyle-Wang0211/pocketworld.git",
+      "openspec_change": "openspec/changes/shutter-v2-thermal-p0",
+      "status": "four_untracked_owned_files"
+    },
+    "product_original_dirty_tree": {
+      "path": "/Users/kaidongwang/Developer/pocketworld",
+      "branch": "ar-capture-rs",
+      "head": "1626543232eff47d1bd3664dad065165e472e1d7",
+      "tracked_dirty_entries": 13,
+      "untracked_backup_archives": 4,
+      "ownership": "pre-existing cloud-removal WIP and .a.bak files; do not modify or include"
+    },
+    "algorithm_original_dirty_tree": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross",
+      "branch": "claude/publish-to-community",
+      "head": "8952bfc76e247a9e2674c0e9c7bbc09ef37c9efe",
+      "experiment_A_baseline": "0a8b8428fba3fbf942af01ada6d1e1252a677c6a",
+      "status_scope": "targeted porcelain: CMakeLists is ' M'; aether_l1_plan.h and l1_ghost_tool.cc are both 'MM' (staged plus unstaged); harness is '??'; full untracked scan intentionally not rerun",
+      "targeted_porcelain": {
+        "aether_cpp/third_party/glomap_vendor/CMakeLists.txt": " M",
+        "aether_cpp/third_party/glomap_vendor/bench/aether_l1_plan.h": "MM",
+        "aether_cpp/third_party/glomap_vendor/bench/l1_ghost_tool.cc": "MM",
+        "aether_cpp/third_party/glomap_vendor/bench/sfm_replay_bench.cc": "??"
+      },
+      "do_not_touch": [
+        "aether_cpp/third_party/glomap_vendor/CMakeLists.txt",
+        "aether_cpp/third_party/glomap_vendor/bench/aether_l1_plan.h",
+        "aether_cpp/third_party/glomap_vendor/bench/l1_ghost_tool.cc"
+      ],
+      "harness": {
+        "path": "aether_cpp/third_party/glomap_vendor/bench/sfm_replay_bench.cc",
+        "bytes": 12460,
+        "sha256": "d534ce1e8941d933628f4605dd3c3e06f4c18088abe1db09bcb585fd9ab1ac11",
+        "tracked": false
+      }
+    }
+  },
+  "product_E_artifacts": [
+    {
+      "path": "lib/capture/manual_capture_ledger.dart",
+      "bytes": 51398,
+      "sha256": "1d6d46fe1c507a2b4db9fd2cb1ffc163ecedc8266875e7278d2c8947e5ea8524"
+    },
+    {
+      "path": "lib/capture/sfm_thermal_scheduler.dart",
+      "bytes": 10045,
+      "sha256": "e96c5464b31602f0d400a752eb4210f5b5174ccd170712776c9c77e85e847323"
+    },
+    {
+      "path": "test/manual_capture_ledger_test.dart",
+      "bytes": 46639,
+      "sha256": "e1f9c7b06e71e7b56dbe9e70abd31d9456ba978d5d3ef64241855e28b55ec5ce"
+    },
+    {
+      "path": "test/sfm_thermal_scheduler_test.dart",
+      "bytes": 13505,
+      "sha256": "a4fd1104f462443ba01c7bbf860722d4e0554ab98dc6b7c2226acd0de682e704"
+    }
+  ],
+  "dvc": {
+    "version": "3.67.1",
+    "python_version": "3.11.15",
+    "cache_dir": "/Users/kaidongwang/.cache/dvc/pocketworld-research-contract-20260714",
+    "cache_type": "reflink,hardlink,copy",
+    "remote_count": 0,
+    "targets": 14,
+    "payload_files": 367,
+    "payload_bytes": 487703207,
+    "required_cache_objects": 374,
+    "missing_cache_objects": 0,
+    "same_host_only": true,
+    "disaster_recovery": false,
+    "oids": [
+      "dff864841b669f096ace9e42af11e605.dir",
+      "156d4b7615cf6164b04e647b7954bec4",
+      "1b780b3dc20379bf4710c13106e12654",
+      "c1642d2647a46fffd9fe8fc668638ede",
+      "7f55fe2d904fc5aa9db2e3bbb718f9e1.dir",
+      "3d206ccc9082e360d523e2e77c5dbb25",
+      "fd2cefff98d94ef6ff6566e0c402af9e",
+      "569cea95a31089af2ac1057b34814d9e",
+      "21e17949af9f7347478c25964a6fe3fc.dir",
+      "f3913e9b4b14d917b860dc7f58e604b2",
+      "076cb8a8886d8ea05ba3fa3a7aa6102f.dir",
+      "a370413b8c79cfc702bdd112900f178d.dir",
+      "e300bea0e3230ce784f75db521ee90ee.dir",
+      "651794852a5a044cb2e57642bfafbb27.dir"
+    ]
+  },
+  "cap51": {
+    "device_model": "iPhone 14 Pro",
+    "coredevice_id": "1B290474-D354-5B4C-AAB0-0805AC5DC832",
+    "usb_udid": "00008120-00146C4A1AEBC01E",
+    "bundle_id": "com.kyle.PocketWorld",
+    "capture_directory": "Documents/captures/cap_1783933521157217",
+    "observed_transport": "localNetwork/tcp",
+    "candidate_db": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/fresh_device_pull_2026-07-14T085404+0800/retry/sfm_live.db",
+      "bytes": 134975488,
+      "sha256": "af1bd571d81cf27228e6b1bd8faa9617a1734bf0d32c1c67ec849c4bc7f5ba97",
+      "sqlite_quick_check": "ok",
+      "remote_size_match": true,
+      "remote_mtime_match": true,
+      "remote_cryptographic_checksum_available": false,
+      "canonical_fixture_promoted": false
+    },
+    "failed_partial": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/fresh_device_pull_2026-07-14T085404+0800/retry/sfm_live_db_attempt3.db",
+      "bytes": 20000000,
+      "sha256": "b453e7ba030d7bca040280dbca545cb7108d931d4022945bf3a004538e4ed26a",
+      "error": "CoreDevice 7000 / NSPOSIXErrorDomain 60 ETIMEDOUT",
+      "eligible": false
+    },
+    "small_files": {
+      "photo_bundle_sha256": "e2a6c57b215ad1641e73c76b0adcaba8f6c77f563c70ea62c17ca15a55743caf",
+      "sfm_fed_frames_sha256": "d86ac0c44a9e5ae154f286cc9fc6baf215f949c5335b4bf9210e87c6d018770c",
+      "sfm_sparse_sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7",
+      "fresh_wal_bytes": 0,
+      "fresh_wal_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "blocker": "Do not run A until the fixture contract explicitly adjudicates the complete candidate copy or a wired fresh pull and records provenance, persistent SQLite state, DVC identity, code/config identity, and the single-variable OFF/ON protocol."
+  },
+  "verification": {
+    "product_tests": {
+      "command": "flutter test --no-pub --no-test-assets test/manual_capture_ledger_test.dart test/sfm_thermal_scheduler_test.dart",
+      "passed": 55,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "product_analyze": {
+      "result": "No issues found",
+      "exit_code": 0
+    },
+    "product_format": {
+      "changed_files": 0,
+      "exit_code": 0
+    },
+    "product_openspec": {
+      "change": "shutter-v2-thermal-p0",
+      "strict_valid": true,
+      "exit_code": 0
+    },
+    "research_tests": {
+      "cwd": "experiments/pocketworld_repro_contract_2026-07-14",
+      "command": "UV_OFFLINE=1 uv run --frozen pytest -q",
+      "passed": 468,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "invalid_research_test_invocation": {
+      "cwd": "research repository root",
+      "command": "/opt/homebrew/bin/python3.11 -m pytest -q",
+      "collection_errors": 5,
+      "reason": "pocketworld_contract package is project-local and was not installed into the repository-root interpreter environment"
+    },
+    "research_openspec": {
+      "change": "freeze-pocketworld-research-contract",
+      "strict_valid": true,
+      "exit_code": 0
+    },
+    "dvc_status": {},
+    "dvc_data_status": {},
+    "dvc_remotes": []
+  },
+  "next_actions": [
+    "Verify this handoff package and confirm the new task observes agents.max_threads=32 without assuming all 32 should be filled.",
+    "Before E implementation, reconcile the 14 completed DVC targets into the research contracts and OpenSpec tasks/deviations, then rerun 468 tests, strict OpenSpec, DVC status, and metadata-only Git checks.",
+    "Continue product E in the isolated product worktree: integrate the ledger and thermal scheduler through failing-first Flutter/native boundary tests.",
+    "Map every native add_frame unknown/internal outcome to nativeIngestAmbiguous and preserve the exact FIFO job-to-native-image identity.",
+    "Run host-level product regression/build checks before any device install.",
+    "Preregister phone qualification and then run user-controlled iPhone 14 Pro profile tests without automatic frame deletion.",
+    "Only after E reaches its gate, qualify cap51 fixture and build Experiment A from clean 0a8b8428 with the harness as the sole addition."
+  ],
+  "explicitly_not_complete": [
+    "E production integration and iPhone qualification",
+    "cap51 canonical verdict-eligible fixture",
+    "Experiment A OFF/ON verdict",
+    "B wall/ceiling experiment",
+    "C A16 tiled shader",
+    "D commercially clean detector-free route",
+    "COLMAP 4.1.0 migration verification",
+    "Ceres 2.2 submodule migration verification",
+    "CasDiffMVS full runner and model-hash delivery verification",
+    "Web viewer-only implementation verification"
+  ]
+}
