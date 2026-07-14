@@ -6,6 +6,8 @@
 - [x] 1.4 Create normalized cap50, cap51 archive, and cap51 replay-fixture skeletons with null+deviation for missing evidence.
 - [x] 1.5 Harden canonical JSON loading, generic verdict closure, actual repository rehash, and single-file DVC identity checks.
 - [x] 1.6 Type cap51 replay qualification and separate code/model/dataset commercial-audit surfaces without upgrading provisional contracts.
+- [x] 1.7 Close Experiment A identity/control gates, metric-to-artifact decision evaluation, and runnable code/config/model/dependency references.
+- [x] 1.8 Verify Git and every available immutable file claim even for provisional contracts; reject float overflow and incomplete commercial dependency declarations.
 
 ## 2. Sparse and DVC Safety Setup
 

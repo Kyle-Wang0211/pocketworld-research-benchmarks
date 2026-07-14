@@ -95,10 +95,12 @@
             "applicable",
             "fixture_contract_id",
             "fresh_authorized_pull",
+            "fresh_device_pull",
             "pull_timestamp",
             "source_device_id",
             "source_app_id",
             "source_app_revision",
+            "source_app_revision_proven",
             "source_capture_directory",
             "ledger_capture_directory",
             "source_quiescence_proven",
@@ -107,6 +109,12 @@
             "capture_binding_proven",
             "integrity_check_passed",
             "db_pose_alignment_passed",
+            "algorithm_revision",
+            "incremental_global_ba_default_enabled",
+            "control_variable",
+            "control_off_value",
+            "control_on_value",
+            "only_control_variable_difference_proven",
             "db_evidence_id",
             "wal_evidence_id",
             "pose_evidence_id",
@@ -116,6 +124,7 @@
             "applicable": {"const": true},
             "fixture_contract_id": {"type": "string", "minLength": 1},
             "fresh_authorized_pull": {"type": "boolean"},
+            "fresh_device_pull": {"type": "boolean"},
             "pull_timestamp": {
               "type": ["string", "null"],
               "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
@@ -123,6 +132,7 @@
             "source_device_id": {"$ref": "#/$defs/nonempty_string_or_null"},
             "source_app_id": {"$ref": "#/$defs/nonempty_string_or_null"},
             "source_app_revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+            "source_app_revision_proven": {"type": "boolean"},
             "source_capture_directory": {"$ref": "#/$defs/nonempty_string_or_null"},
             "ledger_capture_directory": {"$ref": "#/$defs/nonempty_string_or_null"},
             "source_quiescence_proven": {"type": "boolean"},
@@ -131,6 +141,14 @@
             "capture_binding_proven": {"type": "boolean"},
             "integrity_check_passed": {"type": "boolean"},
             "db_pose_alignment_passed": {"type": "boolean"},
+            "algorithm_revision": {
+              "const": "0a8b8428fba3fbf942af01ada6d1e1252a677c6a"
+            },
+            "incremental_global_ba_default_enabled": {"const": false},
+            "control_variable": {"const": "AETHER_INCREMENTAL_GLOBAL_BA"},
+            "control_off_value": {"const": "unset"},
+            "control_on_value": {"const": "1"},
+            "only_control_variable_difference_proven": {"type": "boolean"},
             "db_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
             "wal_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
             "pose_evidence_id": {"$ref": "#/$defs/nonempty_string_or_null"},
@@ -187,14 +205,27 @@
     "code_entry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256", "execution_status", "role"],
+      "required": [
+        "code_id",
+        "path",
+        "sha256",
+        "execution_status",
+        "role",
+        "dependency_ids"
+      ],
       "properties": {
+        "code_id": {"type": "string", "minLength": 1},
         "path": {"$ref": "#/$defs/nonempty_string_or_null"},
         "sha256": {"$ref": "#/$defs/sha256_or_null"},
         "execution_status": {
           "enum": ["runnable", "evidence_source_not_runnable"]
         },
-        "role": {"type": "string", "minLength": 1}
+        "role": {"type": "string", "minLength": 1},
+        "dependency_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
       }
     },
     "code": {
@@ -279,7 +310,9 @@
         },
         "source": {"$ref": "#/$defs/nonempty_string_or_null"},
         "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "weights_path": {"$ref": "#/$defs/nonempty_string_or_null"},
         "weights_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "license_evidence_path": {"$ref": "#/$defs/nonempty_string_or_null"},
         "license_evidence_sha256": {"$ref": "#/$defs/sha256_or_null"},
         "license_status": {
           "enum": [
@@ -305,8 +338,9 @@
     "effective_config": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "path", "sha256", "values"],
+      "required": ["config_id", "status", "path", "sha256", "values"],
       "properties": {
+        "config_id": {"type": "string", "minLength": 1},
         "status": {
           "enum": ["runnable", "evidence_source_not_runnable", "not_applicable"]
         },
@@ -341,12 +375,30 @@
             }
           ]
         },
-        "cwd": {"$ref": "#/$defs/nonempty_string_or_null"}
+        "cwd": {"$ref": "#/$defs/nonempty_string_or_null"},
+        "code_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "config_id": {"type": "string", "minLength": 1},
+        "dependency_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "model_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
       },
       "allOf": [
         {
           "if": {"properties": {"status": {"const": "known"}}},
           "then": {
+            "required": ["code_ids", "config_id", "dependency_ids", "model_ids"],
             "properties": {
               "argv": {"type": "array", "minItems": 1},
               "cwd": {"type": "string", "minLength": 1}
@@ -377,6 +429,7 @@
       "required": ["metric_id", "operator", "value"],
       "properties": {
         "metric_id": {"type": "string", "minLength": 1},
+        "artifact_id": {"type": "string", "minLength": 1},
         "operator": {"enum": [">", ">=", "<", "<=", "=="]},
         "value": {"type": "number"}
       }
@@ -458,6 +511,7 @@
       "required": [
         "status",
         "commercial_open_source_dependencies_verified",
+        "execution_dependency_closure_declared_complete",
         "dependencies",
         "reasons"
       ],
@@ -466,6 +520,7 @@
           "enum": ["not_assessed", "not_qualified", "commercial_evaluation_candidate"]
         },
         "commercial_open_source_dependencies_verified": {"type": "boolean"},
+        "execution_dependency_closure_declared_complete": {"type": "boolean"},
         "dependencies": {
           "type": "array",
           "items": {"$ref": "#/$defs/product_dependency"}
@@ -501,6 +556,7 @@
         "revision": {"$ref": "#/$defs/nonempty_string_or_null"},
         "license_identifier": {"$ref": "#/$defs/nonempty_string_or_null"},
         "license_evidence_sha256": {"$ref": "#/$defs/sha256_or_null"},
+        "license_evidence_path": {"$ref": "#/$defs/nonempty_string_or_null"},
         "license_status": {
           "enum": [
             "verified_commercial_open_source",
@@ -646,6 +702,9 @@
         "commercial_gate_included": {"type": "boolean"},
         "commercial_gate_exclusion_reason": {"type": "string", "minLength": 1},
         "replay_identity_included": {"type": "boolean"},
+        "replay_component_kind": {
+          "enum": ["sqlite_database", "sqlite_wal", "pose_jsonl", "sqlite_shm"]
+        },
         "rights_basis": {"type": "string", "minLength": 1},
         "rights_evidence_sha256": {
           "type": "string",

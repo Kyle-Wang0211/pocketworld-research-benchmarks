@@ -5,16 +5,19 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
+from pocketworld_contract import preservation
 from pocketworld_contract.preservation import (
     CLONE_FLAGS,
     BatchMapError,
     CloneFileError,
+    ClonePublishedDurabilityError,
     CloneVerification,
     ResourceSnapshot,
     ResourceSnapshotError,
@@ -378,6 +381,16 @@ def test_resource_gate_rejects_invalid_snapshots(snapshot: ResourceSnapshot) -> 
         "fixture.sqlite3",
         "fixture.db-wal",
         "fixture.db-shm",
+        "state.sqlite-wal",
+        "state.sqlite-shm",
+        "state.sqlite3-WaL",
+        "state.sqlite3-ShM",
+        "state-wal",
+        "state-SHM",
+        ".wal",
+        ".SHM",
+        "nested/database.WAL",
+        "nested/database.sHm",
         "cloud.ply",
         "matches.npz",
         "array.npy",
@@ -390,6 +403,20 @@ def test_git_path_classifier_rejects_payload_suffixes_everywhere(path: str) -> N
     assert len(violations) == 1
     assert violations[0].path == path
     assert violations[0].reason == "payload_suffix"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "docs/wall.md",
+        "docs/shm_notes.md",
+        "docs/walnut.txt",
+        "experiments/sidewalk.json",
+        "experiments/showroom.csv",
+    ],
+)
+def test_git_path_classifier_does_not_confuse_ordinary_names_with_sidecars(path: str) -> None:
+    assert find_forbidden_git_paths([path]) == ()
 
 
 @pytest.mark.parametrize(
@@ -437,6 +464,21 @@ def test_git_path_classifier_preserves_input_order_for_staged_or_history_paths()
     assert [item.path for item in violations] == paths[1:]
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "experiments/run/.pocketworld-clone-deadbeef/payload",
+        "experiments/run/.pocketworld-npz-deadbeef.snapshot",
+    ],
+)
+def test_git_path_classifier_rejects_generated_private_payload_remnants(path: str) -> None:
+    violations = find_forbidden_git_paths([path])
+
+    assert [(item.path, item.reason) for item in violations] == [
+        (path, "generated_private_payload")
+    ]
+
+
 def test_clonefile_regular_uses_nofollow_flags_and_verifies_size_and_sha(tmp_path: Path) -> None:
     source = tmp_path / "source.bin"
     destination = tmp_path / "destination.bin"
@@ -453,10 +495,174 @@ def test_clonefile_regular_uses_nofollow_flags_and_verifies_size_and_sha(tmp_pat
     result = clonefile_regular(source, destination, clonefile_fn=fake_clone)
 
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    assert calls == [(os.fsencode(source), os.fsencode(destination), 0xA)]
+    assert len(calls) == 1
+    cloned_source, private_target, flags = calls[0]
+    private_target_path = Path(os.fsdecode(private_target))
+    assert cloned_source == os.fsencode(source)
+    assert private_target_path != destination
+    assert private_target_path.parent.parent == destination.parent
+    assert private_target_path.name == "payload"
+    assert private_target_path.parent.name.startswith(".pocketworld-clone-")
+    assert flags == 0xA
     assert CLONE_FLAGS == 0xA
     assert result == CloneVerification(bytes=len(source.read_bytes()), sha256=digest)
     assert destination.read_bytes() == source.read_bytes()
+    assert not private_target_path.parent.exists()
+
+
+def test_clonefile_regular_syncs_payload_publish_and_cleanup_in_order(tmp_path: Path) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"durable clone")
+    events: list[str] = []
+
+    def fake_clone(source_bytes: bytes, destination_bytes: bytes, _flags: int) -> int:
+        events.append("clone")
+        Path(os.fsdecode(destination_bytes)).write_bytes(
+            Path(os.fsdecode(source_bytes)).read_bytes()
+        )
+        return 0
+
+    def recording_sync(descriptor: int) -> None:
+        mode = os.fstat(descriptor).st_mode
+        events.append("sync_file" if stat.S_ISREG(mode) else "sync_directory")
+
+    result = clonefile_regular(
+        source,
+        destination,
+        clonefile_fn=fake_clone,
+        sync_fn=recording_sync,
+    )
+
+    assert events == ["clone", "sync_file", "sync_directory", "sync_directory"]
+    assert result.cleanup_warning is None
+    assert destination.read_bytes() == b"durable clone"
+
+
+def test_clonefile_regular_stops_before_publish_when_payload_sync_fails(tmp_path: Path) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"source")
+    sync_calls = 0
+
+    def fake_clone(source_bytes: bytes, destination_bytes: bytes, _flags: int) -> int:
+        Path(os.fsdecode(destination_bytes)).write_bytes(
+            Path(os.fsdecode(source_bytes)).read_bytes()
+        )
+        return 0
+
+    def fail_payload_sync(_descriptor: int) -> None:
+        nonlocal sync_calls
+        sync_calls += 1
+        if sync_calls == 1:
+            raise OSError("injected payload sync failure")
+
+    with pytest.raises(CloneFileError, match=r"payload.*sync|sync.*payload"):
+        clonefile_regular(
+            source,
+            destination,
+            clonefile_fn=fake_clone,
+            sync_fn=fail_payload_sync,
+        )
+
+    assert not destination.exists()
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
+
+
+def test_clonefile_regular_reports_published_but_uncertain_when_parent_sync_fails(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"source")
+    sync_calls = 0
+
+    def fake_clone(source_bytes: bytes, destination_bytes: bytes, _flags: int) -> int:
+        Path(os.fsdecode(destination_bytes)).write_bytes(
+            Path(os.fsdecode(source_bytes)).read_bytes()
+        )
+        return 0
+
+    def fail_publish_sync(_descriptor: int) -> None:
+        nonlocal sync_calls
+        sync_calls += 1
+        if sync_calls == 2:
+            raise OSError("injected parent sync failure")
+
+    with pytest.raises(ClonePublishedDurabilityError) as caught:
+        clonefile_regular(
+            source,
+            destination,
+            clonefile_fn=fake_clone,
+            sync_fn=fail_publish_sync,
+        )
+
+    assert caught.value.destination == destination
+    assert caught.value.verification.bytes == len(b"source")
+    assert destination.read_bytes() == b"source"
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
+
+
+def test_clonefile_regular_returns_committed_warning_when_private_cleanup_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"source")
+    real_unlink = os.unlink
+
+    def fake_clone(source_bytes: bytes, destination_bytes: bytes, _flags: int) -> int:
+        Path(os.fsdecode(destination_bytes)).write_bytes(
+            Path(os.fsdecode(source_bytes)).read_bytes()
+        )
+        return 0
+
+    def fail_private_payload_unlink(
+        path: str | bytes,
+        *,
+        dir_fd: int | None = None,
+    ) -> None:
+        if os.fsdecode(path) == "payload" and dir_fd is not None:
+            raise OSError("injected private cleanup failure")
+        real_unlink(path, dir_fd=dir_fd)
+
+    monkeypatch.setattr(os, "unlink", fail_private_payload_unlink)
+
+    result = clonefile_regular(source, destination, clonefile_fn=fake_clone)
+
+    assert destination.read_bytes() == b"source"
+    assert result.cleanup_warning is not None
+    assert "cleanup" in result.cleanup_warning
+    assert len(list(tmp_path.glob(".pocketworld-clone-*"))) == 1
+
+
+def test_clonefile_regular_rejects_payload_swapped_after_verification(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"verified source")
+    real_sync = preservation._sync_pinned_regular  # noqa: SLF001
+
+    def fake_clone(source_bytes: bytes, destination_bytes: bytes, _flags: int) -> int:
+        Path(os.fsdecode(destination_bytes)).write_bytes(
+            Path(os.fsdecode(source_bytes)).read_bytes()
+        )
+        return 0
+
+    def sync_then_swap(path: Path, sync_fn: object) -> None:
+        real_sync(path, sync_fn)
+        path.unlink()
+        path.write_bytes(b"replacement payload")
+
+    monkeypatch.setattr(preservation, "_sync_pinned_regular", sync_then_swap)
+
+    with pytest.raises(CloneFileError, match="changed after verification"):
+        clonefile_regular(source, destination, clonefile_fn=fake_clone)
+
+    assert not destination.exists()
 
 
 def test_clonefile_regular_rejects_preexisting_destination_without_touching_it(
@@ -524,6 +730,7 @@ def test_clonefile_regular_removes_partial_new_destination_when_clone_fails(
         clonefile_regular(source, destination, clonefile_fn=failing_clone)
 
     assert not destination.exists()
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
 
 
 def test_clonefile_regular_removes_new_destination_on_hash_mismatch(tmp_path: Path) -> None:
@@ -539,6 +746,7 @@ def test_clonefile_regular_removes_new_destination_on_hash_mismatch(tmp_path: Pa
         clonefile_regular(source, destination, clonefile_fn=corrupt_clone)
 
     assert not destination.exists()
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
 
 
 def test_clonefile_regular_detects_source_mutation_and_cleans_destination(tmp_path: Path) -> None:
@@ -556,6 +764,26 @@ def test_clonefile_regular_detects_source_mutation_and_cleans_destination(tmp_pa
         clonefile_regular(source, destination, clonefile_fn=mutating_clone)
 
     assert not destination.exists()
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
+
+
+def test_clonefile_regular_preserves_racing_foreign_destination_and_cleans_only_private_temp(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.bin"
+    destination = tmp_path / "destination.bin"
+    source.write_bytes(b"source")
+
+    def clone_then_race(_source: bytes, private_target: bytes, _flags: int) -> int:
+        Path(os.fsdecode(private_target)).write_bytes(b"source")
+        destination.write_bytes(b"foreign concurrent result")
+        return 0
+
+    with pytest.raises(CloneFileError, match=r"destination|publish|exist|race"):
+        clonefile_regular(source, destination, clonefile_fn=clone_then_race)
+
+    assert destination.read_bytes() == b"foreign concurrent result"
+    assert list(tmp_path.glob(".pocketworld-clone-*")) == []
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="clonefile is a macOS primitive")
@@ -578,6 +806,12 @@ def test_clonefile_regular_tiny_real_apfs_smoke(tmp_path: Path) -> None:
         "data/pocketworld_captures/cap50/private_manifests/feed.jsonl",
         "data/pocketworld_captures/cap51/replay_database/sfm_live.db-wal",
         "data/pocketworld_captures/cap51/replay_database/sfm_live.db-shm",
+        "research/state.sqlite-wal",
+        "research/state.sqlite-SHM",
+        "research/state-wal",
+        "research/state.SHM",
+        "research/.wal",
+        "research/.ShM",
     ],
 )
 def test_capture_payload_gitignore_covers_new_explicit_patterns(path: str) -> None:

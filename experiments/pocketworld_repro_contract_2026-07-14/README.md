@@ -33,12 +33,23 @@ newline). Unknown truth is represented as `null` plus an exact JSON-pointer
 deviation; placeholders such as `unknown` are rejected.
 
 Contract commands reject duplicate JSON keys, `NaN`/infinities, noncanonical
-whitespace, and a missing final newline. A `verdict_eligible` contract must use
+whitespace, numeric overflow such as `1e9999`, and a missing final newline. A
+`verdict_eligible` contract must use
 `validation_scope=decision_contract` and close runnable code/config/command,
 finite preregistered metrics, stopping rules, preserved `verdict_input` and
-`verdict_output` evidence, and every referenced ID. Verification then rehashes
-the repository-local code, config, verifier `uv.lock`, and preserved verdict
-evidence, including each single-file DVC OID; symlinks are rejected.
+`verdict_output` evidence, and every referenced ID. Each threshold is bound to
+an exact `(metric_id, artifact_id)` observation; all supported comparison
+operators are evaluated and the stored pass/fail decision must match. A known
+command must name every and only runnable code ID, its exact config ID, every
+declared used model ID, and its dependency IDs.
+
+Verification is not deferred for provisional contracts. It checks the declared
+Git root, branch, commit ancestry, and tracked/staged dirty diff, then rehashes
+every non-null repository-local code/config/lock claim, every preserved evidence
+and DVC claim, and any materialized repository-local source-evidence claim.
+Commercial dependency license evidence and model weight/license evidence are
+also rehashed when present. Missing unpreserved external source evidence may
+remain unavailable; preserved evidence is never skipped. Symlinks are rejected.
 
 The three immutable skeleton identities are:
 
@@ -53,10 +64,14 @@ The three immutable skeleton identities are:
 
 The replay fixture uses typed `replay_qualification` fields rather than truth
 hidden in `details`. A future replay verdict requires a new non-provisional ID,
-a fresh authorized pull, source app/capture identity, quiescence or a consistent
-backup, an atomic DB/WAL snapshot, integrity and DB/pose alignment, and preserved
-DB/WAL/pose identities. SQLite SHM remains `excluded_volatile` and is never part
-of replay identity.
+a fresh authorized device pull, proven source app/capture identity, quiescence
+or a consistent backup, an atomic DB/WAL snapshot, integrity and DB/pose
+alignment, and preserved DB/WAL/pose identities. Experiment A additionally
+requires exact algorithm revision
+`0a8b8428fba3fbf942af01ada6d1e1252a677c6a`, a default-disabled production
+gate, `AETHER_INCREMENTAL_GLOBAL_BA=unset` versus `1`, and proof that this is the
+only arm difference. SQLite SHM remains `excluded_volatile` and is never part of
+replay identity.
 
 The consumer target is COLMAP 4.1.0 plus a Ceres 2.2 source submodule. A target
 version is never retroactively written into historical producer truth.
@@ -81,6 +96,15 @@ user-owned private inputs and derived outputs may support that gate only with an
 explicit rights basis and rights-evidence hash. The cap50 LoFTR code remains
 insufficiently evidenced, while LoFTR-indoor weights and ScanNet training lineage
 are explicitly blocked; an Apache code license does not qualify either one.
+
+A commercial candidate must explicitly declare a nonempty, complete execution
+dependency closure. The declared set must exactly equal dependencies referenced
+by runnable code, command, models, training datasets, and runtimes; empty
+surfaces, unresolved references, and unreferenced padding fail. Dependency
+license files and model weight/license files must be repository-relative and
+hash-verified. This is a declared-closure check, not automatic discovery of
+hidden dynamic or binary dependencies; independent evidence is still required
+before asserting that the declaration covers the real execution surface.
 
 ## NPZ inspection and resource limits
 

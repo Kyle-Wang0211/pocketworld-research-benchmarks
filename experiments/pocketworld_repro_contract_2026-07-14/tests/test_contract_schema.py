@@ -132,6 +132,7 @@ NESTED_REQUIRED_FIELDS = [
     ("environment/verifier", "hardware"),
     ("environment/verifier", "backend"),
     ("effective_config", "status"),
+    ("effective_config", "config_id"),
     ("effective_config", "path"),
     ("effective_config", "sha256"),
     ("effective_config", "values"),
@@ -151,6 +152,7 @@ NESTED_REQUIRED_FIELDS = [
     ("privacy", "constraints"),
     ("product_qualification", "status"),
     ("product_qualification", "commercial_open_source_dependencies_verified"),
+    ("product_qualification", "execution_dependency_closure_declared_complete"),
     ("product_qualification", "dependencies"),
     ("product_qualification", "reasons"),
 ]
@@ -222,10 +224,12 @@ def _minimal_contract() -> dict[str, object]:
         "code": {
             "entries": [
                 {
+                    "code_id": "fixture-code",
                     "path": "scripts/run.py",
                     "sha256": "9" * 64,
                     "execution_status": "runnable",
                     "role": "fixture verdict implementation",
+                    "dependency_ids": [],
                 }
             ]
         },
@@ -247,6 +251,7 @@ def _minimal_contract() -> dict[str, object]:
         },
         "models": [],
         "effective_config": {
+            "config_id": "fixture-config",
             "status": "runnable",
             "path": "configs/fixture.json",
             "sha256": "d" * 64,
@@ -257,12 +262,23 @@ def _minimal_contract() -> dict[str, object]:
             "status": "known",
             "argv": ["python", "scripts/run.py", "--config", "configs/fixture.json"],
             "cwd": ".",
+            "code_ids": ["fixture-code"],
+            "config_id": "fixture-config",
+            "dependency_ids": [],
+            "model_ids": [],
         },
         "metrics": {
             "definitions": [
                 {"metric_id": "quality", "unit": "ratio", "direction": "higher_is_better"}
             ],
-            "thresholds": [{"metric_id": "quality", "operator": ">=", "value": 0.9}],
+            "thresholds": [
+                {
+                    "metric_id": "quality",
+                    "artifact_id": "fixture-artifact",
+                    "operator": ">=",
+                    "value": 0.9,
+                }
+            ],
             "observed": [
                 {"metric_id": "quality", "value": 0.95, "artifact_id": "fixture-artifact"}
             ],
@@ -283,6 +299,7 @@ def _minimal_contract() -> dict[str, object]:
         "product_qualification": {
             "status": "not_assessed",
             "commercial_open_source_dependencies_verified": False,
+            "execution_dependency_closure_declared_complete": False,
             "dependencies": [
                 {
                     "dependency_id": "fixture-dependency",
@@ -291,6 +308,7 @@ def _minimal_contract() -> dict[str, object]:
                     "revision": "v1.0.0",
                     "license_identifier": "Apache-2.0",
                     "license_evidence_sha256": "1" * 64,
+                    "license_evidence_path": "licenses/fixture-dependency.txt",
                     "license_status": "verified_commercial_open_source",
                     "audit_verdict": "allow",
                     "intended_use": "fixture product integration",
@@ -301,7 +319,7 @@ def _minimal_contract() -> dict[str, object]:
             ],
             "reasons": [],
         },
-        "verdict": {"eligible": True, "decision": "fixture_pass", "blockers": []},
+        "verdict": {"eligible": True, "decision": "pass", "blockers": []},
     }
 
 
@@ -340,6 +358,9 @@ def _make_commercial_candidate(document: dict[str, object]) -> None:
         item["rights_evidence_sha256"] = "8" * 64
     document["product_qualification"]["status"] = "commercial_evaluation_candidate"
     document["product_qualification"]["commercial_open_source_dependencies_verified"] = True
+    document["product_qualification"]["execution_dependency_closure_declared_complete"] = True
+    document["code"]["entries"][0]["dependency_ids"] = ["fixture-dependency"]
+    document["command"]["dependency_ids"] = ["fixture-dependency"]
 
 
 @pytest.mark.parametrize("missing_field", sorted(REQUIRED_TOP_LEVEL_FIELDS))
@@ -952,6 +973,10 @@ def test_cap50_contract_does_not_invent_dvc_or_commercial_qualification() -> Non
         document["product_qualification"]["commercial_open_source_dependencies_verified"] is False
     )
     assert all(item["commercial_gate_included"] is False for item in evidence)
+    assert document["effective_config"]["path"] == (
+        "experiments/pocketworld_repro_contract_2026-07-14/contracts/"
+        "cap50-floor-plane-sweep-effective-config-v1.json"
+    )
 
 
 def test_cap50_license_and_lineage_boundaries_are_explicit() -> None:
@@ -1017,6 +1042,6 @@ def test_cap50_contract_reverifies_every_referenced_git_file() -> None:
         assert sha256_file(path) == entry["sha256"], entry["path"]
 
     config = document["effective_config"]
-    config_path = CONTRACTS_ROOT.parent / config["path"]
+    config_path = REPOSITORY_ROOT / config["path"]
     assert config_path.is_file()
     assert sha256_file(config_path) == config["sha256"]

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import ctypes
 import errno
+import fcntl
 import hashlib
 import os
 import re
+import secrets
 import stat
 import sys
 from collections.abc import Callable, Iterable
@@ -42,7 +44,13 @@ _PAYLOAD_SUFFIXES = frozenset(
         ".sqlite3",
     }
 )
+_SQLITE_SIDECAR_ENDINGS = ("-wal", "-shm", ".wal", ".shm")
 _CAPTURE_ROOT_PARTS = ("data", "pocketworld_captures")
+_PRIVATE_CLONE_DIRECTORY_PREFIX = ".pocketworld-clone-"
+_GENERATED_PRIVATE_PREFIXES = (_PRIVATE_CLONE_DIRECTORY_PREFIX, ".pocketworld-npz-")
+_PRIVATE_CLONE_PAYLOAD_NAME = "payload"
+_PRIVATE_CLONE_CREATE_ATTEMPTS = 32
+_PRIVATE_CLONE_MODE = 0o700
 CLONE_NOOWNERCOPY = 0x2
 CLONE_NOFOLLOW_ANY = 0x8
 CLONE_FLAGS = CLONE_NOOWNERCOPY | CLONE_NOFOLLOW_ANY
@@ -90,6 +98,27 @@ class CloneVerification(NamedTuple):
 
     bytes: int
     sha256: str
+    cleanup_warning: str | None = None
+
+
+class _VerifiedClone(NamedTuple):
+    verification: CloneVerification
+    destination_identity: tuple[int, int, int, int, int]
+
+
+class ClonePublishedDurabilityError(CloneFileError):
+    """A verified final path exists, but its durable publication is unproven."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        destination: Path,
+        verification: CloneVerification,
+    ) -> None:
+        super().__init__(message)
+        self.destination = destination
+        self.verification = verification
 
 
 class _PreparedClone(NamedTuple):
@@ -98,6 +127,13 @@ class _PreparedClone(NamedTuple):
     source_bytes: int
     source_sha256: str
     source_identity: tuple[int, int, int, int, int]
+
+
+class _PrivateClone(NamedTuple):
+    directory_name: str
+    directory_path: Path
+    directory_descriptor: int
+    payload_path: Path
 
 
 def required_disk_bytes(batch_bytes: int) -> int:
@@ -199,7 +235,15 @@ def find_forbidden_git_paths(paths: object) -> tuple[GitPathViolation, ...]:
         if path is None:
             violations.append(GitPathViolation(path=display_path, reason="invalid_path"))
             continue
-        if path.suffix.lower() in _PAYLOAD_SUFFIXES:
+        if any(part.startswith(_GENERATED_PRIVATE_PREFIXES) for part in path.parts):
+            violations.append(
+                GitPathViolation(path=display_path, reason="generated_private_payload")
+            )
+            continue
+        lowered_name = path.name.lower()
+        if path.suffix.lower() in _PAYLOAD_SUFFIXES or lowered_name.endswith(
+            _SQLITE_SIDECAR_ENDINGS
+        ):
             violations.append(GitPathViolation(path=display_path, reason="payload_suffix"))
             continue
         in_capture_root = path.parts[: len(_CAPTURE_ROOT_PARTS)] == _CAPTURE_ROOT_PARTS
@@ -282,20 +326,11 @@ def _system_clonefile(source: bytes, destination: bytes, flags: int) -> int:
     return int(clone(source, destination, flags))
 
 
-def _cleanup_new_destination(destination: Path) -> None:
-    try:
-        metadata = os.lstat(destination)
-    except FileNotFoundError:
-        return
-    if stat.S_ISDIR(metadata.st_mode):
-        return
-    with suppress(FileNotFoundError):
-        destination.unlink()
-
-
 def _prepare_clone(source: Path, destination: Path) -> _PreparedClone:
     source = _absolute_lexical_path(Path(source), "source")
     destination = _absolute_lexical_path(Path(destination), "destination")
+    if not destination.name:
+        raise CloneFileError("destination must name a file")
     _assert_no_symlink_chain(source, leaf_may_be_missing=False, context="source")
     _assert_no_symlink_chain(destination, leaf_may_be_missing=True, context="destination")
     try:
@@ -323,6 +358,255 @@ def _prepare_clone(source: Path, destination: Path) -> _PreparedClone:
     )
 
 
+def _directory_open_flags() -> int:
+    directory_flag = getattr(os, "O_DIRECTORY", None)
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    if directory_flag is None or no_follow is None:
+        raise CloneFileError("platform cannot safely anchor the destination directory")
+    return os.O_RDONLY | directory_flag | no_follow | getattr(os, "O_CLOEXEC", 0)
+
+
+def _same_directory_identity(path: Path, descriptor: int) -> bool:
+    try:
+        path_metadata = path.stat(follow_symlinks=False)
+    except OSError:
+        return False
+    descriptor_metadata = os.fstat(descriptor)
+    return (
+        path_metadata.st_dev,
+        path_metadata.st_ino,
+        stat.S_IFMT(path_metadata.st_mode),
+    ) == (
+        descriptor_metadata.st_dev,
+        descriptor_metadata.st_ino,
+        stat.S_IFMT(descriptor_metadata.st_mode),
+    )
+
+
+def _open_destination_parent(destination: Path) -> int:
+    parent = destination.parent
+    _assert_no_symlink_chain(parent, leaf_may_be_missing=False, context="destination parent")
+    try:
+        descriptor = os.open(parent, _directory_open_flags())
+    except OSError as error:
+        raise CloneFileError("cannot safely open destination parent directory") from error
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISDIR(metadata.st_mode) or not _same_directory_identity(parent, descriptor):
+        os.close(descriptor)
+        raise CloneFileError("destination parent directory identity changed")
+    return descriptor
+
+
+def _create_private_clone(parent_descriptor: int, destination: Path) -> _PrivateClone:
+    parent_metadata = os.fstat(parent_descriptor)
+    for _attempt in range(_PRIVATE_CLONE_CREATE_ATTEMPTS):
+        directory_name = f"{_PRIVATE_CLONE_DIRECTORY_PREFIX}{secrets.token_hex(16)}"
+        try:
+            os.mkdir(directory_name, _PRIVATE_CLONE_MODE, dir_fd=parent_descriptor)
+        except FileExistsError:
+            continue
+        try:
+            directory_descriptor = os.open(
+                directory_name,
+                _directory_open_flags(),
+                dir_fd=parent_descriptor,
+            )
+        except BaseException:
+            with suppress(FileNotFoundError):
+                os.rmdir(directory_name, dir_fd=parent_descriptor)
+            raise
+
+        directory_path = destination.parent / directory_name
+        directory_metadata = os.fstat(directory_descriptor)
+        if (
+            not stat.S_ISDIR(directory_metadata.st_mode)
+            or stat.S_IMODE(directory_metadata.st_mode) != _PRIVATE_CLONE_MODE
+            or directory_metadata.st_dev != parent_metadata.st_dev
+            or not _same_directory_identity(directory_path, directory_descriptor)
+        ):
+            os.close(directory_descriptor)
+            with suppress(FileNotFoundError):
+                os.rmdir(directory_name, dir_fd=parent_descriptor)
+            raise CloneFileError("private clone directory identity or permissions are unsafe")
+        return _PrivateClone(
+            directory_name=directory_name,
+            directory_path=directory_path,
+            directory_descriptor=directory_descriptor,
+            payload_path=directory_path / _PRIVATE_CLONE_PAYLOAD_NAME,
+        )
+    raise CloneFileError("cannot create an unpredictable private clone directory")
+
+
+def _system_sync_descriptor(descriptor: int) -> None:
+    metadata = os.fstat(descriptor)
+    if sys.platform == "darwin" and stat.S_ISREG(metadata.st_mode):
+        fcntl.fcntl(descriptor, fcntl.F_FULLFSYNC)
+        return
+    os.fsync(descriptor)
+
+
+def _sync_pinned_regular(
+    path: Path,
+    sync_fn: Callable[[int], None],
+) -> None:
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as error:
+        raise CloneFileError("cannot pin verified payload for sync") from error
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise CloneFileError("verified payload is not a regular file")
+        try:
+            sync_fn(descriptor)
+        except OSError as error:
+            raise CloneFileError("verified payload sync failed before publish") from error
+        after = os.fstat(descriptor)
+        if _stable_stat_identity(before) != _stable_stat_identity(after):
+            raise CloneFileError("verified payload changed while syncing")
+    finally:
+        os.close(descriptor)
+    try:
+        current = os.lstat(path)
+    except OSError as error:
+        raise CloneFileError("verified payload changed after sync") from error
+    if _stable_stat_identity(current) != _stable_stat_identity(after):
+        raise CloneFileError("verified payload changed after sync")
+
+
+def _sync_directory(
+    descriptor: int,
+    sync_fn: Callable[[int], None],
+    *,
+    context: str,
+) -> None:
+    if not stat.S_ISDIR(os.fstat(descriptor).st_mode):
+        raise CloneFileError(f"{context} is not a directory")
+    try:
+        sync_fn(descriptor)
+    except OSError as error:
+        raise CloneFileError(f"{context} sync failed") from error
+
+
+def _cleanup_private_clone(
+    private: _PrivateClone,
+    parent_descriptor: int,
+    sync_fn: Callable[[int], None],
+) -> str | None:
+    cleanup_error: OSError | None = None
+    try:
+        try:
+            os.unlink(
+                _PRIVATE_CLONE_PAYLOAD_NAME,
+                dir_fd=private.directory_descriptor,
+            )
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            cleanup_error = error
+    finally:
+        try:
+            os.close(private.directory_descriptor)
+        except OSError as error:
+            cleanup_error = cleanup_error or error
+    try:
+        os.rmdir(private.directory_name, dir_fd=parent_descriptor)
+    except FileNotFoundError:
+        pass
+    except OSError as error:
+        cleanup_error = cleanup_error or error
+    try:
+        _sync_directory(
+            parent_descriptor,
+            sync_fn,
+            context="destination parent cleanup",
+        )
+    except CloneFileError as error:
+        cleanup_error = cleanup_error or error.__cause__ or OSError(str(error))
+    if cleanup_error is None:
+        return None
+    return f"private clone cleanup incomplete: {type(cleanup_error).__name__}"
+
+
+def _verified_private_metadata(
+    private: _PrivateClone,
+    verified_identity: tuple[int, int, int, int, int],
+) -> os.stat_result:
+    try:
+        private_metadata = os.stat(
+            _PRIVATE_CLONE_PAYLOAD_NAME,
+            dir_fd=private.directory_descriptor,
+            follow_symlinks=False,
+        )
+    except OSError as error:
+        raise CloneFileError("verified private clone disappeared before publish") from error
+    if not stat.S_ISREG(private_metadata.st_mode):
+        raise CloneFileError("verified private clone is not a regular file")
+    if _stable_stat_identity(private_metadata) != verified_identity:
+        raise CloneFileError("private clone changed after verification")
+    return private_metadata
+
+
+def _atomic_publish_private_clone(
+    private: _PrivateClone,
+    prepared: _PreparedClone,
+    parent_descriptor: int,
+    verification: CloneVerification,
+    verified_identity: tuple[int, int, int, int, int],
+) -> None:
+    if not _same_directory_identity(prepared.destination.parent, parent_descriptor):
+        raise CloneFileError("destination parent directory changed before publish")
+    private_metadata = _verified_private_metadata(private, verified_identity)
+
+    published = False
+    try:
+        os.link(
+            _PRIVATE_CLONE_PAYLOAD_NAME,
+            prepared.destination.name,
+            src_dir_fd=private.directory_descriptor,
+            dst_dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+        published = True
+    except FileExistsError as error:
+        raise CloneFileError(
+            "destination appeared during atomic no-overwrite publish; foreign target preserved"
+        ) from error
+    except OSError as error:
+        raise CloneFileError("atomic no-overwrite clone publish failed") from error
+
+    try:
+        published_metadata = os.stat(
+            prepared.destination.name,
+            dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+    except OSError as error:
+        if published:
+            raise ClonePublishedDurabilityError(
+                "published destination changed before durable verification",
+                destination=prepared.destination,
+                verification=verification,
+            ) from error
+        raise CloneFileError("published destination disappeared during verification") from error
+    if (published_metadata.st_dev, published_metadata.st_ino) != (
+        private_metadata.st_dev,
+        private_metadata.st_ino,
+    ):
+        raise ClonePublishedDurabilityError(
+            "published destination identity changed before durable verification",
+            destination=prepared.destination,
+            verification=verification,
+        )
+    if not _same_directory_identity(prepared.destination.parent, parent_descriptor):
+        raise ClonePublishedDurabilityError(
+            "destination parent changed after clone publication",
+            destination=prepared.destination,
+            verification=verification,
+        )
+
+
 def _invoke_clonefile(
     prepared: _PreparedClone,
     clonefile_fn: Callable[[bytes, bytes, int], int],
@@ -337,7 +621,7 @@ def _invoke_clonefile(
         raise CloneFileError(f"clonefile failed with errno {error_number}")
 
 
-def _verify_cloned_file(prepared: _PreparedClone) -> CloneVerification:
+def _verify_cloned_file(prepared: _PreparedClone) -> _VerifiedClone:
     try:
         destination_metadata = os.lstat(prepared.destination)
     except FileNotFoundError as error:
@@ -362,7 +646,73 @@ def _verify_cloned_file(prepared: _PreparedClone) -> CloneVerification:
         or prepared.source_sha256 != destination_digest
     ):
         raise CloneFileError("clonefile size or SHA-256 mismatch")
-    return CloneVerification(bytes=prepared.source_bytes, sha256=prepared.source_sha256)
+    return _VerifiedClone(
+        verification=CloneVerification(
+            bytes=prepared.source_bytes,
+            sha256=prepared.source_sha256,
+        ),
+        destination_identity=destination_identity,
+    )
+
+
+def _assert_destination_missing(prepared: _PreparedClone, parent_descriptor: int) -> None:
+    try:
+        os.stat(
+            prepared.destination.name,
+            dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+    except FileNotFoundError:
+        return
+    raise CloneFileError("destination must not exist")
+
+
+def _clone_verify_and_publish(
+    prepared: _PreparedClone,
+    private: _PrivateClone,
+    parent_descriptor: int,
+    clone: Callable[[bytes, bytes, int], int],
+    sync: Callable[[int], None],
+) -> CloneVerification:
+    private_prepared = _PreparedClone(
+        source=prepared.source,
+        destination=private.payload_path,
+        source_bytes=prepared.source_bytes,
+        source_sha256=prepared.source_sha256,
+        source_identity=prepared.source_identity,
+    )
+    _invoke_clonefile(private_prepared, clone)
+    verified = _verify_cloned_file(private_prepared)
+    verification = verified.verification
+    _sync_pinned_regular(private.payload_path, sync)
+    _atomic_publish_private_clone(
+        private,
+        prepared,
+        parent_descriptor,
+        verification,
+        verified.destination_identity,
+    )
+    try:
+        _sync_directory(
+            parent_descriptor,
+            sync,
+            context="destination parent publication",
+        )
+    except CloneFileError as error:
+        raise ClonePublishedDurabilityError(
+            "verified destination was published but parent durability is unproven",
+            destination=prepared.destination,
+            verification=verification,
+        ) from error
+    return verification
+
+
+def _close_parent_descriptor(descriptor: int) -> str | None:
+    try:
+        os.close(descriptor)
+    except OSError as error:
+        return f"destination parent descriptor close incomplete: {type(error).__name__}"
+    return None
 
 
 def clonefile_regular(
@@ -370,16 +720,52 @@ def clonefile_regular(
     destination: Path,
     *,
     clonefile_fn: Callable[[bytes, bytes, int], int] | None = None,
+    sync_fn: Callable[[int], None] | None = None,
 ) -> CloneVerification:
-    """Clone one regular file with no fallback, then verify exact size and SHA-256."""
+    """Privately clone and verify one file, then atomically publish without overwrite."""
     prepared = _prepare_clone(source, destination)
     clone = clonefile_fn or _system_clonefile
+    sync = sync_fn or _system_sync_descriptor
+    parent_descriptor = _open_destination_parent(prepared.destination)
+    private: _PrivateClone | None = None
+    verification: CloneVerification | None = None
+    operation_error: Exception | None = None
+    cleanup_warning: str | None = None
     try:
-        _invoke_clonefile(prepared, clone)
-        return _verify_cloned_file(prepared)
-    except BaseException:
-        _cleanup_new_destination(prepared.destination)
-        raise
+        _assert_destination_missing(prepared, parent_descriptor)
+        private = _create_private_clone(parent_descriptor, prepared.destination)
+        verification = _clone_verify_and_publish(
+            prepared,
+            private,
+            parent_descriptor,
+            clone,
+            sync,
+        )
+    except Exception as error:  # noqa: BLE001 - preserve the original typed failure
+        operation_error = error
+    finally:
+        if private is not None:
+            cleanup_warning = _cleanup_private_clone(
+                private,
+                parent_descriptor,
+                sync,
+            )
+        close_warning = _close_parent_descriptor(parent_descriptor)
+        cleanup_warning = cleanup_warning or close_warning
+
+    if operation_error is not None:
+        if cleanup_warning is not None:
+            operation_error.add_note(cleanup_warning)
+        raise operation_error
+    if verification is None:
+        raise CloneFileError("clone publication ended without a verified committed result")
+    if cleanup_warning is None:
+        return verification
+    return CloneVerification(
+        bytes=verification.bytes,
+        sha256=verification.sha256,
+        cleanup_warning=cleanup_warning,
+    )
 
 
 def _mapping(value: object, context: str) -> dict[str, Any]:

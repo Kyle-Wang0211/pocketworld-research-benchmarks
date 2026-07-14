@@ -70,8 +70,13 @@ The experiment inventory preserves four requested outputs, two merge inputs, fiv
 Each contract declares `contract_kind` and `validation_scope`. Replay truth is a
 typed top-level qualification, not a collection of booleans in evidence
 `details`. A valid replay decision binds a new contract ID to fresh authorized
-DB/WAL/pose bytes, app/capture identity, quiescence or consistent backup,
-integrity, and alignment; SHM is always excluded from replay identity.
+device-pulled DB/WAL/pose bytes, source app revision and capture identity,
+quiescence or consistent backup, integrity, and alignment; SHM is always
+excluded from replay identity. Experiment A additionally fixes the algorithm
+identity to `0a8b8428fba3fbf942af01ada6d1e1252a677c6a`, requires the production
+default to remain disabled, fixes the sole control variable to
+`AETHER_INCREMENTAL_GLOBAL_BA` (`unset` versus `1`), and requires an explicit
+proof that no other control variable differs between arms.
 
 ### 4. Separate license, platform, role, and lineage axes
 
@@ -91,6 +96,18 @@ weights, training datasets, and tools have separate dependency identities,
 not evidence for the indoor weights or ScanNet dataset; those surfaces remain
 blocked/insufficient and explicitly linked by the model record.
 
+A commercial candidate must explicitly assert that its declared execution
+dependency closure is complete. Every runnable code entry and the command name
+the dependency IDs they execute; the command also names every and only runnable
+code ID, the one effective-config ID, and every and only used model ID. The
+declared dependency set must equal this code/command/model/dataset/runtime
+closure, so an empty surface or unreferenced padding cannot satisfy the gate.
+Every dependency license file and every model weight/license file is an
+immutable repository-relative path with a verified hash. This is a strict
+declared-closure gate, not automatic binary or dynamic-runtime dependency
+discovery; a candidate cannot claim completeness without independent evidence
+that its declaration covers the real execution surface.
+
 ### 5. Producer truth is distinct from target policy
 
 Contracts record the actual historical producer stack without rewriting it to the user's new target. `producer_stack` may contain 4.0.4/3.14-dev/unknown with deviations. `consumer_target_stack` records COLMAP 4.1.0. Future A binds algorithm identity `0a8b8428`; future Ceres source-of-truth is submodule tag 2.2. Neither target is retroactively assigned to old artifacts.
@@ -102,9 +119,26 @@ The base verifier uses Python 3.11 and streams hashes in fixed chunks. The repos
 Normalized `effective-config.json` uses only repository-relative asset IDs. Historical scripts with hard-coded scratch paths are explicitly `evidence_source_not_runnable`; parameterizing them is a later change.
 
 Contract loading rejects duplicate keys, non-finite JSON, and noncanonical
-bytes. Verdict verification rehashes the repository-local code, effective
-config, verifier lock, preserved input/output evidence, and single-file DVC OID
-using no-follow, mutation-detecting reads.
+bytes. This includes rejecting numeric overflow such as `1e9999`, which a normal
+JSON parser could otherwise convert to infinity. Metric decisions bind every
+threshold to an exact `(metric_id, artifact_id)` observation, require a finite
+numeric observation, evaluate `>`, `>=`, `<`, `<=`, and `==`, and require the
+stored verdict decision to equal the computed pass/fail result. Multiple metrics
+may legitimately reference one output artifact.
+
+Command identity is closed independently of verdict status: each code entry has
+a stable ID and dependency IDs, effective config has a stable ID, and the known
+command references every and only runnable code, the exact config, every
+declared used model, and its execution dependencies.
+
+`verify-contract` and `gate-verdict` always validate current repository truth,
+including provisional contracts. They verify the declared Git root, branch,
+commit ancestry, and tracked/staged dirty diff; rehash every non-null code,
+config, verifier-lock, preserved-evidence, DVC, commercial license, and model
+weight/license claim; and also rehash a materialized repository-local
+`source_evidence_only` file. Missing unpreserved external source evidence may
+remain unavailable, but preserved evidence is never skipped. All repository
+file checks use no-follow, mutation-detecting reads.
 
 ### 7. Predictive resource and privacy gates
 

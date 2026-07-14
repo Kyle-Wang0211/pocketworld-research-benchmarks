@@ -134,13 +134,21 @@ def test_cap51_fixture_pins_db_wal_pose_and_clone_only_integrity() -> None:
     qualification = document["replay_qualification"]
     assert document["contract_kind"] == "replay_fixture"
     assert qualification["fresh_authorized_pull"] is False
+    assert qualification["fresh_device_pull"] is False
     assert qualification["capture_binding_proven"] is False
     assert qualification["source_app_revision"] is None
+    assert qualification["source_app_revision_proven"] is False
     assert qualification["source_quiescence_proven"] is False
     assert qualification["consistent_backup_proven"] is False
     assert qualification["atomic_db_wal_snapshot_proven"] is False
     assert qualification["integrity_check_passed"] is False
     assert qualification["db_pose_alignment_passed"] is False
+    assert qualification["algorithm_revision"] == ("0a8b8428fba3fbf942af01ada6d1e1252a677c6a")
+    assert qualification["incremental_global_ba_default_enabled"] is False
+    assert qualification["control_variable"] == "AETHER_INCREMENTAL_GLOBAL_BA"
+    assert qualification["control_off_value"] == "unset"
+    assert qualification["control_on_value"] == "1"
+    assert qualification["only_control_variable_difference_proven"] is False
     assert database["replay_identity_included"] is True
     assert wal["bytes"] == 4152
     assert wal["sha256"] == ("4cda3e63ad1604ac94724ee4f24327ee4fec7d86fa97056edca25ea76d85fa72")
@@ -184,6 +192,23 @@ def test_cap51_fixture_excludes_volatile_shm_from_replay_identity() -> None:
         "cap51-replay-pose-ledger",
         "cap51-replay-wal",
     }
+
+
+def test_cap51_fixture_binds_every_replay_ref_to_its_component_kind() -> None:
+    _path, document = _load(FIXTURE_NAME)
+    evidence = _evidence_by_id(document)
+    qualification = document["replay_qualification"]
+    expected_kinds = {
+        "db_evidence_id": "sqlite_database",
+        "wal_evidence_id": "sqlite_wal",
+        "pose_evidence_id": "pose_jsonl",
+        "shm_evidence_id": "sqlite_shm",
+    }
+
+    for reference_field, expected_kind in expected_kinds.items():
+        evidence_id = qualification[reference_field]
+        assert evidence_id is not None
+        assert evidence[evidence_id]["replay_component_kind"] == expected_kind
 
 
 def test_cap51_fixture_gate_remains_closed_for_every_identity_blocker() -> None:

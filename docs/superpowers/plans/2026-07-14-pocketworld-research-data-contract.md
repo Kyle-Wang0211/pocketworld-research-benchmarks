@@ -4,7 +4,7 @@
 
 **Goal:** Preserve available cap50/cap51 and plane-sweep evidence as local-only, content-addressed, fail-closed research contracts without exhausting the Mac or overstating incomplete/non-commercial evidence.
 
-**Architecture:** A sparse isolated worktree holds OpenSpec, deterministic Python tooling, manifests, and DVC pointers. Selected bytes are APFS-cloned into bounded collections and content-addressed by a dedicated local cache with no remote. Cap50, cap51 capture archive, and cap51 DB/pose replay fixture use separate typed contracts so photo absence is not confused with replay eligibility.
+**Architecture:** A sparse isolated worktree holds OpenSpec, deterministic Python tooling, manifests, and DVC pointers. Before sparse-checkout or DVC state is changed, the staged-index delta and `BASE..HEAD` branch history are audited for newly introduced payloads and large blobs; historical payloads already present at the immutable baseline are recorded but do not make this preservation branch fail. Selected bytes are APFS-cloned, without copy fallback, into private same-volume staging directories, verified there, and atomically published one bounded collection at a time. DVC then content-addresses each verified collection through a dedicated local cache with no remote. Cap50, cap51 capture archive, and cap51 DB/pose replay fixture use separate typed contracts so photo absence is not confused with replay eligibility.
 
 **Tech Stack:** Git worktree, OpenSpec 1.6.0, DVC 3.67.1, uv 0.11.14, Python 3.11, pytest, Ruff, encrypted APFS, SHA-256.
 
@@ -146,7 +146,7 @@ Cap50 records `selected=115`, `live_fed=139`, `missing=24`, `grid_m=0.01`, and `
 
 Run all tests/lint/lock checks and commit as `spec(research): define typed PocketWorld experiment contracts`.
 
-### Task 3: Sparse/DVC safety probe
+### Task 3: Git, sparse-checkout, and DVC safety probe
 
 **Files:**
 
@@ -154,25 +154,43 @@ Run all tests/lint/lock checks and commit as `spec(research): define typed Pocke
 - Create: `.dvc/.gitignore`
 - Local only: `.dvc/config.local`
 
-- [ ] **Step 1: Extend sparse checkout only to `data/pocketworld_captures`, compute probe bytes, and record resource gates**
+- [ ] **Step 1: Prove this branch introduced no payload before changing sparse state**
 
-- [ ] **Step 2: Initialize only the isolated research root**
+Inspect the staged-index delta and `BASE..HEAD` history for JPEG, capture JSON sidecars, DB/WAL/SHM, PLY, NPZ, tar, model, or other large payload blobs. Fail closed on any unexpected new binary or large object. Record the exact baseline, HEAD, staged set, sparse-checkout file hash, and full list of currently materialized sparse roots. The baseline already contains historical DA3 payloads; enumerate that inherited fact separately and do not conflate it with a new-branch violation.
+
+- [ ] **Step 2: Compute all probe bytes and resource gates before extending sparse checkout**
+
+Require the target directory to be absent or empty. Check the committed 14-batch resource map, global DVC config hash, no configured remote, dedicated-cache absence, free disk, and memory gate before any mutation. Then add exactly one sparse root, without shell interpolation or a glob:
 
 ```bash
-DVC_NO_ANALYTICS=true dvc init
-DVC_NO_ANALYTICS=true dvc config cache.type reflink,hardlink,copy
-DVC_NO_ANALYTICS=true dvc cache dir --local \
-  /Users/kaidongwang/.cache/dvc/pocketworld-research-contract-20260714
-test -z "$(DVC_NO_ANALYTICS=true dvc remote list)"
+printf '%s\n' data/pocketworld_captures \
+  | git sparse-checkout add --skip-checks --stdin
 ```
 
-- [ ] **Step 3: DVC-add tiny ignored `photos_highres`, DB, PLY, and NPZ probes created through `apply_patch`**
+Re-read the sparse-checkout file and assert that the only roots are the previously recorded roots plus `data/pocketworld_captures`.
 
-First verify reflink-only succeeds, then restore ordered fallback. Inspect config origin, status, free-disk delta, and prove no binary `git add -f` is needed. Remove only workspace probes/pointers; never prune the dedicated cache automatically.
+- [ ] **Step 3: Initialize only the isolated research root inside a network-denied command sandbox**
 
-- [ ] **Step 4: Commit DVC metadata only**
+```bash
+UV_OFFLINE=1 DVC_NO_ANALYTICS=1 ITERATIVE_DO_NOT_TRACK=1 dvc init
+UV_OFFLINE=1 DVC_NO_ANALYTICS=1 ITERATIVE_DO_NOT_TRACK=1 \
+  dvc config cache.type reflink,hardlink,copy
+UV_OFFLINE=1 DVC_NO_ANALYTICS=1 ITERATIVE_DO_NOT_TRACK=1 \
+  dvc cache dir --local \
+  /Users/kaidongwang/.cache/dvc/pocketworld-research-contract-20260714
+test -z "$(UV_OFFLINE=1 DVC_NO_ANALYTICS=1 ITERATIVE_DO_NOT_TRACK=1 \
+  dvc remote list)"
+```
 
-Commit `.dvc/.gitignore`, `.dvc/config`, and the exact root ignore change as `chore(research): configure local-only DVC ownership`.
+Use an OS-level network-deny wrapper in addition to the environment flags. Hash the global DVC config before and after and require equality. Inspect the index immediately: `dvc init` is expected to stage `.dvc/config`, `.dvc/.gitignore`, and `.dvcignore`; reject any other staged path.
+
+- [ ] **Step 4: Probe APFS clone and DVC cache ownership with generated tiny files only**
+
+Create tiny synthetic probes through the tested Python preservation helper, never by copying real source data. First prove APFS clonefile succeeds with no byte-copy fallback. Separately prove DVC cache materialization under the configured ordered cache types; this cache probe must not weaken the source-preservation clone rule. Inspect config origin, status, free-disk delta, and prove no binary `git add -f` is needed. Remove only workspace probes/pointers; never prune the dedicated cache automatically.
+
+- [ ] **Step 5: Stage exact DVC metadata paths and commit metadata only**
+
+Use exact `git add -- <path>` arguments for `.dvc/config`, `.dvc/.gitignore`, `.dvcignore`, and the audited root `.gitignore` change; never retain or rely on DVC's implicit staging. Commit only those paths as `chore(research): configure local-only DVC ownership`.
 
 ### Task 4: Commit complete pre-copy inventory, then preserve cap50
 
@@ -190,7 +208,7 @@ Generate per-file relative path, bytes, full SHA-256, producer/consumer, evidenc
 
 - [ ] **Step 2: Re-check gates, APFS-clone only the 115 JPEG/JSON pairs, and immediately re-check disk**
 
-Use `/bin/cp -cR` with no concurrent collection operation.
+Use the tested preservation helper: clone each source to a mode-0700 random directory on the same volume, verify size and SHA-256, then atomically publish with no-overwrite semantics. There is no byte-copy fallback. A pre-existing or racing destination is preserved and causes a hard stop. Run only one collection operation at a time.
 
 - [ ] **Step 3: Verify the destination against its source manifest before `dvc add`**
 
@@ -225,7 +243,7 @@ Read exact values from `openspec/changes/freeze-pocketworld-research-contract/ev
 
 - [ ] **Step 2: Clone DB/WAL as one persistent batch and hash sources again**
 
-Do not open the scratch source through SQLite. If either persistent source changes between checks, delete only the new destination and stop. Open only a clone or derived SQLite backup in explicit read-only/query-only mode for integrity checks, then rehash its DB/WAL bytes after the query and record any derived logical-backup hash separately. Reject any checkpoint or mutation. Never call the provisional pair a consistent snapshot, and never include SHM in replay-fixture identity.
+Do not open the scratch source through SQLite. Reject every WAL/SHM spelling globally, including `*.sqlite-wal`, `*.sqlite-shm`, `*-wal`, `*-shm`, `*.wal`, and `*.shm`, unless the typed batch explicitly declares the persistent WAL as evidence-only. SHM is never copied. If either persistent source changes between checks, preserve source and any already-published destination for diagnosis and stop; never delete a destination whose publication completed. Open only a clone or derived SQLite backup in explicit read-only/query-only mode for integrity checks, then rehash its DB/WAL bytes after the query and record any derived logical-backup hash separately. Reject any checkpoint or mutation. Never call the provisional pair a consistent snapshot, and never include SHM in replay-fixture identity.
 
 - [ ] **Step 3: Preserve capture-archive metadata separately and generate exactly 105 unavailable image basenames**
 
@@ -254,7 +272,7 @@ Use the four complete hashes from committed inventory; expected vertices are `58
 
 - [ ] **Step 3: Inventory and preserve five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz` serially**
 
-Pin NumPy 2.4.2 in `uv.lock`; verify each with `allow_pickle=False`, reject object dtype, and record producer/consumer/role/inclusion reason.
+Pin NumPy 2.4.2 in `uv.lock`; inspect a verified no-follow, read-only snapshot, load with `allow_pickle=False`, and accept only plain boolean, integer, unsigned-integer, floating, or complex dtypes. Reject object, string, byte-string, void, datetime, timedelta, and structured dtypes. Record producer/consumer/role/inclusion reason.
 
 - [ ] **Step 4: Write eligibility/effective config before DVC add**
 
@@ -275,9 +293,9 @@ Separate pure-A point metrics from merged `+112%` metrics and state that histori
 
 - [ ] **Step 1: Run pytest, Ruff, and `uv lock --check --offline`**
 
-- [ ] **Step 2: Run `dvc status --json`, granular `dvc data status`, `dvc repro --dry`, and assert empty remote list**
+- [ ] **Step 2: Run DVC checks offline and assert empty remote list**
 
-Do not call nonexistent `dvc cache verify` in DVC 3.67.1.
+Run `dvc status --json`, granular `dvc data status`, and `dvc repro --dry` with `UV_OFFLINE=1 DVC_NO_ANALYTICS=1 ITERATIVE_DO_NOT_TRACK=1` inside the same network-denied sandbox. Do not call nonexistent `dvc cache verify` in DVC 3.67.1.
 
 - [ ] **Step 3: Strictly validate OpenSpec and confirm Git tracks no JPEG, DB, PLY, or NPZ payload**
 
@@ -291,7 +309,9 @@ Do not call nonexistent `dvc cache verify` in DVC 3.67.1.
 
 - [ ] **Step 2: Resolve every material finding and rerun Task 7**
 
-- [ ] **Step 3: Stage exact paths only; never use `git add -A`**
+- [ ] **Step 3: Stage the enumerated metadata allowlist only; never use `git add -A`**
+
+The allowlist must explicitly name every contract, manifest, report, `.dvc` pointer, DVC config/ignore file, OpenSpec file, test/tool source, lockfile, and documentation path intended for the commit. Compare the staged set to that allowlist and prove no JPEG, DB, WAL, SHM, PLY, NPZ, tar, or model payload is present before committing.
 
 - [ ] **Step 4: Commit as `research(data): freeze PocketWorld cap50 and provisional cap51 evidence`**
 

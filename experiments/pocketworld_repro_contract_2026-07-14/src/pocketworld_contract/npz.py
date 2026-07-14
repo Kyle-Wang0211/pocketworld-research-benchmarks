@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import math
 import os
@@ -7,6 +8,7 @@ import stat
 import struct
 import tempfile
 import zipfile
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
@@ -26,6 +28,7 @@ _COPY_CHUNK_BYTES = 4 * 1024 * 1024
 _MAX_NPY_HEADER_BYTES = 10_000
 _MAX_NPY_DIMENSIONS = 64
 _SNAPSHOT_MODE = stat.S_IRUSR | stat.S_IWUSR
+_ALLOWED_NUMERIC_DTYPE_KINDS = frozenset({"b", "i", "u", "f", "c"})
 _ZIP_CLASSIC_EOCD = struct.Struct("<4s4H2LH")
 _ZIP_CENTRAL_DIRECTORY_HEADER = struct.Struct("<4s4B4HL2L5H2L")
 _ZIP_CENTRAL_DIRECTORY_ENTRY_BYTES = 46
@@ -191,8 +194,15 @@ def _snapshot_source(
     source_before: os.stat_result,
     max_archive_bytes: int,
 ) -> BinaryIO:
-    with tempfile.TemporaryFile(mode="w+b", dir=source_path.parent) as writable_snapshot:
-        snapshot_descriptor = writable_snapshot.fileno()
+    snapshot_descriptor = -1
+    snapshot_path: Path | None = None
+    try:
+        snapshot_descriptor, snapshot_name = tempfile.mkstemp(
+            prefix=".pocketworld-npz-",
+            suffix=".snapshot",
+            dir=source_path.parent,
+        )
+        snapshot_path = Path(snapshot_name)
         _prepare_snapshot_descriptor(snapshot_descriptor, source_before)
         source_digest, copied_bytes = _copy_descriptor(
             source_descriptor,
@@ -215,8 +225,24 @@ def _snapshot_source(
             os.fstat(source_descriptor),
             "NPZ source changed during snapshot verification",
         )
-        os.lseek(snapshot_descriptor, 0, os.SEEK_SET)
-        return _read_only_duplicate(snapshot_descriptor)
+        writable_identity = os.fstat(snapshot_descriptor)
+        os.close(snapshot_descriptor)
+        snapshot_descriptor = -1
+
+        reader = _open_verified_read_only_snapshot(snapshot_path, writable_identity)
+        try:
+            snapshot_path.unlink()
+        except BaseException:
+            reader.close()
+            raise
+        snapshot_path = None
+        return reader
+    finally:
+        if snapshot_descriptor >= 0:
+            os.close(snapshot_descriptor)
+        if snapshot_path is not None:
+            with suppress(FileNotFoundError):
+                snapshot_path.unlink()
 
 
 def _prepare_snapshot_descriptor(
@@ -270,13 +296,59 @@ def _verify_snapshot_copy(
         raise ContractError("NPZ snapshot digest differs from the source copy")
 
 
-def _read_only_duplicate(descriptor: int) -> BinaryIO:
-    reader_descriptor = os.dup(descriptor)
+def _open_verified_read_only_snapshot(
+    snapshot_path: Path,
+    writable_identity: os.stat_result,
+) -> BinaryIO:
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    if no_follow is None:
+        raise ContractError("platform cannot safely reopen an NPZ snapshot")
+    flags = os.O_RDONLY | no_follow | getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_BINARY", 0)
     try:
+        reader_descriptor = os.open(snapshot_path, flags)
+    except OSError as exc:
+        raise ContractError("NPZ snapshot cannot be reopened read-only without symlinks") from exc
+    try:
+        reader_identity = os.fstat(reader_descriptor)
+        named_identity = os.lstat(snapshot_path)
+        _require_same_snapshot_identity(reader_identity, named_identity, writable_identity)
+        _require_read_only_descriptor(reader_descriptor)
         return os.fdopen(reader_descriptor, "rb", closefd=True)
-    except (OSError, ValueError):
+    except BaseException:
         os.close(reader_descriptor)
         raise
+
+
+def _snapshot_identity(metadata: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_mode,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
+
+
+def _require_same_snapshot_identity(
+    reader_identity: os.stat_result,
+    named_identity: os.stat_result,
+    writable_identity: os.stat_result,
+) -> None:
+    if (
+        not stat.S_ISREG(reader_identity.st_mode)
+        or stat.S_IMODE(reader_identity.st_mode) != _SNAPSHOT_MODE
+        or _snapshot_identity(reader_identity) != _snapshot_identity(writable_identity)
+        or _snapshot_identity(named_identity) != _snapshot_identity(writable_identity)
+    ):
+        raise ContractError("NPZ snapshot identity changed before read-only reopen")
+
+
+def _require_read_only_descriptor(descriptor: int) -> None:
+    access_mode = fcntl.fcntl(descriptor, fcntl.F_GETFL) & os.O_ACCMODE
+    if access_mode != os.O_RDONLY:
+        raise ContractError("NPZ snapshot descriptor is not genuinely read-only")
 
 
 def _copy_descriptor(
@@ -639,8 +711,7 @@ def _preflight_member(
 ) -> _Member:
     with archive.open(entry, "r") as member_stream:
         shape, dtype, header_bytes = _read_npy_header(member_stream, array_name)
-    if dtype.hasobject:
-        raise ContractError(f"NPZ member uses forbidden object dtype/pickle payload: {array_name}")
+    _require_numeric_dtype(dtype, array_name)
     _validate_shape(shape, array_name)
     nonzero_extent_bytes = math.prod(dimension for dimension in shape if dimension) * dtype.itemsize
     if nonzero_extent_bytes > max_member_bytes:
@@ -658,6 +729,13 @@ def _preflight_member(
         header_bytes=header_bytes,
         array_bytes=array_bytes,
     )
+
+
+def _require_numeric_dtype(dtype: np.dtype[object], array_name: str) -> None:
+    if dtype.hasobject:
+        raise ContractError(f"NPZ member uses forbidden object dtype/pickle payload: {array_name}")
+    if dtype.kind not in _ALLOWED_NUMERIC_DTYPE_KINDS:
+        raise ContractError(f"NPZ member uses forbidden non-numeric dtype {dtype!s}: {array_name}")
 
 
 def _validate_shape(shape: tuple[int, ...], array_name: str) -> None:
@@ -706,10 +784,7 @@ def _load_numeric_members(
         result: list[dict[str, object]] = []
         for member in members:
             array = archive[member.array_name]
-            if array.dtype.hasobject:
-                raise ContractError(
-                    f"NPZ member uses forbidden object dtype/pickle payload: {member.array_name}"
-                )
+            _require_numeric_dtype(array.dtype, member.array_name)
             if array.dtype != member.dtype or array.shape != member.shape:
                 raise ContractError(f"NPZ member changed after preflight: {member.array_name}")
             if array.nbytes != member.array_bytes:

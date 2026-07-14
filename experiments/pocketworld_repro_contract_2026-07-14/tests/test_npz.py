@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import errno
+import fcntl
 import importlib
 import io
 import os
@@ -122,6 +124,47 @@ def test_inspect_npz_rejects_object_dtype_without_unpickling(tmp_path: Path) -> 
         inspector.inspect_npz(archive)
 
     assert not marker.exists()
+
+
+@pytest.mark.parametrize(
+    "array",
+    [
+        np.array(["text"], dtype="<U7"),
+        np.array([b"bytes"], dtype="S7"),
+        np.array([b"void"], dtype="V4"),
+        np.array(["2026-07-14"], dtype="datetime64[D]"),
+        np.array([1], dtype="timedelta64[s]"),
+        np.array([(1.0, 2)], dtype=[("x", "<f4"), ("y", "<i4")]),
+    ],
+    ids=["unicode", "bytes", "void", "datetime", "timedelta", "structured"],
+)
+def test_inspect_npz_rejects_every_non_numeric_dtype(
+    tmp_path: Path,
+    array: np.ndarray[object, object],
+) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / f"forbidden-{array.dtype.kind}.npz"
+    np.savez(archive, values=array)
+
+    with pytest.raises(inspector.ContractError, match=r"dtype|numeric|forbidden"):
+        inspector.inspect_npz(archive)
+
+
+def test_inspect_npz_accepts_bool_uint_and_complex_dtypes(tmp_path: Path) -> None:
+    inspector = _npz_module()
+    archive = tmp_path / "additional-numeric-kinds.npz"
+    np.savez(
+        archive,
+        booleans=np.array([True, False], dtype=np.bool_),
+        unsigned=np.array([1, 2], dtype=np.uint16),
+        complex_values=np.array([1 + 2j], dtype=np.complex64),
+    )
+
+    assert inspector.inspect_npz(archive) == [
+        {"name": "booleans", "dtype": "bool", "shape": [2]},
+        {"name": "complex_values", "dtype": "complex64", "shape": [1]},
+        {"name": "unsigned", "dtype": "uint16", "shape": [2]},
+    ]
 
 
 def test_inspect_npz_rejects_symlink_before_opening_payload(tmp_path: Path) -> None:
@@ -684,11 +727,17 @@ def test_inspect_npz_uses_allow_pickle_false_on_a_read_only_snapshot(
     original_load = inspector.np.load
     source_stat = archive.stat()
     source_identity = (source_stat.st_dev, source_stat.st_ino)
-    observations: list[tuple[bool, bool, bool, bool, bool, int]] = []
+    observations: list[tuple[bool, bool, bool, bool, bool, int, int, int]] = []
 
     def tracked_load(file: object, *, allow_pickle: bool) -> object:
         assert isinstance(file, io.IOBase)
         snapshot_stat = os.fstat(file.fileno())
+        access_mode = fcntl.fcntl(file.fileno(), fcntl.F_GETFL) & os.O_ACCMODE
+        pwrite_errno = 0
+        try:
+            os.pwrite(file.fileno(), b"x", 0)
+        except OSError as error:
+            pwrite_errno = error.errno
         observations.append(
             (
                 isinstance(file, (str, os.PathLike)),
@@ -697,6 +746,8 @@ def test_inspect_npz_uses_allow_pickle_false_on_a_read_only_snapshot(
                 file.writable(),
                 snapshot_stat.st_dev == source_stat.st_dev,
                 stat.S_IMODE(snapshot_stat.st_mode),
+                access_mode,
+                pwrite_errno,
             )
         )
         return original_load(file, allow_pickle=allow_pickle)
@@ -705,7 +756,7 @@ def test_inspect_npz_uses_allow_pickle_false_on_a_read_only_snapshot(
 
     inspector.inspect_npz(archive)
 
-    assert observations == [(False, False, False, False, True, 0o600)]
+    assert observations == [(False, False, False, False, True, 0o600, os.O_RDONLY, errno.EBADF)]
 
 
 def test_inspect_npz_never_loads_source_mutated_between_preflight_and_load(

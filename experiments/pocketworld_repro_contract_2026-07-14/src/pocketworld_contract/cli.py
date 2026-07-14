@@ -3,9 +3,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import secrets
 import stat
+import subprocess
 import sys
 from contextlib import ExitStack, suppress
 from pathlib import Path
@@ -262,6 +264,7 @@ def _load_json_object(path: Path) -> Mapping[str, object]:
         raw.decode("utf-8"),
         object_pairs_hook=_reject_duplicate_json_keys,
         parse_constant=_reject_nonfinite_json_constant,
+        parse_float=_reject_nonfinite_json_float,
     )
     if not isinstance(loaded, dict):
         raise ContractError(f"JSON document must be an object: {path}")
@@ -281,6 +284,13 @@ def _reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, ob
 
 def _reject_nonfinite_json_constant(value: str) -> object:
     raise ContractError(f"non-finite JSON number is forbidden: {value}")
+
+
+def _reject_nonfinite_json_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ContractError(f"non-finite JSON number is forbidden: {value}")
+    return parsed
 
 
 def _read_pinned_regular_file(path: Path) -> bytes:
@@ -316,6 +326,48 @@ def _read_pinned_regular_file(path: Path) -> bytes:
     return b"".join(chunks)
 
 
+def _hash_pinned_regular_file(
+    path: Path,
+    *,
+    include_md5: bool,
+) -> tuple[int, str, str | None]:
+    try:
+        before = path.lstat()
+    except OSError as exc:
+        raise ContractError(f"unable to inspect file: {path}") from exc
+    if stat.S_ISLNK(before.st_mode):
+        raise ContractError(f"symlink is forbidden: {path}")
+    if not stat.S_ISREG(before.st_mode):
+        raise ContractError(f"expected a regular file: {path}")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise ContractError(f"unable to open file safely: {path}") from exc
+    sha256 = hashlib.sha256()
+    md5 = hashlib.md5(usedforsecurity=False) if include_md5 else None
+    total_bytes = 0
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode) or _file_identity(before) != _file_identity(opened):
+            raise ContractError(f"file changed before read: {path}")
+        while chunk := os.read(descriptor, 4 * 1024 * 1024):
+            total_bytes += len(chunk)
+            sha256.update(chunk)
+            if md5 is not None:
+                md5.update(chunk)
+        after = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    try:
+        current = path.lstat()
+    except OSError as exc:
+        raise ContractError(f"file changed during read: {path}") from exc
+    if not _same_regular_snapshot(before, opened, after, current):
+        raise ContractError(f"file changed during read: {path}")
+    return total_bytes, sha256.hexdigest(), md5.hexdigest() if md5 is not None else None
+
+
 def _same_regular_snapshot(*states: os.stat_result) -> bool:
     first = states[0]
     identity = _file_identity(first)
@@ -332,11 +384,21 @@ def _verify_repository_verdict_closure(
     contract_path: Path,
     document: Mapping[str, object],
 ) -> None:
-    if document.get("status") != "verdict_eligible":
-        return
-    repository_root = _find_repository_root(contract_path)
+    repository_root = _verify_git_identity(contract_path, document)
     for expectation in _repository_expected_files(document):
         _verify_expected_repository_file(repository_root, expectation)
+    for item in [*document["collections"], *document["artifacts"]]:
+        if (
+            item["identity_status"] == "source_evidence_only"
+            and isinstance(item["path"], str)
+            and isinstance(item["sha256"], str)
+            and not isinstance(item["dvc_oid"], str)
+            and _repo_relative_claim_exists(repository_root, item["path"])
+        ):
+            _verify_expected_repository_file(
+                repository_root,
+                (item["path"], item["bytes"], item["sha256"], None),
+            )
 
 
 def _repository_expected_files(
@@ -347,18 +409,124 @@ def _repository_expected_files(
         (item["path"], item["bytes"], item["sha256"], item["dvc_oid"])
         for item in evidence
         if (
-            item["identity_status"] == "preserved"
-            and item["evidence_role"] in {"verdict_input", "verdict_output"}
+            isinstance(item["path"], str)
+            and isinstance(item["sha256"], str)
+            and (item["identity_status"] == "preserved" or isinstance(item["dvc_oid"], str))
         )
     ]
     expected_files.extend(
-        (entry["path"], None, entry["sha256"], None) for entry in document["code"]["entries"]
+        (entry["path"], None, entry["sha256"], None)
+        for entry in document["code"]["entries"]
+        if isinstance(entry["path"], str) and isinstance(entry["sha256"], str)
     )
     config = document["effective_config"]
-    expected_files.append((config["path"], None, config["sha256"], None))
+    if isinstance(config["path"], str) and isinstance(config["sha256"], str):
+        expected_files.append((config["path"], None, config["sha256"], None))
     verifier = document["environment"]["verifier"]
-    expected_files.append((verifier["uv_lock_path"], None, verifier["uv_lock_sha256"], None))
+    if isinstance(verifier["uv_lock_sha256"], str):
+        expected_files.append((verifier["uv_lock_path"], None, verifier["uv_lock_sha256"], None))
+    for dependency in document["product_qualification"]["dependencies"]:
+        path = dependency.get("license_evidence_path")
+        digest = dependency["license_evidence_sha256"]
+        if isinstance(path, str) and isinstance(digest, str):
+            expected_files.append((path, None, digest, None))
+    for model in document["models"]:
+        for path_key, digest_key in (
+            ("weights_path", "weights_sha256"),
+            ("license_evidence_path", "license_evidence_sha256"),
+        ):
+            path = model.get(path_key)
+            digest = model[digest_key]
+            if isinstance(path, str) and isinstance(digest, str):
+                expected_files.append((path, None, digest, None))
     return expected_files
+
+
+def _verify_git_identity(
+    contract_path: Path,
+    document: Mapping[str, object],
+) -> Path:
+    claimed_root = _resolve_claimed_git_root(contract_path, document["git"]["repository"])
+    _verify_git_ref_claims(claimed_root, document["git"])
+    _verify_git_dirty_claim(claimed_root, document["git"]["dirty_diff_sha256"])
+    return claimed_root
+
+
+def _resolve_claimed_git_root(contract_path: Path, repository_claim: object) -> Path:
+    enclosing_root = _find_repository_root(contract_path)
+    if not isinstance(repository_claim, str):
+        raise ContractError("Git repository identity must be a path string")
+    if repository_claim == ".":
+        claimed_root = enclosing_root
+    else:
+        try:
+            safe_relative_path(repository_claim)
+        except ContractError as exc:
+            raise ContractError("Git repository path must be normalized and relative") from exc
+        claimed_root = _resolve_lexically_nested_directory(enclosing_root, repository_claim)
+        try:
+            claimed_root.relative_to(enclosing_root)
+        except ValueError as exc:  # Defensive: safe_relative_path already rejects traversal.
+            raise ContractError("declared Git repository escapes the enclosing repository") from exc
+
+    actual_root = Path(_run_git(claimed_root, "rev-parse", "--show-toplevel").decode()).resolve()
+    if actual_root != claimed_root.resolve():
+        raise ContractError("declared Git repository path is not the actual Git root")
+    return claimed_root
+
+
+def _resolve_lexically_nested_directory(root: Path, relative_path: str) -> Path:
+    current = root
+    for component in relative_path.split("/"):
+        current = current / component
+        try:
+            state = current.lstat()
+        except OSError as exc:
+            raise ContractError("declared Git repository is unavailable") from exc
+        if stat.S_ISLNK(state.st_mode):
+            raise ContractError("declared Git repository path contains a symlink")
+        if not stat.S_ISDIR(state.st_mode):
+            raise ContractError("declared Git repository path contains a non-directory")
+    return current
+
+
+def _verify_git_ref_claims(
+    claimed_root: Path,
+    git_claim: Mapping[str, object],
+) -> None:
+    branch = git_claim["branch"]
+    if isinstance(branch, str):
+        actual_branch = _run_git(claimed_root, "symbolic-ref", "--quiet", "--short", "HEAD")
+        if actual_branch.decode().strip() != branch:
+            raise ContractError("declared Git branch does not match the repository branch")
+
+    commit = git_claim["commit"]
+    if isinstance(commit, str):
+        _run_git(claimed_root, "cat-file", "-e", f"{commit}^{{commit}}")
+        _run_git(claimed_root, "merge-base", "--is-ancestor", commit, "HEAD")
+
+
+def _verify_git_dirty_claim(claimed_root: Path, dirty_digest: object) -> None:
+    if isinstance(dirty_digest, str):
+        diff = _run_git(claimed_root, "diff", "--binary", "HEAD", "--", strip=False)
+        actual_digest = hashlib.sha256(diff).hexdigest()
+        if actual_digest != dirty_digest:
+            raise ContractError("declared Git dirty diff SHA-256 does not match the worktree")
+
+
+def _run_git(repository_root: Path, *args: str, strip: bool = True) -> bytes:
+    environment = os.environ.copy()
+    environment["GIT_OPTIONAL_LOCKS"] = "0"
+    try:
+        completed = subprocess.run(  # noqa: S603 - fixed executable, argv list, no shell.
+            ["/usr/bin/git", "-C", str(repository_root), *args],
+            check=True,
+            capture_output=True,
+            env=environment,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ContractError(f"Git identity verification failed: {' '.join(args)}") from exc
+    return completed.stdout.strip() if strip else completed.stdout
 
 
 def _verify_expected_repository_file(
@@ -369,19 +537,50 @@ def _verify_expected_repository_file(
     if not isinstance(relative_path, str) or not isinstance(expected_sha256, str):
         raise ContractError("verdict closure contains incomplete repository file identity")
     safe_relative_path(relative_path)
-    payload = _read_repo_relative_file(repository_root, relative_path)
-    if expected_bytes is not None and len(payload) != expected_bytes:
+    actual_bytes, actual_sha256, actual_md5 = _hash_pinned_regular_file(
+        _resolve_repo_relative_file(repository_root, relative_path),
+        include_md5=isinstance(expected_dvc_oid, str) and expected_dvc_oid.startswith("md5:"),
+    )
+    if expected_bytes is not None and actual_bytes != expected_bytes:
         raise ContractError(f"verdict closure byte count mismatch: {relative_path}")
-    actual_sha256 = hashlib.sha256(payload).hexdigest()
     if actual_sha256 != expected_sha256:
         raise ContractError(f"verdict closure SHA-256 mismatch: {relative_path}")
     if expected_dvc_oid is None:
         return
     if not isinstance(expected_dvc_oid, str):
         raise ContractError(f"verdict closure has invalid DVC OID: {relative_path}")
-    actual_dvc_oid = _dvc_oid_for_payload(payload, expected_dvc_oid)
+    actual_dvc_oid = _dvc_oid_for_hashes(actual_sha256, actual_md5, expected_dvc_oid)
     if actual_dvc_oid != expected_dvc_oid:
         raise ContractError(f"verdict closure DVC OID mismatch: {relative_path}")
+
+
+def _repo_relative_claim_exists(repository_root: Path, relative_path: str) -> bool:
+    safe_relative_path(relative_path)
+    current = repository_root
+    parts = relative_path.split("/")
+    for component in parts[:-1]:
+        current = current / component
+        try:
+            state = current.lstat()
+        except FileNotFoundError:
+            return False
+        except OSError as exc:
+            raise ContractError(
+                f"unable to inspect repository evidence claim: {relative_path}"
+            ) from exc
+        if stat.S_ISLNK(state.st_mode) or not stat.S_ISDIR(state.st_mode):
+            raise ContractError(
+                f"repository evidence claim contains an unsafe path: {relative_path}"
+            )
+    try:
+        (current / parts[-1]).lstat()
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise ContractError(
+            f"unable to inspect repository evidence claim: {relative_path}"
+        ) from exc
+    return True
 
 
 def _find_repository_root(contract_path: Path) -> Path:
@@ -397,6 +596,10 @@ def _find_repository_root(contract_path: Path) -> Path:
 
 
 def _read_repo_relative_file(repository_root: Path, relative_path: str) -> bytes:
+    return _read_pinned_regular_file(_resolve_repo_relative_file(repository_root, relative_path))
+
+
+def _resolve_repo_relative_file(repository_root: Path, relative_path: str) -> Path:
     current = repository_root
     parts = relative_path.split("/")
     for component in parts[:-1]:
@@ -407,14 +610,15 @@ def _read_repo_relative_file(repository_root: Path, relative_path: str) -> bytes
             raise ContractError(f"verdict closure path is unavailable: {relative_path}") from exc
         if stat.S_ISLNK(state.st_mode) or not stat.S_ISDIR(state.st_mode):
             raise ContractError(f"verdict closure path contains a symlink: {relative_path}")
-    return _read_pinned_regular_file(current / parts[-1])
+    return current / parts[-1]
 
 
-def _dvc_oid_for_payload(payload: bytes, expected: str) -> str:
+def _dvc_oid_for_hashes(sha256: str, md5: str | None, expected: str) -> str:
     if expected.startswith("md5:"):
+        if md5 is None:
+            raise ContractError("MD5 digest was not computed for a DVC MD5 identity")
         suffix = ".dir" if expected.endswith(".dir") else ""
-        digest = hashlib.md5(payload, usedforsecurity=False).hexdigest()
-        return f"md5:{digest}{suffix}"
+        return f"md5:{md5}{suffix}"
     if expected.startswith("sha256:"):
-        return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+        return f"sha256:{sha256}"
     raise ContractError(f"unsupported DVC OID algorithm: {expected}")

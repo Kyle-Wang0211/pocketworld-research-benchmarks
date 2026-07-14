@@ -67,6 +67,11 @@ def test_cli_verify_contract_loads_and_validates_json(
     contract.write_text('{"schema_version":1}\n', encoding="utf-8")
     observed: list[object] = []
     monkeypatch.setattr(cli, "validate_contract", observed.append, raising=False)
+    monkeypatch.setattr(
+        cli,
+        "_verify_repository_verdict_closure",
+        lambda _path, _document: None,
+    )
 
     assert cli.main(["verify-contract", str(contract)]) == 0
     assert observed == [{"schema_version": 1}]

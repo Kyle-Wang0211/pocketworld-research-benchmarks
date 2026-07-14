@@ -43,7 +43,25 @@ Every asset SHALL have a unique POSIX relative path, role, bytes, lowercase SHA-
 ### Requirement: Full reproducibility truth is mandatory
 Each contract SHALL record Git root/branch/commit/dirty-diff hash; code/script hashes; producer stack; consumer target stack; ordered inputs; effective config and hash; command; seeds/determinism; Python/uv lock and hardware/backend; model source/revision/weight hash/license evidence; metrics/thresholds; exclusions; stopping rules; output hashes; deviations; and verdict.
 
-A verdict-eligible contract SHALL declare `contract_kind` and `validation_scope=decision_contract`, use closed unique identifiers and evidence roles, contain nonempty runnable code/config/command, finite metric thresholds and observations, stopping rules, and preserved `verdict_input`/`verdict_output` evidence. Contract JSON SHALL be canonical and SHALL reject duplicate keys and non-finite numbers. Verification SHALL rehash repository-local code, config, verifier lock, verdict evidence, and single-file DVC OIDs without opening provisional raw evidence.
+A verdict-eligible contract SHALL declare `contract_kind` and `validation_scope=decision_contract`, use closed unique identifiers and evidence roles, contain nonempty runnable code/config/command, finite metric thresholds and observations, stopping rules, and preserved `verdict_input`/`verdict_output` evidence. Contract JSON SHALL be canonical and SHALL reject duplicate keys and non-finite numbers. Verification SHALL rehash repository-local code, config, verifier lock, preserved evidence, and single-file DVC OIDs without deferring checks merely because a contract is provisional.
+
+Every code entry SHALL have a stable `code_id` and dependency IDs; effective
+config SHALL have a stable `config_id`; and every known command SHALL reference
+every and only runnable code ID, the exact config ID, every and only declared
+used model ID, and its execution dependency IDs. A verdict threshold SHALL bind
+to one exact `(metric_id, artifact_id)` observation. The observation SHALL be a
+finite JSON number, the verifier SHALL evaluate `>`, `>=`, `<`, `<=`, and `==`,
+and `verdict.decision` SHALL equal the computed pass/fail result. Multiple
+metrics MAY reference the same output artifact.
+
+Both `verify-contract` and `gate-verdict` SHALL verify current Git root, branch,
+commit ancestry, and any declared tracked/staged dirty-diff hash even for a
+provisional contract. They SHALL rehash every non-null repository-local code,
+config, verifier-lock, preserved-evidence, DVC, commercial license, and model
+weight/license claim. They SHALL also rehash materialized repository-local
+source-evidence-only claims; unavailable unpreserved external source evidence
+MAY remain absent. Numeric overflow such as `1e9999` SHALL fail parsing rather
+than become infinity.
 
 #### Scenario: Historical and target stacks differ
 - **WHEN** an old artifact predates COLMAP 4.1.0
@@ -52,6 +70,14 @@ A verdict-eligible contract SHALL declare `contract_kind` and `validation_scope=
 #### Scenario: Required evidence is absent
 - **WHEN** a required field is unknown
 - **THEN** the contract records `null` plus a deviation and cannot upgrade the related verdict
+
+#### Scenario: Stored metric decision disagrees with evidence
+- **WHEN** an exact metric/artifact observation fails its registered operator and threshold but the contract records `pass`
+- **THEN** verdict validation fails closed
+
+#### Scenario: Provisional repository evidence drifts
+- **WHEN** a provisional contract's non-null Git, code, config, lock, preserved, DVC, license, or model evidence no longer matches current bytes
+- **THEN** `verify-contract` fails rather than deferring rehash until verdict eligibility
 
 ### Requirement: Cap50 closure is explicit
 The cap50 contract SHALL preserve 115 paired 3840×2160 JPEG/sidecars, 115 exact 1024×576 PNG inputs, live ledger, subset metadata, poses, floor IDs, ghost mask, and direct sparse PLY. It SHALL enumerate 24 unavailable names from the 139-frame feed.
@@ -85,6 +111,17 @@ The system SHALL create a capture-archive contract for missing photos and a repl
 
 The replay decision SHALL be typed in `replay_qualification`; freshness, pull time, device/app/revision, source and ledger capture directories, quiescence or consistent backup, atomic DB/WAL, integrity, alignment, and DB/WAL/pose/SHM references SHALL NOT be hidden in free-form details. SHM SHALL be `excluded_volatile` with `replay_identity_included=false`.
 
+An Experiment A replay verdict SHALL additionally prove a fresh device pull,
+the source app revision, exact algorithm revision
+`0a8b8428fba3fbf942af01ada6d1e1252a677c6a`, default-disabled incremental
+global BA, and that the only arm difference is
+`AETHER_INCREMENTAL_GLOBAL_BA=unset` versus
+`AETHER_INCREMENTAL_GLOBAL_BA=1`.
+
+#### Scenario: Replay control-variable closure is incomplete
+- **WHEN** fresh bytes exist but source revision, default-disabled behavior, exact algorithm identity, or sole-control-variable proof is absent
+- **THEN** the replay fixture remains ineligible for an Experiment A verdict
+
 ### Requirement: PLY and complete NPZ inventory are preserved
 The system SHALL preserve four requested output PLY files, two merge-input PLY files, five match NPZ files, `xsec_data.npz`, and `_shell_cache.npz`. Each NPZ SHALL record filename, bytes, SHA, producer, consumer, role, and inclusion reason.
 
@@ -101,6 +138,17 @@ Every artifact SHALL record separate license status, platform qualification, evi
 
 Code, model weights, training data, and tools SHALL be separate dependency records with exact `audit_verdict`, intended use, obligations, and immutable license evidence. A used model SHALL reference one model dependency and all training-dataset dependencies; unrelated source-code evidence SHALL NOT back model identity. Commercial candidates SHALL accept only `allow` dependencies. Clean user-owned private inputs and derived outputs MAY be included only with a rights basis and rights-evidence SHA-256.
 
+A commercial candidate SHALL explicitly declare its execution dependency
+closure complete. Runnable code and command dependency IDs plus model,
+training-dataset, and runtime dependency IDs SHALL resolve to exactly every
+declared dependency: the set SHALL be nonempty, SHALL contain no undefined
+reference, and SHALL contain no unreferenced padding. Every dependency SHALL
+have repository-relative license evidence and a matching hash. Every used model
+SHALL have an immutable repository-relative weight path/hash, license evidence
+path/hash, and matching model dependency license identity. This requirement
+verifies a declared closure and SHALL NOT be described as automatic discovery
+of hidden dynamic or binary dependencies.
+
 #### Scenario: Historical pure-A is reported
 - **WHEN** `floor_planesweep.ply` is summarized
 - **THEN** it is Mac-only, license-unknown pending audit, and not product-qualified
@@ -108,6 +156,10 @@ Code, model weights, training data, and tools SHALL be separate dependency recor
 #### Scenario: Non-commercial lineage is reported
 - **WHEN** B/C or merged evidence is summarized
 - **THEN** LoFTR-indoor/ScanNet lineage is explicit and excluded from commercial gates
+
+#### Scenario: Commercial dependency surface is empty or padded
+- **WHEN** a candidate declares no execution dependency, omits a used model dependency, or adds an unreferenced dependency solely to satisfy the list
+- **THEN** commercial evaluation eligibility is rejected
 
 ### Requirement: Effective configuration is normalized
 The system SHALL create a repository-relative `effective-config.json`, record historical `grid_m=0.01` over script default `0.02`, and mark hard-coded scratch scripts as evidence sources that are not directly runnable.
