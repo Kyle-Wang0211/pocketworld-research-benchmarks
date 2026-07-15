@@ -1,0 +1,86 @@
+{
+  "config": {
+    "depth_competition_offsets_m": [
+      -0.05,
+      0.05
+    ],
+    "depth_ncc_margin": 0.02,
+    "grid_m": 0.05,
+    "image_cache_images": 64,
+    "image_margin_px": 2.0,
+    "max_graze_deg": 72.0,
+    "max_views": 10,
+    "min_parallax_deg": 5.0,
+    "min_std": 6.0,
+    "min_views": 3,
+    "ncc_min": 0.7,
+    "patch_n": 7,
+    "patch_radius_m": 0.015,
+    "tile_points": 128
+  },
+  "forbidden_matcher_outputs_consumed": false,
+  "inputs": {
+    "frame_meta": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json",
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324"
+    },
+    "ledger": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl",
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b"
+    },
+    "photo_count": 115,
+    "planes": {
+      "path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap50_pure_a_wall_ceiling_20260714/structural_planes_v5_floor.json",
+      "sha256": "436cfd4681bf55a004b1836d0cc88be1fd0fe4431ef54968312574f0098747c6"
+    }
+  },
+  "is_wrong_acceptance_probe": true,
+  "method": "known_or_sparse_fitted_plane_tiled_multiview_zncc_unique_depth",
+  "output": {
+    "ply": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap50_pure_a_wall_ceiling_20260714/pure_a_floor_5cm_wrong_minus5_lru64_v2/structural_planesweep_offset_-0.050m.ply",
+    "sha256": "549b631ca35aeb4eeb21fa5170280974fca0dd41ed7b1ff38f59c243d5fcd4a3"
+  },
+  "plane_offset_m": -0.05,
+  "schema": "aether_pure_a_structural_planesweep_v3",
+  "surfaces": [
+    {
+      "acceptance_rate": 0.027393617021276597,
+      "accepted": 103,
+      "coverage_cells_5cm": 103,
+      "decoded_image_loads": 99,
+      "depth_competition_offsets_m": [
+        -0.05,
+        0.05
+      ],
+      "depth_ncc_margin_observed_median": 0.04374688045274644,
+      "depth_ncc_margin_observed_min": 0.023761947993294452,
+      "depth_ncc_margin_required": 0.02,
+      "elapsed_s": 15.00761287502246,
+      "grid_candidates": 3760,
+      "kind": "floor",
+      "parallax_median_deg": 19.641561619105094,
+      "peak_loaded_image_bytes": 1592524800,
+      "plane_offset_m": -0.05,
+      "rejected": {
+        "ambiguous_depth": 85,
+        "few_geometry_views": 449,
+        "few_texture_views": 1047,
+        "few_zncc_views": 1982,
+        "low_parallax": 94
+      },
+      "surface_id": "floor_0",
+      "tiles": 30,
+      "views_median": 3.0,
+      "zncc_median": 0.8439758442802084,
+      "zncc_p10": 0.749913934671796
+    }
+  ],
+  "totals": {
+    "accepted": 103,
+    "coverage_cells_5cm_sum": 103,
+    "elapsed_s": 15.013010875001783,
+    "grid_candidates": 3760,
+    "max_tile_loaded_image_bytes": 1592524800,
+    "peak_rss_bytes": 1609334784
+  }
+}

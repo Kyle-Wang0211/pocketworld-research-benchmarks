@@ -3,15 +3,48 @@
 **All experiments run on Mac (M3 Pro, torch-MPS) — no remote GPU box. No production code touched.**
 
 > [!WARNING]
-> **Commercial-use boundary:** the table and images below are historical research evidence,
+> **Commercial-use boundary:** the historical table and images below are research evidence,
 > not a shipment gate. `floor_rescue_band_colored.ply`, the B/C routes, and every
 > `maxed`/merged result contain LoFTR-indoor/ScanNet non-commercial lineage and may only
 > be described as a non-commercial research upper bound. The plane-sweep algorithm core
 > is model-free photometric geometry, but the historical `fr_planesweep.py` run still
-> reads a LoFTR-derived rescue PLY for coverage statistics; therefore even the historical
-> pure-A result remains `license_status=unknown_pending_audit` until it is rerun from
-> first-party inputs under the clean contract. No result in this README is currently
-> product-qualified.
+> reads a LoFTR-derived rescue PLY for coverage statistics. The 2026-07-15 clean rerun
+> below removes that dependency and consumes only first-party images, poses, intrinsics,
+> the product sparse cloud, and the known floor plane. It is clean with respect to learned
+> matcher lineage, but remains a host research result until the A16 tiled implementation
+> and product integration pass their acceptance tests.
+
+## Clean pure-A result (cap50, 2026-07-15)
+
+The new structural runner includes the floor and never reads LoFTR matches or LoFTR-derived
+point clouds. A 10-view base pass is preserved exactly. A 48-view rescue pass may create a
+point only when the base pass failed and the rescue evidence exceeds the frozen base medians
+(`ZNCC >= 0.850047`, parallax `>= 10.241 deg`, at least 3 mutually consistent views). Every
+pair in the accepted view clique must independently satisfy `ZNCC >= 0.70`.
+
+| metric | product SIFT | historical plane-sweep | **clean pure-A owner + rescue24** |
+|---|---:|---:|---:|
+| Floor points | 5,845 | 12,672 | **13,488** |
+| Plane-sweep 5cm cells | — | 1,459 | **1,596** |
+| New cells absent from SIFT | — | 847 | **1,001** |
+| SIFT union cells | 1,101 | 1,948 | **2,102 (+90.92%)** |
+| ZNCC median / P10 | — | 0.7906 / 0.7189 | **0.8644 / 0.7859** |
+| Views / parallax median | — | 4 / 15.10 deg (star set) | **4 / 14.21 deg (all-pairs clique)** |
+| Points farther than 1um from floor | — | not recorded | **0** |
+| LoFTR-derived inputs consumed | — | yes, coverage comparator | **no** |
+
+This supersedes LoFTR as a dependency for **floor coverage**, not as a general matcher.
+Plane-sweep only owns certified planar structure. Non-planar weak-texture objects still need
+the separate D-route detector-free matcher with commercially clean code, weights, data, and
+runtime provenance. Do not delete that capability or conflate it with floor plane-sweep.
+
+The historical and current parallax medians are not directly comparable: the historical
+star set required each member to agree only with one reference view, while the clean runner
+requires every accepted pair to agree. The current 14.21-degree median is measured on the
+strict set and remains far above the frozen 5-degree gate.
+
+The exact command, hashes, rejection counts, memory peak, and comparison are stored in
+`runs/cap50_pure_a_wall_ceiling_20260714/verdict_pure_a_floor_owner_rescue48_20260715.json`.
 
 ## Problem
 cap50's floor is weakly textured → production SIFT leaves holes + a "ghost layer"
@@ -52,8 +85,8 @@ only by photometric consistency → arbitrarily dense (ZNCC median stays 0.79 at
    plane-sweep is a razor-thin single plane, zero sub-floor points.
 2. **Potentially ship-friendly algorithm core**: pure geometry/shader with no learned-model
    dependency, cross-platform in principle (C++/Dawn/WGSL), and embarrassingly-parallel
-   multi-view NCC. Commercial eligibility still requires a clean-room rerun that removes
-   all LoFTR-derived statistics inputs, audits every dependency, and passes A16 validation.
+   multi-view NCC. The clean rerun now removes all LoFTR-derived statistics inputs; A16
+   validation and product integration remain outstanding.
 3. **Generalizes to any known plane** (walls, ceiling — ARKit plane anchors on-device).
 
 ## Honest limits
@@ -92,6 +125,12 @@ only by photometric consistency → arbitrarily dense (ZNCC median stays 0.79 at
   use official ZJU3DV repo weights, re-verify.
 
 ## Files
+- `fr_planesweep_wall_ceiling.py` — clean tiled structural runner for floor/walls/ceiling;
+  per-point view selection, bounded image cache, exact all-pairs clique, and strict rescue gate.
+- `fit_structural_planes.py` — derives sweep domains from the first-party sparse cloud and
+  known floor metadata; never consumes matcher rescue outputs.
+- `test_fr_planesweep_wall_ceiling.py` — deterministic geometry, clique, cache-selection,
+  floor-domain, and rescue-gate tests.
 - `fr_planesweep.py` — **the plane-sweep densifier** (`GS` env var = grid size). Core result.
 - `fr_common.py` — shared geometry + gates (Sampson/MAGSAC/reproj<3/tri≥2/GRID/floor plane).
 - `build_floor_rescue.py` — data prep (poses.json, production_floor.ply, floor frames).
