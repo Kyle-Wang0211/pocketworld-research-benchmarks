@@ -1,0 +1,49 @@
+name: PWDetectorFreeBench
+options:
+  bundleIdPrefix: com.kyle
+  deploymentTarget:
+    iOS: "16.0"
+configs:
+  Debug: debug
+  Profile: release
+  Release: release
+targets:
+  PWDetectorFreeBench:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    dependencies:
+      - sdk: Metal.framework
+    settings:
+      base:
+        DEVELOPMENT_TEAM: 26AH7V448L
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.PocketWorld.DetectorFreeBench
+        PRODUCT_NAME: PWDetectorFreeBench
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        CLANG_CXX_LANGUAGE_STANDARD: "c++17"
+        CLANG_CXX_LIBRARY: "libc++"
+        HEADER_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(SRCROOT)/../shared"
+        ENABLE_BITCODE: NO
+      configs:
+        Profile:
+          GCC_PREPROCESSOR_DEFINITIONS:
+            - "$(inherited)"
+            - "NDEBUG=1"
+          COPY_PHASE_STRIP: YES
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: PW Detector Free Bench
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
