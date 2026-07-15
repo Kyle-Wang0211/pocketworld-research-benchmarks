@@ -2,17 +2,45 @@
 
 ## Outcome
 
-The strongest current result is **pair-local physical-site assignment after
-two-view geometry and before track/Point3D birth**. It prevents multiple SIFT
-orientation variants at the same bit-identical image coordinate from creating
-parallel 3D entities. It never deletes a captured frame, photo, registered
-camera, or already-generated point; losing candidates simply do not receive a
-birth edge.
+The strongest current result is **multi-view depth-conflict ownership at the
+product-point birth certificate**. All verified observations and internal
+Point3D hypotheses remain available to registration and bundle adjustment.
+Only when two independently certified hypotheses occupy the exact same
+physical image site in at least two registered views, yet disagree by at least
+12 mm in metric depth, does the stronger hypothesis receive the user-visible
+point identity. No captured frame, photo, registered camera, BA observation,
+internal hypothesis, or previously visible point is deleted.
 
-The experiment remains default-OFF. It is the first tested variant that reduces
-the cross-object ghost-layer signal on cap51 while improving floor thickness
-and median image coverage, but its low-decile coverage and planar-error tail
-still regress.
+The decisive implementation correction was to treat COLMAP's negative
+`Point3D.error` value as the "not computed" sentinel. The earlier comparator
+mistakenly ranked `-1` ahead of every measured reprojection error. With the
+sentinel corrected, matched cap51 and cap56 A/B runs retain 100% frame
+registration and identical coverage while improving every comparable geometry
+metric and sharply reducing duplicate-layer births. The switch remains
+default-OFF until the same code path is compiled and exercised through the
+cross-platform product ABI.
+
+### Current no-regression result
+
+| Capture / arm | Registered | Internal points / observations | Published points | floor 16–84% (mm) | coverage median / p10 / min | 8 px conflicts 2v / 3v | normal 30° 2v / 3v | planar p50 / p90 / p95 (mm) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| cap51 OFF | 105/105 | 65,794 / 170,338 | 12,632 | 9.420 | 96 / 6.2 / 1 | 48 / 22 | 11 / 9 | 1.1846 / 8.9425 / 14.6115 |
+| cap51 owner | 105/105 | 65,794 / 170,338 | 12,611 | **9.405** | **96 / 6.2 / 1** | **25 / 8** | **2 / 1** | **1.1836 / 8.9255 / 14.5845** |
+| cap56 OFF | 20/20 | 17,025 / 44,803 | 2,571 | 15.243 | 130 / 104.3 / 97 | 7 / 1 | 0 / 0 | 1.4721 / 7.2508 / 11.1285 |
+| cap56 owner | 20/20 | 17,025 / 44,803 | 2,567 | 15.290* | **130 / 104.3 / 97** | **3 / 0** | 0 / 0 | **1.4714 / 7.2152 / 10.9789** |
+
+`*` The per-arm adaptive floor proxy recomputes its 2%/15% rank boundaries
+after the product population changes from 2,571 to 2,567. All four withheld
+IDs are outside the 334-point OFF floor support set. On that fixed semantic
+support, thickness is exactly `15.2425665493 -> 15.2425665493 mm`; the internal
+models differ by at most `3.7e-13` in point coordinates. This is a rank-boundary
+artifact, not a floor-geometry regression.
+
+Primary evidence for this result:
+
+- `cap51_publish_multiview_owner_nonnegative_ab_20260715.json`
+- `cap56_publish_multiview_owner_nonnegative_ab_20260715.json`
+- `publish_depth_conflict_owner_verdict_20260715.json`
 
 ## Immutable inputs
 

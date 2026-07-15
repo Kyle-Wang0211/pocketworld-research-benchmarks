@@ -1,0 +1,98 @@
+{
+  "schema": "pocketworld_publish_depth_conflict_owner_verdict_v1",
+  "date": "2026-07-15",
+  "mechanism": {
+    "depth_conflict_min_m": 0.012,
+    "minimum_distinct_registered_views": 2,
+    "physical_site_identity": "bit-identical float32 image coordinate",
+    "winner_order": [
+      "lowest non-negative finite measured reprojection error",
+      "longest track",
+      "largest triangulation angle",
+      "lowest point id"
+    ],
+    "negative_point_error_semantics": "not-computed sentinel; ranked as infinity",
+    "mutation_boundary": "product-point identity allocation only; internal hypotheses, observations, registration, and BA are unchanged"
+  },
+  "binary": {
+    "path": "aether_cpp/third_party/glomap_vendor/build-host-incremental-ba-ab/sfm_replay_bench_exe",
+    "sha256": "1c76aed32186e37935235fa803c55d2aed992d81a6ff0e8dfccf6a0472f090c3",
+    "dirty_diff_sha256": "1b762d65f79035ab92b469517d5618a919bf65e64d4be476a729a3c26d914296"
+  },
+  "effective_environment": {
+    "common": {
+      "AETHER_ENRICH_TIME_BUDGET_MS": "1",
+      "AETHER_FINALIZE_NO_OVERLAP": "1",
+      "AETHER_INCREMENTAL_GLOBAL_BA": "unset"
+    },
+    "owner_arm": {
+      "AETHER_PUBLISH_DEPTH_CONFLICT_OWNER": "1",
+      "AETHER_PUBLISH_DEPTH_OWNER_ERROR_FIRST": "1",
+      "AETHER_EXACT_SITE_OWNER_MIN_DEPTH_M": "0.012"
+    },
+    "pair_source": "stored device matches and two-view geometry"
+  },
+  "captures": {
+    "cap51": {
+      "db_sha256": "af1bd571d81cf27228e6b1bd8faa9617a1734bf0d32c1c67ec849c4bc7f5ba97",
+      "ledger_sha256": "d86ac0c44a9e5ae154f286cc9fc6baf215f949c5335b4bf9210e87c6d018770c",
+      "registered_off_on": [105, 105],
+      "internal_points_off_on": [65794, 65794],
+      "internal_observations_off_on": [170338, 170338],
+      "mean_reprojection_px_off_on": [0.8253, 0.8253],
+      "published_points_off_on": [12632, 12611],
+      "floor_thickness_mm_off_on": [9.419650007020566, 9.405112438974788],
+      "coverage_median_off_on": [96.0, 96.0],
+      "coverage_p10_off_on": [6.200000000000003, 6.200000000000003],
+      "coverage_min_off_on": [1, 1],
+      "near_ray_8px_2view_off_on": [48, 25],
+      "near_ray_8px_3view_off_on": [22, 8],
+      "normal_layer_8px_30deg_2view_off_on": [11, 2],
+      "normal_layer_8px_30deg_3view_off_on": [9, 1],
+      "planar_p50_mm_off_on": [1.1845991885430813, 1.1835863161708895],
+      "planar_p90_mm_off_on": [8.94251444805669, 8.925548345156841],
+      "planar_p95_mm_off_on": [14.611517190115892, 14.584484959539564],
+      "withheld_conflict_births": 21
+    },
+    "cap56": {
+      "db_sha256": "a0f4e6d3591d47ca1e99e39de1f2c664e307dfecd9cf222faae180155f3fbf6a",
+      "ledger_sha256": "b083fed4e7af35876c08982ea90547882da5369b0ca7c81ab9dd890440517d37",
+      "registered_off_on": [20, 20],
+      "internal_points_off_on": [17025, 17025],
+      "internal_observations_off_on": [44803, 44803],
+      "mean_reprojection_px_off_on": [1.0204, 1.0204],
+      "maximum_internal_point_coordinate_delta": 3.733190583844752e-13,
+      "published_points_off_on": [2571, 2567],
+      "adaptive_rank_floor_thickness_mm_off_on": [15.24256654930524, 15.289962436703188],
+      "fixed_floor_support_points": 334,
+      "withheld_ids_in_fixed_floor_support": [],
+      "fixed_support_floor_thickness_mm_off_on": [15.242566549305215, 15.242566549305215],
+      "coverage_median_off_on": [130.0, 130.0],
+      "coverage_p10_off_on": [104.3, 104.3],
+      "coverage_min_off_on": [97, 97],
+      "near_ray_8px_2view_off_on": [7, 3],
+      "near_ray_8px_3view_off_on": [1, 0],
+      "normal_layer_8px_30deg_2view_off_on": [0, 0],
+      "normal_layer_8px_30deg_3view_off_on": [0, 0],
+      "planar_p50_mm_off_on": [1.4720839647200932, 1.4714165775750276],
+      "planar_p90_mm_off_on": [7.250773080306256, 7.215206085210828],
+      "planar_p95_mm_off_on": [11.128535923621087, 10.97890941016272],
+      "withheld_point_ids": [9276, 22010, 23180, 23880]
+    }
+  },
+  "invalid_runs": [
+    {
+      "capture": "cap51",
+      "reason": "non-deterministic temporal augmentation produced four extra observations; excluded from matched A/B",
+      "internal_observations": 170342
+    }
+  ],
+  "verdict": {
+    "status": "supported_no_true_regression_on_cap51_and_cap56",
+    "registration_gate": "pass",
+    "coverage_gate": "pass",
+    "geometry_gate": "pass",
+    "ghost_birth_gate": "pass",
+    "production_default": "off_pending_cross-platform_ABI_build_and_product-path_test"
+  }
+}
