@@ -1,0 +1,60 @@
+name: PWWallPlaneSweepDawnBench
+options:
+  bundleIdPrefix: com.kyle
+  deploymentTarget:
+    iOS: "16.0"
+configs:
+  Debug: debug
+  Profile: release
+  Release: release
+targets:
+  PWWallPlaneSweepDawnBench:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+      - path: ../shared/known_plane_patch_normalize.wgsl
+        buildPhase: resources
+    settings:
+      base:
+        DEVELOPMENT_TEAM: 26AH7V448L
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.PocketWorld.WallPlaneSweepDawnBench
+        PRODUCT_NAME: PWWallPlaneSweepDawnBench
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        CLANG_CXX_LANGUAGE_STANDARD: "c++20"
+        CLANG_CXX_LIBRARY: "libc++"
+        ENABLE_BITCODE: NO
+        HEADER_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(SRCROOT)/../shared"
+          - "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/third_party/dawn/include"
+          - "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-ios-device-dawn/third_party/dawn/gen/include"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-ios-device-dawn/third_party/dawn/src/dawn/native/Debug-iphoneos/libwebgpu_dawn.a"
+          - "-framework CoreFoundation"
+          - "-framework Foundation"
+          - "-framework IOSurface"
+          - "-framework QuartzCore"
+          - "-framework Metal"
+          - "-lobjc"
+      configs:
+        Profile:
+          GCC_PREPROCESSOR_DEFINITIONS:
+            - "$(inherited)"
+            - "NDEBUG=1"
+          COPY_PHASE_STRIP: YES
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: PW Wall Dawn Bench
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
