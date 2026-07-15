@@ -11,8 +11,9 @@
 > reads a LoFTR-derived rescue PLY for coverage statistics. The 2026-07-15 clean rerun
 > below removes that dependency and consumes only first-party images, poses, intrinsics,
 > the product sparse cloud, and the known floor plane. It is clean with respect to learned
-> matcher lineage, but remains a host research result until the A16 tiled implementation
-> and product integration pass their acceptance tests.
+> matcher lineage. The floor tiled implementation has passed A16 device parity; the new
+> strict wall scale-rescue arm remains a host result until its Dawn/WGSL device parity and
+> product integration acceptance tests pass.
 
 ## Clean pure-A result (cap50, 2026-07-15)
 
@@ -45,6 +46,40 @@ strict set and remains far above the frozen 5-degree gate.
 
 The exact command, hashes, rejection counts, memory peak, and comparison are stored in
 `runs/cap50_pure_a_wall_ceiling_20260714/verdict_pure_a_floor_owner_rescue48_20260715.json`.
+
+## Clean pure-A wall result (cap50, 2026-07-15)
+
+Walls use a tile-shared geometry-only view set, while the floor keeps its per-point view
+selection. This preserves the frozen wall baseline byte-for-byte and avoids undoing the
+floor coverage gain. The baseline output remains 38 points with PLY SHA-256
+`e4613e7d6ad9a5fc47b4abf224689507152d5b62fd42bee761ef5e0fb2734b6d`.
+
+A second physical patch scale is allowed to append a point only after the baseline failed.
+The rescue is strictly stronger than the baseline: 5 views, at least 18 degrees parallax,
+median clique ZNCC at least 0.90, and at least 0.06 ZNCC advantage over accepted parallel
+planes at -10/-5/+5/+10 cm. Every pair in the clique still independently passes ZNCC 0.80.
+
+| metric | frozen wall baseline | **strict scale rescue union** |
+|---|---:|---:|
+| Accepted / 5cm cells | 38 | **46 (+21.05%)** |
+| Baseline points retained | 38 | **38/38** |
+| Views median | 5 | **5** |
+| Parallax median | 17.6075 deg | **17.8224 deg** |
+| ZNCC median / P10 | 0.89845 / 0.85173 | **0.90464 / 0.86070** |
+| Minimum observed depth advantage | 0.05616 | **0.05616** |
+| New cells absent from SIFT wall support | — | **2** |
+| Serialized max wall-plane residual | — | **4.83e-8 m** |
+| LoFTR / LiDAR / sceneDepth consumed | no | **no** |
+
+Host runtime is 4.30 seconds and peak RSS is 489 MB. This is a zero-quality-regression
+host milestone, not yet a production verdict: the strict rescue still needs full true-device
+backend parity and a second capture holdout. The existing A16 wall tile proves the frozen
+single-scale kernel, not this new rescue arm. Ceiling remains correctly empty under the
+strict gates and is explicitly non-blocking for release; walls remain required.
+
+Evidence is in
+`runs/cap50_pure_a_wall_ceiling_20260714/wall1_strict_scale_rescue_v8/` and
+`runs/cap50_pure_a_wall_ceiling_20260714/verdict_strict_scale_rescue_v8.json`.
 
 ## Problem
 cap50's floor is weakly textured → production SIFT leaves holes + a "ghost layer"
@@ -126,7 +161,8 @@ only by photometric consistency → arbitrarily dense (ZNCC median stays 0.79 at
 
 ## Files
 - `fr_planesweep_wall_ceiling.py` — clean tiled structural runner for floor/walls/ceiling;
-  per-point view selection, bounded image cache, exact all-pairs clique, and strict rescue gate.
+  per-point floor selection, tile-shared wall/ceiling selection, bounded image cache, exact
+  all-pairs clique, unique-depth competition, and stricter multiscale rescue gate.
 - `fit_structural_planes.py` — derives sweep domains from the first-party sparse cloud and
   known floor metadata; never consumes matcher rescue outputs.
 - `test_fr_planesweep_wall_ceiling.py` — deterministic geometry, clique, cache-selection,

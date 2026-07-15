@@ -16,7 +16,7 @@ import math
 import resource
 import time
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable
 
@@ -207,6 +207,79 @@ def unique_depth_winner(
     return unique, center_ncc - best_alternative_ncc
 
 
+def merge_scale_rescue_results(
+    baseline_xyz: np.ndarray,
+    baseline_rgb: np.ndarray,
+    baseline_meta: np.ndarray,
+    rescue_xyz: np.ndarray,
+    rescue_rgb: np.ndarray,
+    rescue_meta: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
+    """Keep every baseline birth and append only new rescue grid points."""
+    if not (
+        len(baseline_xyz) == len(baseline_rgb) == len(baseline_meta)
+        and len(rescue_xyz) == len(rescue_rgb) == len(rescue_meta)
+    ):
+        raise ValueError("scale-rescue point, color, and metadata counts must match")
+    seen = {tuple(np.round(point, 9)) for point in baseline_xyz}
+    rescue_indices = []
+    for index, point in enumerate(rescue_xyz):
+        key = tuple(np.round(point, 9))
+        if key in seen:
+            continue
+        seen.add(key)
+        rescue_indices.append(index)
+    if not rescue_indices:
+        return baseline_xyz, baseline_rgb, baseline_meta, 0
+    chosen = np.asarray(rescue_indices, dtype=np.int64)
+    return (
+        np.concatenate([baseline_xyz, rescue_xyz[chosen]], axis=0),
+        np.concatenate([baseline_rgb, rescue_rgb[chosen]], axis=0),
+        np.concatenate([baseline_meta, rescue_meta[chosen]], axis=0),
+        len(rescue_indices),
+    )
+
+
+def scale_rescue_quality_mask(
+    metadata: np.ndarray,
+    minimum_views: int,
+    minimum_parallax_deg: float,
+    minimum_ncc: float,
+) -> np.ndarray:
+    if metadata.ndim != 2 or metadata.shape[1] < 3:
+        raise ValueError("scale-rescue metadata must contain views, parallax, and NCC")
+    return (
+        (metadata[:, 0] >= minimum_views)
+        & (metadata[:, 1] >= minimum_parallax_deg)
+        & (metadata[:, 2] >= minimum_ncc)
+    )
+
+
+def scale_rescue_applies(surface: dict, patch_radius_m: float | None) -> bool:
+    """The second physical scale is a wall-only birth policy."""
+    return patch_radius_m is not None and surface.get("kind") == "wall"
+
+
+def surface_coverage_cells(
+    points: np.ndarray,
+    surface: dict,
+    floor: dict,
+    cell_m: float = 0.05,
+) -> int:
+    if not len(points):
+        return 0
+    axis_u = np.asarray(surface["basis_u"], dtype=np.float64)
+    axis_v = (
+        np.asarray(floor["normal"], dtype=np.float64)
+        if surface["kind"] == "wall"
+        else np.asarray(surface["basis_v"], dtype=np.float64)
+    )
+    cells = np.floor(
+        np.column_stack([points @ axis_u, points @ axis_v]) / cell_m
+    ).astype(np.int64)
+    return int(len(np.unique(cells, axis=0)))
+
+
 def passes_rescue_gate(
     evidence: dict,
     minimum_ncc: float | None,
@@ -316,6 +389,24 @@ def select_point_views(visible: np.ndarray, head_on: np.ndarray, maximum: int) -
         return []
     order = np.lexsort((candidate, -head_on[candidate]))
     return [int(index) for index in candidate[order[:maximum]]]
+
+
+def select_tile_views(visible: np.ndarray, head_on: np.ndarray, maximum: int) -> list[int]:
+    """Select a shared wall/ceiling view set by tile coverage, then incidence."""
+    if visible.ndim != 2 or head_on.shape != visible.shape:
+        raise ValueError("tile visibility and incidence arrays must have matching 2D shapes")
+    if maximum <= 0:
+        return []
+    frame_indices = np.arange(visible.shape[0])
+    coverage = visible.sum(axis=1)
+    incidence = np.divide(
+        (head_on * visible).sum(axis=1),
+        coverage,
+        out=np.zeros(visible.shape[0], dtype=np.float64),
+        where=coverage > 0,
+    )
+    order = np.lexsort((frame_indices, -incidence, -coverage))
+    return [int(index) for index in order if coverage[index] > 0][:maximum]
 
 
 class ImageCache:
@@ -461,12 +552,26 @@ def sweep_surface(
     for tile_start in range(0, len(points), config.tile_points):
         tile = points[tile_start : tile_start + config.tile_points]
         visible, head_on, _ = project_centers(tile, frames, normal, config)
+        shared_tile_views = (
+            select_tile_views(visible, head_on, config.max_views)
+            if surface["kind"] in {"wall", "ceiling"}
+            else None
+        )
+        shared_tile_images = (
+            image_cache.get_many(shared_tile_views) if shared_tile_views else None
+        )
         tiles += 1
         for local_index, point in enumerate(tile):
-            candidate = select_point_views(
-                visible[:, local_index], head_on[:, local_index], config.max_views
-            )
-            images = image_cache.get_many(candidate) if candidate else {}
+            if shared_tile_views is not None:
+                candidate = [
+                    index for index in shared_tile_views if visible[index, local_index]
+                ]
+                images = shared_tile_images or {}
+            else:
+                candidate = select_point_views(
+                    visible[:, local_index], head_on[:, local_index], config.max_views
+                )
+                images = image_cache.get_many(candidate) if candidate else {}
             base_count = (
                 min(config.base_max_views, config.max_views)
                 if config.base_max_views > 0
@@ -505,7 +610,14 @@ def sweep_surface(
                 alt_visible, _, _ = project_centers(
                     shifted[None, :], frames, normal, config
                 )
-                alt_candidate = [index for index in used_candidate if alt_visible[index, 0]]
+                alternative_pool = (
+                    shared_tile_views
+                    if shared_tile_views is not None
+                    else used_candidate
+                )
+                alt_candidate = [
+                    index for index in alternative_pool if alt_visible[index, 0]
+                ]
                 alternative, _ = score_point_hypothesis(
                     shifted, offsets, frames, alt_candidate, images, config
                 )
@@ -532,19 +644,9 @@ def sweep_surface(
     accepted_points_array = np.asarray(accepted_points, dtype=np.float64).reshape(-1, 3)
     accepted_colors_array = np.asarray(accepted_colors, dtype=np.float64).reshape(-1, 3)
     accepted_meta_array = np.asarray(accepted_meta, dtype=np.float64).reshape(-1, 4)
-    if len(accepted_points_array):
-        axis_u = np.asarray(surface["basis_u"], dtype=np.float64)
-        axis_v = (
-            np.asarray(floor["normal"], dtype=np.float64)
-            if surface["kind"] == "wall"
-            else np.asarray(surface["basis_v"], dtype=np.float64)
-        )
-        cells = np.floor(
-            np.column_stack([accepted_points_array @ axis_u, accepted_points_array @ axis_v]) / 0.05
-        ).astype(np.int64)
-        coverage_cells = int(len(np.unique(cells, axis=0)))
-    else:
-        coverage_cells = 0
+    coverage_cells = surface_coverage_cells(
+        accepted_points_array, surface, floor, 0.05
+    )
     metrics = {
         "surface_id": surface["surface_id"],
         "kind": surface["kind"],
@@ -619,6 +721,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-graze-deg", type=float, default=72.0)
     parser.add_argument("--depth-competition-offset-m", type=float, action="append", default=[])
     parser.add_argument("--depth-ncc-margin", type=float, default=0.02)
+    parser.add_argument("--scale-rescue-patch-radius-m", type=float)
+    parser.add_argument("--scale-rescue-min-views", type=int)
+    parser.add_argument("--scale-rescue-min-parallax-deg", type=float)
+    parser.add_argument("--scale-rescue-min-ncc", type=float)
+    parser.add_argument("--scale-rescue-depth-ncc-margin", type=float)
     return parser.parse_args()
 
 
@@ -663,6 +770,130 @@ def main() -> None:
             config,
             args.plane_offset_m,
         )
+        if scale_rescue_applies(surface, args.scale_rescue_patch_radius_m):
+            if args.scale_rescue_patch_radius_m <= 0:
+                raise ValueError("scale-rescue patch radius must be positive")
+            if args.scale_rescue_patch_radius_m == config.patch_radius_m:
+                raise ValueError("scale-rescue patch radius must differ from baseline")
+            rescue_min_views = (
+                args.scale_rescue_min_views
+                if args.scale_rescue_min_views is not None
+                else config.min_views
+            )
+            rescue_min_parallax = (
+                args.scale_rescue_min_parallax_deg
+                if args.scale_rescue_min_parallax_deg is not None
+                else config.min_parallax_deg
+            )
+            rescue_min_ncc = (
+                args.scale_rescue_min_ncc
+                if args.scale_rescue_min_ncc is not None
+                else config.ncc_min
+            )
+            rescue_depth_margin = (
+                args.scale_rescue_depth_ncc_margin
+                if args.scale_rescue_depth_ncc_margin is not None
+                else config.depth_ncc_margin
+            )
+            rescue_config = replace(
+                config,
+                patch_radius_m=args.scale_rescue_patch_radius_m,
+                min_views=rescue_min_views,
+                min_parallax_deg=rescue_min_parallax,
+                depth_ncc_margin=rescue_depth_margin,
+            )
+            rescue_xyz, rescue_rgb, rescue_metadata, rescue_metrics = sweep_surface(
+                surface,
+                planes["floor"],
+                frames,
+                rescue_config,
+                args.plane_offset_m,
+            )
+            quality_mask = scale_rescue_quality_mask(
+                rescue_metadata,
+                rescue_min_views,
+                rescue_min_parallax,
+                rescue_min_ncc,
+            )
+            rescue_xyz = rescue_xyz[quality_mask]
+            rescue_rgb = rescue_rgb[quality_mask]
+            rescue_metadata = rescue_metadata[quality_mask]
+            baseline_metrics = metrics
+            xyz, rgb, metadata, added = merge_scale_rescue_results(
+                xyz,
+                rgb,
+                metadata,
+                rescue_xyz,
+                rescue_rgb,
+                rescue_metadata,
+            )
+            depth_margins = [
+                value
+                for value in (
+                    baseline_metrics["depth_ncc_margin_observed_min"],
+                    rescue_metrics["depth_ncc_margin_observed_min"],
+                )
+                if value is not None
+            ]
+            depth_margin_medians = [
+                value
+                for value in (
+                    baseline_metrics["depth_ncc_margin_observed_median"],
+                    rescue_metrics["depth_ncc_margin_observed_median"],
+                )
+                if value is not None
+            ]
+            metrics = dict(baseline_metrics)
+            metrics.update(
+                {
+                    "accepted": len(xyz),
+                    "acceptance_rate": len(xyz) / metrics["grid_candidates"],
+                    "coverage_cells_5cm": surface_coverage_cells(
+                        xyz, surface, planes["floor"], 0.05
+                    ),
+                    "elapsed_s": baseline_metrics["elapsed_s"]
+                    + rescue_metrics["elapsed_s"],
+                    "tiles": baseline_metrics["tiles"] + rescue_metrics["tiles"],
+                    "peak_loaded_image_bytes": max(
+                        baseline_metrics["peak_loaded_image_bytes"],
+                        rescue_metrics["peak_loaded_image_bytes"],
+                    ),
+                    "decoded_image_loads": baseline_metrics["decoded_image_loads"]
+                    + rescue_metrics["decoded_image_loads"],
+                    "views_median": float(np.median(metadata[:, 0])) if len(metadata) else None,
+                    "parallax_median_deg": (
+                        float(np.median(metadata[:, 1])) if len(metadata) else None
+                    ),
+                    "zncc_median": float(np.median(metadata[:, 2])) if len(metadata) else None,
+                    "zncc_p10": (
+                        float(np.percentile(metadata[:, 2], 10)) if len(metadata) else None
+                    ),
+                    "depth_ncc_margin_observed_min": (
+                        min(depth_margins) if depth_margins else None
+                    ),
+                    "depth_ncc_margin_observed_median": (
+                        min(depth_margin_medians) if depth_margin_medians else None
+                    ),
+                    "scale_rescue_accepted": added,
+                    "final_rejected_after_all_scales": metrics["grid_candidates"] - len(xyz),
+                    "scale_rescue": {
+                        "policy": "retain_all_baseline_births_append_unique_rescue_births",
+                        "patch_n": rescue_config.patch_n,
+                        "patch_radius_m": rescue_config.patch_radius_m,
+                        "accepted_in_rescue_arm": rescue_metrics["accepted"],
+                        "accepted_after_rescue_quality_gate": len(rescue_xyz),
+                        "added_unique_points": added,
+                        "quality_gate": {
+                            "min_views": rescue_min_views,
+                            "min_parallax_deg": rescue_min_parallax,
+                            "min_ncc": rescue_min_ncc,
+                            "depth_ncc_margin": rescue_depth_margin,
+                        },
+                        "baseline_metrics": baseline_metrics,
+                        "rescue_metrics": rescue_metrics,
+                    },
+                }
+            )
         all_xyz.append(xyz)
         all_rgb.append(rgb)
         all_meta.append(metadata)
@@ -678,18 +909,23 @@ def main() -> None:
     write_ply(ply_path, xyz, rgb, metadata)
     elapsed = time.perf_counter() - start
     depth_competition_enabled = bool(config.depth_competition_offsets_m)
+    scale_rescue_enabled = any("scale_rescue" in row for row in surface_metrics)
     stats = {
         "schema": (
             "aether_pure_a_structural_planesweep_v3"
             if includes_floor
             else (
-                "aether_pure_a_wall_ceiling_planesweep_v2"
+                "aether_pure_a_wall_ceiling_planesweep_v3"
+                if scale_rescue_enabled
+                else "aether_pure_a_wall_ceiling_planesweep_v2"
                 if depth_competition_enabled
                 else "aether_pure_a_wall_ceiling_planesweep_v1"
             )
         ),
         "method": (
-            "known_or_sparse_fitted_plane_tiled_multiview_zncc_unique_depth"
+            "known_or_sparse_fitted_plane_tiled_multiscale_zncc_unique_depth"
+            if scale_rescue_enabled
+            else "known_or_sparse_fitted_plane_tiled_multiview_zncc_unique_depth"
             if depth_competition_enabled
             else "known_or_sparse_fitted_plane_tiled_multiview_zncc"
         ),
@@ -702,7 +938,14 @@ def main() -> None:
             "planes": {"path": str(args.planes), "sha256": sha256(args.planes)},
             "photo_count": len(frames),
         },
-        "config": config.__dict__,
+        "config": {
+            **config.__dict__,
+            "scale_rescue_patch_radius_m": args.scale_rescue_patch_radius_m,
+            "scale_rescue_min_views": args.scale_rescue_min_views,
+            "scale_rescue_min_parallax_deg": args.scale_rescue_min_parallax_deg,
+            "scale_rescue_min_ncc": args.scale_rescue_min_ncc,
+            "scale_rescue_depth_ncc_margin": args.scale_rescue_depth_ncc_margin,
+        },
         "surfaces": surface_metrics,
         "totals": {
             "grid_candidates": sum(row["grid_candidates"] for row in surface_metrics),

@@ -23,6 +23,12 @@ FIT_SPEC.loader.exec_module(FIT_MODULE)
 
 
 class PlaneSweepCoreTest(unittest.TestCase):
+    def test_scale_rescue_is_wall_only(self):
+        self.assertTrue(MODULE.scale_rescue_applies({"kind": "wall"}, 0.06))
+        self.assertFalse(MODULE.scale_rescue_applies({"kind": "floor"}, 0.06))
+        self.assertFalse(MODULE.scale_rescue_applies({"kind": "ceiling"}, 0.06))
+        self.assertFalse(MODULE.scale_rescue_applies({"kind": "wall"}, None))
+
     def test_largest_consistent_clique_requires_all_pairs(self):
         ncc = np.array(
             [
@@ -181,6 +187,63 @@ class PlaneSweepCoreTest(unittest.TestCase):
         head_on = np.array([0.5, 1.0, 0.9, 0.7, 0.9])
         selected = MODULE.select_point_views(visible, head_on, 3)
         self.assertEqual(selected, [2, 4, 3])
+
+    def test_structural_tile_views_prioritize_coverage_then_incidence(self):
+        visible = np.array(
+            [
+                [True, True, True, False],
+                [True, True, False, False],
+                [True, True, True, False],
+                [False, False, False, False],
+            ]
+        )
+        head_on = np.array(
+            [
+                [0.6, 0.6, 0.6, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+                [0.8, 0.8, 0.8, 0.0],
+                [1.0, 1.0, 1.0, 1.0],
+            ]
+        )
+        selected = MODULE.select_tile_views(visible, head_on, 3)
+        self.assertEqual(selected, [2, 0, 1])
+
+    def test_structural_tile_view_ties_are_deterministic(self):
+        visible = np.ones((3, 2), dtype=bool)
+        head_on = np.full((3, 2), 0.75)
+        self.assertEqual(MODULE.select_tile_views(visible, head_on, 2), [0, 1])
+
+    def test_scale_rescue_keeps_baseline_order_and_only_appends_new_points(self):
+        baseline_xyz = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+        baseline_rgb = np.array([[10.0, 0.0, 0.0], [20.0, 0.0, 0.0]])
+        baseline_meta = np.array([[4.0, 10.0, 0.8, 4.0], [5.0, 12.0, 0.9, 5.0]])
+        rescue_xyz = np.array([[1.0, 0.0, 0.0], [2.0, 0.0, 0.0]])
+        rescue_rgb = np.array([[99.0, 0.0, 0.0], [30.0, 0.0, 0.0]])
+        rescue_meta = np.array([[6.0, 15.0, 0.95, 6.0], [4.0, 11.0, 0.85, 4.0]])
+        xyz, rgb, meta, added = MODULE.merge_scale_rescue_results(
+            baseline_xyz,
+            baseline_rgb,
+            baseline_meta,
+            rescue_xyz,
+            rescue_rgb,
+            rescue_meta,
+        )
+        self.assertEqual(added, 1)
+        self.assertEqual(xyz.tolist(), [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]])
+        self.assertEqual(rgb[:, 0].tolist(), [10.0, 20.0, 30.0])
+        self.assertEqual(meta[:, 2].tolist(), [0.8, 0.9, 0.85])
+
+    def test_scale_rescue_quality_gate_requires_every_strict_threshold(self):
+        metadata = np.array(
+            [
+                [5.0, 18.0, 0.90, 6.0],
+                [4.0, 20.0, 0.95, 6.0],
+                [6.0, 17.9, 0.95, 6.0],
+                [6.0, 20.0, 0.899, 6.0],
+            ]
+        )
+        mask = MODULE.scale_rescue_quality_mask(metadata, 5, 18.0, 0.90)
+        self.assertEqual(mask.tolist(), [True, False, False, False])
 
     def test_rescue_gate_requires_all_baseline_medians(self):
         evidence = {"views": 4, "ncc": 0.85, "parallax": 10.0}

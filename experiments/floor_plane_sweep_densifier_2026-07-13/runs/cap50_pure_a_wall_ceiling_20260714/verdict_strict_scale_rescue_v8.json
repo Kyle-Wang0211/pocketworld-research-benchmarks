@@ -1,0 +1,81 @@
+{
+  "baseline": {
+    "accepted": 38,
+    "coverage_cells_5cm": 38,
+    "depth_margin_min": 0.056160456198367736,
+    "parallax_median_deg": 17.60754533379088,
+    "ply_sha256": "e4613e7d6ad9a5fc47b4abf224689507152d5b62fd42bee761ef5e0fb2734b6d",
+    "views_median": 5.0,
+    "zncc_median": 0.8984545002053308,
+    "zncc_p10": 0.8517308458444701
+  },
+  "checks": {
+    "all_serialized_points_on_unique_wall_plane_within_1um": true,
+    "baseline_points_retained": true,
+    "coverage_strictly_increased": true,
+    "depth_margin_min_no_regression": true,
+    "forbidden_matcher_outputs_consumed": false,
+    "lidar_or_scene_depth_consumed": false,
+    "no_duplicate_output_cells": true,
+    "parallax_median_no_regression": true,
+    "views_median_no_regression": true,
+    "zncc_median_no_regression": true,
+    "zncc_p10_no_regression": true
+  },
+  "decision": "PASS_HOST_ZERO_REGRESSION_WALL_SCALE_RESCUE",
+  "inputs": {
+    "frame_meta": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json",
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324"
+    },
+    "ledger": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl",
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b"
+    },
+    "photo_count": 115,
+    "planes": {
+      "path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap50_pure_a_wall_ceiling_20260714/structural_planes_v4_zncc_certified.json",
+      "sha256": "858d648abd7684d5d8f3be4dbb401253b7c621aa7bf70a96f927f347e2318e79"
+    }
+  },
+  "new_rescue_geometry": {
+    "cells_not_in_sparse_wall_5cm": 2,
+    "max_abs_serialized_wall_plane_residual_m": 4.8265173413497564e-08,
+    "nearest_sparse_m_max": 0.044480230767951566,
+    "nearest_sparse_m_median": 0.01979416099654012,
+    "nearest_sparse_m_min": 0.00766858164174029,
+    "nearest_sparse_m_p90": 0.04019321100628949,
+    "points_farther_than_5cm_from_sparse": 0,
+    "unique_cells_5cm": 8,
+    "unique_points": 8
+  },
+  "production_readiness": false,
+  "quality_gates": {
+    "depth_ncc_margin": 0.06,
+    "min_ncc": 0.9,
+    "min_parallax_deg": 18.0,
+    "min_views": 5
+  },
+  "reason_not_production_ready": "full strict-rescue wall fixture still requires true-device backend parity and an additional capture holdout",
+  "runtime": {
+    "accepted": 46,
+    "coverage_cells_5cm_sum": 46,
+    "elapsed_s": 4.298942499997793,
+    "grid_candidates": 713,
+    "max_tile_loaded_image_bytes": 248832000,
+    "peak_rss_bytes": 489291776
+  },
+  "schema": "pocketworld_pure_a_wall_strict_scale_rescue_verdict_v1",
+  "strict_rescue_union": {
+    "accepted": 46,
+    "added": 8,
+    "coverage_cells_5cm": 46,
+    "depth_margin_min": 0.056160456198367736,
+    "gain_pct": 21.05263157894737,
+    "parallax_median_deg": 17.822430783378167,
+    "ply_sha256": "2eec64b5da7430edd8f8564d18a5fa82b67ef6e66d05196a3c31fe77c802206b",
+    "views_median": 5.0,
+    "zncc_median": 0.9046378843203287,
+    "zncc_p10": 0.8607024953239908
+  }
+}

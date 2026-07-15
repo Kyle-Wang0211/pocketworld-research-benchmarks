@@ -1,0 +1,81 @@
+{
+  "compile_seconds" : 0.222226375,
+  "decision" : "PASS_A16_STREAMING_SHADER_PARITY",
+  "device_model" : "iPhone15,2",
+  "fixture" : {
+    "candidate_count" : 64,
+    "forbidden_matcher_outputs_consumed" : false,
+    "frame_count" : 10,
+    "hypothesis_count" : 5,
+    "patch_n" : 9,
+    "point_count" : 320,
+    "surface_id" : "wall_1"
+  },
+  "manifest_sha256" : "51bacab75a14f6a7e23f88a3a3276304e25baeeda69aadc358c45afbb4fc5b1a",
+  "metal_device" : "Apple A16 GPU",
+  "os_version" : "26.5",
+  "parity" : {
+    "accepted_exact" : true,
+    "actual_accepted" : [
+      3,
+      4,
+      21,
+      22,
+      46,
+      47,
+      48,
+      49
+    ],
+    "expected_accepted" : [
+      3,
+      4,
+      21,
+      22,
+      46,
+      47,
+      48,
+      49
+    ],
+    "normalized_patch_compared_values" : 184356,
+    "normalized_patch_max_abs" : 0.00017490983009338379,
+    "normalized_patch_mean_abs" : 3.2498434502543713e-06,
+    "valid_mismatch_count" : 0
+  },
+  "runs" : [
+    {
+      "decode_seconds" : 0.67676587499999996,
+      "elapsed_seconds" : 0.70001745800000004,
+      "gpu_dispatch_and_wait_seconds" : 0.020770373999999998,
+      "index" : 0,
+      "kind" : "cold",
+      "rss_after_bytes" : 92241920,
+      "thermal_after" : "nominal"
+    },
+    {
+      "decode_seconds" : 0.395120376,
+      "elapsed_seconds" : 0.40895300000000001,
+      "gpu_dispatch_and_wait_seconds" : 0.012496832000000001,
+      "index" : 1,
+      "kind" : "warm",
+      "rss_after_bytes" : 92684288,
+      "thermal_after" : "nominal"
+    },
+    {
+      "decode_seconds" : 0.34231229000000002,
+      "elapsed_seconds" : 0.35474749999999999,
+      "gpu_dispatch_and_wait_seconds" : 0.011386042999999998,
+      "index" : 2,
+      "kind" : "warm",
+      "rss_after_bytes" : 92684288,
+      "thermal_after" : "nominal"
+    }
+  ],
+  "schema" : "pocketworld_a16_planesweep_streaming_bench_v1",
+  "status" : "complete",
+  "streaming" : {
+    "output_patch_buffer_bytes" : 1036800,
+    "peak_sampled_rss_bytes" : 133136384,
+    "resident_4k_textures_at_once" : 1
+  },
+  "thermal_final" : "nominal"
+}
