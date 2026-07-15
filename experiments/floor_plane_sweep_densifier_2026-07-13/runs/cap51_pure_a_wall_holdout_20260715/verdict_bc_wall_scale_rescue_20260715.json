@@ -1,0 +1,296 @@
+{
+  "date": "2026-07-15",
+  "decision": "PASS_HOST_WALL_GAIN_ZERO_REGRESSION_AND_REPRESENTATIVE_A16_TILE_PARITY",
+  "device": {
+    "cap50": [
+      {
+        "adapter": "Apple A16 GPU",
+        "baseline_exact": true,
+        "best_ms": 20.410833,
+        "candidate_count": 64,
+        "compared_values": 442584,
+        "decision": "PASS_DAWN_A16_WALL_SCALE_RESCUE_PARITY",
+        "device_model": "iPhone15,2",
+        "max_abs": 9.399652481079102e-05,
+        "mean_abs": 8.83252758630777e-07,
+        "path": "experiments/plane_sweep_a16_bench_2026-07-14/runs/iphone15_2_dawn_wall_scale_rescue_final_20260715_154115/device_result.json",
+        "peak_rss_bytes": 94208000,
+        "rescue_exact": true,
+        "sha256": "3700794aa8fa9c0823f7a83334d7f78f94c02fbcbc095d4a249a3f66dc0a988f",
+        "surface_id": "wall_1",
+        "thermal_final": "nominal",
+        "tile_index": 0,
+        "union_exact": true,
+        "valid_mismatch_count": 0
+      }
+    ],
+    "cap51": [
+      {
+        "adapter": "Apple A16 GPU",
+        "baseline_exact": true,
+        "best_ms": 40.729458,
+        "candidate_count": 64,
+        "compared_values": 455625,
+        "decision": "PASS_DAWN_A16_WALL_SCALE_RESCUE_PARITY",
+        "device_model": "iPhone15,2",
+        "max_abs": 0.0004276316612958908,
+        "mean_abs": 2.8745189861355005e-06,
+        "path": "experiments/plane_sweep_a16_bench_2026-07-14/runs/iphone15_2_dawn_cap51_wall2_tile6_20260715_160344/device_result.json",
+        "peak_rss_bytes": 117882880,
+        "rescue_exact": true,
+        "sha256": "8ac702b95f28cbd11e19b78db8027871e453cd5119a99936e0f0d05bf887494c",
+        "surface_id": "wall_2",
+        "thermal_final": "nominal",
+        "tile_index": 6,
+        "union_exact": true,
+        "valid_mismatch_count": 0
+      },
+      {
+        "adapter": "Apple A16 GPU",
+        "baseline_exact": true,
+        "best_ms": 64.146666,
+        "candidate_count": 64,
+        "compared_values": 455625,
+        "decision": "PASS_DAWN_A16_WALL_SCALE_RESCUE_PARITY",
+        "device_model": "iPhone15,2",
+        "max_abs": 0.0004276316612958908,
+        "mean_abs": 2.8745189861355005e-06,
+        "path": "experiments/plane_sweep_a16_bench_2026-07-14/runs/iphone15_2_dawn_cap51_wall2_tile6_rep2_20260715_1604/device_result.json",
+        "peak_rss_bytes": 110067712,
+        "rescue_exact": true,
+        "sha256": "51fefbfb4879a498aafb56a2cc9bbe8843ac2b706192b49e060385975eb40101",
+        "surface_id": "wall_2",
+        "thermal_final": "nominal",
+        "tile_index": 6,
+        "union_exact": true,
+        "valid_mismatch_count": 0
+      }
+    ]
+  },
+  "diagnostics_preserved": [
+    {
+      "run": "cap51 strict static gate v1",
+      "status": "superseded: wall_3 aggregate median regression detected"
+    },
+    {
+      "run": "cap51 nonregression v2",
+      "status": "invalid: baseline-relative threshold was incorrectly coupled into depth competition"
+    },
+    {
+      "run": "cap51 nonregression v3",
+      "status": "valid predecessor without explicit baseline-prefix runtime assertions"
+    }
+  ],
+  "host": {
+    "cap50": {
+      "added": 8,
+      "all_baseline_prefix_hashes_exact": true,
+      "all_nonregression_checks_pass": true,
+      "baseline_accepted": 38,
+      "elapsed_s": 4.502063416992314,
+      "gain_percent": 21.052631578947366,
+      "grid_candidates": 713,
+      "peak_rss_bytes": 489488384,
+      "per_surface": [
+        {
+          "added": 8,
+          "baseline": 38,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 17.822430783378167,
+          "surface_id": "wall_1",
+          "union": 46,
+          "views_median": 5.0,
+          "zncc_median": 0.9046378843203287,
+          "zncc_p10": 0.8607024953239908
+        }
+      ],
+      "photos_used": 115,
+      "stats_path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap50_pure_a_wall_ceiling_20260714/wall1_strict_scale_rescue_nonregression_v10/wall_ceiling_planesweep_main_stats.json",
+      "stats_sha256": "a9b0c54674c25ad4fa750ce521f89e7025a5ee21227c2bc359e36c92fbff24e4",
+      "surface_count": 1,
+      "union_accepted": 46
+    },
+    "cap51_available81": {
+      "added": 7,
+      "all_baseline_prefix_hashes_exact": true,
+      "all_nonregression_checks_pass": true,
+      "baseline_accepted": 111,
+      "capture_registered_frames": 105,
+      "elapsed_s": 33.475531125004636,
+      "gain_percent": 6.3063063063063085,
+      "grid_candidates": 9226,
+      "historically_retained_photos": 81,
+      "peak_rss_bytes": 515915776,
+      "per_surface": [
+        {
+          "added": 0,
+          "baseline": 46,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 23.365446028305918,
+          "surface_id": "wall_0",
+          "union": 46,
+          "views_median": 4.0,
+          "zncc_median": 0.9047186117560262,
+          "zncc_p10": 0.8696819214554433
+        },
+        {
+          "added": 6,
+          "baseline": 14,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 26.356362763113207,
+          "surface_id": "wall_1",
+          "union": 20,
+          "views_median": 6.0,
+          "zncc_median": 0.9352815340014298,
+          "zncc_p10": 0.8550301869622976
+        },
+        {
+          "added": 1,
+          "baseline": 12,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 12.178751929434409,
+          "surface_id": "wall_2",
+          "union": 13,
+          "views_median": 4.0,
+          "zncc_median": 0.8816993202968395,
+          "zncc_p10": 0.846631596526326
+        },
+        {
+          "added": 0,
+          "baseline": 9,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 24.738590775587536,
+          "surface_id": "wall_3",
+          "union": 9,
+          "views_median": 5.0,
+          "zncc_median": 0.9135608040589627,
+          "zncc_p10": 0.8980678306061104
+        },
+        {
+          "added": 0,
+          "baseline": 7,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 34.125492216820355,
+          "surface_id": "wall_4",
+          "union": 7,
+          "views_median": 4.0,
+          "zncc_median": 0.8916280142850804,
+          "zncc_p10": 0.8652556176295009
+        },
+        {
+          "added": 0,
+          "baseline": 23,
+          "nonregression_checks": {
+            "accepted_not_lower": true,
+            "baseline_point_prefix_exact": true,
+            "coverage_cells_5cm_not_lower": true,
+            "depth_margin_median_not_lower": true,
+            "depth_margin_min_not_lower": true,
+            "parallax_median_not_lower": true,
+            "views_median_not_lower": true,
+            "zncc_median_not_lower": true,
+            "zncc_p10_not_lower": true
+          },
+          "parallax_median_deg": 11.041216078555163,
+          "surface_id": "wall_5",
+          "union": 23,
+          "views_median": 4.0,
+          "zncc_median": 0.8986774385024423,
+          "zncc_p10": 0.8533539782034902
+        }
+      ],
+      "photo_manifest_path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap51_pure_a_wall_holdout_20260715/photos_available81_manifest.json",
+      "photo_manifest_sha256": "6d92b1a8b716ea66f9521131b854dd79f0ca6a5edb0191caf97c1acb214d01e0",
+      "photo_payload_bytes": 185839460,
+      "photos_used": 81,
+      "stats_path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap51_pure_a_wall_holdout_20260715/all_certified_walls_strict_scale_rescue_nonregression_v4/wall_ceiling_planesweep_main_stats.json",
+      "stats_sha256": "b757d97dd3d4b46177e0ecf95f4c800510a35bb2ec93a9249d5c4c6f50263175",
+      "surface_count": 6,
+      "union_accepted": 118
+    },
+    "cap56": {
+      "ceiling_count": 0,
+      "evaluable_for_wall": false,
+      "planes_path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap56_pure_a_wall_holdout_20260715/structural_planes.json",
+      "planes_sha256": "98b836e7edaf14e20f5ade423772927d6b6a82d02a822cc0d727dd3dae848e22",
+      "wall_count": 0
+    }
+  },
+  "inputs_and_constraints": {
+    "cross_platform_kernel": "shared WGSL through Dawn; Metal Apple, Vulkan Android/HarmonyOS",
+    "known_or_sparse_fitted_planes_only": true,
+    "learned_model_consumed": false,
+    "lidar_or_scene_depth_consumed": false,
+    "third_party_matcher_output_consumed": false
+  },
+  "schema": "pocketworld_pure_a_wall_scale_rescue_bc_verdict_v1",
+  "scope_correction": {
+    "cap50_device_scope": "representative 64-candidate tile only",
+    "cap50_host_scope": "full certified wall_1, 713 candidates, 115 photos",
+    "cap51_device_scope": "representative 64-candidate wall_2 tile6 only",
+    "cap51_host_scope": "all six certified walls over all 81 extant photos; capture ledger remains 105 frames",
+    "cap56_wall_scope": "not evaluable; no wall passed frozen 0.60m support-span gate",
+    "full_cap50_and_cap56_true_device": false,
+    "prohibited_claim": "Do not call this cap50+cap56 full-capture BxC device validation."
+  }
+}

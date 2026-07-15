@@ -11,9 +11,9 @@
 > reads a LoFTR-derived rescue PLY for coverage statistics. The 2026-07-15 clean rerun
 > below removes that dependency and consumes only first-party images, poses, intrinsics,
 > the product sparse cloud, and the known floor plane. It is clean with respect to learned
-> matcher lineage. The floor tiled implementation has passed A16 device parity; the new
-> strict wall scale-rescue arm remains a host result until its Dawn/WGSL device parity and
-> product integration acceptance tests pass.
+> matcher lineage. The floor tiled implementation and two representative strict-wall tiles
+> have passed A16 Dawn/WGSL parity. This is shader/kernel evidence, not a claim that every
+> candidate from cap50 or cap51 ran on-device; product integration remains outstanding.
 
 ## Clean pure-A result (cap50, 2026-07-15)
 
@@ -47,7 +47,7 @@ strict set and remains far above the frozen 5-degree gate.
 The exact command, hashes, rejection counts, memory peak, and comparison are stored in
 `runs/cap50_pure_a_wall_ceiling_20260714/verdict_pure_a_floor_owner_rescue48_20260715.json`.
 
-## Clean pure-A wall result (cap50, 2026-07-15)
+## Clean pure-A wall result (cap50 + cap51 holdout, 2026-07-15)
 
 Walls use a tile-shared geometry-only view set, while the floor keeps its per-point view
 selection. This preserves the frozen wall baseline byte-for-byte and avoids undoing the
@@ -58,6 +58,9 @@ A second physical patch scale is allowed to append a point only after the baseli
 The rescue is strictly stronger than the baseline: 5 views, at least 18 degrees parallax,
 median clique ZNCC at least 0.90, and at least 0.06 ZNCC advantage over accepted parallel
 planes at -10/-5/+5/+10 cm. Every pair in the clique still independently passes ZNCC 0.80.
+The final birth gate also requires the rescue point to meet or exceed that wall's baseline
+median view count, parallax, and ZNCC. This relative gate is applied only after frozen depth
+competition; applying it inside the sweep would incorrectly hide competing parallel depths.
 
 | metric | frozen wall baseline | **strict scale rescue union** |
 |---|---:|---:|
@@ -71,15 +74,29 @@ planes at -10/-5/+5/+10 cm. Every pair in the clique still independently passes 
 | Serialized max wall-plane residual | — | **4.83e-8 m** |
 | LoFTR / LiDAR / sceneDepth consumed | no | **no** |
 
-Host runtime is 4.30 seconds and peak RSS is 489 MB. This is a zero-quality-regression
-host milestone, not yet a production verdict: the strict rescue still needs full true-device
-backend parity and a second capture holdout. The existing A16 wall tile proves the frozen
-single-scale kernel, not this new rescue arm. Ceiling remains correctly empty under the
-strict gates and is explicitly non-blocking for release; walls remain required.
+The final cap50 host rerun took 4.50 seconds with 489 MB peak RSS. Runtime assertions prove
+that all 38 baseline point coordinates remain the exact prefix of the union and that accepted
+count, coverage, view median, parallax median, ZNCC median/P10, and depth-margin min/median do
+not decrease.
 
-Evidence is in
-`runs/cap50_pure_a_wall_ceiling_20260714/wall1_strict_scale_rescue_v8/` and
-`runs/cap50_pure_a_wall_ceiling_20260714/verdict_strict_scale_rescue_v8.json`.
+The independent cap51 holdout uses all 81 JPEGs still present from its 105-frame registered
+ledger. Six certified walls contribute 9,226 candidates: baseline 111, strict union 118
+(+6.31%). All six walls pass the same nine runtime non-regression assertions; wall_1 adds six
+points, wall_2 adds one, and the other walls abstain. The historical 24-photo gap is an old
+retention defect, so this must be described as all *available* cap51 photos, not 105 images.
+cap56 is not a wall holdout: its floor-focused capture has no wall with the frozen 0.60 m
+horizontal and vertical support spans, so it is recorded as not evaluable rather than pass/fail.
+
+The shared WGSL kernel through Dawn has representative A16 parity on both captures. cap50
+wall_1/tile0 and cap51 wall_2/tile6 both reproduce host baseline/rescue/union exactly. cap51
+passed twice with 455,625 normalized patch values, zero validity mismatches, mean absolute
+error 2.87e-6, maximum error 4.28e-4, nominal thermals, and 118 MB peak sampled RSS. These are
+64-candidate tile tests, not full-capture device executions. Ceiling remains non-blocking;
+walls remain required.
+
+Evidence is in `runs/cap50_pure_a_wall_ceiling_20260714/wall1_strict_scale_rescue_nonregression_v10/`,
+`runs/cap51_pure_a_wall_holdout_20260715/`, and
+`../plane_sweep_a16_bench_2026-07-14/runs/iphone15_2_dawn_cap51_wall2_tile6_*`.
 
 ## Problem
 cap50's floor is weakly textured → production SIFT leaves holes + a "ghost layer"

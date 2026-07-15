@@ -284,6 +284,8 @@ def main() -> None:
         frame_rows.append(
             {
                 "frame_id": frame.frame_id,
+                "source_photo": frame.image_path.name,
+                "source_photo_sha256": sha256(frame.image_path),
                 "resource": resource_name,
                 "resource_sha256": sha256(resource_path),
                 "resource_bytes": resource_path.stat().st_size,

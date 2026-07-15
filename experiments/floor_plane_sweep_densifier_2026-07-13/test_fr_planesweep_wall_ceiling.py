@@ -23,6 +23,18 @@ FIT_SPEC.loader.exec_module(FIT_MODULE)
 
 
 class PlaneSweepCoreTest(unittest.TestCase):
+    def test_missing_ceiling_does_not_block_wall_height_domain(self):
+        height = np.linspace(0.0, 2.0, 1000)
+        limit = FIT_MODULE.wall_height_limit(height, ceiling=None)
+        supported = height[height >= 0.15]
+        self.assertAlmostEqual(limit - 0.10, np.percentile(supported, 99.5))
+        self.assertEqual(
+            FIT_MODULE.wall_height_limit(
+                height, {"height_above_floor_m": 2.7}
+            ),
+            2.7,
+        )
+
     def test_scale_rescue_is_wall_only(self):
         self.assertTrue(MODULE.scale_rescue_applies({"kind": "wall"}, 0.06))
         self.assertFalse(MODULE.scale_rescue_applies({"kind": "floor"}, 0.06))
@@ -244,6 +256,27 @@ class PlaneSweepCoreTest(unittest.TestCase):
         )
         mask = MODULE.scale_rescue_quality_mask(metadata, 5, 18.0, 0.90)
         self.assertEqual(mask.tolist(), [True, False, False, False])
+
+    def test_scale_rescue_thresholds_cannot_lower_baseline_medians(self):
+        baseline = np.array(
+            [
+                [5.0, 24.0, 0.91, 6.0],
+                [6.0, 25.0, 0.92, 6.0],
+                [5.0, 26.0, 0.93, 6.0],
+            ]
+        )
+        views, parallax, ncc = MODULE.scale_rescue_nonregression_thresholds(
+            baseline, 5, 18.0, 0.90
+        )
+        self.assertEqual(views, 5)
+        self.assertEqual(parallax, 25.0)
+        self.assertEqual(ncc, 0.92)
+
+        empty = np.empty((0, 4))
+        self.assertEqual(
+            MODULE.scale_rescue_nonregression_thresholds(empty, 5, 18.0, 0.90),
+            (5, 18.0, 0.90),
+        )
 
     def test_rescue_gate_requires_all_baseline_medians(self):
         evidence = {"views": 4, "ncc": 0.85, "parallax": 10.0}

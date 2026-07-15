@@ -70,6 +70,10 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def ndarray_sha256(values: np.ndarray) -> str:
+    return hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest()
+
+
 def load_frames(meta_path: Path, ledger_path: Path, photo_dir: Path) -> list[Frame]:
     meta = json.loads(meta_path.read_text())
     ledger_by_name = {}
@@ -252,6 +256,24 @@ def scale_rescue_quality_mask(
         (metadata[:, 0] >= minimum_views)
         & (metadata[:, 1] >= minimum_parallax_deg)
         & (metadata[:, 2] >= minimum_ncc)
+    )
+
+
+def scale_rescue_nonregression_thresholds(
+    baseline_metadata: np.ndarray,
+    minimum_views: int,
+    minimum_parallax_deg: float,
+    minimum_ncc: float,
+) -> tuple[int, float, float]:
+    """Keep rescue births at or above both frozen and baseline median quality."""
+    if baseline_metadata.ndim != 2 or baseline_metadata.shape[1] < 3:
+        raise ValueError("baseline metadata must contain views, parallax, and NCC")
+    if len(baseline_metadata) == 0:
+        return minimum_views, minimum_parallax_deg, minimum_ncc
+    return (
+        max(minimum_views, math.ceil(float(np.median(baseline_metadata[:, 0])))),
+        max(minimum_parallax_deg, float(np.median(baseline_metadata[:, 1]))),
+        max(minimum_ncc, float(np.median(baseline_metadata[:, 2]))),
     )
 
 
@@ -775,20 +797,29 @@ def main() -> None:
                 raise ValueError("scale-rescue patch radius must be positive")
             if args.scale_rescue_patch_radius_m == config.patch_radius_m:
                 raise ValueError("scale-rescue patch radius must differ from baseline")
-            rescue_min_views = (
+            baseline_metadata = metadata
+            frozen_rescue_min_views = (
                 args.scale_rescue_min_views
                 if args.scale_rescue_min_views is not None
                 else config.min_views
             )
-            rescue_min_parallax = (
+            frozen_rescue_min_parallax = (
                 args.scale_rescue_min_parallax_deg
                 if args.scale_rescue_min_parallax_deg is not None
                 else config.min_parallax_deg
             )
-            rescue_min_ncc = (
+            frozen_rescue_min_ncc = (
                 args.scale_rescue_min_ncc
                 if args.scale_rescue_min_ncc is not None
                 else config.ncc_min
+            )
+            rescue_min_views, rescue_min_parallax, rescue_min_ncc = (
+                scale_rescue_nonregression_thresholds(
+                    metadata,
+                    frozen_rescue_min_views,
+                    frozen_rescue_min_parallax,
+                    frozen_rescue_min_ncc,
+                )
             )
             rescue_depth_margin = (
                 args.scale_rescue_depth_ncc_margin
@@ -798,8 +829,12 @@ def main() -> None:
             rescue_config = replace(
                 config,
                 patch_radius_m=args.scale_rescue_patch_radius_m,
-                min_views=rescue_min_views,
-                min_parallax_deg=rescue_min_parallax,
+                # Keep the frozen sweep/depth-competition population fixed.
+                # Baseline-relative non-regression is a final birth gate only;
+                # applying it here could suppress parallel-plane competitors
+                # and accidentally create extra winners.
+                min_views=frozen_rescue_min_views,
+                min_parallax_deg=frozen_rescue_min_parallax,
                 depth_ncc_margin=rescue_depth_margin,
             )
             rescue_xyz, rescue_rgb, rescue_metadata, rescue_metrics = sweep_surface(
@@ -819,6 +854,8 @@ def main() -> None:
             rescue_rgb = rescue_rgb[quality_mask]
             rescue_metadata = rescue_metadata[quality_mask]
             baseline_metrics = metrics
+            baseline_xyz = xyz.copy()
+            baseline_xyz_sha256 = ndarray_sha256(baseline_xyz)
             xyz, rgb, metadata, added = merge_scale_rescue_results(
                 xyz,
                 rgb,
@@ -888,12 +925,59 @@ def main() -> None:
                             "min_parallax_deg": rescue_min_parallax,
                             "min_ncc": rescue_min_ncc,
                             "depth_ncc_margin": rescue_depth_margin,
+                            "frozen_min_views": frozen_rescue_min_views,
+                            "frozen_min_parallax_deg": frozen_rescue_min_parallax,
+                            "frozen_min_ncc": frozen_rescue_min_ncc,
+                            "baseline_median_views": float(np.median(baseline_metadata[:, 0]))
+                            if len(baseline_metadata)
+                            else None,
+                            "baseline_median_parallax_deg": float(
+                                np.median(baseline_metadata[:, 1])
+                            )
+                            if len(baseline_metadata)
+                            else None,
+                            "baseline_median_ncc": float(np.median(baseline_metadata[:, 2]))
+                            if len(baseline_metadata)
+                            else None,
                         },
                         "baseline_metrics": baseline_metrics,
                         "rescue_metrics": rescue_metrics,
                     },
                 }
             )
+            baseline_prefix_sha256 = ndarray_sha256(xyz[: len(baseline_xyz)])
+
+            def metric_not_lower(name: str) -> bool:
+                baseline_value = baseline_metrics.get(name)
+                merged_value = metrics.get(name)
+                return baseline_value is None or (
+                    merged_value is not None and merged_value >= baseline_value - 1e-12
+                )
+
+            nonregression_checks = {
+                "baseline_point_prefix_exact": baseline_prefix_sha256
+                == baseline_xyz_sha256,
+                "accepted_not_lower": metric_not_lower("accepted"),
+                "coverage_cells_5cm_not_lower": metric_not_lower("coverage_cells_5cm"),
+                "views_median_not_lower": metric_not_lower("views_median"),
+                "parallax_median_not_lower": metric_not_lower("parallax_median_deg"),
+                "zncc_median_not_lower": metric_not_lower("zncc_median"),
+                "zncc_p10_not_lower": metric_not_lower("zncc_p10"),
+                "depth_margin_min_not_lower": metric_not_lower(
+                    "depth_ncc_margin_observed_min"
+                ),
+                "depth_margin_median_not_lower": metric_not_lower(
+                    "depth_ncc_margin_observed_median"
+                ),
+            }
+            if not all(nonregression_checks.values()):
+                failed = [name for name, passed in nonregression_checks.items() if not passed]
+                raise RuntimeError(
+                    f"scale-rescue quality regression for {surface['surface_id']}: {failed}"
+                )
+            metrics["scale_rescue"]["baseline_xyz_sha256"] = baseline_xyz_sha256
+            metrics["scale_rescue"]["baseline_prefix_sha256"] = baseline_prefix_sha256
+            metrics["scale_rescue"]["nonregression_checks"] = nonregression_checks
         all_xyz.append(xyz)
         all_rgb.append(rgb)
         all_meta.append(metadata)

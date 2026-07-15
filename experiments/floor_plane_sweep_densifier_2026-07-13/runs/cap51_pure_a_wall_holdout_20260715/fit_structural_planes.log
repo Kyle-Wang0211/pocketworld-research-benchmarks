@@ -1,0 +1,557 @@
+{
+  "algorithm": "known floor domain + deterministic sparse-cloud histogram ceiling + optional histogram ceiling + vertical Hough walls",
+  "ceiling_fit": {
+    "reason": null,
+    "release_blocking": false,
+    "status": "fitted"
+  },
+  "counts": {
+    "ceiling": 1,
+    "certified": 7,
+    "floor": 1,
+    "walls": 6
+  },
+  "floor": {
+    "basis_u": [
+      0.9999672820548593,
+      -0.008088851274248288,
+      -7.283461038013187e-05
+    ],
+    "basis_v": [
+      1.3552527156068808e-20,
+      0.009003955624318468,
+      -0.9999594635699566
+    ],
+    "bounds_u_m": [
+      -0.35356842730061466,
+      3.7673633693171737
+    ],
+    "bounds_v_m": [
+      -2.2113481296766375,
+      0.44706244302527354
+    ],
+    "certified_for_generation": true,
+    "coverage_cells_5cm": 1092,
+    "domain_padding_m": 0.05,
+    "kind": "floor",
+    "normal": [
+      0.008089179180694255,
+      0.9999267469510846,
+      0.0090036610333923
+    ],
+    "plane_certification": {
+      "checks": {
+        "finite_positive_domain": true,
+        "minimum_coverage": true,
+        "minimum_support": true
+      },
+      "source": "first-party known floor plane plus product sparse-cloud domain",
+      "support_band_m": 0.02
+    },
+    "plane_value_n_dot_x": -0.8801673033176531,
+    "support_points_20mm": 13575,
+    "surface_id": "floor_0"
+  },
+  "inputs": {
+    "floor_plane": {
+      "path": "experiments/floor_plane_sweep_densifier_2026-07-13/runs/cap51_pure_a_wall_holdout_20260715/floor_plane_product_cloud.json",
+      "sha256": "54c94872c8a5cd33d370d5d94f8654284f56489be5c4c3b96899e000adf0bc65"
+    },
+    "forbidden_matcher_outputs_consumed": false,
+    "sparse_cloud": {
+      "path": "data/pocketworld_captures/cap51/sfm/sfm_sparse.ply",
+      "sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7"
+    }
+  },
+  "schema": "aether_known_structural_planes_v2",
+  "surfaces": [
+    {
+      "basis_u": [
+        0.9999672820548593,
+        -0.008088851274248288,
+        -7.283461038013187e-05
+      ],
+      "basis_v": [
+        1.3552527156068808e-20,
+        0.009003955624318468,
+        -0.9999594635699566
+      ],
+      "bounds_u_m": [
+        0.7463682336533769,
+        3.442188978689805
+      ],
+      "bounds_v_m": [
+        -2.062572898901168,
+        -0.26284114213783205
+      ],
+      "certified_for_generation": false,
+      "coverage_cells_10cm": 69,
+      "fit_band_m": 0.035,
+      "height_above_floor_m": 1.9900733143201443,
+      "kind": "ceiling",
+      "normal": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": false,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.0909090909090908,
+        "domain_points": 38032,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 48,
+            "points_20mm": 626
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 38,
+            "points_20mm": 233
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 21,
+            "points_20mm": 92
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 44,
+            "points_20mm": 213
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 28,
+            "points_20mm": 130
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 2.686695278969957
+      },
+      "plane_value_n_dot_x": 1.1099060110024912,
+      "support_points_35mm": 1061,
+      "surface_id": "ceiling_0"
+    },
+    {
+      "basis_u": [
+        -0.9612302454308853,
+        0.010257329414257482,
+        -0.2755561693415107
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.15592363706783816,
+        1.8627991327311373
+      ],
+      "bounds_u_m": [
+        -3.4201117584486473,
+        -0.47650742326186946
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 409,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        0.2756283375291128,
+        0.0064255680767549735,
+        -0.9612428057602451
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.4652173913043478,
+        "domain_points": 35819,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 337,
+            "points_20mm": 2454
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 230,
+            "points_20mm": 1246
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 31,
+            "points_20mm": 61
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 146,
+            "points_20mm": 1085
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 58,
+            "points_20mm": 359
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 1.9695024077046548
+      },
+      "plane_value_n_dot_x": -1.1122141047816783,
+      "score": 26293.960770488724,
+      "support_points_35mm": 4133,
+      "surface_id": "wall_0",
+      "theta_deg_in_horizontal_basis": 74,
+      "vertical_basis": "floor_normal"
+    },
+    {
+      "basis_u": [
+        -0.9612302454308853,
+        0.010257329414257482,
+        -0.2755561693415107
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.31775620926209264,
+        1.7297540019917614
+      ],
+      "bounds_u_m": [
+        -3.257937101274019,
+        -1.3311157847959196
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 171,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        0.2756283375291128,
+        0.0064255680767549735,
+        -0.9612428057602451
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.6511627906976745,
+        "domain_points": 20617,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 142,
+            "points_20mm": 2768
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 56,
+            "points_20mm": 107
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 2,
+            "points_20mm": 2
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 86,
+            "points_20mm": 254
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 24,
+            "points_20mm": 125
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 10.89763779527559
+      },
+      "plane_value_n_dot_x": 1.184863024281639,
+      "score": 10029.408756252784,
+      "support_points_35mm": 3440,
+      "surface_id": "wall_1",
+      "theta_deg_in_horizontal_basis": 74,
+      "vertical_basis": "floor_normal"
+    },
+    {
+      "basis_u": [
+        -0.8829187046280216,
+        0.011369132879794993,
+        -0.4693882229408166
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.18246848032003082,
+        1.171828621170826
+      ],
+      "bounds_u_m": [
+        -3.1360920542003097,
+        -1.3298647617156256
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 120,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        0.46945620264105453,
+        0.004152535295836599,
+        -0.8829459950939571
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.123456790123457,
+        "domain_points": 23542,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 91,
+            "points_20mm": 2772
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 81,
+            "points_20mm": 1103
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 55,
+            "points_20mm": 480
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 67,
+            "points_20mm": 1589
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 31,
+            "points_20mm": 562
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 1.7444933920704846
+      },
+      "plane_value_n_dot_x": 0.7066604067405544,
+      "score": 8027.452896155792,
+      "support_points_35mm": 4475,
+      "surface_id": "wall_2",
+      "theta_deg_in_horizontal_basis": 62,
+      "vertical_basis": "floor_normal"
+    },
+    {
+      "basis_u": [
+        -0.9612302454308853,
+        0.005293676373896002,
+        0.2756961955837046
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.17639270287659062,
+        1.8294653618107257
+      ],
+      "bounds_u_m": [
+        -3.1883416637262463,
+        0.41407278780140366
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 152,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        -0.2756283375291127,
+        0.010884747230416499,
+        -0.9612026538814109
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.202020202020202,
+        "domain_points": 36984,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 119,
+            "points_20mm": 1542
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 96,
+            "points_20mm": 1285
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 84,
+            "points_20mm": 976
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 99,
+            "points_20mm": 1014
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 82,
+            "points_20mm": 1017
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 1.2
+      },
+      "plane_value_n_dot_x": -1.4864793440981883,
+      "score": 7780.262206378394,
+      "support_points_35mm": 2620,
+      "surface_id": "wall_3",
+      "theta_deg_in_horizontal_basis": 106,
+      "vertical_basis": "floor_normal"
+    },
+    {
+      "basis_u": [
+        -0.7660193797189127,
+        0.011984050683333105,
+        -0.6427057588230181
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.19798715001016076,
+        1.661911557931167
+      ],
+      "bounds_u_m": [
+        -3.1013945456159213,
+        -1.1249567684390844
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 155,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        0.6427665789967885,
+        0.0016980167964150555,
+        -0.766060207597108
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.0673076923076923,
+        "domain_points": 28452,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 111,
+            "points_20mm": 1434
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 98,
+            "points_20mm": 769
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 76,
+            "points_20mm": 424
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 104,
+            "points_20mm": 1059
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 90,
+            "points_20mm": 809
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 1.3541076487252124
+      },
+      "plane_value_n_dot_x": 1.8452680657687757,
+      "score": 7709.59467157645,
+      "support_points_35mm": 2474,
+      "surface_id": "wall_4",
+      "theta_deg_in_horizontal_basis": 50,
+      "vertical_basis": "floor_normal"
+    },
+    {
+      "basis_u": [
+        -0.17364249625537959,
+        -0.007462551023414661,
+        0.9847804800189854
+      ],
+      "basis_v": [
+        0.008089179180694255,
+        0.9999267469510846,
+        0.0090036610333923
+      ],
+      "bounds_height_m": [
+        0.17049535504380398,
+        1.7405466864268497
+      ],
+      "bounds_u_m": [
+        -0.8362209600505073,
+        1.5470458474806046
+      ],
+      "certified_for_generation": true,
+      "coverage_cells_10cm": 154,
+      "fit_band_m": 0.035,
+      "kind": "wall",
+      "normal": [
+        -0.9847755321261709,
+        0.009529483933799203,
+        -0.17356941050073413
+      ],
+      "plane_certification": {
+        "checks": {
+          "minimum_coverage": true,
+          "minimum_support": true,
+          "unique_vs_10cm_points": true,
+          "unique_vs_5cm_cells": true,
+          "unique_vs_5cm_points": true
+        },
+        "coverage_prominence_vs_5cm": 1.0521739130434782,
+        "domain_points": 33375,
+        "offset_support": {
+          "+0.00": {
+            "coverage_cells_10cm": 121,
+            "points_20mm": 1222
+          },
+          "+0.05": {
+            "coverage_cells_10cm": 115,
+            "points_20mm": 886
+          },
+          "+0.10": {
+            "coverage_cells_10cm": 98,
+            "points_20mm": 846
+          },
+          "-0.05": {
+            "coverage_cells_10cm": 108,
+            "points_20mm": 822
+          },
+          "-0.10": {
+            "coverage_cells_10cm": 75,
+            "points_20mm": 213
+          }
+        },
+        "source": "first-party sparse cloud only",
+        "support_prominence_vs_5cm": 1.3792325056433408
+      },
+      "plane_value_n_dot_x": -3.282136152884521,
+      "score": 7075.625484718647,
+      "support_points_35mm": 2111,
+      "surface_id": "wall_5",
+      "theta_deg_in_horizontal_basis": 170,
+      "vertical_basis": "floor_normal"
+    }
+  ]
+}

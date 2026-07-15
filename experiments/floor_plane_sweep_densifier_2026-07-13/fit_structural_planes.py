@@ -284,6 +284,18 @@ def wall_candidates(
     return walls
 
 
+def wall_height_limit(height: np.ndarray, ceiling: dict | None) -> float:
+    """Keep wall fitting available when a capture has no observable ceiling."""
+    if ceiling is not None:
+        return float(ceiling["height_above_floor_m"])
+    supported = height[np.isfinite(height) & (height >= 0.15)]
+    if len(supported) < 100:
+        raise ValueError("insufficient above-floor sparse support for wall fitting")
+    # wall_candidates subtracts 10 cm from this limit. Adding it here makes
+    # the effective cap the robust 99.5th percentile of observed support.
+    return float(np.percentile(supported, 99.5) + 0.10)
+
+
 def certify_surface(
     surface: dict,
     xyz: np.ndarray,
@@ -362,27 +374,33 @@ def main() -> None:
     height = projection - floor_value
     axis_u, axis_v = horizontal_basis(up)
 
-    ceiling, _ = fit_ceiling(xyz, height, axis_u, axis_v, floor_value, up)
+    ceiling = None
+    ceiling_fit_error = None
+    try:
+        ceiling, _ = fit_ceiling(xyz, height, axis_u, axis_v, floor_value, up)
+    except ValueError as error:
+        ceiling_fit_error = str(error)
     walls = wall_candidates(
         xyz,
         height,
         axis_u,
         axis_v,
-        ceiling["height_above_floor_m"],
+        wall_height_limit(height, ceiling),
         args.max_walls,
     )
     for wall in walls:
         wall["basis_v"] = up.tolist()
 
     floor = build_floor_surface(xyz, up, floor_value, axis_u, axis_v)
-    for surface in [ceiling, *walls]:
+    structural_surfaces = ([ceiling] if ceiling is not None else []) + walls
+    for surface in structural_surfaces:
         certify_surface(surface, xyz, height, floor)
 
     output = {
         "schema": "aether_known_structural_planes_v2",
         "algorithm": (
             "known floor domain + deterministic sparse-cloud histogram ceiling "
-            "+ vertical Hough walls"
+            "+ optional histogram ceiling + vertical Hough walls"
         ),
         "inputs": {
             "sparse_cloud": {"path": str(args.cloud), "sha256": sha256(args.cloud)},
@@ -390,13 +408,18 @@ def main() -> None:
             "forbidden_matcher_outputs_consumed": False,
         },
         "floor": floor,
-        "surfaces": [ceiling, *walls],
+        "surfaces": structural_surfaces,
+        "ceiling_fit": {
+            "release_blocking": False,
+            "status": "fitted" if ceiling is not None else "not_observed",
+            "reason": ceiling_fit_error,
+        },
         "counts": {
             "floor": 1,
-            "ceiling": 1,
+            "ceiling": int(ceiling is not None),
             "walls": len(walls),
             "certified": sum(
-                surface["certified_for_generation"] for surface in [floor, ceiling, *walls]
+                surface["certified_for_generation"] for surface in [floor, *structural_surfaces]
             ),
         },
     }

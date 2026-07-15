@@ -99,5 +99,30 @@ An immediately preceding independent device launch is retained in
 - Final thermal state: nominal
 
 This closes A16 backend parity for the strict wall rescue without changing any frozen
-baseline birth. B still requires a second-capture wall holdout and product integration;
-ceiling remains explicitly non-blocking.
+baseline birth on the representative cap50 tile.
+
+The second-capture holdout is cap51, not cap56. cap51 has six certified walls over all 81
+JPEGs still present from its 105-frame ledger; the host union grows 111 -> 118 with all
+runtime non-regression checks passing. cap56 contains no wall meeting the frozen structural
+support spans and is therefore not wall-evaluable.
+
+For an independent A16 fixture, cap51 `wall_2` tile 6 contains 64 candidates with host
+baseline `[]` and strict rescue/union `[16]`. Generate it with:
+
+```sh
+POCKETWORLD_CAP51_PHOTOS=/tmp/pocketworld_cap51_photos_20260715 \
+  /opt/homebrew/bin/python3.11 \
+  experiments/plane_sweep_a16_bench_2026-07-14/generate_cap51_wall_scale_rescue_fixture.py
+```
+
+Two detached device launches are retained in
+`runs/iphone15_2_dawn_cap51_wall2_tile6_20260715_160344/` and
+`runs/iphone15_2_dawn_cap51_wall2_tile6_rep2_20260715_1604/`. Both report exact
+baseline/rescue/union parity and zero validity mismatches over 455,625 normalized patch
+values. Mean / maximum absolute error is 2.87e-6 / 4.28e-4; best-of-three wall time is
+40.73 ms and 64.15 ms, peak sampled RSS is 117.9 MB and 110.1 MB, and thermals remain
+nominal. The source JPEG hash for every cropped resource is pinned in the fixture manifest.
+
+These cap50 and cap51 device runs are representative 64-candidate kernel-parity tiles, not
+full-capture device executions. B's second-capture host holdout and C's two-capture A16 tile
+parity are complete; shared product integration remains open. Ceiling remains non-blocking.
