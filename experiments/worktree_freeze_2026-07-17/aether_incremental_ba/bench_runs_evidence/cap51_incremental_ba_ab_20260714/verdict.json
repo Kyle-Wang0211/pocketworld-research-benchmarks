@@ -1,0 +1,95 @@
+{
+  "decision": "REJECT_ON_KEEP_PRODUCTION_DEFAULT_OFF",
+  "deviations": [
+    "Replay reused all 858 stored raw match pairs; COLMAP API exposed 579 two-view geometries, 570 nonempty.",
+    "Both arms used the same finalize path and each attempted 3 time-budgeted CPU re-match pairs for starved frames.",
+    "wall_ceiling_coverage_proxy is a 5 cm robust-plane occupancy diagnostic, not the B known-plane plane-sweep metric."
+  ],
+  "gates": [
+    {
+      "id": "registered_frames",
+      "off": 105,
+      "on": 105,
+      "pass": true,
+      "rule": "ON == 105"
+    },
+    {
+      "id": "reprojection",
+      "off": 0.826,
+      "on": 0.8292,
+      "pass": true,
+      "ratio": 1.0038740920096854,
+      "rule": "ON/OFF <= 1.03"
+    },
+    {
+      "id": "sparse_points",
+      "off": 65658,
+      "on": 65822,
+      "pass": true,
+      "ratio": 1.0024977915867068,
+      "rule": "ON/OFF >= 0.97"
+    },
+    {
+      "id": "floor_thickness_arkit_gravity",
+      "off": 6.7543832147198835,
+      "on": 46.858355628332085,
+      "pass": false,
+      "ratio": 6.937473658025988,
+      "rule": "ON/OFF <= 1.03"
+    },
+    {
+      "id": "ghost_layers",
+      "off": 874,
+      "on": 610,
+      "pass": true,
+      "ratio": 0.6979405034324943,
+      "rule": "ON/OFF <= 1.03"
+    },
+    {
+      "diagnostic_proxy": true,
+      "id": "wall_ceiling_coverage_proxy",
+      "off": 1133,
+      "on": 1212,
+      "pass": true,
+      "ratio": 1.0697263901147396,
+      "rule": "ON/OFF >= 0.97"
+    },
+    {
+      "id": "track3plus",
+      "off": 19097,
+      "on": 19062,
+      "pass": true,
+      "ratio": 0.9981672514007436,
+      "rule": "ON/OFF >= 0.97"
+    },
+    {
+      "id": "peak_memory",
+      "off": 860553216,
+      "on": 817954816,
+      "pass": true,
+      "ratio": 0.9504988195872364,
+      "rule": "ON/OFF <= 1.03"
+    },
+    {
+      "id": "runtime",
+      "off": 52295.6,
+      "on": 53828.9,
+      "pass": true,
+      "ratio": 1.0293198662985032,
+      "rule": "ON/OFF <= 1.03"
+    }
+  ],
+  "important_cross_check": {
+    "interpretation": "ON can look locally compact after refitting its own plane while violating device-gravity geometry; product decision uses ARKit gravity.",
+    "local_refit_non_ghost_floor_spread_off_mm": 7.815940786545156,
+    "local_refit_non_ghost_floor_spread_on_mm": 8.141300007716957
+  },
+  "reason": "ARKit-gravity floor thickness regressed from 6.754 mm to 46.858 mm despite other metrics remaining near parity or improving.",
+  "schema": "aether_cap51_incremental_global_ba_ab_verdict_v1",
+  "summary": {
+    "failed": 1,
+    "passed": 8,
+    "total": 9
+  },
+  "threshold_policy": "historical 3% non-inferiority diagnostic; registered-frames hard equality"
+}
