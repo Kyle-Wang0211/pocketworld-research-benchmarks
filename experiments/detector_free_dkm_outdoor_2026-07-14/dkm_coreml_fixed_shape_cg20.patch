@@ -1,0 +1,176 @@
+diff --git a/dkm/models/dkm.py b/dkm/models/dkm.py
+index 2a7b069..b4f009f 100644
+--- a/dkm/models/dkm.py
++++ b/dkm/models/dkm.py
+@@ -90,10 +90,12 @@ class ConvRefiner(nn.Module):
+         with torch.no_grad():
+             x_hat = F.grid_sample(y, flow.permute(0, 2, 3, 1), align_corners=False)
+         if self.has_displacement_emb:
++            inv_hs = 1.0 / float(hs)
++            inv_ws = 1.0 / float(ws)
+             query_coords = torch.meshgrid(
+             (
+-                torch.linspace(-1 + 1 / hs, 1 - 1 / hs, hs, device=device),
+-                torch.linspace(-1 + 1 / ws, 1 - 1 / ws, ws, device=device),
++                torch.linspace(-1.0 + inv_hs, 1.0 - inv_hs, hs, device=device),
++                torch.linspace(-1.0 + inv_ws, 1.0 - inv_ws, ws, device=device),
+             )
+             )
+             query_coords = torch.stack((query_coords[1], query_coords[0]))
+@@ -311,7 +313,30 @@ class GP(nn.Module):
+         return local_cov
+ 
+     def reshape(self, x):
+-        return rearrange(x, "b d h w -> b (h w) d")
++        return x.flatten(2).transpose(1, 2)
++
++    @staticmethod
++    def fixed_cg_solve(matrix, rhs, iterations=20, eps=1e-8):
++        """Fixed-iteration SPD solve using CoreML-lowerable tensor ops."""
++        solution = torch.zeros_like(rhs)
++        residual = rhs
++        direction = residual
++        residual_sq = torch.sum(residual * residual, dim=1, keepdim=True)
++        for _ in range(iterations):
++            matrix_direction = matrix.matmul(direction)
++            denominator = torch.sum(
++                direction * matrix_direction, dim=1, keepdim=True
++            ).clamp_min(eps)
++            alpha = residual_sq / denominator
++            solution = solution + alpha * direction
++            residual = residual - alpha * matrix_direction
++            next_residual_sq = torch.sum(
++                residual * residual, dim=1, keepdim=True
++            )
++            beta = next_residual_sq / residual_sq.clamp_min(eps)
++            direction = residual + beta * direction
++            residual_sq = next_residual_sq
++        return solution
+ 
+     def project_to_basis(self, x):
+         if self.basis == "fourier":
+@@ -325,17 +350,19 @@ class GP(nn.Module):
+ 
+     def get_pos_enc(self, y):
+         b, c, h, w = y.shape
++        inv_h = 1.0 / float(h)
++        inv_w = 1.0 / float(w)
+         coarse_coords = torch.meshgrid(
+             (
+-                torch.linspace(-1 + 1 / h, 1 - 1 / h, h, device=y.device),
+-                torch.linspace(-1 + 1 / w, 1 - 1 / w, w, device=y.device),
++                torch.linspace(-1.0 + inv_h, 1.0 - inv_h, h, device=y.device),
++                torch.linspace(-1.0 + inv_w, 1.0 - inv_w, w, device=y.device),
+             )
+         )
+ 
+         coarse_coords = torch.stack((coarse_coords[1], coarse_coords[0]), dim=-1)[
+             None
+         ].expand(b, h, w, 2)
+-        coarse_coords = rearrange(coarse_coords, "b h w d -> b d h w")
++        coarse_coords = coarse_coords.permute(0, 3, 1, 2)
+         coarse_embedded_coords = self.project_to_basis(coarse_coords)
+         return coarse_embedded_coords
+ 
+@@ -352,20 +379,15 @@ class GP(nn.Module):
+         K_yy = self.K(y, y)
+         K_xy = self.K(x, y)
+         K_yx = K_xy.permute(0, 2, 1)
+-        sigma_noise = self.sigma_noise * torch.eye(h2 * w2, device=x.device)[None, :, :]
+-        # Due to https://github.com/pytorch/pytorch/issues/16963 annoying warnings, remove batch if N large
+-        if len(K_yy[0]) > 2000:
+-            K_yy_inv = torch.cat([torch.linalg.inv(K_yy[k:k+1] + sigma_noise[k:k+1]) for k in range(b)])
+-        else:
+-            K_yy_inv = torch.linalg.inv(K_yy + sigma_noise)
+-
+-        mu_x = K_xy.matmul(K_yy_inv.matmul(f))
+-        mu_x = rearrange(mu_x, "b (h w) d -> b d h w", h=h1, w=w1)
++        sigma_noise = self.sigma_noise * torch.eye(K_yy.shape[-1], device=x.device)[None, :, :]
++        solved_features = self.fixed_cg_solve(K_yy + sigma_noise, f)
++        mu_x = K_xy.matmul(solved_features)
++        mu_x = mu_x.transpose(1, 2).reshape(b, -1, h1, w1)
+         if not self.no_cov:
+             cov_x = K_xx - K_xy.matmul(K_yy_inv.matmul(K_yx))
+-            cov_x = rearrange(cov_x, "b (h w) (r c) -> b h w r c", h=h1, w=w1, r=h1, c=w1)
++            cov_x = cov_x.reshape(b, h1, w1, h1, w1)
+             local_cov_x = self.get_local_cov(cov_x)
+-            local_cov_x = rearrange(local_cov_x, "b h w K -> b K h w")
++            local_cov_x = local_cov_x.permute(0, 3, 1, 2)
+             gp_feats = torch.cat((mu_x, local_cov_x), dim=1)
+         else:
+             gp_feats = mu_x
+@@ -440,16 +462,18 @@ class Decoder(nn.Module):
+         return flow, certainty
+ 
+     def get_placeholder_flow(self, b, h, w, device):
++        inv_h = 1.0 / float(h)
++        inv_w = 1.0 / float(w)
+         coarse_coords = torch.meshgrid(
+             (
+-                torch.linspace(-1 + 1 / h, 1 - 1 / h, h, device=device),
+-                torch.linspace(-1 + 1 / w, 1 - 1 / w, w, device=device),
++                torch.linspace(-1.0 + inv_h, 1.0 - inv_h, h, device=device),
++                torch.linspace(-1.0 + inv_w, 1.0 - inv_w, w, device=device),
+             )
+         )
+         coarse_coords = torch.stack((coarse_coords[1], coarse_coords[0]), dim=-1)[
+             None
+         ].expand(b, h, w, 2)
+-        coarse_coords = rearrange(coarse_coords, "b h w d -> b d h w")
++        coarse_coords = coarse_coords.permute(0, 3, 1, 2)
+         return coarse_coords
+ 
+ 
+@@ -723,10 +747,12 @@ class RegressionMatcher(nn.Module):
+                 0, 2, 3, 1
+                 )
+             # Create im1 meshgrid
++            inv_hs = 1.0 / float(hs)
++            inv_ws = 1.0 / float(ws)
+             query_coords = torch.meshgrid(
+                 (
+-                    torch.linspace(-1 + 1 / hs, 1 - 1 / hs, hs, device=device),
+-                    torch.linspace(-1 + 1 / ws, 1 - 1 / ws, ws, device=device),
++                    torch.linspace(-1.0 + inv_hs, 1.0 - inv_hs, hs, device=device),
++                    torch.linspace(-1.0 + inv_ws, 1.0 - inv_ws, ws, device=device),
+                 )
+             )
+             query_coords = torch.stack((query_coords[1], query_coords[0]))
+diff --git a/dkm/utils/local_correlation.py b/dkm/utils/local_correlation.py
+index c0c1c06..7a79024 100644
+--- a/dkm/utils/local_correlation.py
++++ b/dkm/utils/local_correlation.py
+@@ -11,12 +11,14 @@ def local_correlation(
+ ):
+     device = feature0.device
+     b, c, h, w = feature0.size()
++    inv_h = 1.0 / float(h)
++    inv_w = 1.0 / float(w)
+     if flow is None:
+         # If flow is None, assume feature0 and feature1 are aligned
+         coords = torch.meshgrid(
+                 (
+-                    torch.linspace(-1 + 1 / h, 1 - 1 / h, h, device=device),
+-                    torch.linspace(-1 + 1 / w, 1 - 1 / w, w, device=device),
++                    torch.linspace(-1.0 + inv_h, 1.0 - inv_h, h, device=device),
++                    torch.linspace(-1.0 + inv_w, 1.0 - inv_w, w, device=device),
+                 ))
+         coords = torch.stack((coords[1], coords[0]), dim=-1)[
+             None
+@@ -26,13 +28,13 @@ def local_correlation(
+     r = local_radius
+     local_window = torch.meshgrid(
+                 (
+-                    torch.linspace(-2*local_radius/h, 2*local_radius/h, 2*r+1, device=device),
+-                    torch.linspace(-2*local_radius/w, 2*local_radius/w, 2*r+1, device=device),
++                    torch.linspace(-2.0 * local_radius * inv_h, 2.0 * local_radius * inv_h, 2*r+1, device=device),
++                    torch.linspace(-2.0 * local_radius * inv_w, 2.0 * local_radius * inv_w, 2*r+1, device=device),
+                 ))
+     local_window = torch.stack((local_window[1], local_window[0]), dim=-1)[
+             None
+         ].expand(b, 2*r+1, 2*r+1, 2).reshape(b, (2*r+1)**2, 2)
+-    coords = (coords[:,:,:,None]+local_window[:,None,None]).reshape(b,h,w*(2*r+1)**2,2)
++    coords = (coords[:,:,:,None]+local_window[:,None,None]).flatten(2, 3)
+     window_feature = F.grid_sample(
+         feature1, coords, padding_mode=padding_mode, align_corners=False
+     )[...,None].reshape(b,c,h,w,(2*r+1)**2)

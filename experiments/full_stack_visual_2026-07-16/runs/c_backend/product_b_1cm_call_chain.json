@@ -1,0 +1,101 @@
+{
+  "schema": "pw_product_b_1cm_c_call_chain_v1",
+  "created_at": "2026-07-16T22:26:34+08:00",
+  "status": "PASS_STATIC_IDENTITY_AND_EXPORTED_SYMBOLS",
+  "algorithm_role": "pure_a_known_plane_b_floor_and_wall",
+  "call_chain": [
+    {
+      "step": 1,
+      "dart": "BcdStructuralQualityRunner.run",
+      "behavior": "Selects unique floor/wall owners, then converts only selected owner requests to a 1 cm publication grid."
+    },
+    {
+      "step": 2,
+      "dart": "NativeBcdStructuralQualityBackend.sweepMany",
+      "behavior": "Prepares all tiled requests and invokes runStructuralBatchesSharedImages."
+    },
+    {
+      "step": 3,
+      "dart": "BcdFinalizeCoordinator.prepareStructuralBatches",
+      "behavior": "Calls the C candidate ABI and divides floor into at most 128-candidate tiles and walls into at most 64-candidate tiles."
+    },
+    {
+      "step": 4,
+      "dart": "BcdFinalizeCoordinator.runStructuralBatchesSharedImages",
+      "behavior": "Creates native sessions in bounded waves, decodes/uploads each JPEG once per wave, adds all view scales, and finishes with RGB."
+    },
+    {
+      "step": 5,
+      "native": "aether_structural_grid_count -> aether_structural_grid_build -> aether_structural_prepare_views",
+      "behavior": "C++ candidate grid, competing-depth hypotheses, visibility, and deterministic view preparation."
+    },
+    {
+      "step": 6,
+      "native": "aether_planesweep_session_create -> aether_planesweep_image_decode_jpeg -> aether_planesweep_session_add_image_view_scales -> aether_planesweep_session_finish_rgb -> aether_planesweep_session_free",
+      "behavior": "C++ tiled known-plane plane-sweep and accepted-point RGB publication."
+    },
+    {
+      "step": 7,
+      "native": "register_wgsl_source(known_plane_patch_normalize) -> load_shader -> create_compute_pipeline",
+      "behavior": "On the verified macOS host dylib, actual patch normalization executes through Dawn/WGSL."
+    }
+  ],
+  "effective_tile_contract": {
+    "publication_grid_m": 0.01,
+    "floor_max_candidates_per_tile": 128,
+    "wall_max_candidates_per_tile": 64,
+    "shared_wave_max_candidates": 512,
+    "dense_clone_preserves_tile_points": true,
+    "not_24x17": true
+  },
+  "backend": {
+    "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-bcd-release/libaether3d_ffi.dylib",
+    "sha256": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+    "all_symbols_listed_above_exported": true
+  },
+  "sources": {
+    "runner": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_structural_quality_runner.dart",
+      "sha256": "9ce2991869f4d538c08b1d926c5ebc9c7e138e03ff542cf9fb80e3a2e83d9c18",
+      "relevant_lines": [672, 692, 761, 789]
+    },
+    "coordinator": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_finalize_coordinator.dart",
+      "sha256": "c7472d7b6cf8bdb06f1fb3aab655558d4732f2fd449425c6a5f2e4c6c132d78a",
+      "relevant_lines": [1345, 1388, 1391, 1440, 1590, 1626, 1635, 1675, 1813, 1915]
+    },
+    "candidate_ffi": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/structural_candidate_ffi.dart",
+      "sha256": "70acb0b43f9cc8eca4ce0b0577c8666379f7def6412cb0f348302dc7e8789264"
+    },
+    "planesweep_ffi": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/structural_planesweep_ffi.dart",
+      "sha256": "f482049789afd75bdb5b13dc7d5d82a9f2a8fb4f6a4ed23b3e030c465199035a"
+    },
+    "candidate_cpp": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_candidate_c.cpp",
+      "sha256": "b7ecf0d2213b62c50c83c86c4caf3d0bf76106670b9f3b1c5425d6c0fc417413"
+    },
+    "planesweep_cpp": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_c.cpp",
+      "sha256": "d3032fd19cff0380411cdd5d1a9e673750d86f3960da6787b0934bcd82b8706c",
+      "wgsl_registration_lines": [408, 432]
+    },
+    "jpeg_io_cpp": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_io_c.cpp",
+      "sha256": "9b66a5b74d772293751c0eed8b65d540f62a19e2a016a07f296b7eafbf31c6d3"
+    },
+    "wgsl": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/shaders/wgsl/known_plane_patch_normalize.wgsl",
+      "sha256": "b31b347c761ddf4e1676f73ab02add7f41be9b7632dd34b0eda5ed1ef13b3a7a"
+    },
+    "generated_wgsl_header": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/include/aether/shaders/wgsl_sources.h",
+      "sha256": "3dcad5e37f4526731847c82cf3ccb55d4c01689e94efe5d947ddf2531921a45c"
+    }
+  },
+  "runtime_parity_certificate": {
+    "path": "experiments/full_stack_visual_2026-07-16/runs/c_backend/current_dylib_wgsl_parity_certificate.json",
+    "sha256": "27f6728a973d07ccb33f3622079a716d917a7c0b05a10118396fa096afc23c01"
+  }
+}

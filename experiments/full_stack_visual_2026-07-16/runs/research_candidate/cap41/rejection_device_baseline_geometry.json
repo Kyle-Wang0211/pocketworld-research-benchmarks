@@ -1,0 +1,43 @@
+{
+  "schema": "pw_full_stack_device_baseline_rejection_v1",
+  "status": "REJECTED_GEOMETRY_MISMATCH",
+  "capture": "cap41",
+  "device_baseline": {
+    "path": "/tmp/pw_device_exact_evidence_20260716/cap41/sfm_sparse.ply",
+    "point_count": 51000,
+    "sha256": "b1079c9984ca219ff2b97430e9f9a3cac9d3bfd02f7cd9255e42197091ada00b"
+  },
+  "rejected_ghost_raw": {
+    "path": "experiments/full_stack_visual_2026-07-16/runs/d_final/cap41/ghost_owner_full_device_raw_gauge.ply",
+    "point_count": 61567,
+    "sha256": "a8397fd0994b5ed8b5050972cdcc9f109dedbc8e22f29df05416aa7fb101e984"
+  },
+  "metrics": {
+    "candidate_bbox_diagonal_raw": 278.0606284786584,
+    "candidate_to_device": {
+      "median_m": 0.4947021630116158,
+      "p90_m": 1.3655397514052758,
+      "p95_m": 1.4836829648028642,
+      "within_3cm_fraction": 0.050725226176360716
+    },
+    "candidate_to_device_diagonal_ratio": 1.4285614216611298,
+    "device_bbox_diagonal_raw": 194.64380338321735,
+    "device_to_candidate": {
+      "median_m": 0.2407456874052736,
+      "p90_m": 0.7909241561851622,
+      "p95_m": 0.9269913007183262,
+      "within_3cm_fraction": 0.06333333333333334
+    },
+    "raw_units_per_metre": 29.99445520475226
+  },
+  "thresholds": {
+    "bbox_diagonal_ratio": [0.8, 1.25],
+    "minimum_within_3cm_fraction_each_direction": 0.5,
+    "maximum_median_nn_m_each_direction": 0.1,
+    "maximum_p90_nn_m_each_direction": 0.2
+  },
+  "strict_command": "experiments/full_stack_visual_2026-07-16/run_cap41_strict.sh",
+  "strict_exit_code": 2,
+  "strict_log_sha256": "798c3318f5cf1d9c0d559b476c5757aefe928c46a00700fe6fa259804dc52a1d",
+  "reason": "The transform was fitted to a different 51000-point metric baseline and cannot certify the non-rigid host ghost replay as the device baseline geometry."
+}

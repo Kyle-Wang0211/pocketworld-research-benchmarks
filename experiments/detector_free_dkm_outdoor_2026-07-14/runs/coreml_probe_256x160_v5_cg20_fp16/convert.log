@@ -1,0 +1,36 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+Support for converting Torch Script Models is experimental. If possible you should use a traced model for conversion.
+Tuple detected at graph output. This will be flattened in the converted model.
+Converting PyTorch Frontend ==> MIL Ops:   0%|          | 0/2480 [00:00<?, ? ops/s]Converting PyTorch Frontend ==> MIL Ops:  23%|██▎       | 560/2480 [00:00<00:00, 5572.93 ops/s]Converting PyTorch Frontend ==> MIL Ops:  57%|█████▋    | 1409/2480 [00:00<00:00, 7282.91 ops/s]Converting PyTorch Frontend ==> MIL Ops:  86%|████████▌ | 2138/2480 [00:00<00:00, 5317.23 ops/s]Converting PyTorch Frontend ==> MIL Ops: 100%|█████████▉| 2478/2480 [00:00<00:00, 5862.38 ops/s]
+Running MIL frontend_pytorch pipeline:   0%|          | 0/5 [00:00<?, ? passes/s]Running MIL frontend_pytorch pipeline:  80%|████████  | 4/5 [00:00<00:00, 35.90 passes/s]Running MIL frontend_pytorch pipeline: 100%|██████████| 5/5 [00:00<00:00, 36.93 passes/s]
+Running MIL default pipeline:   0%|          | 0/95 [00:00<?, ? passes/s]Running MIL default pipeline:   4%|▍         | 4/95 [00:00<00:02, 35.75 passes/s]Running MIL default pipeline:   9%|▉         | 9/95 [00:00<00:02, 41.61 passes/s]/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3621', of the source model, has been renamed to 'var_3621' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3622', of the source model, has been renamed to 'var_3622' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, 'input8.1', of the source model, has been renamed to 'input8_1' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+Running MIL default pipeline:  15%|█▍        | 14/95 [00:00<00:02, 39.39 passes/s]Running MIL default pipeline:  20%|██        | 19/95 [00:00<00:01, 41.30 passes/s]Running MIL default pipeline:  25%|██▌       | 24/95 [00:00<00:01, 40.79 passes/s]Running MIL default pipeline:  31%|███       | 29/95 [00:00<00:01, 42.69 passes/s]Running MIL default pipeline:  36%|███▌      | 34/95 [00:00<00:01, 33.04 passes/s]Running MIL default pipeline:  41%|████      | 39/95 [00:01<00:01, 33.50 passes/s]Running MIL default pipeline:  45%|████▌     | 43/95 [00:01<00:01, 27.86 passes/s]Running MIL default pipeline:  51%|█████     | 48/95 [00:01<00:01, 31.09 passes/s]Running MIL default pipeline:  56%|█████▌    | 53/95 [00:01<00:01, 34.72 passes/s]Running MIL default pipeline:  60%|██████    | 57/95 [00:01<00:01, 26.27 passes/s]Running MIL default pipeline:  64%|██████▍   | 61/95 [00:03<00:04,  7.45 passes/s]Running MIL default pipeline:  67%|██████▋   | 64/95 [00:03<00:03,  8.42 passes/s]Running MIL default pipeline:  71%|███████   | 67/95 [00:03<00:02,  9.89 passes/s]Running MIL default pipeline:  77%|███████▋  | 73/95 [00:03<00:01, 14.87 passes/s]Running MIL default pipeline:  83%|████████▎ | 79/95 [00:03<00:00, 20.46 passes/s]Running MIL default pipeline:  89%|████████▉ | 85/95 [00:03<00:00, 26.33 passes/s]Running MIL default pipeline:  96%|█████████▌| 91/95 [00:04<00:00, 32.03 passes/s]Running MIL default pipeline: 100%|██████████| 95/95 [00:04<00:00, 21.96 passes/s]
+Running MIL backend_mlprogram pipeline:   0%|          | 0/12 [00:00<?, ? passes/s]Running MIL backend_mlprogram pipeline:  50%|█████     | 6/12 [00:00<00:00, 59.47 passes/s]Running MIL backend_mlprogram pipeline: 100%|██████████| 12/12 [00:00<00:00, 58.20 passes/s]Running MIL backend_mlprogram pipeline: 100%|██████████| 12/12 [00:00<00:00, 58.36 passes/s]
+COREML_FP16_CONVERT_PASS /tmp/pocketworld_dkm_coreml_probe_256x160_cg20_v5_fp16.mlpackage
+OUTPUTS ['var_3621', 'var_3622', 'input8_1']
+real 19.04
+user 11.98
+sys 1.94
+          1469579264  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              154328  page reclaims
+                9121  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+               11630  voluntary context switches
+                7092  involuntary context switches
+        204292935391  instructions retired
+         51204614781  cycles elapsed
+          1230014216  peak memory footprint

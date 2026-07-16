@@ -1,0 +1,89 @@
+{
+  "schema": "pw_c_tiled_execution_report_v1",
+  "created_at": "2026-07-16T22:26:34+08:00",
+  "capture": "cap40",
+  "algorithm_roles": [
+    "known_plane_b_floor",
+    "known_plane_b_wall"
+  ],
+  "status": "BLOCKED_STALE_EXPECTED_BIRTH_COUNT_CONTRACT",
+  "backend_exercised": true,
+  "backend": {
+    "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-bcd-release/libaether3d_ffi.dylib",
+    "sha256_before_and_after_run": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+    "exports_verified": [
+      "aether_planesweep_session_options_default",
+      "aether_planesweep_birth_options_default",
+      "aether_planesweep_session_create",
+      "aether_planesweep_image_decode_jpeg",
+      "aether_planesweep_session_add_image_view_scales",
+      "aether_planesweep_session_finish_rgb",
+      "aether_planesweep_session_free"
+    ]
+  },
+  "effective_parameters": {
+    "publication_grid_m": 0.01,
+    "floor_tile_candidates": 128,
+    "wall_tile_candidates": 64,
+    "floor_patch_n": 7,
+    "wall_patch_n": 9,
+    "floor_depth_offsets_m": [0.0, -0.05, 0.05],
+    "wall_depth_offsets_m": [0.0, -0.1, -0.05, 0.05, 0.1],
+    "shared_wave_candidate_capacity": 512,
+    "note": "B tile size is a one-dimensional bounded candidate count, not D's coarse/fine depth-count pair."
+  },
+  "input_identity": {
+    "fixture_manifest_path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/dart_bcd_quality_fixture_v1_20260716/manifest.json",
+    "fixture_manifest_sha256": "1521f570178d5d506c1b1a547bc927e766ed6d53f13cd19b2f287cc71f50009a",
+    "sparse_xyz_sha256": "89ce46d45f67a768438cce40e9e5ebbd96fdce8e5555719d78ac807fe8c27f7f",
+    "frame_meta_sha256": "b2501b2c42235186fbd31462debda3afb2b4ddbd621c16a1ae51259072e109ce",
+    "ledger_sha256": "ca29102b7dc93cd6932f8e8d0679c541de1caf7110868584472dbfbaeaee79b9",
+    "registered_views": 61,
+    "original_sparse_points": 62691
+  },
+  "execution": {
+    "command_exit_code": 1,
+    "elapsed_ms_internal": 383669,
+    "elapsed_seconds_wall": 384.95,
+    "maximum_resident_set_bytes": 412123136,
+    "peak_memory_footprint_bytes": 543736768,
+    "swaps": 0,
+    "log_path": "experiments/full_stack_visual_2026-07-16/runs/c_backend/cap40_current_dylib_b_1cm.log",
+    "log_sha256": "c707bdc3150844fbc6721bd4e556fd7b03ee0bedaa74284108252ae2582f0f35"
+  },
+  "output_validation": {
+    "result_path": "experiments/full_stack_visual_2026-07-16/runs/c_backend/cap40_current_dylib_b_1cm.json",
+    "result_sha256": "33e366c27798e47c26334ce2ce6015f63fc19852603cc07af4c99e2285bca9ed",
+    "quality_passed": true,
+    "owner_identity_exact": true,
+    "original_sparse_untouched_exact": true,
+    "floor_birth_points": 9753,
+    "wall_birth_points": 109,
+    "structural_birth_points": 9862,
+    "expected_birth_count_exact": false,
+    "mismatch_count": 1,
+    "mismatch": "Frozen fixture expects the pre-publication owner-selection counts 97+12=109, while the current runner publishes the same owners on a 1 cm grid and produces 9753+109=9862. No current 1 cm golden count is registered."
+  },
+  "source_artifacts": {
+    "runner": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_structural_quality_runner.dart",
+      "sha256": "9ce2991869f4d538c08b1d926c5ebc9c7e138e03ff542cf9fb80e3a2e83d9c18"
+    },
+    "coordinator": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_finalize_coordinator.dart",
+      "sha256": "c7472d7b6cf8bdb06f1fb3aab655558d4732f2fd449425c6a5f2e4c6c132d78a"
+    },
+    "dart_ffi": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/structural_planesweep_ffi.dart",
+      "sha256": "f482049789afd75bdb5b13dc7d5d82a9f2a8fb4f6a4ed23b3e030c465199035a"
+    },
+    "cpp_reference": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_c.cpp",
+      "sha256": "d3032fd19cff0380411cdd5d1a9e673750d86f3960da6787b0934bcd82b8706c"
+    },
+    "shader": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/shaders/wgsl/known_plane_patch_normalize.wgsl",
+      "sha256": "b31b347c761ddf4e1676f73ab02add7f41be9b7632dd34b0eda5ed1ef13b3a7a"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+/opt/homebrew/lib/python3.11/site-packages/torch/nn/modules/module.py:1789: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /Users/runner/work/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:4384.)
+  return forward_call(*args, **kwargs)
+{
+  "compute_units": "cpu_only",
+  "coreml_predict_seconds": [
+    0.4299716670066118,
+    0.35504358299658634,
+    0.34552566599450074
+  ],
+  "decision": "FAIL_COREML_TORCH_PARITY",
+  "outputs": {
+    "input8_1": {
+      "max_abs": 1.6689300537109375e-05,
+      "mean_abs": 4.532933417067397e-06,
+      "p99_abs": 1.3828277587890625e-05,
+      "shape": [
+        2,
+        1,
+        10,
+        16
+      ]
+    },
+    "var_3621": {
+      "max_abs": 0.00017127394676208496,
+      "mean_abs": 1.1045325436498388e-06,
+      "p99_abs": 1.3828277587890625e-05,
+      "shape": [
+        2,
+        2,
+        160,
+        256
+      ]
+    },
+    "var_3622": {
+      "max_abs": 0.0015344619750976562,
+      "mean_abs": 3.356926754349843e-05,
+      "p99_abs": 0.0003070831298828125,
+      "shape": [
+        2,
+        1,
+        160,
+        256
+      ]
+    }
+  },
+  "thresholds": {
+    "certainty_max_abs": 0.001,
+    "flow_max_abs": 5e-05
+  },
+  "torch_cpu_predict_seconds": 1.651237417012453
+}

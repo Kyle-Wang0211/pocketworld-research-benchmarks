@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -22,7 +23,12 @@ PLANES = ROOT / (
 META = ROOT / "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json"
 LEDGER = ROOT / "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl"
 PHOTOS = ROOT / "data/pocketworld_captures/cap50/raw/photos_highres"
-RESOURCES = Path(__file__).resolve().parent / "ios_dawn_wall_bench/Resources"
+RESOURCES = Path(
+    os.environ.get(
+        "POCKETWORLD_PLANESWEEP_FIXTURE_DIR",
+        Path(__file__).resolve().parent / "ios_dawn_wall_bench/Resources",
+    )
+)
 
 SURFACE_ID = "wall_1"
 TILE_INDEX = 0

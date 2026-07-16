@@ -1,0 +1,93 @@
+{
+  "schema": "pocketworld_additive_wall_birth_validation_v1",
+  "capture": "cap41",
+  "decision": "PASS_ADDITIVE_TRUE_WALL_BIRTH",
+  "method": "append_one_multiview_certified_site_to_frozen_59_then_rerun_identical_cross_surface_birth_ownership",
+  "inputs": {
+    "baseline_ownership": {
+      "path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap41_bed_scene_20260716/wall_birth_ownership_v3_exact_site.json",
+      "sha256": "105f99ab60c513fefe78ef5839033fad17e0ca7f2929ee4f5f1906136ee69772"
+    },
+    "baseline_stats": {
+      "path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap41_bed_scene_20260716/wall_owner_final_strict_rescue_v3_evidence/wall_ceiling_planesweep_main_stats.json",
+      "sha256": "fcf042e6566c3ad1599af85357c8234996eee5c5c188ef3a28b83247a096bf93"
+    },
+    "gpu_boundary_diagnostic": {
+      "path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap41_wall_envelope5_grid480_tie_band_v1_20260716.json",
+      "sha256": "78dbaeb561b50a9846f9e5608337ccf7ea809c7eb239d1ec1887e66b6b268e68"
+    },
+    "pil_gpu_comparison": {
+      "path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap41_wall_envelope5_grid480_pil_gpu_v1_20260716.json",
+      "sha256": "5b52793538b32e45fd91371e997c426f0365a98b0cab69b0d8354351f46ca351"
+    }
+  },
+  "added_birth": {
+    "surface_id": "envelope__wall_envelope_5",
+    "surface_grid_index": 480,
+    "xyz": [
+      -1.6533045768737793,
+      -0.22552117705345154,
+      -0.7792122960090637
+    ],
+    "supporting_views": 5,
+    "clique_frame_ids": [
+      61,
+      60,
+      59,
+      58,
+      77
+    ],
+    "median_ncc": 0.9732564091682434,
+    "parallax_deg": 24.84647560119629,
+    "valid_parallel_depth_competitors": 0,
+    "strongest_low_parallax_clique": {
+      "frame_ids": [
+        61,
+        60,
+        59,
+        57,
+        58
+      ],
+      "median_ncc": 0.9732564173087355,
+      "parallax_deg": 7.674665136288608
+    },
+    "equal_strength_wide_parallax_clique": {
+      "frame_ids": [
+        61,
+        60,
+        59,
+        58,
+        77
+      ],
+      "median_ncc": 0.9732564173087355,
+      "parallax_deg": 24.846476676717106
+    }
+  },
+  "ownership_result": {
+    "input_wall_births": 60,
+    "published_wall_births": 60,
+    "withheld_product_identities": 0,
+    "birth_radius_conflicts_before": 0,
+    "parallel_layer_conflicts_after": 0,
+    "extra_birth_near_ray_pairs_8px": 0,
+    "extra_birth_parallel_pairs_8px": 0,
+    "coverage_per_frame_32x18_exact": true
+  },
+  "quality_gates": {
+    "all_original_59_births_retained": true,
+    "registered_frames_retained": 102,
+    "new_birth_has_wide_parallax_multiview_evidence": true,
+    "new_birth_has_no_valid_parallel_depth_competitor": true,
+    "new_birth_creates_no_cross_surface_ghost_conflict": true,
+    "no_learned_matcher": true,
+    "no_lidar": true,
+    "no_scene_depth": true
+  },
+  "frozen_contract_adjustment": {
+    "previous_wall_births": 59,
+    "quality_validated_wall_births": 60,
+    "previous_structural_births": 158,
+    "quality_validated_structural_births": 159,
+    "reason": "the previous single-clique tie break stopped on an equal-strength low-parallax clique and missed the independently present wide-parallax clique"
+  }
+}

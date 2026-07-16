@@ -1,0 +1,87 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+/opt/homebrew/lib/python3.11/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/homebrew/lib/python3.11/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:465: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_h = 1.0 / float(h)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:466: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_w = 1.0 / float(w)
+/opt/homebrew/lib/python3.11/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /Users/runner/work/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:4384.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:353: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_h = 1.0 / float(h)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:354: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_w = 1.0 / float(w)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:146: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  T = torch.tensor(self.T, device=c.device)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:93: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_hs = 1.0 / float(hs)
+/tmp/pocketworld_dkm_ef57565d/dkm/models/dkm.py:94: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_ws = 1.0 / float(ws)
+/private/tmp/pocketworld_dkm_ef57565d/dkm/utils/local_correlation.py:14: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_h = 1.0 / float(h)
+/private/tmp/pocketworld_dkm_ef57565d/dkm/utils/local_correlation.py:15: TracerWarning: Converting a tensor to a Python float might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  inv_w = 1.0 / float(w)
+Tuple detected at graph output. This will be flattened in the converted model.
+Converting PyTorch Frontend ==> MIL Ops:   0%|          | 0/2489 [00:00<?, ? ops/s]Converting PyTorch Frontend ==> MIL Ops:  35%|███▌      | 877/2489 [00:00<00:00, 8769.55 ops/s]Converting PyTorch Frontend ==> MIL Ops:  70%|███████   | 1754/2489 [00:00<00:00, 5284.62 ops/s]Converting PyTorch Frontend ==> MIL Ops:  96%|█████████▌| 2395/2489 [00:00<00:00, 5662.33 ops/s]Converting PyTorch Frontend ==> MIL Ops: 100%|█████████▉| 2487/2489 [00:00<00:00, 5873.36 ops/s]
+Running MIL frontend_pytorch pipeline:   0%|          | 0/5 [00:00<?, ? passes/s]Running MIL frontend_pytorch pipeline:  80%|████████  | 4/5 [00:00<00:00, 39.81 passes/s]Running MIL frontend_pytorch pipeline: 100%|██████████| 5/5 [00:00<00:00, 40.96 passes/s]
+Running MIL default pipeline:   0%|          | 0/92 [00:00<?, ? passes/s]Running MIL default pipeline:   4%|▍         | 4/92 [00:00<00:02, 34.78 passes/s]Running MIL default pipeline:  10%|▉         | 9/92 [00:00<00:01, 41.59 passes/s]/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, 'input.477', of the source model, has been renamed to 'input_477' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3630', of the source model, has been renamed to 'var_3630' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3631', of the source model, has been renamed to 'var_3631' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+Running MIL default pipeline:  15%|█▌        | 14/92 [00:00<00:01, 40.50 passes/s]Running MIL default pipeline:  21%|██        | 19/92 [00:00<00:01, 42.79 passes/s]Running MIL default pipeline:  26%|██▌       | 24/92 [00:00<00:01, 42.41 passes/s]Running MIL default pipeline:  33%|███▎      | 30/92 [00:00<00:01, 45.14 passes/s]Running MIL default pipeline:  38%|███▊      | 35/92 [00:00<00:01, 34.40 passes/s]Running MIL default pipeline:  42%|████▏     | 39/92 [00:01<00:01, 34.58 passes/s]Running MIL default pipeline:  47%|████▋     | 43/92 [00:01<00:01, 27.82 passes/s]Running MIL default pipeline:  52%|█████▏    | 48/92 [00:01<00:01, 31.22 passes/s]Running MIL default pipeline:  58%|█████▊    | 53/92 [00:01<00:01, 34.72 passes/s]Running MIL default pipeline:  62%|██████▏   | 57/92 [00:01<00:01, 27.82 passes/s]Running MIL default pipeline:  68%|██████▊   | 63/92 [00:01<00:00, 34.02 passes/s]Running MIL default pipeline:  76%|███████▌  | 70/92 [00:01<00:00, 40.87 passes/s]Running MIL default pipeline:  84%|████████▎ | 77/92 [00:02<00:00, 46.96 passes/s]Running MIL default pipeline:  91%|█████████▏| 84/92 [00:02<00:00, 51.11 passes/s]Running MIL default pipeline:  98%|█████████▊| 90/92 [00:02<00:00, 43.35 passes/s]Running MIL default pipeline: 100%|██████████| 92/92 [00:02<00:00, 38.66 passes/s]
+Running MIL backend_mlprogram pipeline:   0%|          | 0/12 [00:00<?, ? passes/s]Running MIL backend_mlprogram pipeline:  58%|█████▊    | 7/12 [00:00<00:00, 64.53 passes/s]Running MIL backend_mlprogram pipeline: 100%|██████████| 12/12 [00:00<00:00, 63.00 passes/s]
+{
+  "cg_iterations": 20,
+  "coremltools_version": "9.0",
+  "dkm_revision": "ef57565db52684e661052ba82eb361329c63af3d",
+  "forbidden_ops": {
+    "dynamic_int": 0,
+    "linalg_inv": 0,
+    "reciprocal": 0
+  },
+  "gpl_geometry_utils_imported": false,
+  "input_image_sha256": [
+    "6a30aae8022a70606c48fc5f8bea0a025b6fe4c8dc816a43cb087f99d9b80bdd",
+    "d6417bb127c6404e8619d61113d08b46f57fd7e1de3ee64195d599633549cbc5"
+  ],
+  "outputs": [
+    "var_3630",
+    "var_3631",
+    "input_477"
+  ],
+  "production_ready": false,
+  "resolution": [
+    384,
+    224
+  ],
+  "route": "DKMv3_outdoor_MegaDepth_only_clean_CoreML_probe",
+  "torch_version": "2.12.0",
+  "trace_sha256": "e2a853439118daed88069914f5d411171c9005ea0c6d5dea6b0bbe38fbfdf4eb",
+  "weights_bytes": 289797889,
+  "weights_sha256": "fa2e6d9e3d8ee11455c0ac602bc639899df5e5d2e1809f87b1fbe4af692541b8"
+}
+real 17.48
+user 10.68
+sys 5.40
+          3214999552  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              476098  page reclaims
+               18889  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+               24627  voluntary context switches
+              509653  involuntary context switches
+        177370306239  instructions retired
+         56663998555  cycles elapsed
+          4725887128  peak memory footprint

@@ -1,0 +1,22 @@
+[dkm] frames=115 candidate_pairs=406 selected=8 slice=120:128 available=6.09GB
+/opt/homebrew/lib/python3.11/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/opt/homebrew/lib/python3.11/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+[dkm] model loaded on mps in 0.61s
+/opt/homebrew/lib/python3.11/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /Users/runner/work/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:4384.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+[dkm] 1/8 030_031 grid=1214 arkit_inlier=1.000 magsac_inlier=1.000 median=0.447px time=0.96s
+[dkm] 2/8 030_097 grid=2001 arkit_inlier=0.982 magsac_inlier=0.973 median=0.395px time=0.45s
+[dkm] 3/8 030_098 grid=1612 arkit_inlier=0.757 magsac_inlier=0.999 median=2.521px time=0.53s
+[dkm] 4/8 030_099 grid=1137 arkit_inlier=0.321 magsac_inlier=0.996 median=3.383px time=0.49s
+[dkm] 5/8 031_097 grid=757 arkit_inlier=0.886 magsac_inlier=1.000 median=1.086px time=0.45s
+[dkm] 6/8 031_032 grid=894 arkit_inlier=1.000 magsac_inlier=1.000 median=0.581px time=0.44s
+[dkm] 7/8 031_096 grid=955 arkit_inlier=0.510 magsac_inlier=1.000 median=2.865px time=0.44s
+Traceback (most recent call last):
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/detector_free_dkm_outdoor_2026-07-14/match_cap50.py", line 525, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/detector_free_dkm_outdoor_2026-07-14/match_cap50.py", line 453, in main
+    f"[dkm] {pair_index + 1}/{len(pairs)} {key} grid={len(points0)} "
+TypeError: unsupported format string passed to NoneType.__format__

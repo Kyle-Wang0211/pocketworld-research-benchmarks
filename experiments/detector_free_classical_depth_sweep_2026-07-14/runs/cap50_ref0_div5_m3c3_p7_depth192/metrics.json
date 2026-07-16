@@ -1,0 +1,153 @@
+{
+  "config": {
+    "consistency_absolute_m": 0.08,
+    "consistency_relative": 0.05,
+    "consistency_views": 3,
+    "depth_max_m": 4.3,
+    "depth_min_m": 0.8,
+    "depth_ncc_margin": 0.03,
+    "depth_samples": 192,
+    "height": 144,
+    "inverse_depth_uniform": true,
+    "min_views": 3,
+    "ncc_min": 0.75,
+    "patch_n": 7,
+    "second_peak_exclusion_radius_samples": 2,
+    "width": 256
+  },
+  "inputs": {
+    "frame_meta": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json",
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324"
+    },
+    "ledger": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl",
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b"
+    },
+    "reference": {
+      "file": "cell_85_slot_0_tap-8.jpg",
+      "frame_id": 0,
+      "index": 0
+    },
+    "sources": [
+      {
+        "file": "cell_86_slot_0_tap-19.jpg",
+        "frame_id": 1,
+        "index": 1
+      },
+      {
+        "file": "cell_86_slot_2_tap-37.jpg",
+        "frame_id": 3,
+        "index": 3
+      },
+      {
+        "file": "cell_86_slot_5_tap-77.jpg",
+        "frame_id": 6,
+        "index": 6
+      },
+      {
+        "file": "cell_68_slot_0_tap-122.jpg",
+        "frame_id": 9,
+        "index": 9
+      },
+      {
+        "file": "cell_85_slot_1_tap-180.jpg",
+        "frame_id": 13,
+        "index": 13
+      }
+    ],
+    "sparse_eval_only": {
+      "path": "data/pocketworld_captures/cap50/sfm/sfm_sparse.ply",
+      "sha256": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df"
+    }
+  },
+  "license": {
+    "learned_model": null,
+    "production_algorithm_dependencies": [
+      "numpy",
+      "opencv_for_host_probe_only"
+    ],
+    "third_party_matcher_output_consumed": false,
+    "training_data": null
+  },
+  "metrics": {
+    "accepted_fraction": 0.04123263888888889,
+    "accepted_pixels": 1520,
+    "best_ncc_quantiles_accepted": {
+      "0": 0.7501700520515442,
+      "10": 0.7795101404190063,
+      "100": 0.9812302589416504,
+      "25": 0.8141763806343079,
+      "50": 0.8587720394134521,
+      "75": 0.9021704196929932,
+      "90": 0.9316638708114624,
+      "95": 0.9466410279273987,
+      "99": 0.9715494513511658
+    },
+    "consistency_count_preaccepted": {
+      "0": 0.0,
+      "10": 0.0,
+      "100": 5.0,
+      "25": 1.0,
+      "50": 2.0,
+      "75": 3.0,
+      "90": 4.0,
+      "95": 4.0,
+      "99": 5.0
+    },
+    "consistency_rejected_pixels": 2681,
+    "elapsed_seconds": 8.97829591698246,
+    "ncc_margin_quantiles_accepted": {
+      "0": 0.030108630657196045,
+      "10": 0.038768984377384186,
+      "100": 0.680541455745697,
+      "25": 0.052353039383888245,
+      "50": 0.07671818137168884,
+      "75": 0.12039920687675476,
+      "90": 0.18002018332481384,
+      "95": 0.22501511871814728,
+      "99": 0.3451400399208069
+    },
+    "peak_rss_bytes": 252690432,
+    "pixels": 36864,
+    "pre_consistency_accepted_pixels": 4201,
+    "reciprocal_depth_error_m": {
+      "0": 1.6162515630302465e-06,
+      "10": 0.0066884784453274315,
+      "100": 3.684283789183049,
+      "25": 0.020135047514232784,
+      "50": 0.08049675391566913,
+      "75": 1.3378176606590326,
+      "90": 3.07007777017041,
+      "95": 3.2585346906668144,
+      "99": 3.3913801823504985
+    },
+    "sparse_absolute_depth_error_m": {
+      "0": 3.9799444662591554e-05,
+      "10": 0.010274104294634734,
+      "100": 1.8411205590588748,
+      "25": 0.030790911904178653,
+      "50": 0.057379357704211986,
+      "75": 0.17919450484656607,
+      "90": 0.4816451426684648,
+      "95": 0.7247581341452982,
+      "99": 1.6988183441255658
+    },
+    "sparse_comparable_pixels": 460,
+    "sparse_projected_samples": 27772,
+    "sparse_relative_depth_error": {
+      "0": 2.93956269449459e-05,
+      "10": 0.006987605352276225,
+      "100": 0.7487640623625672,
+      "25": 0.02029735746476627,
+      "50": 0.03972329775854074,
+      "75": 0.1217969908438052,
+      "90": 0.23739894243414286,
+      "95": 0.3410910100732406,
+      "99": 0.5291929806559731
+    },
+    "sparse_zbuffer_pixels": 8527
+  },
+  "route": "self_developed_model_free_detector_free_known_pose_mvs",
+  "schema": "pocketworld_model_free_known_pose_depth_sweep_v1"
+}

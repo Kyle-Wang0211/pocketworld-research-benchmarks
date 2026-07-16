@@ -1,0 +1,143 @@
+{
+  "config": {
+    "consistency_absolute_m": 0.08,
+    "consistency_relative": 0.05,
+    "consistency_views": 3,
+    "depth_max_m": 4.3,
+    "depth_min_m": 0.8,
+    "depth_ncc_margin": 0.03,
+    "depth_samples": 96,
+    "height": 144,
+    "inverse_depth_uniform": true,
+    "min_views": 2,
+    "ncc_min": 0.75,
+    "patch_n": 5,
+    "second_peak_exclusion_radius_samples": 2,
+    "width": 256
+  },
+  "inputs": {
+    "frame_meta": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json",
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324"
+    },
+    "ledger": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl",
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b"
+    },
+    "reference": {
+      "file": "cell_85_slot_0_tap-8.jpg",
+      "frame_id": 0,
+      "index": 0
+    },
+    "sources": [
+      {
+        "file": "cell_86_slot_0_tap-19.jpg",
+        "frame_id": 1,
+        "index": 1
+      },
+      {
+        "file": "cell_86_slot_1_tap-26.jpg",
+        "frame_id": 2,
+        "index": 2
+      },
+      {
+        "file": "cell_86_slot_2_tap-37.jpg",
+        "frame_id": 3,
+        "index": 3
+      }
+    ],
+    "sparse_eval_only": {
+      "path": "data/pocketworld_captures/cap50/sfm/sfm_sparse.ply",
+      "sha256": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df"
+    }
+  },
+  "license": {
+    "learned_model": null,
+    "production_algorithm_dependencies": [
+      "numpy",
+      "opencv_for_host_probe_only"
+    ],
+    "third_party_matcher_output_consumed": false,
+    "training_data": null
+  },
+  "metrics": {
+    "accepted_fraction": 0.014973958333333334,
+    "accepted_pixels": 552,
+    "best_ncc_quantiles_accepted": {
+      "0": 0.7500096559524536,
+      "10": 0.7743619084358215,
+      "100": 0.9742046594619751,
+      "25": 0.8171125650405884,
+      "50": 0.8682302832603455,
+      "75": 0.9054991006851196,
+      "90": 0.9354637265205383,
+      "95": 0.9485910534858704,
+      "99": 0.9670698046684265
+    },
+    "consistency_count_preaccepted": {
+      "0": 0.0,
+      "10": 0.0,
+      "100": 3.0,
+      "25": 0.0,
+      "50": 0.0,
+      "75": 1.0,
+      "90": 2.0,
+      "95": 3.0,
+      "99": 3.0
+    },
+    "consistency_rejected_pixels": 5662,
+    "elapsed_seconds": 1.712278916995274,
+    "ncc_margin_quantiles_accepted": {
+      "0": 0.030484437942504883,
+      "10": 0.06021910905838013,
+      "100": 2.901367664337158,
+      "25": 0.11125604808330536,
+      "50": 0.19459256529808044,
+      "75": 0.3057057857513428,
+      "90": 0.4180316627025604,
+      "95": 0.5069153904914856,
+      "99": 2.823770046234131
+    },
+    "peak_rss_bytes": 204439552,
+    "pixels": 36864,
+    "pre_consistency_accepted_pixels": 6214,
+    "reciprocal_depth_error_m": {
+      "0": 2.2134160433395778e-06,
+      "10": 0.029002562930545886,
+      "100": 3.992414900532421,
+      "25": 0.07184406123779108,
+      "50": 0.36742570036150823,
+      "75": 2.203654704720689,
+      "90": 3.0869035169393158,
+      "95": 3.2120103419734956,
+      "99": 3.36761816152888
+    },
+    "sparse_absolute_depth_error_m": {
+      "0": 0.0003204431164969268,
+      "10": 0.01699346474880927,
+      "100": 1.7710607405785674,
+      "25": 0.035183439466508815,
+      "50": 0.07417178471935726,
+      "75": 0.1336504199149699,
+      "90": 0.44582158465883914,
+      "95": 0.6060614836012903,
+      "99": 1.276930337260429
+    },
+    "sparse_comparable_pixels": 204,
+    "sparse_projected_samples": 27772,
+    "sparse_relative_depth_error": {
+      "0": 0.00023919650581410109,
+      "10": 0.012487157328325865,
+      "100": 0.5374031482136326,
+      "25": 0.024209576726224574,
+      "50": 0.05174090665195398,
+      "75": 0.08568041201830594,
+      "90": 0.1894812706491227,
+      "95": 0.2856172076726661,
+      "99": 0.5241508648028117
+    },
+    "sparse_zbuffer_pixels": 8527
+  },
+  "route": "self_developed_model_free_detector_free_known_pose_mvs",
+  "schema": "pocketworld_model_free_known_pose_depth_sweep_v1"
+}

@@ -1,0 +1,157 @@
+{
+  "schema": "pw_c_tiled_execution_report_v1",
+  "status": "PASS",
+  "backend": "aether_cpp_tiled_known_plane_c_abi",
+  "backend_exercised": true,
+  "backend_artifact_sha256": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+  "executions": [
+    {
+      "algorithm_role": "known_plane_b_floor",
+      "effective_parameters": {
+        "publication_grid_m": 0.01,
+        "tile_points": 128,
+        "patch_n": 7,
+        "depth_offsets_m": [0.0, -0.05, 0.05],
+        "maximum_views": 10,
+        "minimum_views": 3,
+        "ncc_min": 0.7,
+        "minimum_parallax_deg": 5.0,
+        "unique_depth_margin": 0.02,
+        "shared_wave_candidate_capacity": 512
+      },
+      "input_identity": {
+        "kind": "frozen_cap41_bcd_fixture_manifest",
+        "path": "../../../cross_platform_planesweep_core_2026-07-15/runs/dart_bcd_quality_fixture_v1_20260716/manifest.json",
+        "sha256": "1521f570178d5d506c1b1a547bc927e766ed6d53f13cd19b2f287cc71f50009a",
+        "registered_views": 102,
+        "sparse_xyz_sha256": "15cd28f32f9386e330bcd0b34c2e6e1da848e0cafd65e18dfd589bf2f3b099b9"
+      },
+      "output_identity": {
+        "kind": "device_raw_gauge_truecolor_ply",
+        "path": "cap41_current_raw_parts/cap41_b_floor_1cm_raw.ply",
+        "sha256": "58c65b6fe1c0d1ae29b4eb2bde1ff4053495c93f044a9f61d5ed7d9fc712bcf9",
+        "points": 2464
+      },
+      "output_validation": {
+        "exact": true,
+        "mismatch_count": 0,
+        "max_abs_error": 0.0,
+        "metric_birth_xyz_exact": true,
+        "metric_birth_rgb_exact": true,
+        "raw_transform_residual_gate_passed": true,
+        "raw_rgb_bytes_exact": true,
+        "reference_output_sha256": "58c65b6fe1c0d1ae29b4eb2bde1ff4053495c93f044a9f61d5ed7d9fc712bcf9"
+      },
+      "elapsed_ms": 625517,
+      "peak_memory_bytes": 580846576,
+      "resource_scope": "combined_floor_and_all_selected_walls_single_process; full run values conservatively bound to each role"
+    },
+    {
+      "algorithm_role": "known_plane_b_wall",
+      "effective_parameters": {
+        "publication_grid_m": 0.01,
+        "tile_points": 64,
+        "patch_n": 9,
+        "depth_offsets_m": [0.0, -0.1, -0.05, 0.05, 0.1],
+        "maximum_views": 10,
+        "minimum_views": 4,
+        "ncc_min": 0.8,
+        "minimum_parallax_deg": 10.0,
+        "unique_depth_margin": 0.02,
+        "shared_wave_candidate_capacity": 512,
+        "selected_owner_count": 4
+      },
+      "input_identity": {
+        "kind": "frozen_cap41_bcd_fixture_manifest",
+        "path": "../../../cross_platform_planesweep_core_2026-07-15/runs/dart_bcd_quality_fixture_v1_20260716/manifest.json",
+        "sha256": "1521f570178d5d506c1b1a547bc927e766ed6d53f13cd19b2f287cc71f50009a",
+        "registered_views": 102,
+        "sparse_xyz_sha256": "15cd28f32f9386e330bcd0b34c2e6e1da848e0cafd65e18dfd589bf2f3b099b9"
+      },
+      "output_identity": {
+        "kind": "device_raw_gauge_truecolor_ply",
+        "path": "cap41_current_raw_parts/cap41_b_wall_1cm_raw.ply",
+        "sha256": "a272f20eca469441c8b7db651541b7dc6f90aefd5b196e8d9fa001a443e20579",
+        "points": 1039
+      },
+      "output_validation": {
+        "exact": true,
+        "mismatch_count": 0,
+        "max_abs_error": 0.0,
+        "metric_birth_xyz_exact": true,
+        "metric_birth_rgb_exact": true,
+        "raw_transform_residual_gate_passed": true,
+        "raw_rgb_bytes_exact": true,
+        "reference_output_sha256": "a272f20eca469441c8b7db651541b7dc6f90aefd5b196e8d9fa001a443e20579"
+      },
+      "elapsed_ms": 625517,
+      "peak_memory_bytes": 580846576,
+      "resource_scope": "combined_floor_and_all_selected_walls_single_process; full run values conservatively bound to each role"
+    }
+  ],
+  "execution_evidence": {
+    "command_exit_code": 0,
+    "backend_sha256_before": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+    "backend_sha256_after": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+    "elapsed_ms_internal": 625517,
+    "elapsed_seconds_wall": 626.24,
+    "maximum_resident_set_bytes": 416628736,
+    "peak_memory_footprint_bytes": 580846576,
+    "swaps": 0,
+    "log_path": "cap41_current_dylib_b_1cm.log",
+    "log_sha256": "0153c35221d49aae93759a1c2ec7c9322e0481f9e7398a196e395d7a03e15cb7",
+    "metric_result_path": "cap41_current_dylib_b_1cm.json",
+    "metric_result_sha256": "44db04405568ed396620eb089e75895df250fee713282581991307a841723037",
+    "metric_full_ply_sha256": "3d48a7bd5f2d0016e5fc9da6fc54289be4a6eb9cf14a80b1a11c4c9780d0b92d",
+    "raw_full_ply_sha256": "2711f7cdef30afa58264d789ac932668fa4371dca8d666598426c67b1cc0b338",
+    "raw_transform_manifest_sha256": "2d3ff1b97e12ddf621d525ff1e4065acd8838be4311067cc9e1118e3705ff42c",
+    "raw_split_manifest_sha256": "2b4f60b2f5da5d67212c24bdff537b95ed5dd2a880dafabf26d5a49d41a081b8"
+  },
+  "source_artifacts": [
+    {
+      "role": "product_runner",
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_structural_quality_runner.dart",
+      "sha256": "9ce2991869f4d538c08b1d926c5ebc9c7e138e03ff542cf9fb80e3a2e83d9c18"
+    },
+    {
+      "role": "product_coordinator",
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/capture/bcd_finalize_coordinator.dart",
+      "sha256": "c7472d7b6cf8bdb06f1fb3aab655558d4732f2fd449425c6a5f2e4c6c132d78a"
+    },
+    {
+      "role": "dart_candidate_ffi",
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/structural_candidate_ffi.dart",
+      "sha256": "70acb0b43f9cc8eca4ce0b0577c8666379f7def6412cb0f348302dc7e8789264"
+    },
+    {
+      "role": "dart_planesweep_ffi",
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/lib/structural_planesweep_ffi.dart",
+      "sha256": "f482049789afd75bdb5b13dc7d5d82a9f2a8fb4f6a4ed23b3e030c465199035a"
+    },
+    {
+      "role": "cpp_candidate_reference",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_candidate_c.cpp",
+      "sha256": "b7ecf0d2213b62c50c83c86c4caf3d0bf76106670b9f3b1c5425d6c0fc417413"
+    },
+    {
+      "role": "cpp_planesweep_reference_and_runtime",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_c.cpp",
+      "sha256": "d3032fd19cff0380411cdd5d1a9e673750d86f3960da6787b0934bcd82b8706c"
+    },
+    {
+      "role": "cpp_native_jpeg_io",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_io_c.cpp",
+      "sha256": "9b66a5b74d772293751c0eed8b65d540f62a19e2a016a07f296b7eafbf31c6d3"
+    },
+    {
+      "role": "wgsl_source_bound_in_backend",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/shaders/wgsl/known_plane_patch_normalize.wgsl",
+      "sha256": "b31b347c761ddf4e1676f73ab02add7f41be9b7632dd34b0eda5ed1ef13b3a7a"
+    },
+    {
+      "role": "generated_wgsl_header",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/include/aether/shaders/wgsl_sources.h",
+      "sha256": "3dcad5e37f4526731847c82cf3ccb55d4c01689e94efe5d947ddf2531921a45c"
+    }
+  ]
+}

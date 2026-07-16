@@ -1,0 +1,32 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+Traceback (most recent call last):
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/detector_free_dkm_outdoor_2026-07-14/validate_coreml_256x160.py", line 104, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/detector_free_dkm_outdoor_2026-07-14/validate_coreml_256x160.py", line 51, in main
+    loaded = ct.models.MLModel(args.coreml, compute_units=ct.ComputeUnit.CPU_AND_GPU)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/models/model.py", line 560, in __init__
+    raise TypeError(
+TypeError: Expected model to be a .mlmodel file, .mlpackage file or a Model_pb2 object
+real 3.44
+user 2.13
+sys 0.43
+           426852352  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               63257  page reclaims
+                5668  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                4970  voluntary context switches
+                4393  involuntary context switches
+         22404409424  instructions retired
+          9412823822  cycles elapsed
+           350897088  peak memory footprint

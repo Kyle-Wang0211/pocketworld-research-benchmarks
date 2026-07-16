@@ -1,0 +1,64 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+Support for converting Torch Script Models is experimental. If possible you should use a traced model for conversion.
+Tuple detected at graph output. This will be flattened in the converted model.
+Converting PyTorch Frontend ==> MIL Ops:   0%|          | 0/1813 [00:00<?, ? ops/s]
+
+ERROR - converting 'linalg_inv' op (located at: 'decoder/32/K_yy_inv.2'):
+
+Converting PyTorch Frontend ==> MIL Ops:  33%|███▎      | 598/1813 [00:00<00:00, 7953.38 ops/s]
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/_converters_entry.py", line 646, in convert
+    mlmodel = mil_convert(
+              ^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/converter.py", line 186, in mil_convert
+    return _mil_convert(
+           ^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/converter.py", line 218, in _mil_convert
+    proto, mil_program = mil_convert_to_proto(
+                         ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/converter.py", line 294, in mil_convert_to_proto
+    prog = frontend_converter(model, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/converter.py", line 106, in __call__
+    return load(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/load.py", line 87, in load
+    return _perform_torch_convert(converter, debug)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/load.py", line 158, in _perform_torch_convert
+    raise e
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/load.py", line 150, in _perform_torch_convert
+    prog = converter.convert()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/converter.py", line 1392, in convert
+    convert_nodes(self.context, self.graph, early_exit=not has_states)
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/ops.py", line 118, in convert_nodes
+    raise e     # re-raise exception
+    ^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/ops.py", line 113, in convert_nodes
+    convert_single_node(context, node)
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/ops.py", line 174, in convert_single_node
+    add_op(context, node)
+  File "/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/frontend/torch/ops.py", line 8971, in linalg_inv
+    raise NotImplementedError(
+NotImplementedError: For non-const input, the lowering for Torch `linalg_inv` op is not supported
+        3.70 real         2.78 user         0.42 sys
+           759906304  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              102720  page reclaims
+                1712  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                3522  voluntary context switches
+                2423  involuntary context switches
+         33704598024  instructions retired
+         11803494706  cycles elapsed
+           674301176  peak memory footprint

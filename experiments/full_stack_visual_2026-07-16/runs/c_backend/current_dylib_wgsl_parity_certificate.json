@@ -1,0 +1,44 @@
+{
+  "schema": "pw_c_wgsl_parity_certificate_v1",
+  "created_at": "2026-07-16T22:26:34+08:00",
+  "status": "PASS",
+  "backend_exercised": true,
+  "backend_path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-bcd-release/libaether3d_ffi.dylib",
+  "backend_sha256": "1c7ce574f144bfa0870f62368a1dc825417234061e6cfa9c992fb9fbc5784b95",
+  "fixture": {
+    "path": "experiments/cross_platform_planesweep_core_2026-07-15/fixtures/cap50_wall1_tile0",
+    "manifest_sha256": "3f8d72ad50e9c6281efe4bbb12fda8142c2bc8f0c051020765a14148423e42bf",
+    "candidate_count": 64,
+    "scale_count": 2
+  },
+  "cpu_reference": {
+    "command": "/opt/homebrew/bin/python3.11 experiments/cross_platform_planesweep_core_2026-07-15/verify_product_c_abi_parity.py --aether-root /Users/kaidongwang/Developer/Aether3D-cross --fixture experiments/cross_platform_planesweep_core_2026-07-15/fixtures/cap50_wall1_tile0 --output experiments/full_stack_visual_2026-07-16/runs/c_backend/cpu_reference_parity_cap50_wall1_tile0.json",
+    "exit_code": 0,
+    "result_sha256": "1f7e6fe7247bf261674749c099beaa1574efe232a7145956e9e9333bebfa2dfa",
+    "exact_by_scale": [true, true],
+    "union_exact": true,
+    "mismatch_count": 0,
+    "max_abs_error": 0
+  },
+  "actual_dawn_wgsl": {
+    "command": "/opt/homebrew/bin/python3.11 experiments/cross_platform_planesweep_core_2026-07-15/verify_host_dawn_rgb_parity.py --library /Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-bcd-release/libaether3d_ffi.dylib --fixture experiments/cross_platform_planesweep_core_2026-07-15/fixtures/cap50_wall1_tile0 --output experiments/full_stack_visual_2026-07-16/runs/c_backend/wgsl_current_dylib_parity_cap50_wall1_tile0.json --repeat-sessions 3",
+    "exit_code": 0,
+    "result_sha256": "776bacfa47babce593b39590548ae19d214113937512ebd204cbb2a7d8d7c0e0",
+    "accepted_indices_exact": true,
+    "accepted_rgb_exact": true,
+    "plain_vs_rgb_geometry_exact": true,
+    "rejected_candidates_black": true,
+    "sessions_deterministic": true,
+    "repeat_sessions": 3,
+    "mismatch_count": 0,
+    "max_abs_error": 0
+  },
+  "source_artifacts": {
+    "cpp_reference_path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/src/pipeline/aether_structural_planesweep_c.cpp",
+    "cpp_reference_sha256": "d3032fd19cff0380411cdd5d1a9e673750d86f3960da6787b0934bcd82b8706c",
+    "wgsl_path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/shaders/wgsl/known_plane_patch_normalize.wgsl",
+    "wgsl_sha256": "b31b347c761ddf4e1676f73ab02add7f41be9b7632dd34b0eda5ed1ef13b3a7a",
+    "generated_header_path": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/include/aether/shaders/wgsl_sources.h",
+    "generated_header_sha256": "3dcad5e37f4526731847c82cf3ccb55d4c01689e94efe5d947ddf2531921a45c"
+  }
+}

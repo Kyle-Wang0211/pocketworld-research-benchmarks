@@ -1,0 +1,104 @@
+{
+  "config": {
+    "base_max_views": 0,
+    "depth_competition_offsets_m": [
+      -0.1,
+      -0.05,
+      0.05,
+      0.1
+    ],
+    "depth_ncc_margin": 0.02,
+    "grid_m": 0.05,
+    "image_cache_images": 10,
+    "image_margin_px": 2.0,
+    "max_graze_deg": 72.0,
+    "max_views": 10,
+    "min_parallax_deg": 10.0,
+    "min_std": 6.0,
+    "min_views": 4,
+    "ncc_min": 0.8,
+    "patch_n": 9,
+    "patch_radius_m": 0.03,
+    "rescue_min_ncc": null,
+    "rescue_min_parallax_deg": null,
+    "rescue_min_views": 0,
+    "scale_rescue_depth_ncc_margin": null,
+    "scale_rescue_min_ncc": null,
+    "scale_rescue_min_parallax_deg": null,
+    "scale_rescue_min_views": null,
+    "scale_rescue_patch_radius_m": null,
+    "tile_points": 64
+  },
+  "forbidden_matcher_outputs_consumed": false,
+  "inputs": {
+    "frame_meta": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/subset_meta_cap50full.json",
+      "sha256": "bd082ce5f8557f09fc98c12c43b44994d1531c801f6f0c7de37674f2a222c324"
+    },
+    "ledger": {
+      "path": "data/pocketworld_captures/cap50/private_manifests/sfm_fed_frames.jsonl",
+      "sha256": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b"
+    },
+    "photo_count": 115,
+    "planes": {
+      "path": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap50_wall_candidate_union_v2.json",
+      "sha256": "49dc07bff1293ba0c3032745bc87ba51cb437136cab8e1f377bd93c450eb710d"
+    }
+  },
+  "is_wrong_acceptance_probe": false,
+  "method": "known_or_sparse_fitted_plane_tiled_multiview_zncc_unique_depth",
+  "output": {
+    "birth_evidence": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap50_env57_python_reference_v1_20260716/wall_ceiling_planesweep_main_birth_evidence.jsonl",
+    "birth_evidence_sha256": "7168d34f840ae71d05b8b74a34e919dade0ec7c5afe103145dc844476a594077",
+    "ply": "experiments/cross_platform_planesweep_core_2026-07-15/runs/cap50_env57_python_reference_v1_20260716/wall_ceiling_planesweep_main.ply",
+    "sha256": "4da448626b406ef7244356732ad47f08f0e6946912efd74852797e2f1d889436"
+  },
+  "plane_offset_m": 0.0,
+  "schema": "aether_pure_a_wall_ceiling_planesweep_v2",
+  "surfaces": [
+    {
+      "acceptance_rate": 0.015151515151515152,
+      "accepted": 10,
+      "base_accepted": 10,
+      "coverage_cells_5cm": 10,
+      "decoded_image_loads": 27,
+      "depth_competition_offsets_m": [
+        -0.1,
+        -0.05,
+        0.05,
+        0.1
+      ],
+      "depth_ncc_margin_observed_median": 0.03916734327708421,
+      "depth_ncc_margin_observed_min": 0.02637141150586686,
+      "depth_ncc_margin_required": 0.02,
+      "elapsed_s": 1.7628252080176026,
+      "grid_candidates": 660,
+      "kind": "wall",
+      "parallax_median_deg": 15.567143380721365,
+      "peak_loaded_image_bytes": 248832000,
+      "plane_offset_m": 0.0,
+      "rejected": {
+        "ambiguous_depth": 19,
+        "few_geometry_views": 17,
+        "few_texture_views": 167,
+        "few_zncc_views": 446,
+        "low_parallax": 1,
+        "rescue_quality": 0
+      },
+      "rescue_accepted": 0,
+      "surface_id": "envelope__wall_envelope_57",
+      "tiles": 11,
+      "views_median": 4.0,
+      "zncc_median": 0.9285675153209099,
+      "zncc_p10": 0.9003758029118213
+    }
+  ],
+  "totals": {
+    "accepted": 10,
+    "coverage_cells_5cm_sum": 10,
+    "elapsed_s": 1.7652944999863394,
+    "grid_candidates": 660,
+    "max_tile_loaded_image_bytes": 248832000,
+    "peak_rss_bytes": 464437248
+  }
+}

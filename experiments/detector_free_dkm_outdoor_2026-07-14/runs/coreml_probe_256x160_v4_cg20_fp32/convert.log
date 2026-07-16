@@ -1,0 +1,34 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+Support for converting Torch Script Models is experimental. If possible you should use a traced model for conversion.
+Tuple detected at graph output. This will be flattened in the converted model.
+Converting PyTorch Frontend ==> MIL Ops:   0%|          | 0/2480 [00:00<?, ? ops/s]Converting PyTorch Frontend ==> MIL Ops:  34%|███▍      | 838/2480 [00:00<00:00, 8376.49 ops/s]Converting PyTorch Frontend ==> MIL Ops:  68%|██████▊   | 1676/2480 [00:00<00:00, 8120.24 ops/s]Converting PyTorch Frontend ==> MIL Ops: 100%|█████████▉| 2478/2480 [00:00<00:00, 6294.98 ops/s]
+Running MIL frontend_pytorch pipeline:   0%|          | 0/5 [00:00<?, ? passes/s]Running MIL frontend_pytorch pipeline:  80%|████████  | 4/5 [00:00<00:00, 37.52 passes/s]Running MIL frontend_pytorch pipeline: 100%|██████████| 5/5 [00:00<00:00, 38.36 passes/s]
+Running MIL default pipeline:   0%|          | 0/92 [00:00<?, ? passes/s]Running MIL default pipeline:   4%|▍         | 4/92 [00:00<00:02, 35.76 passes/s]Running MIL default pipeline:  10%|▉         | 9/92 [00:00<00:02, 41.40 passes/s]/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, 'input8.1', of the source model, has been renamed to 'input8_1' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3621', of the source model, has been renamed to 'var_3621' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+/opt/homebrew/lib/python3.11/site-packages/coremltools/converters/mil/mil/passes/defs/preprocess.py:273: UserWarning: Output, '3622', of the source model, has been renamed to 'var_3622' in the Core ML model.
+  warnings.warn(msg.format(var.name, new_name))
+Running MIL default pipeline:  15%|█▌        | 14/92 [00:00<00:01, 39.16 passes/s]Running MIL default pipeline:  21%|██        | 19/92 [00:00<00:01, 40.57 passes/s]Running MIL default pipeline:  26%|██▌       | 24/92 [00:00<00:01, 39.60 passes/s]Running MIL default pipeline:  32%|███▏      | 29/92 [00:00<00:01, 41.77 passes/s]Running MIL default pipeline:  37%|███▋      | 34/92 [00:00<00:01, 32.59 passes/s]Running MIL default pipeline:  42%|████▏     | 39/92 [00:01<00:01, 33.68 passes/s]Running MIL default pipeline:  47%|████▋     | 43/92 [00:01<00:01, 28.43 passes/s]Running MIL default pipeline:  52%|█████▏    | 48/92 [00:01<00:01, 30.06 passes/s]Running MIL default pipeline:  58%|█████▊    | 53/92 [00:01<00:01, 33.86 passes/s]Running MIL default pipeline:  62%|██████▏   | 57/92 [00:01<00:01, 27.17 passes/s]Running MIL default pipeline:  67%|██████▋   | 62/92 [00:01<00:00, 31.43 passes/s]Running MIL default pipeline:  75%|███████▌  | 69/92 [00:01<00:00, 38.84 passes/s]Running MIL default pipeline:  83%|████████▎ | 76/92 [00:02<00:00, 44.93 passes/s]Running MIL default pipeline:  89%|████████▉ | 82/92 [00:02<00:00, 48.41 passes/s]Running MIL default pipeline:  97%|█████████▋| 89/92 [00:02<00:00, 42.08 passes/s]Running MIL default pipeline: 100%|██████████| 92/92 [00:02<00:00, 37.26 passes/s]
+Running MIL backend_mlprogram pipeline:   0%|          | 0/12 [00:00<?, ? passes/s]Running MIL backend_mlprogram pipeline:  50%|█████     | 6/12 [00:00<00:00, 59.64 passes/s]Running MIL backend_mlprogram pipeline: 100%|██████████| 12/12 [00:00<00:00, 60.44 passes/s]
+COREML_CONVERT_PASS /tmp/pocketworld_dkm_coreml_probe_256x160_cg20_v4_fp32.mlpackage
+OUTPUTS ['var_3621', 'var_3622', 'input8_1']
+       11.85 real         7.04 user         2.08 sys
+          1386577920  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              166381  page reclaims
+               22913  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+               14995  voluntary context switches
+               21810  involuntary context switches
+        119237061003  instructions retired
+         33463053722  cycles elapsed
+          1128302464  peak memory footprint

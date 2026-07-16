@@ -1,0 +1,71 @@
+{
+  "capture_name": "cap41",
+  "decision": "BLOCKED_GHOST_REPLAY_NOT_PRODUCT_EXACT",
+  "device_baseline": {
+    "path": "/private/tmp/pw_device_exact_evidence_20260716/cap41/sfm_sparse.ply",
+    "point_count": 51000,
+    "sha256": "b1079c9984ca219ff2b97430e9f9a3cac9d3bfd02f7cd9255e42197091ada00b"
+  },
+  "forbidden_resolutions": [
+    "relax strict baseline thresholds",
+    "ICP-align a structurally different reconstruction and call it product-exact",
+    "delete generated outlier or ghost points after publication"
+  ],
+  "ghost_owner_candidate": {
+    "path": "/private/tmp/pw_full_stack_20260716/colorized/cap41_ghost_owner_full_truecolor.ply",
+    "point_count": 61567,
+    "sha256": "30a6e121121fb06f61567c850495d8b989b98b1b47551e3c4c2f1dbe3c8818d1"
+  },
+  "live_order_reproduction": {
+    "capture_time_points": 75862,
+    "capture_time_two_way_5cm_coverage": [
+      0.11863647148770136,
+      0.20613725490196078
+    ],
+    "final_points": 60603,
+    "final_two_way_5cm_coverage": [
+      0.09596884642674455,
+      0.21876470588235294
+    ],
+    "harness": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/Aether3D-cross/incremental-ba-ab-20260714/aether_cpp/third_party/glomap_vendor/bench/live_order_stored_match_replay.cc",
+      "sha256": "4f659805b688687d90d6cc575aa88fe8f69891ab19c41d17e4c2075f10177570"
+    },
+    "logical_fingerprint_log": {
+      "path": "/private/tmp/pw_live_order_replay_20260716/logs/31_snapshot_logical_fingerprint.log",
+      "sha256": "297705898245f45a0c99476a52598ad4800a3c052df23c383891a1eec94d301d"
+    },
+    "pose_anchored_cloud_metrics": {
+      "path": "/private/tmp/pw_live_order_replay_20260716/logs/24_cap41_pose_anchored_cloud_parity.log",
+      "sha256": "f89bd8d1746f7a41cc0f6b5c1037ddbbc0c43c998d7086d08f10696e32d7f2c9"
+    },
+    "run_log": {
+      "path": "/private/tmp/pw_live_order_replay_20260716/logs/20_cap41_off_v2_run.log",
+      "sha256": "2042888e8d21e5ccac0a09976398f3cf8baacf384d8ab4740a91a46d5444696b"
+    }
+  },
+  "reason": "The terminal DB lacks pair creation order/provenance. Replaying stored terminal pairs cannot reproduce the historical device cloud, so applying the ghost birth gate to that replay does not certify a product-exact replacement.",
+  "required_resolution": [
+    "run a fresh capture/finalize with the new gate-enabled binary and durable pair provenance",
+    "or recover the exact historical binary plus pair-order/provenance logs"
+  ],
+  "schema": "pw_full_stack_strict_blocker_v1",
+  "status": "BLOCKED",
+  "strict_device_baseline_alignment": {
+    "candidate_to_device": {
+      "median_m": 0.4947021630116158,
+      "p90_m": 1.3655397514052758,
+      "within_3cm_fraction": 0.050725226176360716
+    },
+    "candidate_to_device_diagonal_ratio": 1.4285614216611298,
+    "device_to_candidate": {
+      "median_m": 0.2407456874052736,
+      "p90_m": 0.7909241561851622,
+      "within_3cm_fraction": 0.06333333333333334
+    }
+  },
+  "strict_failure_log": {
+    "path": "/private/tmp/pw_cap41_strict_final_assembly.log",
+    "sha256": "798c3318f5cf1d9c0d559b476c5757aefe928c46a00700fe6fa259804dc52a1d"
+  }
+}

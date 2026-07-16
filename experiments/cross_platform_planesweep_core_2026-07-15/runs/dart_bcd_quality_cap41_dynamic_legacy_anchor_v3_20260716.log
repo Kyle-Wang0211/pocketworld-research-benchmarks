@@ -1,0 +1,33 @@
+Running build hooks...Running build hooks...BCD_PROGRESS capture=cap41 stage=floor_coarse 0/6 elapsed_ms=306
+Unhandled exception:
+Invalid argument(s): Failed to lookup symbol 'aether_planesweep_image_decode_jpeg': dlsym(0x75d11420, aether_planesweep_image_decode_jpeg): symbol not found
+#0      DynamicLibrary.lookup (dart:ffi-patch/ffi_dynamic_library_patch.dart:33:70)
+#1      _NativeStructuralPlaneSweep.decodeJpegImage (package:pocketworld_flutter/structural_planesweep_ffi.dart)
+#2      _NativeStructuralPlaneSweep.decodeJpegImage (package:pocketworld_flutter/structural_planesweep_ffi.dart)
+#3      StructuralPlaneSweepImage.decodeJpeg (package:pocketworld_flutter/structural_planesweep_ffi.dart:1224:46)
+#4      BcdFinalizeCoordinator.runStructuralBatchesSharedImages (package:pocketworld_flutter/capture/bcd_finalize_coordinator.dart:1596:51)
+#5      NativeBcdStructuralQualityBackend.sweepMany (package:pocketworld_flutter/capture/bcd_structural_quality_runner.dart:173:47)
+#6      NativeBcdStructuralQualityBackend.sweep (package:pocketworld_flutter/capture/bcd_structural_quality_runner.dart:160:12)
+#7      BcdStructuralQualityRunner.run (package:pocketworld_flutter/capture/bcd_structural_quality_runner.dart:269:40)
+#8      main (file:///Users/kaidongwang/.config/superpowers/worktrees/pocketworld/shutter-v2-thermal-p0-20260714/tool/bcd_quality_check.dart:122:53)
+#9      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:312:33)
+#10     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
+Warning: No Dawn device lost callback was set. This is probably not intended. If you really want to ignore device lost and suppress this message, set the callback explicitly.
+        1.54 real         0.87 user         0.13 sys
+           266944512  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               37198  page reclaims
+                1533  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   9  voluntary context switches
+                7462  involuntary context switches
+         10567688309  instructions retired
+          3696049245  cycles elapsed
+           187433656  peak memory footprint

@@ -1,0 +1,73 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+/opt/homebrew/lib/python3.11/site-packages/torch/nn/modules/module.py:1789: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /Users/runner/work/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:4384.)
+  return forward_call(*args, **kwargs)
+{
+  "compute_units": "cpu_and_gpu",
+  "coreml_predict_seconds": [
+    1.156577042012941,
+    0.235324709006818,
+    0.23384233299293555
+  ],
+  "decision": "FAIL_COREML_TORCH_PARITY",
+  "outputs": {
+    "input_477": {
+      "max_abs": 1.811981201171875e-05,
+      "mean_abs": 2.6535449251241516e-06,
+      "p99_abs": 1.049041748046875e-05,
+      "shape": [
+        2,
+        1,
+        18,
+        32
+      ]
+    },
+    "var_3630": {
+      "max_abs": 8.314847946166992e-05,
+      "mean_abs": 1.6787072354418342e-07,
+      "p99_abs": 2.592802047729492e-06,
+      "shape": [
+        2,
+        2,
+        288,
+        512
+      ]
+    },
+    "var_3631": {
+      "max_abs": 0.0016002655029296875,
+      "mean_abs": 2.0186815163469873e-05,
+      "p99_abs": 0.0001639270776649937,
+      "shape": [
+        2,
+        1,
+        288,
+        512
+      ]
+    }
+  },
+  "thresholds": {
+    "certainty_max_abs": 0.001,
+    "flow_max_abs": 5e-05
+  },
+  "torch_cpu_predict_seconds": 2.9104214169783518
+}
+real 11.97
+user 7.10
+sys 2.52
+          2039398400  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              263230  page reclaims
+               19057  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                5854  voluntary context switches
+              475502  involuntary context switches
+         80288359213  instructions retired
+         32680268764  cycles elapsed
+          2667595528  peak memory footprint

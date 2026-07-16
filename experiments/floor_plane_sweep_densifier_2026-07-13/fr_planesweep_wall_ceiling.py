@@ -225,14 +225,7 @@ def merge_scale_rescue_results(
         and len(rescue_xyz) == len(rescue_rgb) == len(rescue_meta)
     ):
         raise ValueError("scale-rescue point, color, and metadata counts must match")
-    seen = {tuple(np.round(point, 9)) for point in baseline_xyz}
-    rescue_indices = []
-    for index, point in enumerate(rescue_xyz):
-        key = tuple(np.round(point, 9))
-        if key in seen:
-            continue
-        seen.add(key)
-        rescue_indices.append(index)
+    rescue_indices = unique_rescue_indices(baseline_xyz, rescue_xyz)
     if not rescue_indices:
         return baseline_xyz, baseline_rgb, baseline_meta, 0
     chosen = np.asarray(rescue_indices, dtype=np.int64)
@@ -242,6 +235,21 @@ def merge_scale_rescue_results(
         np.concatenate([baseline_meta, rescue_meta[chosen]], axis=0),
         len(rescue_indices),
     )
+
+
+def unique_rescue_indices(
+    baseline_xyz: np.ndarray, rescue_xyz: np.ndarray
+) -> list[int]:
+    """Return the deterministic rescue rows appended by the merge policy."""
+    seen = {tuple(np.round(point, 9)) for point in baseline_xyz}
+    rescue_indices = []
+    for index, point in enumerate(rescue_xyz):
+        key = tuple(np.round(point, 9))
+        if key in seen:
+            continue
+        seen.add(key)
+        rescue_indices.append(index)
+    return rescue_indices
 
 
 def scale_rescue_quality_mask(
@@ -539,6 +547,10 @@ def score_point_hypothesis(
         "parallax": parallax,
         "ncc": float(np.median(pair_ncc)),
         "candidate_views": len(candidate),
+        # Kept out of the PLY numeric schema, but available to the optional
+        # birth-evidence sidecar.  Product ownership must use the exact views
+        # that certified a point, not every camera into which it can project.
+        "clique_frame_indices": clique_frames,
         "color": np.median(np.stack([center_colors[index] for index in clique]), axis=0),
     }, None
 
@@ -549,6 +561,7 @@ def sweep_surface(
     frames: list[Frame],
     config: SweepConfig,
     offset_m: float,
+    evidence_sink: list[dict] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict]:
     points = surface_grid(surface, floor, config.grid_m, offset_m)
     offsets = patch_offsets(surface, floor, config)
@@ -658,6 +671,23 @@ def sweep_surface(
             accepted_meta.append(
                 [center["views"], center["parallax"], center["ncc"], center["candidate_views"]]
             )
+            if evidence_sink is not None:
+                evidence_sink.append(
+                    {
+                        "surface_id": surface["surface_id"],
+                        "surface_grid_index": tile_start + local_index,
+                        "xyz": [float(value) for value in point],
+                        "clique_frame_ids": [
+                            frames[index].frame_id
+                            for index in center["clique_frame_indices"]
+                        ],
+                        "views": center["views"],
+                        "parallax_deg": center["parallax"],
+                        "zncc_median": center["ncc"],
+                        "candidate_views": center["candidate_views"],
+                        "base_view_rescue": accepted_by_rescue,
+                    }
+                )
             if accepted_by_rescue:
                 rescue_accepted += 1
             else:
@@ -782,16 +812,20 @@ def main() -> None:
     all_xyz = []
     all_rgb = []
     all_meta = []
+    all_evidence = []
     surface_metrics = []
     start = time.perf_counter()
     for surface in surfaces:
+        baseline_evidence = []
         xyz, rgb, metadata, metrics = sweep_surface(
             surface,
             planes["floor"],
             frames,
             config,
             args.plane_offset_m,
+            evidence_sink=baseline_evidence,
         )
+        evidence = baseline_evidence
         if scale_rescue_applies(surface, args.scale_rescue_patch_radius_m):
             if args.scale_rescue_patch_radius_m <= 0:
                 raise ValueError("scale-rescue patch radius must be positive")
@@ -837,12 +871,14 @@ def main() -> None:
                 min_parallax_deg=frozen_rescue_min_parallax,
                 depth_ncc_margin=rescue_depth_margin,
             )
+            rescue_evidence = []
             rescue_xyz, rescue_rgb, rescue_metadata, rescue_metrics = sweep_surface(
                 surface,
                 planes["floor"],
                 frames,
                 rescue_config,
                 args.plane_offset_m,
+                evidence_sink=rescue_evidence,
             )
             quality_mask = scale_rescue_quality_mask(
                 rescue_metadata,
@@ -853,9 +889,16 @@ def main() -> None:
             rescue_xyz = rescue_xyz[quality_mask]
             rescue_rgb = rescue_rgb[quality_mask]
             rescue_metadata = rescue_metadata[quality_mask]
+            rescue_evidence = [
+                rescue_evidence[index]
+                for index in np.flatnonzero(quality_mask)
+            ]
             baseline_metrics = metrics
             baseline_xyz = xyz.copy()
             baseline_xyz_sha256 = ndarray_sha256(baseline_xyz)
+            appended_rescue_indices = unique_rescue_indices(
+                baseline_xyz, rescue_xyz
+            )
             xyz, rgb, metadata, added = merge_scale_rescue_results(
                 xyz,
                 rgb,
@@ -864,6 +907,15 @@ def main() -> None:
                 rescue_rgb,
                 rescue_metadata,
             )
+            if added != len(appended_rescue_indices):
+                raise RuntimeError("rescue evidence merge count mismatch")
+            evidence = [
+                {**row, "physical_scale": "baseline"}
+                for row in baseline_evidence
+            ] + [
+                {**rescue_evidence[index], "physical_scale": "rescue"}
+                for index in appended_rescue_indices
+            ]
             depth_margins = [
                 value
                 for value in (
@@ -981,6 +1033,12 @@ def main() -> None:
         all_xyz.append(xyz)
         all_rgb.append(rgb)
         all_meta.append(metadata)
+        if len(evidence) != len(xyz):
+            raise RuntimeError(
+                f"birth evidence count mismatch for {surface['surface_id']}: "
+                f"{len(evidence)} != {len(xyz)}"
+            )
+        all_evidence.extend(evidence)
         surface_metrics.append(metrics)
         print(json.dumps(metrics, sort_keys=True), flush=True)
     xyz = np.concatenate(all_xyz) if all_xyz else np.empty((0, 3))
@@ -991,6 +1049,17 @@ def main() -> None:
     output_prefix = "structural_planesweep" if includes_floor else "wall_ceiling_planesweep"
     ply_path = args.output_dir / f"{output_prefix}_{suffix}.ply"
     write_ply(ply_path, xyz, rgb, metadata)
+    evidence_path = args.output_dir / f"{output_prefix}_{suffix}_birth_evidence.jsonl"
+    with evidence_path.open("w", encoding="utf-8") as stream:
+        for point_index, row in enumerate(all_evidence):
+            stream.write(
+                json.dumps(
+                    {"point_index": point_index, **row},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n"
+            )
     elapsed = time.perf_counter() - start
     depth_competition_enabled = bool(config.depth_competition_offsets_m)
     scale_rescue_enabled = any("scale_rescue" in row for row in surface_metrics)
@@ -1041,7 +1110,12 @@ def main() -> None:
                 (row["peak_loaded_image_bytes"] for row in surface_metrics), default=0
             ),
         },
-        "output": {"ply": str(ply_path), "sha256": sha256(ply_path)},
+        "output": {
+            "ply": str(ply_path),
+            "sha256": sha256(ply_path),
+            "birth_evidence": str(evidence_path),
+            "birth_evidence_sha256": sha256(evidence_path),
+        },
     }
     stats_path = args.output_dir / f"{output_prefix}_{suffix}_stats.json"
     stats_path.write_text(json.dumps(stats, indent=2, sort_keys=True) + "\n")

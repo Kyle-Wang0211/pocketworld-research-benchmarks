@@ -1,0 +1,76 @@
+{
+  "component_gates": {
+    "d_birth_ownership_exact_and_under_400ms_four_scenes": true,
+    "one_decode_all_scales_exact_and_faster": true,
+    "shared_dawn_runtime_exact_and_faster": true
+  },
+  "decision": "PASS_BCD_HOST_SPEED_PREFLIGHT",
+  "device_speed_gate": "PENDING_A16_AFTER_PRODUCT_ORCHESTRATION",
+  "inputs": {
+    "d_quality": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/detector_free_a16_bench_2026-07-15/runs/bcd_joint_local_manifold_four_scene_v7_c_abi_partial_select_20260716/result.json",
+      "sha256": "588a54f8b9b83fe1c47acaaa1bfb59dd4b5e1a87e0977f3722cb01b03727de50"
+    },
+    "jpeg": [
+      {
+        "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/cross_platform_planesweep_core_2026-07-15/runs/cap50_multiscale_jpeg_c_abi_bench_v1.json",
+        "sha256": "d9c1ba3198b3a0ae54861aea4e8aec2f531992d432b1efe7cb9565ca45ab2a87"
+      },
+      {
+        "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/cross_platform_planesweep_core_2026-07-15/runs/cap51_multiscale_jpeg_c_abi_bench_v1.json",
+        "sha256": "11123f30a5a4a411b87a2b065085133a43ffc13306f448a08fa57c7fbd4e5c39"
+      }
+    ],
+    "quality": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/cross_platform_planesweep_core_2026-07-15/runs/bcd_four_scene_quality_verdict_v3_c_abi_20260716.json",
+      "sha256": "bcc27d11bfa4dbb8e944b0437ec32c571b1623162a9a00b1addae227f88ed24a"
+    },
+    "runtime": [
+      {
+        "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/cross_platform_planesweep_core_2026-07-15/runs/cap50_host_dawn_shared_runtime_bench_v1.json",
+        "sha256": "6dc050a11a8072c3c6425277c1ac0b5b4131ce8c91433d2e131444fb9dc2b97c"
+      },
+      {
+        "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/cross_platform_planesweep_core_2026-07-15/runs/cap51_host_dawn_shared_runtime_bench_v1.json",
+        "sha256": "cd9accf87a0f2b7a8fcaf51583f68bc007e7ae341e7884a6bb4654c64f6e38b9"
+      }
+    ]
+  },
+  "measurements": {
+    "d_birth_ownership_four_scenes_ms": {
+      "all_reference_dual_manifold_filter": 230.4738341481425,
+      "all_reference_wall_ownership": 0.516955042257905,
+      "four_capture_index_build": 69.89975005853921,
+      "total_birth_ownership": 300.8905392489396
+    },
+    "jpeg": [
+      {
+        "new_add_median_ms": 1654.2048330011312,
+        "old_add_median_ms": 3186.505249963375,
+        "saved_percent": 48.08717691520689,
+        "speedup_ratio": 1.9263063354628682
+      },
+      {
+        "new_add_median_ms": 1810.20945799537,
+        "old_add_median_ms": 3524.2772920173593,
+        "saved_percent": 48.636009371465384,
+        "speedup_ratio": 1.9468892267970757
+      }
+    ],
+    "runtime": [
+      {
+        "cold_create_ms": 98.22525002527982,
+        "saved_percent": 99.87787462342466,
+        "warm_create_median_ms": 0.11995795648545027
+      },
+      {
+        "cold_create_ms": 100.41791701223701,
+        "saved_percent": 99.88510518865934,
+        "warm_create_median_ms": 0.11537497630342841
+      }
+    ]
+  },
+  "production_integration_authorized": false,
+  "quality_still_passing": true,
+  "schema": "pocketworld_bcd_host_speed_preflight_v1"
+}

@@ -1,0 +1,251 @@
+{
+  "config": {
+    "capture": "cap56",
+    "consistency_absolute_m": 0.08,
+    "consistency_relative": 0.05,
+    "consistency_views": 4,
+    "depth_max_m": 4.3,
+    "depth_min_m": 0.8,
+    "depth_ncc_margin": 0.03,
+    "depth_samples": 96,
+    "floor_ownership_slab_m": 0.0,
+    "height": 144,
+    "inverse_depth_uniform": true,
+    "min_parallax_deg": 8.0,
+    "min_views": 4,
+    "ncc_min": 0.75,
+    "patch_n": 7,
+    "quadratic_inverse_depth_refinement_mode": "conservative",
+    "quadratic_refinement_gate": {
+      "controls_point_birth": false,
+      "max_abs_offset_samples_exclusive": 0.4,
+      "max_discrete_depth_m_exclusive": 1.5,
+      "max_ncc_exclusive": 0.8,
+      "max_ncc_margin_exclusive": 0.15,
+      "min_abs_offset_samples_inclusive": 0.15,
+      "profile": "cap50_plus_cap56_design_views_v2_pending_holdout"
+    },
+    "second_peak_exclusion_radius_samples": 2,
+    "width": 256
+  },
+  "inputs": {
+    "frame_meta": null,
+    "ledger": {
+      "path": "data/pocketworld_captures/cap56/fresh_device_pull_2026-07-15T1002+0800/sfm_fed_frames.jsonl",
+      "sha256": "b083fed4e7af35876c08982ea90547882da5369b0ca7c81ab9dd890440517d37"
+    },
+    "photo_bundle": {
+      "frame_count": 20,
+      "ordered_jpeg_sidecar_sha256": "040233c2e1e0b37ae42cbd785713cf0f419cb74a47877eea2e2e55618daf98af",
+      "path": "data/pocketworld_captures/cap56/raw/photos_highres"
+    },
+    "reference": {
+      "file": "cell_100_slot_0_tap-99.jpg",
+      "frame_id": 18,
+      "index": 18
+    },
+    "sources": [
+      {
+        "file": "cell_50_slot_0_tap-1.jpg",
+        "frame_id": 0,
+        "index": 0
+      },
+      {
+        "file": "cell_68_slot_0_tap-8.jpg",
+        "frame_id": 1,
+        "index": 1
+      },
+      {
+        "file": "cell_85_slot_0_tap-14.jpg",
+        "frame_id": 2,
+        "index": 2
+      },
+      {
+        "file": "cell_85_slot_1_tap-20.jpg",
+        "frame_id": 3,
+        "index": 3
+      },
+      {
+        "file": "cell_99_slot_0_tap-25.jpg",
+        "frame_id": 4,
+        "index": 4
+      },
+      {
+        "file": "cell_99_slot_1_tap-31.jpg",
+        "frame_id": 5,
+        "index": 5
+      },
+      {
+        "file": "cell_99_slot_2_tap-38.jpg",
+        "frame_id": 6,
+        "index": 6
+      }
+    ],
+    "sparse_eval_only": {
+      "path": "data/pocketworld_captures/cap56/fresh_device_pull_2026-07-15T1002+0800/sfm_sparse.ply",
+      "sha256": "3c926b0283cf407b6abd5349eb1c067e54d498dd25d108fb53a6677b79e6a782"
+    },
+    "structural_planes": null
+  },
+  "license": {
+    "learned_model": null,
+    "production_algorithm_dependencies": [
+      "numpy",
+      "opencv_for_host_probe_only"
+    ],
+    "third_party_matcher_output_consumed": false,
+    "training_data": null
+  },
+  "metrics": {
+    "accepted_fraction": 0.04774305555555555,
+    "accepted_pixels": 1760,
+    "below_floor_minus15mm_emitted": 0,
+    "best_ncc_quantiles_accepted": {
+      "0": 0.7500394582748413,
+      "10": 0.8037443161010742,
+      "100": 0.9928401708602905,
+      "25": 0.8604059219360352,
+      "50": 0.9167667627334595,
+      "75": 0.9524919986724854,
+      "90": 0.9760368466377258,
+      "95": 0.9821553230285645,
+      "99": 0.9879611730575562
+    },
+    "consistency_count_preaccepted": {
+      "0": 0.0,
+      "10": 0.0,
+      "100": 7.0,
+      "25": 1.0,
+      "50": 3.0,
+      "75": 5.0,
+      "90": 6.0,
+      "95": 6.0,
+      "99": 7.0
+    },
+    "consistency_rejected_pixels": 1918,
+    "elapsed_seconds": 7.808944166987203,
+    "floor_distance_m_accepted": null,
+    "floor_distance_m_post_consistency": null,
+    "floor_ghost_band_minus50_to_minus15mm_emitted": 0,
+    "floor_ghost_band_minus50_to_minus15mm_post_consistency": 0,
+    "floor_ownership_rejected_pixels": 0,
+    "max_consistent_parallax_deg_accepted": {
+      "0": 12.488155975278106,
+      "10": 14.92922019908349,
+      "100": 22.403871675061822,
+      "25": 16.491800643771477,
+      "50": 19.376270467629503,
+      "75": 20.807746187707558,
+      "90": 21.365740956110926,
+      "95": 21.581765029257895,
+      "99": 21.83473991261379
+    },
+    "ncc_margin_quantiles_accepted": {
+      "0": 0.030989408493041992,
+      "10": 0.07371585816144943,
+      "100": 2.877230644226074,
+      "25": 0.1063094437122345,
+      "50": 0.1656498908996582,
+      "75": 0.24543294310569763,
+      "90": 0.32246872782707214,
+      "95": 0.360269695520401,
+      "99": 0.4304226338863373
+    },
+    "peak_rss_bytes": 209092608,
+    "pixels": 36864,
+    "post_consistency_accepted_pixels": 1760,
+    "pre_consistency_accepted_pixels": 3678,
+    "quadratic_candidate_pixels": 14537,
+    "quadratic_depth_adjustment_m": {
+      "0": 0.0,
+      "10": 0.0,
+      "100": 0.0036752111002773535,
+      "25": 0.0,
+      "50": 0.0,
+      "75": 0.0,
+      "90": 0.0,
+      "95": 0.0,
+      "99": 0.0
+    },
+    "quadratic_refined_pixels": 3343,
+    "reciprocal_depth_error_m": {
+      "0": 1.5553963959025197e-06,
+      "10": 0.002390252085552791,
+      "100": 3.933776428688738,
+      "25": 0.006973787506501905,
+      "50": 0.060400576292565566,
+      "75": 3.5627248099514937,
+      "90": 3.693476294160571,
+      "95": 3.7394252155450816,
+      "99": 3.7969602470451016
+    },
+    "sparse_absolute_depth_error_m": {
+      "0": 0.0003375476379039455,
+      "10": 0.02715286454809218,
+      "100": 0.13603486551794997,
+      "25": 0.047469083865181894,
+      "50": 0.062172608651664185,
+      "75": 0.07438339076027872,
+      "90": 0.08293537677835394,
+      "95": 0.099331104918088,
+      "99": 0.12812847639735994
+    },
+    "sparse_accuracy": {
+      "absolute_error_m": {
+        "0": 0.0003375476379039455,
+        "10": 0.02715286454809218,
+        "100": 0.13603486551794997,
+        "25": 0.047469083865181894,
+        "50": 0.062172608651664185,
+        "75": 0.07438339076027872,
+        "90": 0.08293537677835394,
+        "95": 0.099331104918088,
+        "99": 0.12812847639735994
+      },
+      "count": 531,
+      "within_0_05_m": 0.2806026365348399,
+      "within_0_10_m": 0.9510357815442562,
+      "within_0_20_m": 1.0,
+      "within_0_50_m": 1.0
+    },
+    "sparse_comparable_pixels": 531,
+    "sparse_error_by_true_depth": {
+      "0_8_to_1_5_m": {
+        "absolute_error_m": {
+          "0": 0.0003375476379039455,
+          "10": 0.017190528890131562,
+          "100": 0.12868182214987278,
+          "25": 0.03403605656244055,
+          "50": 0.05286648021376472,
+          "75": 0.06607603070403278,
+          "90": 0.07927421726848348,
+          "95": 0.09162751378896125,
+          "99": 0.11743999088140822
+        },
+        "count": 292,
+        "within_0_05_m": 0.4554794520547945,
+        "within_0_10_m": 0.9657534246575342,
+        "within_0_20_m": 1.0,
+        "within_0_50_m": 1.0
+      },
+      "1_5_to_2_5_m": null,
+      "2_5_to_3_5_m": null,
+      "3_5_to_4_3_m": null
+    },
+    "sparse_projected_samples": 11474,
+    "sparse_relative_depth_error": {
+      "0": 0.0003422850100520933,
+      "10": 0.030422398177558017,
+      "100": 0.18819627926154459,
+      "25": 0.05313348862331704,
+      "50": 0.07479587750922861,
+      "75": 0.09415721395905152,
+      "90": 0.10548464910044612,
+      "95": 0.11835642668904606,
+      "99": 0.17298223934353438
+    },
+    "sparse_zbuffer_pixels": 5553
+  },
+  "route": "self_developed_model_free_detector_free_known_pose_mvs",
+  "schema": "pocketworld_model_free_known_pose_depth_sweep_v1"
+}
