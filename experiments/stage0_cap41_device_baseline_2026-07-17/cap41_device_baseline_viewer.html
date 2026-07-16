@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>cap41 DEVICE ORIGINAL baseline — stage0 2026-07-17</title>
+<style>
+  body { margin:0; background:#101014; color:#ddd; font:13px -apple-system,sans-serif; overflow:hidden; }
+  #hud { position:fixed; top:0; left:0; right:0; padding:8px 12px; background:rgba(16,16,20,.85); z-index:10; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  #hud b { color:#7fd4ff; }
+  button { background:#22242c; color:#ddd; border:1px solid #444; border-radius:4px; padding:4px 10px; cursor:pointer; }
+  button.active { background:#2e5f8a; border-color:#7fd4ff; }
+  #stats { color:#9a9; }
+  canvas { display:block; }
+  #tag { position:fixed; bottom:8px; left:12px; color:#e0b060; z-index:10; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <b>cap41 DEVICE ORIGINAL(左侧基准)</b>
+  <span id="viewbtns"></span>
+  <span id="stats">loading…</span>
+</div>
+<div id="tag">device gauge · up=+Y · 51,000 pts · SHA b1079c99…da00b · 拖拽=旋转 滚轮=缩放 shift拖=平移</div>
+<canvas id="c"></canvas>
+<script>
+"use strict";
+const canvas = document.getElementById('c');
+const gl = canvas.getContext('webgl', {preserveDrawingBuffer:true, antialias:true});
+let N=0, prog, buf, views={}, cam=null;
+
+function resize(){ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio;
+  canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; gl.viewport(0,0,canvas.width,canvas.height); draw(); }
+addEventListener('resize', resize);
+
+const VS=`attribute vec3 p; attribute vec3 col; uniform mat4 mvp; varying vec3 vc;
+void main(){ gl_Position=mvp*vec4(p,1.0); gl_PointSize=2.0*${devicePixelRatio.toFixed(1)}; vc=col; }`;
+const FS=`precision mediump float; varying vec3 vc; void main(){ gl_FragColor=vec4(vc,1.0); }`;
+
+function sh(t,s){ const o=gl.createShader(t); gl.shaderSource(o,s); gl.compileShader(o);
+  if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; }
+
+function m4mul(a,b){ const o=new Float32Array(16);
+  for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+j]*b[i*4+k];o[i*4+j]=s;} return o; }
+function lookAt(e,t,up){ const z=norm3(sub3(e,t)), x=norm3(cross3(up,z)), y=cross3(z,x);
+  return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+    -dot3(x,e),-dot3(y,e),-dot3(z,e),1]); }
+function persp(fovy,asp,n,f){ const t=1/Math.tan(fovy*Math.PI/360);
+  return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0]); }
+const sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm3=a=>{const l=Math.hypot(...a);return [a[0]/l,a[1]/l,a[2]/l];};
+const add3=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], scale3=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+
+function draw(){ if(!cam||!N) return;
+  gl.clearColor(0.063,0.063,0.078,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);
+  const d=Math.hypot(...sub3(cam.eye,cam.target));
+  const mvp=m4mul(persp(cam.fov,canvas.width/canvas.height,d*0.001,d*20), lookAt(cam.eye,cam.target,[0,1,0]));
+  gl.uniformMatrix4fv(gl.getUniformLocation(prog,'mvp'),false,mvp);
+  gl.drawArrays(gl.POINTS,0,N); }
+
+function setView(name){ const v=views.views[name]; cam={eye:[...v.eye],target:[...v.target],fov:v.fov};
+  document.querySelectorAll('#viewbtns button').forEach(b=>b.classList.toggle('active',b.textContent===name));
+  window.currentView=name; draw(); }
+
+// orbit / zoom / pan
+let drag=null;
+canvas.onmousedown=e=>drag={x:e.clientX,y:e.clientY,shift:e.shiftKey};
+addEventListener('mouseup',()=>drag=null);
+addEventListener('mousemove',e=>{ if(!drag||!cam) return;
+  const dx=(e.clientX-drag.x)/innerWidth, dy=(e.clientY-drag.y)/innerHeight; drag.x=e.clientX; drag.y=e.clientY;
+  let off=sub3(cam.eye,cam.target);
+  if(drag.shift){ const d=Math.hypot(...off), z=norm3(off), x=norm3(cross3([0,1,0],z)), y=cross3(z,x);
+    const m=add3(scale3(x,-dx*d),scale3(y,dy*d)); cam.eye=add3(cam.eye,m); cam.target=add3(cam.target,m); }
+  else{ const r=Math.hypot(...off); let th=Math.atan2(off[0],off[2]), ph=Math.asin(off[1]/r);
+    th-=dx*4; ph=Math.max(-1.55,Math.min(1.55,ph+dy*3));
+    cam.eye=add3(cam.target,[r*Math.cos(ph)*Math.sin(th), r*Math.sin(ph), r*Math.cos(ph)*Math.cos(th)]); }
+  draw(); });
+canvas.onwheel=e=>{ e.preventDefault(); if(!cam) return;
+  const off=sub3(cam.eye,cam.target), s=Math.exp(e.deltaY*0.001);
+  cam.eye=add3(cam.target,scale3(off,s)); draw(); };
+
+async function main(){
+  const [plyBuf, vj] = await Promise.all([
+    fetch('../../data/pocketworld_captures/cap41/device_2026-07-16/sfm_sparse.ply').then(r=>r.arrayBuffer()),
+    fetch('views.json').then(r=>r.json())]);
+  views=vj;
+  const u8=new Uint8Array(plyBuf), hdr=new TextDecoder().decode(u8.slice(0,2048));
+  const m=hdr.match(/element vertex (\d+)/); N=+m[1];
+  const off=hdr.indexOf('end_header\n')+11;
+  const pos=new Float32Array(N*3), col=new Float32Array(N*3), dv=new DataView(plyBuf,off);
+  for(let i=0;i<N;i++){ const b=i*15;
+    pos[i*3]=dv.getFloat32(b,true); pos[i*3+1]=dv.getFloat32(b+4,true); pos[i*3+2]=dv.getFloat32(b+8,true);
+    col[i*3]=dv.getUint8(b+12)/255; col[i*3+1]=dv.getUint8(b+13)/255; col[i*3+2]=dv.getUint8(b+14)/255; }
+  prog=gl.createProgram(); gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  for(const [name,arr] of [['p',pos],['col',col]]){ const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+    gl.bufferData(gl.ARRAY_BUFFER,arr,gl.STATIC_DRAW); const loc=gl.getAttribLocation(prog,name);
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0); }
+  const vb=document.getElementById('viewbtns');
+  for(const name of Object.keys(views.views)){ const b=document.createElement('button');
+    b.textContent=name; b.onclick=()=>setView(name); vb.appendChild(b); }
+  addEventListener('keydown',e=>{ const ks=Object.keys(views.views); const i=+e.key-1; if(ks[i]) setView(ks[i]); });
+  document.getElementById('stats').textContent=`${N.toLocaleString()} pts · device original · 95/102 registered`;
+  resize(); setView('overview');
+  window.viewerReady=true;
+}
+main().catch(e=>{ document.getElementById('stats').textContent='ERROR: '+e; });
+</script>
+</body>
+</html>
