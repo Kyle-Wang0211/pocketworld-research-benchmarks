@@ -1,0 +1,141 @@
+{
+  "schema": "u3_combined_classifier_v1",
+  "capture": "cap50",
+  "join": {
+    "method": "union_index (netvote ply row==union_index, exact coord match); alias via NN<=0.03m",
+    "depth_ply_mismatch": 0,
+    "n_eval_points": 3211,
+    "n_alias_csv": 243,
+    "n_alias_matched": 15,
+    "n_alias_in_union": 15
+  },
+  "counts": {
+    "n_enemy_chairFP": 642,
+    "n_clean_floor": 745,
+    "n_roi_wood": 1824
+  },
+  "results": {
+    "single_alias": {
+      "fp_kill_rate": 0.0,
+      "clean_floor_retention": 1.0,
+      "wood_retention": 0.9956140350877193,
+      "separation_product": 0.0,
+      "n_killed": 8
+    },
+    "single_freespace_ge1": {
+      "fp_kill_rate": 0.3894080996884735,
+      "clean_floor_retention": 0.8684563758389262,
+      "wood_retention": 0.8854166666666666,
+      "separation_product": 0.338183946977775,
+      "n_killed": 557
+    },
+    "single_margin_best": {
+      "fp_kill_rate": 0.7087227414330218,
+      "clean_floor_retention": 0.5624161073825503,
+      "wood_retention": 0.5021929824561404,
+      "separation_product": 0.39859708545024986,
+      "n_killed": 1689,
+      "thresh": -0.02
+    },
+    "ensemble_OR_best": {
+      "fp_kill_rate": 0.6292834890965732,
+      "clean_floor_retention": 0.7181208053691275,
+      "wood_retention": 0.6557017543859649,
+      "separation_product": 0.45190156599552567,
+      "n_killed": 1242,
+      "margin_thresh": -0.065
+    },
+    "ensemble_OR_margin0.02": {
+      "fp_kill_rate": 0.8987538940809969,
+      "clean_floor_retention": 0.30067114093959735,
+      "wood_retention": 0.26151315789473684,
+      "separation_product": 0.27022935875723936,
+      "n_killed": 2445
+    },
+    "logistic_best_INSAMPLE": {
+      "fp_kill_rate": 0.9610591900311527,
+      "clean_floor_retention": 0.7865771812080538,
+      "wood_retention": 0.4051535087719298,
+      "separation_product": 0.7559472286687994,
+      "n_killed": 1861,
+      "prob_thresh": 0.44
+    },
+    "logistic_auc_insample": 0.9207917790461853,
+    "logistic_coef": {
+      "alias": 0.0,
+      "neg_margin": 0.5915907756630564,
+      "margin_nan": -0.5152812897934371,
+      "freespace": 0.05876511140192437,
+      "occlusion": -2.612648106753451,
+      "support": -0.02066559655768378,
+      "netvote": -0.039287328693782125,
+      "agreement": -4.195098054486127,
+      "no_l1_obs": -0.788742367626499
+    },
+    "logistic_best_CV_OOF": {
+      "fp_kill_rate": 0.9626168224299065,
+      "clean_floor_retention": 0.785234899328859,
+      "separation_product": 0.7558803236530138,
+      "prob_thresh": 0.44
+    },
+    "logistic_auc_cv": 0.9195948064981496,
+    "HONEST_chairFP_vs_ROIwood_CV": {
+      "fp_kill_rate": 0.8130841121495327,
+      "roi_wood_retention": 0.6321271929824561,
+      "separation_product": 0.5139725774717167,
+      "prob_thresh": 0.49
+    },
+    "HONEST_chairFP_vs_ROIwood_AUC": 0.809660138957206,
+    "HONEST_margin_chairFP_vs_ROIwood": {
+      "fp_kill_rate": 0.7087227414330218,
+      "roi_wood_retention": 0.5021929824561404,
+      "separation_product": 0.35591558725474126,
+      "thresh": -0.02
+    },
+    "HONEST_freespace_chairFP_vs_ROIwood": {
+      "fp_kill_rate": 0.3894080996884735,
+      "roi_wood_retention": 0.8854166666666666,
+      "separation_product": 0.3447884215991692
+    },
+    "HONEST_single_best_inROI_sep": 0.35591558725474126,
+    "ref_median_fusion_retention": 0.28,
+    "ref_depth_competition_07_best": {
+      "separation_product": 0.414886366012252,
+      "fp_kill_rate": 0.8286604361370716,
+      "clean_floor_retention": 0.5006711409395973
+    }
+  },
+  "confusions": [
+    {
+      "tag": "ensemble_OR_best",
+      "enemy_killed": 404,
+      "enemy_survived": 238,
+      "floor_killed": 210,
+      "floor_survived": 535,
+      "wood_killed": 628,
+      "wood_survived": 1196
+    },
+    {
+      "tag": "logistic_deploy@CVthresh",
+      "enemy_killed": 617,
+      "enemy_survived": 25,
+      "floor_killed": 159,
+      "floor_survived": 586,
+      "wood_killed": 1085,
+      "wood_survived": 739
+    }
+  ],
+  "interpretation": null,
+  "single_best_sep_product": 0.39859708545024986,
+  "ensemble_best_sep_product_vs_cleanfloor": 0.7558803236530138,
+  "ensemble_uplift_abs_vs_cleanfloor": 0.357283238202764,
+  "ensemble_uplift_rel_vs_cleanfloor": 0.8963518581657005,
+  "HONEST_inROI_sep_product": 0.5139725774717167,
+  "HONEST_inROI_AUC": 0.809660138957206,
+  "HONEST_single_best_inROI_sep": 0.35591558725474126,
+  "wood_retention_at_logistic_op": 0.40515350877192985,
+  "verdict_stat_separates": true,
+  "verdict_lossless_ok": false,
+  "inROI_stat_uplift_over_single": 0.1580569902169754,
+  "verdict": "PARTIAL \u2014 \u7edf\u8ba1\u5206\u79bb\u4f46\u975e\u65e0\u635f\u53ef\u4ea4\u4ed8. (1) ensemble \u4e09\u4fe1\u53f7\u5728\u540c\u4e00\u56f0\u96be ROI \u5185\u786e\u5b9e\u4f18\u4e8e\u4efb\u4e00\u5355\u4fe1\u53f7: chairFP vs \u771f\u6728\u5730\u677f 5-fold CV AUC=0.810, in-ROI \u5206\u79bb\u79ef=0.514, \u663e\u8457\u8d85\u5355\u4fe1\u53f7\u6700\u4f18 0.356 (+0.158, \u589e\u76ca\u6765\u81ea free-space \u5728 squash \u4e0a 3.4x \u5bcc\u96c6+occlusion 2x, \u4e0e off-plane margin \u7ec4\u5408; alias \u5728\u6b64 union \u4ec5 15/243 \u547d\u4e2d, \u662f\u533a\u57df\u7ea7\u975e\u9010\u70b9\u4fe1\u53f7, \u8d21\u732e~0). (2) \u4f46\u4e0d\u662f\u5e72\u51c0\u5206\u79bb: \u5728\u80fd\u79fb\u9664\u6905\u5b50\u538b\u6241\u5c42\u7684\u64cd\u4f5c\u70b9 (\u6740 617/642=96% chairFP) \u540c\u65f6\u5220\u6389 1085/1824=59% \u7684 ROI \u5185\u771f\u6728\u5730\u677f (wood_ret=0.41 << 0.90 \u65e0\u635f\u95e8). chairFP \u4e0e\u6b20\u89c2\u6d4b\u771f\u5730\u677f\u91cd\u53e0\u4e25\u91cd, \u5224\u522b\u529b\u6700\u7ec8\u4ecd\u7cfb\u4e8e L1 \u89c2\u6d4b\u8986\u76d6\u5ea6. (3) \u7ed3\u8bba: \u4e0b\u6e38\u878d\u5408\u5df2\u88ab\u69a8\u5230\u6781\u9650, \u4e09\u4fe1\u53f7\u5408\u6210\u628a\u5206\u79bb\u79ef\u4ece ~0.30-0.36 \u62ac\u5230 0.51, \u4f46\u65e0\u6cd5\u8fbe\u5230\u65e0\u635f\u4ea4\u4ed8\u6240\u9700\u7684\u6d01\u51c0\u5ea6. \u6b8b\u4f59\u91cd\u53e0\u662f\u4e0a\u6e38\u6570\u636e\u95ee\u9898 \u2014\u2014 5 \u5f20 L1 \u6df1\u5ea6\u5bf9 coverage-edge \u5730\u677f\u4e0e chair-squash \u90fd\u4f9b\u8bc1\u4e0d\u8db3. \u5fc5\u987b\u4e0a\u6e38\u8865\u6bcf\u89c6\u7a20\u5bc6\u6df1\u5ea6 (\u5168 CasDiffMVS MVS free-space, \u975e 5 \u5f20 L1), \u8ba9\u771f\u5730\u677f\u62ff\u5230\u8db3\u591f\u89c2\u6d4b\u5b58\u6d3b\u3001\u540c\u65f6\u5bf9 squash \u4f9b\u53cd\u8bc1."
+}

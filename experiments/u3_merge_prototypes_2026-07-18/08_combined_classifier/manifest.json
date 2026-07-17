@@ -1,0 +1,21 @@
+{
+  "schema": "u3_08_combined_classifier_manifest_v1",
+  "capture": "cap50",
+  "python": "3.11",
+  "inputs_consumed": {
+    "netvote_ply": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/u3_merge_prototypes_2026-07-18/04_merrell_netvote/netvote_candidates.ply",
+      "sha256": "75c4a15c69cdeca688ed2ae52d300d4876663d6da2c19bb2737385d80a1549cf"
+    },
+    "depth_jsonl": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/u3_merge_prototypes_2026-07-18/07_offplane_depth_competition/depth_competition.jsonl",
+      "sha256": "0d01c943e9b3fd88f9cb6b4d6699caff002c57e91c5dc17ad944c20bc19efca0"
+    },
+    "alias_csv": {
+      "path": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/u3_merge_prototypes_2026-07-18/06_glomap_alias/alias_points.csv",
+      "sha256": "1f47b329b92dd7a308f7c6f46781f2d6cf72ca086bdf3e50c9ec9b21f6d14b59"
+    }
+  },
+  "join_key": "union_index (netvote ply row==union_index, coord-exact); alias via NN<=0.03m",
+  "verdict": "PARTIAL: 统计分离(in-ROI CV AUC 0.81/sep 0.514 超单信号0.356)但非无损可交付(操作点误删37-59%真地板)->上游补每视稠密深度"
+}
