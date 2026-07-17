@@ -1,0 +1,62 @@
+{
+  "LIMITATIONS": [
+    "Tracks are reconstructed from verified two_view_geometries, not the exact production track set. temporal_detail points (created in finalize outside the two-view graph) are UNDER-REPRESENTED here; treat 2-view/short-track counts as a lower bound on the low-parallax population.",
+    "The geometric interval model reduces exactly to a parallax threshold (w_rel<=tau <=> alpha>=arcsin(sigma/(f*tau))). With 4K imagery (f=2559px) and sigma=1px, even 2deg parallax gives ~1.1% inverse-depth precision, so the geometric-only DSO gate does NOT hold most sub-2deg points at reasonable tau; it only bites for sub-1deg points or when sigma_px reflects the unrefined 3px temporal_detail regime. See gate_stats.json.",
+    "floater_proxy is a geometric-instability proxy (reproj>2px or implausible depth), NOT a labelled ghost set. The SfM cloud legitimately contains the real chair; the flattened-chair GHOST is a plane-sweep artifact (union_baseline), adjudicated separately in #5/section 7.5. The geometric interval gate is expected NOT to catch the 17deg-parallax plane-sweep ghosts (they are photometrically consistent at floor depth); that requires the PHOTOMETRIC interval -- see photometric_interval_probe.py."
+  ],
+  "camera": {
+    "cx": 1926.7423095703125,
+    "cy": 1082.1748046875,
+    "f_px": 2558.96826171875,
+    "model": "SIMPLE_PINHOLE",
+    "res": [
+      3840,
+      2160
+    ]
+  },
+  "capture": "cap50",
+  "elapsed_s": 6.52,
+  "gates": {
+    "dso": "w_rel <= tau  (mature=born, else immature=held)",
+    "fixed": "parallax >= 2.0 deg (production temporal_detail create gate)"
+  },
+  "generated_utc": "2026-07-17T19:36:19Z",
+  "inputs_sha256": {
+    "sfm_live.db": "380b23d0eae515cc266daa868f5c56a6364b0009e3f725f11d1cf36b863690c2",
+    "sfm_sparse.ply": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df",
+    "sfm_sparse_meta.json": "bdd31a0adc8b1654bc1871592e3b9483c21bb79d0f1645550f5ef12aaedda9fd"
+  },
+  "interval_model": "w_rel = (sigma_px / f) / sin(alpha_max)  [DSO ImmaturePoint first-order, prop to 1/parallax]",
+  "kind": "diagnostic_only__not_a_production_candidate__no_self_approval",
+  "mapping_check_median_reproj_px": 0.5611,
+  "outputs": {
+    "gate_stats.json": "8734ebb3d90928ccb0ef36acf40f5e0fa151782c24c86698307dbcd767ec8f5a",
+    "tracks.npz": "7243ce97b7c07974a97af0519cc8decab6dc0d0c33d72b2271f2fd34c72bc0c5",
+    "viewer_gate_topdown_and_roi.png": "9718e6fabd70e41b12e72e6414c7558b03215a5eca3965dec1bfa6610f666a32"
+  },
+  "params": {
+    "fixed_angle_deg": 2.0,
+    "reproj_keep_px": 4.0,
+    "roi_x": [
+      0.25,
+      1.05
+    ],
+    "roi_z": [
+      -1.7,
+      -0.55
+    ],
+    "sigma_px_set": [
+      1.0,
+      3.0
+    ],
+    "tau_set": [
+      0.05,
+      0.1,
+      0.2
+    ]
+  },
+  "peak_rss_bytes": 144621568,
+  "peak_rss_gb": 0.135,
+  "schema": "pocketworld_dso_interval_gate_prototype_v1",
+  "track_count": 89594
+}

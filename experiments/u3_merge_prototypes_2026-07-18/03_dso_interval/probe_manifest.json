@@ -1,0 +1,81 @@
+{
+  "APPROXIMATIONS": [
+    "Block-matching ZNCC uses an image-aligned 7x7 window in each view (no homography warp of the patch). Adequate for probing interval width/multimodality on small windows; not a calibrated MVS cost.",
+    "Reference view = closest observing view; ray cast through its keypoint. Only image-backed observing frames (115/139) are used."
+  ],
+  "capture": "cap50",
+  "elapsed_s": 92.59,
+  "generated_utc": "2026-07-17T19:34:56Z",
+  "inputs_sha256": {
+    "sfm_fed_frames.jsonl": "d3970be1d4f152b605525b75e4495d2c14c2b17138617ed94fca19711cc1603b",
+    "sfm_live.db": "380b23d0eae515cc266daa868f5c56a6364b0009e3f725f11d1cf36b863690c2",
+    "sfm_sparse_meta.json": "bdd31a0adc8b1654bc1871592e3b9483c21bb79d0f1645550f5ef12aaedda9fd"
+  },
+  "kind": "diagnostic_only__frozen_sample__no_self_approval",
+  "n_sampled": 20,
+  "note_viewer_redrawn": "viewer relabelled EXPLORATORY/INCONCLUSIVE from saved jsonl (no rescan); sha updated here",
+  "outputs": {
+    "photometric_probe.jsonl": "24597c97b8b056d0503dc98abf70743f0ee6409c55adeb2ca71d0622f99e5ba0",
+    "photometric_probe_summary.json": "c4b85722f60e4afc3c482f9d26dbe9f45a8b3fca04b3abd05492c75230d93775",
+    "viewer_photometric_profiles.png": "b73c486745f85b4aa84b35ea5d731e36fd1264bd5de0957513c50e222a7bcbb0"
+  },
+  "params": {
+    "max_resident_images": 10,
+    "n_scan": 161,
+    "patch_half": 3,
+    "patch_step_px": 2.0,
+    "roi_x": [
+      0.25,
+      1.05
+    ],
+    "roi_z": [
+      -1.7,
+      -0.55
+    ],
+    "samples_per_class": 5,
+    "scan_mult_range": [
+      0.35,
+      2.8
+    ],
+    "seed_domain": "pocketworld:dso-photometric-probe:v1",
+    "sigma_px": 3.0,
+    "zncc_margin": 0.05
+  },
+  "peak_rss_bytes": 1404403712,
+  "peak_rss_mb": 1339.3,
+  "schema": "pocketworld_dso_photometric_interval_probe_v1",
+  "summary": {
+    "chair_roi_2view": {
+      "n": 5,
+      "peak_at_tri_frac": 0.4,
+      "photo_modes_median": 3.0,
+      "photo_relwidth_median": 0.00878,
+      "w_geo_median": 0.01023,
+      "zncc_peak_median": 0.857
+    },
+    "chair_roi_multiview": {
+      "n": 5,
+      "peak_at_tri_frac": 0.6,
+      "photo_modes_median": 1.0,
+      "photo_relwidth_median": 0.0,
+      "w_geo_median": 0.00776,
+      "zncc_peak_median": 0.6186
+    },
+    "highpar_control": {
+      "n": 5,
+      "peak_at_tri_frac": 0.4,
+      "photo_modes_median": 2.0,
+      "photo_relwidth_median": 0.0,
+      "w_geo_median": 0.00246,
+      "zncc_peak_median": 0.4183
+    },
+    "lowpar_2view": {
+      "n": 5,
+      "peak_at_tri_frac": 0.8,
+      "photo_modes_median": 1.0,
+      "photo_relwidth_median": 0.0,
+      "w_geo_median": 0.05223,
+      "zncc_peak_median": 0.8656
+    }
+  }
+}

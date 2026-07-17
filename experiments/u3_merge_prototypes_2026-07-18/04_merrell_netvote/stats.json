@@ -1,0 +1,146 @@
+{
+  "artifacts": {
+    "netvote_candidates_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/u3_merge_prototypes_2026-07-18/04_merrell_netvote/netvote_candidates.ply",
+    "netvote_candidates_ply_sha256": "75c4a15c69cdeca688ed2ae52d300d4876663d6da2c19bb2737385d80a1549cf"
+  },
+  "capture": "cap50",
+  "conf_min": 0.5,
+  "demonstration_A_cure_false_kills": {
+    "definition": "outside-ROI floor candidates with photometric support nviews>=5 that catch >=1 L1 free-space violation",
+    "killed_by_single_vote_conviction": 364,
+    "rescued_by_netvote": 364,
+    "rescued_frac_of_falsekill": 1.0,
+    "rescued_opposition_median": 1.0,
+    "rescued_support_median": 5.0
+  },
+  "demonstration_B_chair_honest_test": {
+    "chair_roi_candidates_no_l1_obs": 123,
+    "chair_roi_candidates_with_any_l1_obs": 2343,
+    "chair_roi_freespace_votes_total": 459,
+    "chair_roi_killed_by_netvote": 0,
+    "chair_roi_occlusion_votes_total": 968,
+    "chair_roi_total": 2466,
+    "chair_smear_killed_by_netvote": 0,
+    "chair_smear_killed_by_single_vote": 236,
+    "chair_smear_total": 515,
+    "verdict": "net-vote kills 0/515 chair-smear points (0.0%); the chair-flatten false positive is NOT cured by the net-vote gate because the plane-sweep candidates carry strong photometric support and the L1 depth maps supply essentially no free-space opposition against them (they either do not cover the coverage-edge ROI, abstain on low confidence, or see the flattened point as occluded behind the real object rather than in free space). Root cause is upstream: no independent per-view depth for the plane-sweep candidates -> no counter-evidence to net against."
+  },
+  "elapsed_s": 0.19351312500657514,
+  "l1_frame_ids": [
+    2,
+    20,
+    83,
+    128,
+    129
+  ],
+  "peak_rss_bytes": 85721088,
+  "planesweep": {
+    "agreement_votes_total": 14769,
+    "candidates_with_any_l1_observation": 12954,
+    "candidates_with_freespace_ge1": 1884,
+    "candidates_with_freespace_ge1_frac": 0.1396797153024911,
+    "candidates_with_occlusion_ge1": 6729,
+    "freespace_votes_total": 2177,
+    "killed_netvote": 0,
+    "killed_netvote_frac": 0.0,
+    "killed_single_vote": 1884,
+    "killed_single_vote_frac": 0.1396797153024911,
+    "occlusion_votes_total": 11898,
+    "support_max": 15,
+    "support_median": 4.0,
+    "support_min": 3,
+    "total": 13488
+  },
+  "region_summaries": {
+    "chair_roi_all": {
+      "freespace_max": 1,
+      "freespace_mean": 0.18613138686131386,
+      "killed_by_netvote": 0,
+      "killed_by_netvote_frac": 0.0,
+      "killed_by_single_vote": 459,
+      "killed_by_single_vote_frac": 0.18613138686131386,
+      "name": "chair_roi_all",
+      "support_median": 3.0,
+      "total": 2466,
+      "with_freespace_ge1": 459,
+      "with_freespace_ge1_frac": 0.18613138686131386
+    },
+    "chair_smear_nonwood": {
+      "freespace_max": 1,
+      "freespace_mean": 0.458252427184466,
+      "killed_by_netvote": 0,
+      "killed_by_netvote_frac": 0.0,
+      "killed_by_single_vote": 236,
+      "killed_by_single_vote_frac": 0.458252427184466,
+      "name": "chair_smear_nonwood",
+      "support_median": 4.0,
+      "total": 515,
+      "with_freespace_ge1": 236,
+      "with_freespace_ge1_frac": 0.458252427184466
+    },
+    "outside_roi_true_floor_strong": {
+      "freespace_max": 2,
+      "freespace_mean": 0.14044585987261146,
+      "killed_by_netvote": 0,
+      "killed_by_netvote_frac": 0.0,
+      "killed_by_single_vote": 364,
+      "killed_by_single_vote_frac": 0.1159235668789809,
+      "name": "outside_roi_true_floor_strong",
+      "support_median": 6.0,
+      "total": 3140,
+      "with_freespace_ge1": 364,
+      "with_freespace_ge1_frac": 0.1159235668789809
+    }
+  },
+  "roi_xz": {
+    "X0": 0.25,
+    "X1": 1.05,
+    "Z0": -1.7,
+    "Z1": -0.55
+  },
+  "schema": "u3_merrell_netvote_prototype_v1",
+  "sensitivity_tau_free": {
+    "0.05": {
+      "chair_smear_killed_netvote": 0,
+      "chair_smear_killed_single_vote": 236,
+      "chair_smear_total": 515,
+      "outside_falsekill_single_vote": 946,
+      "outside_rescued_by_netvote": 946,
+      "outside_true_floor_total": 3140,
+      "roi_killed_netvote": 0,
+      "roi_killed_single_vote": 459,
+      "roi_total": 2466
+    },
+    "0.10": {
+      "chair_smear_killed_netvote": 0,
+      "chair_smear_killed_single_vote": 236,
+      "chair_smear_total": 515,
+      "outside_falsekill_single_vote": 364,
+      "outside_rescued_by_netvote": 364,
+      "outside_true_floor_total": 3140,
+      "roi_killed_netvote": 0,
+      "roi_killed_single_vote": 459,
+      "roi_total": 2466
+    },
+    "0.20": {
+      "chair_smear_killed_netvote": 0,
+      "chair_smear_killed_single_vote": 236,
+      "chair_smear_total": 515,
+      "outside_falsekill_single_vote": 97,
+      "outside_rescued_by_netvote": 97,
+      "outside_true_floor_total": 3140,
+      "roi_killed_netvote": 0,
+      "roi_killed_single_vote": 459,
+      "roi_total": 2466
+    }
+  },
+  "sfm_opposition_pass": {
+    "in_roi_total": 6968,
+    "in_roi_with_freespace_ge1": 969,
+    "note": "per-point photometric support (track length) is NOT in the pulled artifacts (sfm_sparse.ply is xyz+rgb; sfm_live.db is a feature/match DB with no points3D), so SfM cannot get a faithful net-vote support term. Reported: opposition only, plus that the on-device pipeline already ran free-space arbitration on the SfM cloud (ghost_arbitration.json).",
+    "total": 92849,
+    "with_freespace_ge1": 24793,
+    "with_freespace_ge1_frac": 0.26702495449600966
+  },
+  "tau_free_m_primary": 0.1
+}

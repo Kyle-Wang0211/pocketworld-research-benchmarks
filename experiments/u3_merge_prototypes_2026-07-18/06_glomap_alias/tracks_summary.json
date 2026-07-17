@@ -1,0 +1,115 @@
+{
+  "capture": "cap50",
+  "input_db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_live.db",
+  "n_images": 139,
+  "n_registered_poses": 139,
+  "n_verified_pairs_used": 738,
+  "n_inlier_edges": 252014,
+  "n_feature_nodes": 1134742,
+  "n_tracks_ge2": 96595,
+  "n_singletons": 861075,
+  "n_alias_tracks": 243,
+  "alias_fraction_of_tracks": 0.00252,
+  "n_alias_triangulated": 243,
+  "n_alias_in_chair_roi": 68,
+  "track_len_hist_top10": {
+    "2": 59831,
+    "3": 18707,
+    "4": 7876,
+    "5": 4186,
+    "6": 2428,
+    "7": 1353,
+    "8": 813,
+    "9": 508,
+    "10": 379,
+    "11": 175
+  },
+  "top_collision_images": [
+    [
+      59,
+      22
+    ],
+    [
+      4,
+      19
+    ],
+    [
+      60,
+      17
+    ],
+    [
+      7,
+      15
+    ],
+    [
+      58,
+      14
+    ],
+    [
+      8,
+      12
+    ],
+    [
+      5,
+      11
+    ],
+    [
+      22,
+      11
+    ],
+    [
+      61,
+      11
+    ],
+    [
+      3,
+      10
+    ],
+    [
+      2,
+      8
+    ],
+    [
+      54,
+      8
+    ],
+    [
+      55,
+      8
+    ],
+    [
+      91,
+      8
+    ],
+    [
+      89,
+      8
+    ]
+  ],
+  "chair_roi": {
+    "X": [
+      0.25,
+      1.05
+    ],
+    "Z": [
+      -1.7,
+      -0.55
+    ]
+  },
+  "note": "alias = same image contributes >=2 features to one union-find track (GLOMAP duplicate-image inconsistency). Marked as observation-site candidates, NOT dropped.",
+  "spatial": {
+    "prod_frac_in_chair_roi": 0.075,
+    "alias_frac_in_chair_roi": 0.2798,
+    "chair_roi_enrichment_x": 3.73,
+    "roi_binomial_z": 12.1,
+    "alias_nn_to_prod_cloud_median_m": 0.0146,
+    "alias_nn_frac_within_5cm": 0.885,
+    "prod_floor_band15_frac": 0.161,
+    "alias_floor_band15_frac_all": 0.1193,
+    "alias_roi_floor_band15_frac": 0.2353,
+    "alias_nonroi_floor_band15_frac": 0.0743,
+    "alias_roi_spread_median_m": 0.0157,
+    "alias_nonroi_spread_median_m": 0.0474
+  },
+  "honest_verdict": "Alias is RARE globally (243 tracks = 0.25% of 96,595 tracks) and does NOT explain the ghost layer or double-wall as a whole (global alias floor-band rate 11.9% is BELOW the 16.1% cloud base rate). BUT alias is strongly spatially enriched in the chair squash ROI: 3.7x (28% vs 7.5%, z=12.1), and those ROI aliases are tightly triangulated (spread 0.016m) and sit in the floor band (23.5% vs 7.4% elsewhere) -> consistent with repeated-texture chair points collapsing onto a second/duplicated site. Alias is therefore a WEAK-VOLUME but SPATIALLY-SPECIFIC birth-time signal: it flags the chair ROI as an observation-site needing pre-birth arbitration, which is exactly the region #5 showed downstream free-space/opposition rules cannot kill."
+}
