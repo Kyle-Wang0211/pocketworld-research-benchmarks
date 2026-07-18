@@ -1,0 +1,198 @@
+--- /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/ec9f9b4e-1fb2-4811-9a59-9ebf8da6d16f/scratchpad/e12_precopy.cc	2026-07-18 17:50:50
++++ /Users/kaidongwang/.config/superpowers/worktrees/Aether3D-cross/incremental-ba-ab-20260714/aether_cpp/third_party/glomap_vendor/build-host-e12-stage2/aether_sfm_c_e12.cc	2026-07-18 17:48:51
+@@ -479,6 +479,15 @@
+   int64_t stat_stage2_transfer_reject_angle = 0;
+   int64_t stat_stage2_alias_claimed = 0;       // site variants routed to the union track
+   int64_t stat_stage2_competing_owner_pairs = 0;  // two distinct established owners met
++  // [E16 M2 LOW-PARALLAX BIRTH BAN] telemetry (all zero while the arm is
++  // dormant; live vs temporal-detail birth mouths ledgered separately).
++  int64_t stat_m2_pairs_checked = 0;        // live pairs priced (ratio computed)
++  int64_t stat_m2_pairs_banned_live = 0;    // live pairs under the ratio threshold
++  int64_t stat_m2_births_banned_live = 0;   // live 2-view creates refused
++  int64_t stat_m2_pairs_checked_td = 0;     // temporal-detail pairs priced
++  int64_t stat_m2_pairs_banned_td = 0;      // td pairs under the threshold
++  int64_t stat_m2_births_banned_td = 0;     // td creates refused
++  int64_t stat_m2_pairs_nodepth_allow = 0;  // no scene depth yet -> birth allowed
+   int64_t stat_already_assigned = 0;  // both observations already on same track
+   int64_t stat_merge_needed = 0;      // both observations on different tracks
+   int64_t stat_merge_accepted = 0;    // conservative live track merges accepted
+@@ -1097,6 +1106,53 @@
+       EnvGateDouble("AETHER_STAGE2_TRANSFER_MAX_ANGLE_DEG", 60.0) * M_PI /
+       180.0);
+   return value;
++}
++
++// [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] ORB-SLAM2 birth gate
++// (LocalMapping::CreateNewMapPoints): before a pair may BIRTH new 2-view
++// points, its baseline / median-scene-depth ratio must reach the threshold
++// (ORB-SLAM2 ships 0.01; env-repriceable). Low-parallax pairs are the
++// certified nursery of the sigma_depth ghost shell (doublewall verdict:
++// 5.2 deg thick vs 11.4 deg thin), so refusing BIRTH there chokes the shell
++// at its source. Growing an established track, merging, and every other arm
++// stay untouched; with the env unset the arm is fully dormant (default-OFF
++// discipline). Known cost deliberately being priced by E16: ~80% of
++// low-parallax 2-views are the retained weak-texture wall coverage (memory
++// anchor), so wall cover may drop — the verdict must quantify that exchange.
++bool M2LowParallaxBanEnabled() {
++  const char* value = std::getenv("AETHER_M2_LOWPARALLAX_BAN");
++  return value && value[0] == '1';
++}
++
++double M2LowParallaxMinRatio() {
++  static const double value =
++      EnvGateDouble("AETHER_M2_LOWPARALLAX_MIN_RATIO", 0.01);
++  return value;
++}
++
++// ORB-SLAM2 KeyFrame::ComputeSceneMedianDepth(q=2) transplanted onto the
++// colmap Reconstruction: median z-depth, in the given camera frame, over the
++// scene points currently observed by that image. Returns <=0 when the image
++// observes no triangulated points yet (bootstrap) — the caller must then
++// ALLOW birth: no scene scale exists to price parallax against, exactly like
++// ORB-SLAM whose gate only runs after map initialization.
++double M2MedianSceneDepth(const colmap::Reconstruction& recon,
++                          colmap::image_t image_id,
++                          const colmap::Rigid3d& cam_from_world) {
++  if (!recon.ExistsImage(image_id)) return -1.0;
++  const colmap::Image& image = recon.Image(image_id);
++  std::vector<double> depths;
++  depths.reserve(image.NumPoints3D());
++  for (const colmap::Point2D& point2D : image.Points2D()) {
++    if (!point2D.HasPoint3D()) continue;
++    const Eigen::Vector3d x_cam =
++        cam_from_world * recon.Point3D(point2D.point3D_id).xyz;
++    if (x_cam.z() > 0.0) depths.push_back(x_cam.z());
++  }
++  if (depths.empty()) return -1.0;
++  const size_t mid = (depths.size() - 1) / 2;  // ORB-SLAM vDepths[(N-1)/q], q=2
++  std::nth_element(depths.begin(), depths.begin() + mid, depths.end());
++  return depths[mid];
+ }
+ 
+ // Express every frame's measured pixel rays in the deterministic frame-zero
+@@ -3981,6 +4037,30 @@
+           reconstruction->Camera(image1.CameraId());
+       const colmap::Camera& camera2 =
+           reconstruction->Camera(image2.CameraId());
++      // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] Same ORB-SLAM2 gate at
++      // the finalize temporal-detail birth mouth. Median scene depth over
++      // the FINAL reconstruction's points observed by frame2 (the later
++      // frame of the pair), in its camera frame; baseline from the same
++      // recon poses this path's own create gates use. Grow (AddObservation
++      // into established tracks) stays untouched — only CREATE is banned.
++      bool m2_td_pair_banned = false;
++      if (M2LowParallaxBanEnabled()) {
++        ++s->stat_m2_pairs_checked_td;
++        const double m2_med_depth = M2MedianSceneDepth(
++            *reconstruction, frame2.image_id, image2.CamFromWorld());
++        if (m2_med_depth > 0.0) {
++          const double m2_baseline =
++              (image1.CamFromWorld().TgtOriginInSrc() -
++               image2.CamFromWorld().TgtOriginInSrc())
++                  .norm();
++          if (m2_baseline / m2_med_depth < M2LowParallaxMinRatio()) {
++            m2_td_pair_banned = true;
++            ++s->stat_m2_pairs_banned_td;
++          }
++        } else {
++          ++s->stat_m2_pairs_nodepth_allow;
++        }
++      }
+       for (const colmap::FeatureMatch& match : geometry.inlier_matches) {
+         if (match.point2D_idx1 >= image1.NumPoints2D() ||
+             match.point2D_idx2 >= image2.NumPoints2D()) {
+@@ -4185,6 +4265,12 @@
+           continue;
+         }
+ 
++        // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] Banned pair: refuse
++        // the temporal-detail CREATE (grow handled above stays intact).
++        if (m2_td_pair_banned) {
++          ++s->stat_m2_births_banned_td;
++          continue;
++        }
+         const std::optional<Eigen::Vector2d> cam_point1 =
+             camera1.CamFromImg(point1.xy);
+         const std::optional<Eigen::Vector2d> cam_point2 =
+@@ -4232,6 +4318,16 @@
+         ++s->stat_temporal_detail_created;
+       }
+     }
++  }
++  // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] Finalize-side ledger (dead
++  // line while the arm is dormant).
++  if (M2LowParallaxBanEnabled()) {
++    LOG(WARNING) << "[aether_sfm] m2-lowparallax-td pairs_checked="
++                 << s->stat_m2_pairs_checked_td
++                 << " pairs_banned=" << s->stat_m2_pairs_banned_td
++                 << " births_banned_td=" << s->stat_m2_births_banned_td
++                 << " td_created=" << s->stat_temporal_detail_created
++                 << " td_grown=" << s->stat_temporal_detail_grown;
+   }
+   db->Close();
+ }
+@@ -7586,6 +7682,28 @@
+         const Eigen::Matrix3x4d P_cur = rec.cam_from_world.ToMatrix();
+         const Eigen::Vector3d c_prev = prev.cam_from_world.TgtOriginInSrc();
+         const Eigen::Vector3d c_cur = rec.cam_from_world.TgtOriginInSrc();
++        // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] Per-pair ORB-SLAM2
++        // ratio: baseline / median scene depth of the ESTABLISHED neighbor
++        // frame (prev), in prev's camera frame (the KF2 semantics of
++        // LocalMapping::CreateNewMapPoints). Baseline uses the same
++        // FrameRecord poses this path's own create gates triangulate with
++        // (one gauge). A banned pair may still grow/merge established
++        // tracks below — only the 2-view CREATE is refused.
++        bool m2_pair_banned = false;
++        if (M2LowParallaxBanEnabled()) {
++          ++s->stat_m2_pairs_checked;
++          const double m2_med_depth = M2MedianSceneDepth(
++              *s->live_recon, prev.image_id, prev.cam_from_world);
++          if (m2_med_depth > 0.0) {
++            if ((c_prev - c_cur).norm() / m2_med_depth <
++                M2LowParallaxMinRatio()) {
++              m2_pair_banned = true;
++              ++s->stat_m2_pairs_banned_live;
++            }
++          } else {
++            ++s->stat_m2_pairs_nodepth_allow;
++          }
++        }
+         const colmap::FeatureMatches& inliers = two_view_geometry.inlier_matches;
+         const bool use_inliers = !inliers.empty();
+         const int grow_n =
+@@ -7993,6 +8111,15 @@
+               ++s->stat_site_owner_accepted;
+               continue;
+             }
++          }
++          // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] The pair's
++          // baseline/medianSceneDepth ratio is under threshold: this pair
++          // may not BIRTH a 2-view point (the sigma_depth shell nursery).
++          // Grow/merge above already ran untouched; when the env is unset
++          // this branch is dead code (m2_pair_banned stays false).
++          if (m2_pair_banned) {
++            ++s->stat_m2_births_banned_live;
++            continue;
+           }
+           const std::optional<Eigen::Vector2d> nn1 = s->camera.CamFromImg(prev.points[i1]);
+           const std::optional<Eigen::Vector2d> nn2 = s->camera.CamFromImg(rec.points[i2]);
+@@ -8115,6 +8242,19 @@
+                    << " rej_angle=" << s->stat_stage2_transfer_reject_angle
+                    << " alias_claimed=" << s->stat_stage2_alias_claimed
+                    << " competing=" << s->stat_stage2_competing_owner_pairs;
++    }
++
++    // [E16 M2 LOW-PARALLAX BIRTH BAN 2026-07-19] Bite telemetry on the same
++    // cadence: pairs_banned==0 with the env set means the arm never engaged
++    // (check the env / scene depth availability first).
++    if (M2LowParallaxBanEnabled() &&
++        (frame_id == 1 || (frame_id + 1) % 20 == 0)) {
++      LOG(WARNING) << "[aether_sfm] m2-lowparallax frames=" << (frame_id + 1)
++                   << " ratio_min=" << M2LowParallaxMinRatio()
++                   << " pairs_checked=" << s->stat_m2_pairs_checked
++                   << " pairs_banned=" << s->stat_m2_pairs_banned_live
++                   << " births_banned_live=" << s->stat_m2_births_banned_live
++                   << " nodepth_allow=" << s->stat_m2_pairs_nodepth_allow;
+     }
+ 
+     // ── Windowed local bundle adjustment (Cauchy) over the last W frames ──
