@@ -81,3 +81,9 @@ open "http://localhost:8123/experiments/rs_replication_exec_2026-07-19/compare_a
 - `cap50/`:`e3_candidate_cap50.ply`、`diff_cap50.ply`、`e3_arrays.npz`、`stats.json`、`side_by_side_cap50.png`、`trail_before_after_cap50.png`、`sweep_curve_cap50.png`
 - `cap51/`:同构 7 件
 - 本文件 `E3_EXEC_LOG.md`
+
+---
+## 用户肉眼判定(2026-07-19)
+用户在 compare_any.html 同 gauge 并排(cap50, overview)查看 E3 候选 vs 生产原版后判定:
+**"鬼层确实压缩了一些。继续"** → E3 出生纪律刀 [USER-VISUAL PASS],授权继续执行。
+(bh=8 走廊票的过拟合披露与新场景独立验证要求维持不变。)
