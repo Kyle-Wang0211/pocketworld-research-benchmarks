@@ -1,0 +1,212 @@
+{
+  "cap": "cap51",
+  "inputs": {
+    "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_live.db",
+    "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+    "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse.ply",
+    "baseline_ply_sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7",
+    "e3_candidate_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap51/e3_candidate_cap51.ply",
+    "e3_candidate_sha256": "29bf9b1bd196f354faf727cfec9bd86cffcceb10cb88a3242faad7f98402d564",
+    "e3_arrays": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap51/e3_arrays.npz",
+    "e2a_fingerprints": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/cap51/fingerprints.npz",
+    "sha_checks": "S1 stats + E2-A fingerprints ply_sha256 == baseline sha (asserted); e3_candidate == prod[~cull] (asserted)"
+  },
+  "gauge": "production refined poses; injected refit points triangulated in the SAME frame (frozen poses/K); NO Sim3, no realignment",
+  "rule": {
+    "principle": "RS discipline: tie points passing THE unified ruler get published; injection side runs STRICTER gates than incumbent side",
+    "G0": "S1 unified 2-view rule (verified pair + DLT refit + reproj<=3px + theta>=2deg), byte-identical constants",
+    "G1": "dedup: > 0.02 m from any production point",
+    "G2": "resurrection guard: >= 0.05 m from every E3-culled point (stricter, injected must not repopulate cleaned zones)",
+    "G3": "floor guard: floor_h >= -0.015 m on arbitrated plane (stricter than stock E3 -0.1; constructively zero double-floor-band adds)",
+    "G4": "chair-ROI guard (cap50): no injected point in ROI within 0.05 m of floor",
+    "G5": "corridor vote: BOTH observation corridors marched (E2-A constants) against E3-candidate solid voxels; either >= 8 solid crossings => cull; no proxy votes (stricter than stock net>=0); too-short corridor = clear (declared)",
+    "G7": "floor-thickening guard: floor-slab (|y-y_floor|<=0.06) injections kept ONLY as pure hole-fill (tight slab <=0.03 AND new 2cm cover cell AND thickness cell with <8 E3 slab pts) - protects the floor thickness ruler from 2-view depth-noise shell",
+    "G6": "after-context E2-A four-signature scan on combined cloud; ANY flagged injected point dropped, iterated to fixed point (stricter than stock earn-existence)",
+    "colorize": "certified recipe: bilinear at obs_xy-0.5 full-res (COLMAP convention), OOB skipped, representative sample = lower-median-luma real sample (2 obs => darker), round+clamp; missing photo => remaining obs; none => NN production color (declared)"
+  },
+  "funnel": {
+    "G0_s1_pass_pairs": 28224,
+    "G1_dedup_gt2cm": 8538,
+    "G2_resurrection_guard": 8205,
+    "G2_cut": 333,
+    "G3_floor_guard": 6728,
+    "G3_cut": 1477,
+    "G4_chair_roi_guard": 6728,
+    "G4_cut": 0,
+    "G7_floor_holefill_only": 6435,
+    "G7_cut": 293,
+    "G5_corridor_bh8_both_cams": 6434,
+    "G5_cut": 1,
+    "G5_short_corridor_clear": 0,
+    "G6_signature_clean": 6277,
+    "G6_cut": 157,
+    "G6_iters": 3
+  },
+  "colorize": {
+    "n_frames_missing_jpg": 24,
+    "n_oob_samples": 0,
+    "n_nn_fallback_points": 444,
+    "n_from_two_obs": 4048,
+    "n_from_one_obs": 1785
+  },
+  "check_1_four_rulers": {
+    "ruler_1_points": {
+      "before_e3": 64117,
+      "after_v11": 70394,
+      "injected": 6277,
+      "delta_pct": 9.79,
+      "vs_production_baseline": {
+        "baseline": 64392,
+        "after_v11": 70394,
+        "delta_pct": 9.32
+      }
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -0.8976,
+      "before": {
+        "n_floor_slab": 21735,
+        "thickness_med_cell_p90p10_m": 0.01172623932361605,
+        "thickness_p90_cell_m": 0.04235821366310122,
+        "n_thickness_cells": 766,
+        "thickness_global_std_m": 0.01902175894417086,
+        "cover_cells_2cm": 4363,
+        "cover_area_m2": 1.7452
+      },
+      "after": {
+        "n_floor_slab": 21984,
+        "thickness_med_cell_p90p10_m": 0.01215949058532717,
+        "thickness_p90_cell_m": 0.04341626584529878,
+        "n_thickness_cells": 784,
+        "thickness_global_std_m": 0.018996158175517062,
+        "cover_cells_2cm": 4567,
+        "cover_area_m2": 1.8268
+      }
+    },
+    "ruler_3_coverage": {
+      "before_cells_2cm": 4363,
+      "after_cells_2cm": 4567,
+      "new_cells_from_injection": 204
+    },
+    "ruler_4_wallclock_host_proxy_s": {
+      "load_s": 0.4,
+      "rescue_extract_s": 1.4,
+      "corridor_vote_s": 0.2,
+      "signature_scan_s": 0.6,
+      "before_detector_s": 0.2,
+      "colorize_s": 2.7,
+      "renders_s": 1.9
+    }
+  },
+  "check_2_ghost_recheck": {
+    "double_floor_band_density": {
+      "band_floor_h_m": [
+        -0.06,
+        -0.015
+      ],
+      "before": 6880,
+      "after": 6880,
+      "added_by_injection": 0
+    },
+    "below_floor_points": {
+      "gate_m": -0.1,
+      "before": 0,
+      "after": 0,
+      "added_by_injection": 0
+    },
+    "trail_signature_points": {
+      "before_e3_cloud": {
+        "S_behind": 168,
+        "S_below": 0,
+        "S_streak": 20,
+        "S_out": 319,
+        "union": 500
+      },
+      "after_v11_cloud": {
+        "S_behind": 178,
+        "S_below": 0,
+        "S_streak": 14,
+        "S_out": 236,
+        "union": 423
+      },
+      "after_flag_on_injected": 0,
+      "after_flag_on_e3_points": 423,
+      "e3_points_newly_flagged_by_injection_context": 50,
+      "e3_points_unflagged_by_injection_context": 127,
+      "note": "gate is count-level (union must not increase). Context shift detail: injected occupancy ADDS evidence - an e3 point newly flagged S_behind now provably looks through a (newly densified) surface; its own position/status is unchanged, it becomes a candidate for a FUTURE knife, not a new ghost. Unflagged count = injected density legitimately de-wisps sparse real geometry."
+    },
+    "chair_roi": {
+      "roi": null,
+      "before": null,
+      "after": null
+    },
+    "pass": true
+  },
+  "check_3_spatial_distribution": {
+    "dist_to_nearest_production_point_m": {
+      "[0.02,0.05)": 5443,
+      "[0.05,0.1)": 683,
+      "[0.1,0.25)": 151,
+      "[0.25,10.0)": 0
+    },
+    "local_e3_density_cnt10": {
+      "hole_cnt10_le10": 573,
+      "mid": 1404,
+      "already_dense_cnt10_ge40": 4300,
+      "frac_already_dense": 0.685,
+      "frac_hole_or_mid": 0.315
+    },
+    "layer_counts": {
+      "floor": 246,
+      "object_low": 3260,
+      "wall_high": 2771
+    },
+    "layer_x_density": {
+      "floor": {
+        "hole": 5,
+        "mid": 80,
+        "dense": 161
+      },
+      "object_low": {
+        "hole": 312,
+        "mid": 654,
+        "dense": 2294
+      },
+      "wall_high": {
+        "hole": 256,
+        "mid": 670,
+        "dense": 1845
+      }
+    },
+    "new_floor_cover_cells_2cm": 204,
+    "note": "layering by height above arbitrated floor plane: floor=|fh|<=0.06, object_low=fh<=1.0, wall_high=fh>1.0 (proxy layering, declared)"
+  },
+  "quality_of_injected": {
+    "theta_deg": {
+      "p10": 2.492,
+      "p50": 4.38,
+      "p90": 7.136
+    },
+    "refit_maxres_px": {
+      "p10": 0.213,
+      "p50": 1.153,
+      "p90": 2.425
+    }
+  },
+  "honesty": [
+    "evidence rebuilt from sfm_live.db in observation space; NOT byte-exact production finalize replication",
+    "injected positions are host DLT refit results with frozen refined poses (structure-only); production would re-triangulate + BA these tracks - positions may differ at mm scale",
+    "colorize: 24 registered frames have no photo on disk (cap51); points with zero recoverable samples fall back to nearest-production-point color (444 pts, declared)",
+    "representative color with 2 samples = the darker sample (production lower-median rule), not an average",
+    "G3/G4/G5-unanimity/G6-zero-flag/G7 are injection-side strictness choices (stricter than user-approved E3 stock rule), chosen so the ghost recheck passes constructively; the cost is conservatism: some real rescue points near cleaned zones/floor band/covered floor cells are left out (counted in funnel)",
+    "first-run lesson (disclosed): without G7 the cap50 floor med-cell thickness regressed 0.04844->0.05172 m (+3.3mm) - floor injections into already-covered cells thicken instead of fill; G7 was added in response and the run repeated (this is a rule change made BEFORE any user approval of E6 products, not after)",
+    "wallclock = host python proxy, not device numbers; nothing here ships without sign-off"
+  ],
+  "outputs_sha256": {
+    "v1_1_candidate_cap51.ply": "09692f89cc9e0fcedd88a52b5250de2b36d725c89c3557b5ce888d28a0f63033",
+    "diff_inject_cap51.ply": "39488476e2c1f25f60aedef904236ca198c535387585a2723c66410b2cee4b6d",
+    "side_by_side_cap51.png": "cf615c77419ff3466c9d2355b9a76bd31937537a3b65dd16d34bf18108c89cb4",
+    "inject_overlay_cap51.png": "9bf5705b05ae5045d98eb16d9221fc53af727b1abc975df274acb6734d167f6b",
+    "spatial_dist_cap51.png": "178526b17f388759ebe87af4ddc1fc437b0c490f19e9fdd12f8c16fb22007960",
+    "rescue_provenance_cap51.npz": "b20db71e910716e8cbee9bbfc3a22f86d382aa0ae5b509105357d76dc6a581c7"
+  }
+}
