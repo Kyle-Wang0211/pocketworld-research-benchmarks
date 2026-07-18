@@ -1,0 +1,124 @@
+=== cap51 ===
+v1.1 baseline reconstructed: 70394 pts (64117 stock + 6277 injected), PLY identity asserted
+obs recovery: stock ge2=5360/64117 1=12805 0=45952 (1.1s)
+edges: A=20002 B=913 union=20482 rootskip=2
+ round 1: cands=20482 proc=3072 acted=82 died=70 (cum transfer=85 deaths=70)
+ round 2: cands=20394 proc=3059 acted=2 died=2 (cum transfer=87 deaths=72)
+ round 3: cands=20391 proc=3058 acted=0 died=0 (cum transfer=87 deaths=72)
+ final pass: acted=299
+ round 4: cands=6711 proc=1006 acted=0 died=0 (cum transfer=400 deaths=297)
+ final pass: acted=1
+ round 5: cands=6690 proc=1003 acted=0 died=0 (cum transfer=401 deaths=298)
+ final pass: acted=0
+obs conservation: before=38510 kept=38007 transferred_in_alive=401 dropped_with_death=108 bridge_extra_injected=6
+after cloud: 70096 pts (dead 298, strengthened winners 278)
+{
+ "funnel": {
+  "loser_died_natural": 298,
+  "attempted": 44985,
+  "no_transfer": 19283,
+  "skip_dist_gt5cm": 25317,
+  "winner_retriangulated": 299,
+  "obs_dropped_with_death": 108,
+  "obs_transferred": 401,
+  "obs_fail_reproj": 13165,
+  "retri_guard_keep_pos": 85,
+  "loser_survived": 86,
+  "tie_broken_by_reproj": 6825,
+  "obs_fail_viewangle": 5,
+  "cov_guard_veto": 1
+ },
+ "ruler_1_points": {
+  "before_v11": 70394,
+  "after_e11": 70096,
+  "delta": -298,
+  "deaths_natural": 298,
+  "strengthened_winners": 278,
+  "note": "delta = losers whose remaining obs < 2 after gated transfer (natural death, not killed)"
+ },
+ "ruler_2_floor_thickness": {
+  "y_floor": -0.8976,
+  "before": {
+   "n_floor_slab": 21984,
+   "thickness_med_cell_p90p10_m": 0.01215949058532717,
+   "thickness_p90_cell_m": 0.04341626584529878,
+   "n_thickness_cells": 784,
+   "thickness_global_std_m": 0.018996158175517062,
+   "cover_cells_2cm": 4567,
+   "cover_area_m2": 1.8268
+  },
+  "after": {
+   "n_floor_slab": 21945,
+   "thickness_med_cell_p90p10_m": 0.012203860282897994,
+   "thickness_p90_cell_m": 0.0434256422519684,
+   "n_thickness_cells": 783,
+   "thickness_global_std_m": 0.019000261019346473,
+   "cover_cells_2cm": 4567,
+   "cover_area_m2": 1.8268
+  },
+  "med_cell_change_pct": 0.36
+ },
+ "ruler_3_coverage_hard_gate": {
+  "before_cells_2cm": 4567,
+  "after_cells_2cm": 4567,
+  "delta": 0,
+  "pass": true,
+  "constructive_vetoes": 1
+ },
+ "ghost_shell_v11_caliber": {
+  "double_floor_band": {
+   "band": [
+    -0.06,
+    -0.015
+   ],
+   "before": 6880,
+   "after": 6875,
+   "delta": -5,
+   "delta_pct": -0.07
+  },
+  "below_floor": {
+   "before": 0,
+   "after": 0
+  },
+  "band_evidence_accounting": {
+   "band_points_before": 6880,
+   "band_points_with_ge2_obs": 341,
+   "band_points_touching_any_edge": 688,
+   "band_points_died": 5
+  }
+ },
+ "three_way_reconciliation": {
+  "E8_all_or_nothing": {
+   "band_delta_pct": -3.87,
+   "cross_layer_rejected": "44-47% of attempts died at all-or-nothing reproj>4px",
+   "fail_reproj": 22378,
+   "attempted": 47410
+  },
+  "E9_conflict_mv_blunt_knife": {
+   "band_below_delta_pct": -96.26,
+   "cover_delta_pct": -30.3,
+   "pose_warp": {
+    "n_common": 105,
+    "median_dC_mm": [
+     -17.3,
+     62.7,
+     -9.8
+    ],
+    "p90_residual_mm": 197.1
+   },
+   "verdict": "cap51: band -96.3% but coverage -30.3% FAIL (collateral kill); cap50: band +38.0% (pose-gauge warp made it WORSE) -- topology surgery + BA = E9-C lesson"
+  },
+  "E11_this": {
+   "band_delta": -5,
+   "band_delta_pct": -0.07,
+   "cover_delta": 0,
+   "cross_layer_obs_gate": {
+    "attempted": 2294,
+    "passed": 25,
+    "pass_rate_pct": 1.09,
+    "note": "per-observation transfer pass rate on cross-layer (|dfh|>1.5cm) competitions -- E8's death spot"
+   }
+  }
+ }
+}
+ALL DONE

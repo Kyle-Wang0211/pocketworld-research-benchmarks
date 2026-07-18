@@ -1,0 +1,333 @@
+{
+  "cap": "cap51",
+  "inputs": {
+    "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_live.db",
+    "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+    "production_ply_sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7",
+    "baseline": "v1.1 candidate (user-approved E6 output)",
+    "v1_1_ply_sha256": "09692f89cc9e0fcedd88a52b5250de2b36d725c89c3557b5ce888d28a0f63033"
+  },
+  "gauge": "production refined poses FROZEN throughout; no BA, no Sim3; zero pose warp by construction (E9-C lesson bypassed)",
+  "semantics": {
+    "winner": "support count (recovered obs) decides winner ONLY; ties by mean self-reproj",
+    "loser": "observations individually gated at winner position (pos depth -> reproj <= 4.0px (our 3-4px caliber; chi2 sigma=1 equiv 16) -> view angle < 60 deg); passing obs TRANSFER; loser keeps failures; dies naturally only when < 2 own obs remain",
+    "winner_retriangulation": "multiview DLT over merged obs; accepted only if all obs <= 4.0px AND inside member bbox +-0.01m (E8 dive lesson); else position kept",
+    "small_steps": "top-confidence 15% of open competitions per round (min 500), positions retriangulated between rounds, iterate to convergence + final full pass",
+    "aux_distance_veto_m": 0.05,
+    "coverage_guard": "constructive atomic veto: death emptying an uncovered 2cm cell vetoes the whole competition; winner reposition emptying its sole cell is skipped",
+    "license": "ORB-SLAM2 Fuse/Replace criteria SEMANTICS self-implemented; zero GPLv3 code copied"
+  },
+  "obs_recovery": {
+    "stock_ge2_obs": 5360,
+    "stock_1_obs": 12805,
+    "stock_0_obs": 45952,
+    "n_stock": 64117,
+    "n_injected": 6277
+  },
+  "evidence_graph": {
+    "edges_A_shared_track": 20002,
+    "edges_B_pair_bridge": 913,
+    "edges_union": 20482,
+    "roots_skipped_fanout": 2
+  },
+  "funnel": {
+    "loser_died_natural": 298,
+    "attempted": 44985,
+    "no_transfer": 19283,
+    "skip_dist_gt5cm": 25317,
+    "winner_retriangulated": 299,
+    "obs_dropped_with_death": 108,
+    "obs_transferred": 401,
+    "obs_fail_reproj": 13165,
+    "retri_guard_keep_pos": 85,
+    "loser_survived": 86,
+    "tie_broken_by_reproj": 6825,
+    "obs_fail_viewangle": 5,
+    "cov_guard_veto": 1
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "candidates": 20482,
+      "processed": 3072,
+      "acted": 82,
+      "died": 70,
+      "obs_transferred_cum": 85,
+      "deaths_cum": 70
+    },
+    {
+      "round": 2,
+      "candidates": 20394,
+      "processed": 3059,
+      "acted": 2,
+      "died": 2,
+      "obs_transferred_cum": 87,
+      "deaths_cum": 72
+    },
+    {
+      "round": 3,
+      "candidates": 20391,
+      "processed": 3058,
+      "acted": 0,
+      "died": 0,
+      "obs_transferred_cum": 87,
+      "deaths_cum": 72
+    },
+    {
+      "round": "3-final",
+      "processed": 6711,
+      "acted": 299,
+      "deaths_cum": 297
+    },
+    {
+      "round": 4,
+      "candidates": 6711,
+      "processed": 1006,
+      "acted": 0,
+      "died": 0,
+      "obs_transferred_cum": 400,
+      "deaths_cum": 297
+    },
+    {
+      "round": "4-final",
+      "processed": 6690,
+      "acted": 1,
+      "deaths_cum": 298
+    },
+    {
+      "round": 5,
+      "candidates": 6690,
+      "processed": 1003,
+      "acted": 0,
+      "died": 0,
+      "obs_transferred_cum": 401,
+      "deaths_cum": 298
+    },
+    {
+      "round": "5-final",
+      "processed": 6690,
+      "acted": 0,
+      "deaths_cum": 298
+    }
+  ],
+  "transfer_reproj_px": {
+    "n": 401,
+    "p10": 3.05548,
+    "p50": 3.50388,
+    "p90": 3.8901,
+    "pass_at_2.45px_chi2_5.99": 16,
+    "pass_at_3px": 27
+  },
+  "obs_conservation": {
+    "total_before": 38510,
+    "kept_on_alive": 38007,
+    "transferred_into_alive_winners": 401,
+    "dropped_only_with_dying_loser": 108,
+    "bridge_pair_obs_injected": 6,
+    "identity": "before + bridge_injected == kept + transferred + dropped",
+    "holds": true
+  },
+  "ruler_1_points": {
+    "before_v11": 70394,
+    "after_e11": 70096,
+    "delta": -298,
+    "deaths_natural": 298,
+    "strengthened_winners": 278,
+    "note": "delta = losers whose remaining obs < 2 after gated transfer (natural death, not killed)"
+  },
+  "ruler_2_floor_thickness": {
+    "y_floor": -0.8976,
+    "before": {
+      "n_floor_slab": 21984,
+      "thickness_med_cell_p90p10_m": 0.01215949058532717,
+      "thickness_p90_cell_m": 0.04341626584529878,
+      "n_thickness_cells": 784,
+      "thickness_global_std_m": 0.018996158175517062,
+      "cover_cells_2cm": 4567,
+      "cover_area_m2": 1.8268
+    },
+    "after": {
+      "n_floor_slab": 21945,
+      "thickness_med_cell_p90p10_m": 0.012203860282897994,
+      "thickness_p90_cell_m": 0.0434256422519684,
+      "n_thickness_cells": 783,
+      "thickness_global_std_m": 0.019000261019346473,
+      "cover_cells_2cm": 4567,
+      "cover_area_m2": 1.8268
+    },
+    "med_cell_change_pct": 0.36
+  },
+  "ruler_2b_wall_thickness_proxy": {
+    "before": {
+      "n_wall_slab": 3963,
+      "thickness_med_cell_p90p10_m": 0.03576035271534295,
+      "thickness_p90_cell_m": 0.0583880983652834,
+      "n_thickness_cells": 165
+    },
+    "after": {
+      "n_wall_slab": 3954,
+      "thickness_med_cell_p90p10_m": 0.035480459582373974,
+      "thickness_p90_cell_m": 0.0583880983652834,
+      "n_thickness_cells": 165
+    }
+  },
+  "ruler_3_coverage_hard_gate": {
+    "before_cells_2cm": 4567,
+    "after_cells_2cm": 4567,
+    "delta": 0,
+    "pass": true,
+    "constructive_vetoes": 1
+  },
+  "ruler_4_wallclock_host_proxy_s": {
+    "load_s": 0.6,
+    "pair_reextract_s": 1.7,
+    "obs_recovery_s": 1.1,
+    "edges_s": 0.0,
+    "transfer_s": 0.9,
+    "metrics_s": 0.4,
+    "audit_s": 1.2,
+    "renders_s": 0.4
+  },
+  "ghost_shell_v11_caliber": {
+    "double_floor_band": {
+      "band": [
+        -0.06,
+        -0.015
+      ],
+      "before": 6880,
+      "after": 6875,
+      "delta": -5,
+      "delta_pct": -0.07
+    },
+    "below_floor": {
+      "before": 0,
+      "after": 0
+    },
+    "band_evidence_accounting": {
+      "band_points_before": 6880,
+      "band_points_with_ge2_obs": 341,
+      "band_points_touching_any_edge": 688,
+      "band_points_died": 5
+    }
+  },
+  "ghost_shell_e9c_fixed_frame_v2": {
+    "before": {
+      "gauge_shift_mm": 5.0,
+      "band_below": 7793,
+      "shell_above": 847,
+      "ghost_2045": 6471,
+      "below_floor": 20,
+      "floor": {
+        "n_floor_slab": 21987,
+        "thickness_med_cell_p90p10_m": 0.012051941010241651,
+        "thickness_p90_cell_m": 0.04477946525737746,
+        "n_thickness_cells": 787,
+        "cover_cells_2cm": 5092,
+        "cover_area_m2": 2.0368
+      }
+    },
+    "after": {
+      "gauge_shift_mm": 5.0,
+      "band_below": 7787,
+      "shell_above": 847,
+      "ghost_2045": 6466,
+      "below_floor": 20,
+      "floor": {
+        "n_floor_slab": 21948,
+        "thickness_med_cell_p90p10_m": 0.012007826389186595,
+        "thickness_p90_cell_m": 0.0447926279952299,
+        "n_thickness_cells": 786,
+        "cover_cells_2cm": 5091,
+        "cover_area_m2": 2.0364
+      }
+    }
+  },
+  "g1_true_surface_retention": {
+    "true_floor_pts_before": 13922,
+    "true_floor_pts_died": 32,
+    "true_floor_obs_before": 5158,
+    "true_floor_obs_after_incl_transfers": 5147,
+    "retention_pct": 99.787,
+    "dying_tf_losers_detail": {
+      "obs_transferred_to_winner_retained": 32,
+      "obs_dropped_genuine_loss": 11,
+      "winners_still_in_pm15mm": "30/32"
+    },
+    "zero_dropped": false,
+    "e9_reference": "E9 conflict_mv collateral kill on true floor was -42%; this ruler is the same red line",
+    "note": "obs on |fh|<=15mm points; transfers INTO true-floor winners count toward retention; transferred-out obs live on the winner (retained), only dropped obs are losses"
+  },
+  "chair_roi": {
+    "before": null,
+    "after": null
+  },
+  "dead_fh_histogram": {
+    "band_below_-60..-15mm": 5,
+    "true_floor_+-15mm": 32,
+    "shell_above_15..60mm": 2,
+    "above_60mm": 259,
+    "below_-60mm": 0
+  },
+  "winner_displacement_m": {
+    "p10": 0.0,
+    "p50": 0.00198,
+    "p90": 0.0101
+  },
+  "kill_audit": {
+    "n_dead_total": 298,
+    "n_sampled": 36,
+    "zone_histogram": {
+      "elsewhere": 31,
+      "true_floor": 4,
+      "double_floor_band": 1
+    },
+    "dist_loser_winner_mm": {
+      "p50": 8.9,
+      "p90": 35.9
+    },
+    "reproj_sep_px_p50": 3.7,
+    "true_floor_deaths_in_sample": 4
+  },
+  "three_way_reconciliation": {
+    "E8_all_or_nothing": {
+      "band_delta_pct": -3.87,
+      "cross_layer_rejected": "44-47% of attempts died at all-or-nothing reproj>4px",
+      "fail_reproj": 22378,
+      "attempted": 47410
+    },
+    "E9_conflict_mv_blunt_knife": {
+      "band_below_delta_pct": -96.26,
+      "cover_delta_pct": -30.3,
+      "pose_warp": {
+        "n_common": 105,
+        "median_dC_mm": [
+          -17.3,
+          62.7,
+          -9.8
+        ],
+        "p90_residual_mm": 197.1
+      },
+      "verdict": "cap51: band -96.3% but coverage -30.3% FAIL (collateral kill); cap50: band +38.0% (pose-gauge warp made it WORSE) -- topology surgery + BA = E9-C lesson"
+    },
+    "E11_this": {
+      "band_delta": -5,
+      "band_delta_pct": -0.07,
+      "cover_delta": 0,
+      "cross_layer_obs_gate": {
+        "attempted": 2294,
+        "passed": 25,
+        "pass_rate_pct": 1.09,
+        "note": "per-observation transfer pass rate on cross-layer (|dfh|>1.5cm) competitions -- E8's death spot"
+      }
+    }
+  },
+  "outputs_sha256": {
+    "e11_candidate_cap51.ply": "9b7b99d96daff71066237cdd68a3cf003ef2db188961e8c0d6a7021eaea11bde",
+    "diff_transfer_cap51.ply": "89250b7be92291cf2801a1e9ca086b1fdf7e467772f303deb587044b8d498c65",
+    "transfer_provenance_cap51.npz": "22791794d89f9a6f9ca5a4da85869ac9671b41257ebc105a8fc74bbef480528d",
+    "ghost_crosssection_floor_cap51.png": "3b183502813c96b5d00dbee9844005be795b44a97ab981d7db4c22c266d70c39",
+    "ghost_crosssection_diff_cap51.png": "eda2b3e197c6e3ad4b79e572951b7ce5cf6f2d1aa8172c177a6b696c47f18e02",
+    "side_by_side_cap51.png": "fbb36093aef0cf3fee52a0c8c43888775a1e743939da4c21582e21a9d61e0eb9",
+    "kill_audit_cap51.png": "b860396f7c6cb740f8c1c68e0bd857203976e5434c4f8ad4a06f6f6fd325d834"
+  }
+}
