@@ -1,0 +1,104 @@
+=== cap50 ===
+pairs re-extracted with node ids: 48226 (identity vs E6 provenance asserted)
+v1.1 baseline reconstructed: 103702 pts (92132 stock + 11570 injected), PLY identity asserted
+obs recovery: stock ge2-obs=11732/92132, 1-obs=19765, 0-obs=60635 (1.5s)
+edges: A(shared-track)=58782 B(pair-bridge)=2101 (cross-point bridges 2843/13630 both-side hits; G1-excluded-pair bridges 1147) union=59715 roots skipped fanout>20: 41
+ merge pass 1: merged 10169 (total 10169)
+ merge pass 2: merged 102 (total 10271)
+ merge pass 3: merged 0 (total 10271)
+merged groups=6794 members=17065 -> after cloud 93431 pts (delta -10271)
+{
+ "merge_funnel": {
+  "attempted": 140736,
+  "fail_reproj_gt4px": 130161,
+  "dlt_used": 7171,
+  "dlt_fallback_trial": 3320,
+  "cov_guard_veto": 220,
+  "fail_neg_depth": 84,
+  "merged_total": 10271,
+  "passes": 3
+ },
+ "groups": {
+  "n_groups": 6794,
+  "n_member_points": 17065,
+  "group_size_hist": {
+   "2": 4881,
+   "3": 1120,
+   "4": 433,
+   "5": 187,
+   "6": 83,
+   "7": 31,
+   "8": 28,
+   "9": 11,
+   "10": 6,
+   "11": 8,
+   "12": 1,
+   "13": 2,
+   "15": 1,
+   "18": 1,
+   "19": 1
+  },
+  "member_displacement_m": {
+   "p10": 0.0,
+   "p50": 0.0063,
+   "p90": 0.38665
+  },
+  "consensus_nobs": {
+   "p10": 1.0,
+   "p50": 2.0,
+   "p90": 4.0
+  }
+ },
+ "ruler_2_floor_thickness": {
+  "y_floor": -1.1109,
+  "before": {
+   "n_floor_slab": 10760,
+   "thickness_med_cell_p90p10_m": 0.048382031917572066,
+   "thickness_p90_cell_m": 0.07759971141815176,
+   "n_thickness_cells": 398,
+   "thickness_global_std_m": 0.02723013300180175,
+   "cover_cells_2cm": 2416,
+   "cover_area_m2": 0.9664
+  },
+  "after": {
+   "n_floor_slab": 10066,
+   "thickness_med_cell_p90p10_m": 0.048863340002013866,
+   "thickness_p90_cell_m": 0.07611045241355896,
+   "n_thickness_cells": 386,
+   "thickness_global_std_m": 0.027157033771711962,
+   "cover_cells_2cm": 2425,
+   "cover_area_m2": 0.97
+  },
+  "med_cell_change_pct": 0.99
+ },
+ "ruler_3_coverage_hard_gate": {
+  "before_cells_2cm": 2416,
+  "after_cells_2cm": 2425,
+  "delta": 9,
+  "pass": true,
+  "constructive_vetoes": 220
+ },
+ "ghost_shell": {
+  "double_floor_band": {
+   "band_floor_h_m": [
+    -0.06,
+    -0.015
+   ],
+   "before": 3917,
+   "after": 3706,
+   "delta": -211
+  },
+  "below_floor": {
+   "before": 0,
+   "after": 490
+  },
+  "band_evidence_accounting": {
+   "band_points_before": 3917,
+   "band_points_with_ge2_obs": 99,
+   "band_points_touching_any_edge": 405,
+   "band_points_merged": 285,
+   "note": "answers: does connectivity evidence actually reach the shell?"
+  }
+ }
+}
+ALL DONE

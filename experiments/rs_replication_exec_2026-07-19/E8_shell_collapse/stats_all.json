@@ -1,0 +1,424 @@
+{
+  "cap50": {
+    "cap": "cap50",
+    "inputs": {
+      "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_live.db",
+      "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+      "production_ply_sha256": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df",
+      "baseline": "v1.1 candidate (user-approved E6 output; E8 is the next layer on top of it)",
+      "v1_1_ply_sha256": "077bdd37dd84c8950f40d6dcbe301ab59f2bf185de43b735b28637833f815eb7"
+    },
+    "gauge": "production refined poses; NO Sim3, NO realignment; consensus positions from frozen-pose multiview DLT",
+    "rule": {
+      "evidence": "observation connectivity ONLY (shared verified-track roots + verified-pair bridges incl. G1-excluded <2cm pairs); NO pure-distance merging (cap47 lesson)",
+      "merge_test": "COLMAP all-or-nothing: trial=track-length weighted average; EVERY obs of both tracks (+bridging pair obs) must reproject <= 4.0px with positive depth",
+      "aux_distance_cap_m": 0.05,
+      "aux_distance_note": "distance only VETOES (never creates a merge); added after first run showed 4px all-or-nothing cannot constrain depth on low-parallax obs unions (displacement p90=0.39m, 490 new below-floor)",
+      "consensus_position": "multiview DLT over merged obs, accepted only if it passes the same all-obs test AND stays inside member bbox +-0.01m; else track-length weighted average (COLMAP's own merge position); counted",
+      "recursive": "passes over edge list to fixed point",
+      "coverage_guard": "constructive: merge vetoed if it would empty a 2cm cover cell without re-covering it"
+    },
+    "obs_recovery": {
+      "stock_ge2_obs": 11732,
+      "stock_1_obs": 19765,
+      "stock_0_obs": 60635,
+      "n_stock": 92132,
+      "n_injected": 11570,
+      "note": "S1-identical recovery (3px nearest verified-matched keypoint per frame); injected points carry their two birth obs exactly"
+    },
+    "evidence_graph": {
+      "edges_shared_track_A": 58782,
+      "edges_pair_bridge_B": 2101,
+      "bridges_from_G1_excluded_pairs": 1147,
+      "pairs_with_both_side_hits": 13630,
+      "pairs_bridging_two_different_points": 2843,
+      "edges_union": 59715,
+      "root_fanout_hist_ge2": {
+        "2": 5324,
+        "3": 2227,
+        "4": 1001,
+        "5": 548,
+        "6": 306,
+        "7": 175,
+        "8": 147,
+        "9": 76,
+        "10": 60,
+        "11": 58,
+        "12": 28,
+        "13": 30,
+        "14": 30,
+        "15": 20,
+        "16": 16,
+        "17": 18,
+        "18": 6,
+        "19": 12,
+        "20": 7,
+        "21": 6,
+        "22": 6,
+        "23": 4,
+        "24": 4,
+        "25": 2,
+        "26": 6,
+        "28": 1,
+        "29": 4,
+        "30": 1,
+        "31": 1,
+        "32": 1,
+        "37": 1,
+        "42": 1,
+        "53": 1,
+        "56": 1,
+        "59": 1
+      },
+      "roots_skipped_fanout_gt_cap": 41
+    },
+    "merge_funnel": {
+      "attempted": 149151,
+      "skip_dist_gt5cm": 73896,
+      "dlt_fallback_trial": 4735,
+      "fail_reproj_gt4px": 66111,
+      "dlt_used": 4409,
+      "cov_guard_veto": 18,
+      "merged_total": 9126,
+      "passes": 3
+    },
+    "groups": {
+      "n_groups": 6457,
+      "n_member_points": 15583,
+      "group_size_hist": {
+        "2": 4847,
+        "3": 993,
+        "4": 368,
+        "5": 152,
+        "6": 49,
+        "7": 22,
+        "8": 13,
+        "9": 8,
+        "10": 2,
+        "11": 2,
+        "12": 1
+      },
+      "member_displacement_m": {
+        "p10": 0.0,
+        "p50": 0.00222,
+        "p90": 0.01514
+      },
+      "consensus_nobs": {
+        "p10": 1.0,
+        "p50": 2.0,
+        "p90": 4.0
+      }
+    },
+    "ruler_1_points": {
+      "before_v11": 103702,
+      "after_e8": 94576,
+      "delta": -9126,
+      "note": "delta = merged twins collapsing into consensus; observations all retained (union), nothing deleted"
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -1.1109,
+      "before": {
+        "n_floor_slab": 10760,
+        "thickness_med_cell_p90p10_m": 0.048382031917572066,
+        "thickness_p90_cell_m": 0.07759971141815176,
+        "n_thickness_cells": 398,
+        "thickness_global_std_m": 0.02723013300180175,
+        "cover_cells_2cm": 2416,
+        "cover_area_m2": 0.9664
+      },
+      "after": {
+        "n_floor_slab": 10233,
+        "thickness_med_cell_p90p10_m": 0.0490010261535645,
+        "thickness_p90_cell_m": 0.07733157157897944,
+        "n_thickness_cells": 389,
+        "thickness_global_std_m": 0.02716845876672669,
+        "cover_cells_2cm": 2416,
+        "cover_area_m2": 0.9664
+      },
+      "med_cell_change_pct": 1.28
+    },
+    "ruler_2b_wall_thickness_proxy": {
+      "wall_normal": [
+        -0.89879,
+        0.00091,
+        -0.43838
+      ],
+      "wall_offset_m": 1.8289,
+      "before": {
+        "n_wall_slab": 22335,
+        "thickness_med_cell_p90p10_m": 0.052263719425372446,
+        "thickness_p90_cell_m": 0.08813639476087705,
+        "n_thickness_cells": 334
+      },
+      "after": {
+        "n_wall_slab": 18951,
+        "thickness_med_cell_p90p10_m": 0.05302780315373015,
+        "thickness_p90_cell_m": 0.08829109925273343,
+        "n_thickness_cells": 332
+      },
+      "med_cell_change_pct": 1.46,
+      "note": "E8-declared proxy ruler (dominant vertical plane frozen on BEFORE cloud, +-6cm slab, 5cm cells, p90-p10 along wall normal); not a certified metric"
+    },
+    "ruler_3_coverage_hard_gate": {
+      "before_cells_2cm": 2416,
+      "after_cells_2cm": 2416,
+      "delta": 0,
+      "pass": true,
+      "constructive_vetoes": 18
+    },
+    "ruler_4_wallclock_host_proxy_s": {
+      "load_s": 0.7,
+      "pair_reextract_s": 2.5,
+      "obs_recovery_s": 2.1,
+      "edges_s": 0.1,
+      "merge_s": 1.6,
+      "metrics_s": 0.6,
+      "renders_s": 0.5
+    },
+    "ghost_shell": {
+      "double_floor_band": {
+        "band_floor_h_m": [
+          -0.06,
+          -0.015
+        ],
+        "before": 3917,
+        "after": 3752,
+        "delta": -165
+      },
+      "below_floor": {
+        "before": 0,
+        "after": 0
+      },
+      "band_evidence_accounting": {
+        "band_points_before": 3917,
+        "band_points_with_ge2_obs": 99,
+        "band_points_touching_any_edge": 405,
+        "band_points_merged": 262,
+        "note": "answers: does connectivity evidence actually reach the shell?"
+      }
+    },
+    "chair_roi": {
+      "before": {
+        "n_roi": 7224,
+        "n_roi_near_floor_5cm": 93
+      },
+      "after": {
+        "n_roi": 6822,
+        "n_roi_near_floor_5cm": 91
+      }
+    },
+    "cap47_reconciliation": {
+      "cap47_pure_spatial_FRAG_MERGE": "-3% thickness, condemned (no observation evidence)",
+      "e8_floor_med_cell_change_pct": 1.28,
+      "e8_wall_med_cell_change_pct": 1.46,
+      "e8_double_floor_band_change": -165
+    },
+    "outputs_sha256": {
+      "e8_candidate_cap50.ply": "b3c0704316f9ef62b8cb1c0668501cc0e184f0b5e6ba4c31788d353054c92cb3",
+      "diff_collapse_cap50.ply": "3a1665be5b73b00ac28dc62b960380a492f4119d0fe8b17a55428bbe393bf5bd",
+      "collapse_provenance_cap50.npz": "f28b2d0035783bf60fcb5468695ec6eeeb1ee6a2b38fb0036cee73b404fff0c5",
+      "ghost_crosssection_floor_cap50.png": "011930b5371a4802d90bbfcdf207c0710a1a3c7cf68f2f9e1226bfbf9b7eb9cd",
+      "ghost_crosssection_wall_cap50.png": "2234b46c35908828d3f70cb81b4d4e95db0285d9472683f1e6c81daabf022e40",
+      "side_by_side_cap50.png": "0fb6d7f741c73e08e4378cdbba4161cdbeeda27e2a94bf7b0f16582d094ca60b"
+    }
+  },
+  "cap51": {
+    "cap": "cap51",
+    "inputs": {
+      "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_live.db",
+      "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+      "production_ply_sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7",
+      "baseline": "v1.1 candidate (user-approved E6 output; E8 is the next layer on top of it)",
+      "v1_1_ply_sha256": "09692f89cc9e0fcedd88a52b5250de2b36d725c89c3557b5ce888d28a0f63033"
+    },
+    "gauge": "production refined poses; NO Sim3, NO realignment; consensus positions from frozen-pose multiview DLT",
+    "rule": {
+      "evidence": "observation connectivity ONLY (shared verified-track roots + verified-pair bridges incl. G1-excluded <2cm pairs); NO pure-distance merging (cap47 lesson)",
+      "merge_test": "COLMAP all-or-nothing: trial=track-length weighted average; EVERY obs of both tracks (+bridging pair obs) must reproject <= 4.0px with positive depth",
+      "aux_distance_cap_m": 0.05,
+      "aux_distance_note": "distance only VETOES (never creates a merge); added after first run showed 4px all-or-nothing cannot constrain depth on low-parallax obs unions (displacement p90=0.39m, 490 new below-floor)",
+      "consensus_position": "multiview DLT over merged obs, accepted only if it passes the same all-obs test AND stays inside member bbox +-0.01m; else track-length weighted average (COLMAP's own merge position); counted",
+      "recursive": "passes over edge list to fixed point",
+      "coverage_guard": "constructive: merge vetoed if it would empty a 2cm cover cell without re-covering it"
+    },
+    "obs_recovery": {
+      "stock_ge2_obs": 5360,
+      "stock_1_obs": 12805,
+      "stock_0_obs": 45952,
+      "n_stock": 64117,
+      "n_injected": 6277,
+      "note": "S1-identical recovery (3px nearest verified-matched keypoint per frame); injected points carry their two birth obs exactly"
+    },
+    "evidence_graph": {
+      "edges_shared_track_A": 20002,
+      "edges_pair_bridge_B": 913,
+      "bridges_from_G1_excluded_pairs": 268,
+      "pairs_with_both_side_hits": 6950,
+      "pairs_bridging_two_different_points": 1386,
+      "edges_union": 20482,
+      "root_fanout_hist_ge2": {
+        "2": 3423,
+        "3": 1226,
+        "4": 571,
+        "5": 241,
+        "6": 131,
+        "7": 76,
+        "8": 32,
+        "9": 24,
+        "10": 10,
+        "11": 10,
+        "12": 9,
+        "13": 3,
+        "14": 5,
+        "17": 2,
+        "18": 1,
+        "19": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1
+      },
+      "roots_skipped_fanout_gt_cap": 2
+    },
+    "merge_funnel": {
+      "attempted": 47410,
+      "skip_dist_gt5cm": 19908,
+      "dlt_fallback_trial": 3007,
+      "fail_reproj_gt4px": 22378,
+      "dlt_used": 2117,
+      "cov_guard_veto": 116,
+      "merged_total": 5008,
+      "passes": 3
+    },
+    "groups": {
+      "n_groups": 3960,
+      "n_member_points": 8968,
+      "group_size_hist": {
+        "2": 3207,
+        "3": 544,
+        "4": 152,
+        "5": 41,
+        "6": 11,
+        "7": 1,
+        "8": 2,
+        "9": 1,
+        "11": 1
+      },
+      "member_displacement_m": {
+        "p10": 0.0,
+        "p50": 0.0014,
+        "p90": 0.01303
+      },
+      "consensus_nobs": {
+        "p10": 1.0,
+        "p50": 2.0,
+        "p90": 4.0
+      }
+    },
+    "ruler_1_points": {
+      "before_v11": 70394,
+      "after_e8": 65386,
+      "delta": -5008,
+      "note": "delta = merged twins collapsing into consensus; observations all retained (union), nothing deleted"
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -0.8976,
+      "before": {
+        "n_floor_slab": 21984,
+        "thickness_med_cell_p90p10_m": 0.01215949058532717,
+        "thickness_p90_cell_m": 0.04341626584529878,
+        "n_thickness_cells": 784,
+        "thickness_global_std_m": 0.018996158175517062,
+        "cover_cells_2cm": 4567,
+        "cover_area_m2": 1.8268
+      },
+      "after": {
+        "n_floor_slab": 20641,
+        "thickness_med_cell_p90p10_m": 0.011903548240661588,
+        "thickness_p90_cell_m": 0.04289508461952203,
+        "n_thickness_cells": 760,
+        "thickness_global_std_m": 0.01911634616914659,
+        "cover_cells_2cm": 4569,
+        "cover_area_m2": 1.8276
+      },
+      "med_cell_change_pct": -2.1
+    },
+    "ruler_2b_wall_thickness_proxy": {
+      "wall_normal": [
+        0.27563,
+        0.01017,
+        -0.96121
+      ],
+      "wall_offset_m": 1.1843,
+      "before": {
+        "n_wall_slab": 3963,
+        "thickness_med_cell_p90p10_m": 0.03576035271534295,
+        "thickness_p90_cell_m": 0.0583880983652834,
+        "n_thickness_cells": 165
+      },
+      "after": {
+        "n_wall_slab": 3755,
+        "thickness_med_cell_p90p10_m": 0.033365617989124075,
+        "thickness_p90_cell_m": 0.054825225594828726,
+        "n_thickness_cells": 159
+      },
+      "med_cell_change_pct": -6.7,
+      "note": "E8-declared proxy ruler (dominant vertical plane frozen on BEFORE cloud, +-6cm slab, 5cm cells, p90-p10 along wall normal); not a certified metric"
+    },
+    "ruler_3_coverage_hard_gate": {
+      "before_cells_2cm": 4567,
+      "after_cells_2cm": 4569,
+      "delta": 2,
+      "pass": true,
+      "constructive_vetoes": 116
+    },
+    "ruler_4_wallclock_host_proxy_s": {
+      "load_s": 0.6,
+      "pair_reextract_s": 1.8,
+      "obs_recovery_s": 1.2,
+      "edges_s": 0.0,
+      "merge_s": 0.6,
+      "metrics_s": 0.4,
+      "renders_s": 0.4
+    },
+    "ghost_shell": {
+      "double_floor_band": {
+        "band_floor_h_m": [
+          -0.06,
+          -0.015
+        ],
+        "before": 6880,
+        "after": 6614,
+        "delta": -266
+      },
+      "below_floor": {
+        "before": 0,
+        "after": 0
+      },
+      "band_evidence_accounting": {
+        "band_points_before": 6880,
+        "band_points_with_ge2_obs": 341,
+        "band_points_touching_any_edge": 688,
+        "band_points_merged": 480,
+        "note": "answers: does connectivity evidence actually reach the shell?"
+      }
+    },
+    "chair_roi": {
+      "before": null,
+      "after": null
+    },
+    "cap47_reconciliation": {
+      "cap47_pure_spatial_FRAG_MERGE": "-3% thickness, condemned (no observation evidence)",
+      "e8_floor_med_cell_change_pct": -2.1,
+      "e8_wall_med_cell_change_pct": -6.7,
+      "e8_double_floor_band_change": -266
+    },
+    "outputs_sha256": {
+      "e8_candidate_cap51.ply": "b116b6b9744fbc4f84f6061d9ec712b86e74aa94cbbf3c443cced220edb35e44",
+      "diff_collapse_cap51.ply": "d8c5b50d1e87794bf37eec057846b2ef6781f8cb249b5659fba4f74912b8aaa8",
+      "collapse_provenance_cap51.npz": "8ccc08b50194e288333a21751c48dc9a8bfb632c5e54bf2fcdd058beff78a984",
+      "ghost_crosssection_floor_cap51.png": "efb40a80eb09f6f4ea337dffebfef9175fb085c86faad3cb959f3b6e55588f47",
+      "ghost_crosssection_wall_cap51.png": "bdd3e17b7a9a1bd09459d4d82ebd73f2b7366f66801afa198cc3c76de0c9ca49",
+      "side_by_side_cap51.png": "5ecba181a389d30caacbafe53f224b66a1a77f9ec675f2127078b37b0b262fab"
+    }
+  }
+}
