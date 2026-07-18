@@ -1,0 +1,433 @@
+--- bench/aether_sfm_c.cc	2026-07-17 10:30:03
++++ build-host-e12-stage2/aether_sfm_c_e12.cc	2026-07-18 16:13:38
+@@ -469,6 +469,16 @@
+   int64_t stat_multiview_birth_observations = 0;
+   int64_t stat_multiview_site_observation_attempted = 0;
+   int64_t stat_multiview_site_observation_rejected = 0;
++  // [E12 STAGE2 FINE KNIFE 2026-07-19] merge-and-transfer birth telemetry.
++  int64_t stat_stage2_union_events = 0;        // conflicted-site matches routed through the knife
++  int64_t stat_stage2_union_births = 0;        // first births of a conflicted site family
++  int64_t stat_stage2_transfer_accepted = 0;   // loser observations transferred into the winner
++  int64_t stat_stage2_transfer_dedup = 0;      // same-image obs already representing the site
++  int64_t stat_stage2_transfer_reject_depth = 0;
++  int64_t stat_stage2_transfer_reject_reproj = 0;
++  int64_t stat_stage2_transfer_reject_angle = 0;
++  int64_t stat_stage2_alias_claimed = 0;       // site variants routed to the union track
++  int64_t stat_stage2_competing_owner_pairs = 0;  // two distinct established owners met
+   int64_t stat_already_assigned = 0;  // both observations already on same track
+   int64_t stat_merge_needed = 0;      // both observations on different tracks
+   int64_t stat_merge_accepted = 0;    // conservative live track merges accepted
+@@ -1051,9 +1061,44 @@
+ double ExactSiteOwnerMinDepthGapM() {
+   static const double value =
+       EnvGateDouble("AETHER_EXACT_SITE_OWNER_MIN_DEPTH_M", 0.012);
++  return value;
++}
++
++// [E12 STAGE2 FINE KNIFE 2026-07-19] Merge-and-transfer birth for exact-site
++// conflicts. Where AETHER_CONFLICT_MULTIVIEW_BIRTH defers EVERY 2-view birth
++// touching a multi-variant DSP-SIFT site (collective punishment: cap51 real
++// floor slab −42%, coverage −30%, E9-C verdict), this arm keeps the FIRST
++// birth of a site family on the ordinary 2-view create gates (byte-identical
++// thresholds) and converts every LATER competing hypothesis at that site into
++// a per-observation transfer into the established winner track: support
++// (track length, deterministic tie-break) picks the winner, loser
++// observations pass {positive depth, reproj at the winner position <= 4 px,
++// viewing-direction cone < 60 deg, one observation per image} individually,
++// and one triangulation produces exactly one point per site family. A
++// gate-failing observation is dropped — a second point is never born on a
++// conflicted site. Ordinary no-conflict births are untouched by construction.
++// Gate numerics follow the E8/E11 certified 4 px cross-layer physics; both
++// knobs stay env-repriceable for the mandated 'o'-config recalibration.
++bool Stage2MergeTransferEnabled() {
++  const char* value = std::getenv("AETHER_STAGE2_MERGE_TRANSFER");
++  return value && value[0] == '1';
++}
++
++double Stage2TransferMaxReprojPx() {
++  static const double value =
++      EnvGateDouble("AETHER_STAGE2_TRANSFER_REPROJ_PX", 4.0);
+   return value;
+ }
+ 
++double Stage2TransferMinCosAngle() {
++  // 60 deg viewing cone (cos = 0.5) — ORB-SLAM Fuse-lineage guard against
++  // fusing the two faces of a genuinely two-sided surface (M16 companion).
++  static const double value = std::cos(
++      EnvGateDouble("AETHER_STAGE2_TRANSFER_MAX_ANGLE_DEG", 60.0) * M_PI /
++      180.0);
++  return value;
++}
++
+ // Express every frame's measured pixel rays in the deterministic frame-zero
+ // camera before matching, triangulation, and BA.  This removes autofocus-
+ // induced K changes without adding a per-frame camera or any BA degrees of
+@@ -1197,6 +1242,7 @@
+        !ExactSiteOwnerV2Enabled() &&
+        !ExactSiteGeometricWinnerEnabled() &&
+        !ConflictMultiViewBirthEnabled() &&
++       !Stage2MergeTransferEnabled() &&
+        !PostGeometrySiteAssignmentEnabled())) {
+     return;
+   }
+@@ -1210,6 +1256,7 @@
+       ExactSiteOwnerV2Enabled() ||
+       ExactSiteGeometricWinnerEnabled() ||
+       ConflictMultiViewBirthEnabled() ||
++      Stage2MergeTransferEnabled() ||
+       PostGeometrySiteAssignmentEnabled()) {
+     frame->exact_site_grid.reserve(frame->points.size());
+     for (uint32_t idx = 0; idx < frame->points.size(); ++idx) {
+@@ -1246,7 +1293,7 @@
+ }
+ 
+ bool IsExactSiteConflict(const FrameRecord& frame, const uint32_t feature_idx) {
+-  if (!ConflictMultiViewBirthEnabled() ||
++  if ((!ConflictMultiViewBirthEnabled() && !Stage2MergeTransferEnabled()) ||
+       feature_idx >= frame.points.size() || frame.exact_site_grid.empty()) {
+     return false;
+   }
+@@ -1622,7 +1669,11 @@
+ std::optional<uint32_t> FindExactSiteOwnerV2Feature(
+     const colmap::Reconstruction& recon, const FrameRecord& frame,
+     const uint32_t query_idx) {
+-  if (!ExactSiteOwnerV2Enabled() || query_idx >= frame.points.size() ||
++  // [E12] The stage-2 merge-transfer arm reuses this owner scan verbatim: its
++  // "longest established track, deterministic tie-break" rule IS the support
++  // criterion that picks the winner system of a conflicted site.
++  if ((!ExactSiteOwnerV2Enabled() && !Stage2MergeTransferEnabled()) ||
++      query_idx >= frame.points.size() ||
+       frame.exact_site_grid.empty() || !recon.ExistsImage(frame.image_id)) {
+     return std::nullopt;
+   }
+@@ -1666,7 +1717,11 @@
+ int64_t ClaimExactSiteOwnerV2Aliases(
+     const colmap::Reconstruction& recon, FrameRecord* frame,
+     const uint32_t owner_idx) {
+-  if (!ExactSiteOwnerV2Enabled() || !frame ||
++  // [E12] Also live under the stage-2 merge-transfer arm: claiming every
++  // still-unassigned variant of an owned site is what routes later competing
++  // hypotheses into the SAME track (union) instead of a twin birth.
++  if ((!ExactSiteOwnerV2Enabled() && !Stage2MergeTransferEnabled()) ||
++      !frame ||
+       owner_idx >= frame->points.size() ||
+       frame->exact_site_grid.empty() ||
+       !recon.ExistsImage(frame->image_id)) {
+@@ -1694,7 +1749,56 @@
+   }
+   return claimed;
+ }
++
++// [E12 STAGE2 FINE KNIFE 2026-07-19] Per-observation transfer gate chain,
++// SYNTHESIS v2 S5 order: one-obs-per-image dedup -> positive depth ->
++// reprojection at the winner's triangulated position (<= 4 px certified
++// cross-layer physics, E8/E11) -> viewing cone < 60 deg (anti two-sided
++// fusion). The SINGLE source of gate truth for both the birth-time union
++// branch and alias-routed track growth; a failing observation is dropped,
++// never seeded into a second point.
++enum class Stage2TransferVerdict { kOk, kDupImage, kDepth, kReproj, kAngle };
+ 
++Stage2TransferVerdict EvaluateStage2Transfer(
++    const colmap::Reconstruction& recon,
++    const colmap::Camera& camera,
++    const colmap::point3D_t pid,
++    const colmap::image_t obs_image_id,
++    const colmap::Rigid3d& obs_cam_from_world,
++    const Eigen::Vector2d& obs_kp) {
++  const colmap::Point3D& p3d = recon.Point3D(pid);
++  for (const colmap::TrackElement& el : p3d.track.Elements()) {
++    if (el.image_id == obs_image_id) return Stage2TransferVerdict::kDupImage;
++  }
++  const Eigen::Vector3d X_c = obs_cam_from_world * p3d.xyz;
++  if (X_c.z() <= 0.0) return Stage2TransferVerdict::kDepth;
++  const std::optional<Eigen::Vector2d> pr = camera.ImgFromCam(X_c);
++  if (!pr || (*pr - obs_kp).norm() > Stage2TransferMaxReprojPx()) {
++    return Stage2TransferVerdict::kReproj;
++  }
++  // Mean viewing direction (unit point->camera rays) over the current track.
++  // A degenerate direction sum fails OPEN: the reproj gate above remains the
++  // binding constraint and rejecting on numerical noise would be arbitrary.
++  Eigen::Vector3d mean_dir = Eigen::Vector3d::Zero();
++  for (const colmap::TrackElement& el : p3d.track.Elements()) {
++    if (!recon.ExistsImage(el.image_id)) continue;
++    const Eigen::Vector3d cc =
++        recon.Image(el.image_id).CamFromWorld().TgtOriginInSrc();
++    const double n = (cc - p3d.xyz).norm();
++    if (n > 1e-12) mean_dir += (cc - p3d.xyz) / n;
++  }
++  if (mean_dir.norm() > 1e-9) {
++    mean_dir.normalize();
++    const Eigen::Vector3d cc = obs_cam_from_world.TgtOriginInSrc();
++    const double n = (cc - p3d.xyz).norm();
++    if (n > 1e-12 &&
++        ((cc - p3d.xyz) / n).dot(mean_dir) < Stage2TransferMinCosAngle()) {
++      return Stage2TransferVerdict::kAngle;
++    }
++  }
++  return Stage2TransferVerdict::kOk;
++}
++
+ NearbySiteOwners FindExactSiteOwners(const colmap::Reconstruction& recon,
+                                      const FrameRecord& frame,
+                                      const uint32_t query_idx) {
+@@ -7603,6 +7707,44 @@
+               ++s->stat_grow_reject_reproj;
+               continue;
+             }
++            // [E12 STAGE2 FINE KNIFE 2026-07-19] An edge that reached an
++            // established track through a knife-claimed site alias
++            // (raw != resolved) is a LOSER OBSERVATION arriving late: hold it
++            // to the stage-2 transfer gates (one-obs-per-image, depth>0,
++            // reproj <= 4 px at the track position, cone < 60 deg) instead of
++            // the wide grow gate, so cross-layer sigma_depth evidence is
++            // dropped rather than absorbed into a smeared union track.
++            // Non-aliased edges keep the shipped grow behavior untouched.
++            if (Stage2MergeTransferEnabled() &&
++                (raw_i1 != i1 || raw_i2 != i2)) {
++              const Stage2TransferVerdict verdict = EvaluateStage2Transfer(
++                  *s->live_recon, s->camera, pid, gimg, gcfw, gkp);
++              if (verdict != Stage2TransferVerdict::kOk) {
++                switch (verdict) {
++                  case Stage2TransferVerdict::kDupImage:
++                    ++s->stat_stage2_transfer_dedup;
++                    break;
++                  case Stage2TransferVerdict::kDepth:
++                    ++s->stat_grow_rejected;
++                    ++s->stat_grow_reject_cheirality;
++                    ++s->stat_stage2_transfer_reject_depth;
++                    break;
++                  case Stage2TransferVerdict::kReproj:
++                    ++s->stat_grow_rejected;
++                    ++s->stat_grow_reject_reproj;
++                    ++s->stat_stage2_transfer_reject_reproj;
++                    break;
++                  case Stage2TransferVerdict::kAngle:
++                    ++s->stat_grow_rejected;
++                    ++s->stat_stage2_transfer_reject_angle;
++                    break;
++                  default:
++                    break;
++                }
++                continue;
++              }
++              ++s->stat_stage2_transfer_accepted;
++            }
+             if (ConflictMultiViewSiteOwnerEnabled() &&
+                 !AetherExactSiteObservationAvailable(
+                     *s->live_recon,
+@@ -7621,6 +7763,15 @@
+                   ClaimExactSiteOwnerV2Aliases(*s->live_recon, grown_frame,
+                                                gidx);
+             }
++            // [E12 STAGE2 FINE KNIFE 2026-07-19] The grown observation's site
++            // now belongs to this track: claim its still-unassigned variants
++            // so later competing hypotheses union here instead of reaching
++            // the birth path. No-op for single-variant sites.
++            if (Stage2MergeTransferEnabled()) {
++              FrameRecord* stage2_grown_frame = has1 ? &rec : &prev;
++              s->stat_stage2_alias_claimed += ClaimExactSiteOwnerV2Aliases(
++                  *s->live_recon, stage2_grown_frame, gidx);
++            }
+             ++s->stat_grow_accepted;
+             continue;
+           }
+@@ -7630,6 +7781,173 @@
+           // left unassigned here. Their verified edges were added to the
+           // conflict-only graph above and may create a point only after the
+           // official triangulator sees independent support from >=3 images.
++          //
++          // [E12 STAGE2 FINE KNIFE 2026-07-19] Fine-grained replacement for
++          // the conflict-multiview defer below (takes precedence if both envs
++          // are set; intended to run ALONE). A conflicted exact site is never
++          // deferred and never killed:
++          //   - no established owner yet -> FIRST birth of the site family,
++          //     through the byte-identical ordinary 2-view create gates, then
++          //     every still-unassigned variant of both endpoint sites is
++          //     aliased to the born observation so later competing hypotheses
++          //     resolve into the SAME track (union) via the grow path;
++          //   - established owner(s) -> support (track length) picks the
++          //     winner; the current two observations are LOSER observations
++          //     and transfer individually through the stage-2 gate chain
++          //     {one-obs-per-image, depth>0, reproj<=4px, cone<60deg} into
++          //     the winner track. Gate failures are dropped; a second point
++          //     is never born on the site. A losing established point is NOT
++          //     deleted (the live merge machinery remains its judge).
++          // Ordinary sites (single-variant buckets) never enter this branch:
++          // the real-floor 2-view birth path is untouched by construction.
++          if (Stage2MergeTransferEnabled() &&
++              (IsExactSiteConflict(prev, i1) ||
++               IsExactSiteConflict(rec, i2))) {
++            ++s->stat_stage2_union_events;
++            const std::optional<uint32_t> owner1 =
++                FindExactSiteOwnerV2Feature(*s->live_recon, prev, i1);
++            const std::optional<uint32_t> owner2 =
++                FindExactSiteOwnerV2Feature(*s->live_recon, rec, i2);
++            colmap::point3D_t pid1 = colmap::kInvalidPoint3DId;
++            colmap::point3D_t pid2 = colmap::kInvalidPoint3DId;
++            {
++              const colmap::Image& prev_img =
++                  s->live_recon->Image(prev.image_id);
++              const colmap::Image& cur_img = s->live_recon->Image(image_id);
++              if (owner1 && *owner1 < prev_img.NumPoints2D() &&
++                  prev_img.Point2D(*owner1).HasPoint3D()) {
++                pid1 = prev_img.Point2D(*owner1).point3D_id;
++              }
++              if (owner2 && *owner2 < cur_img.NumPoints2D() &&
++                  cur_img.Point2D(*owner2).HasPoint3D()) {
++                pid2 = cur_img.Point2D(*owner2).point3D_id;
++              }
++            }
++            if (pid1 == colmap::kInvalidPoint3DId &&
++                pid2 == colmap::kInvalidPoint3DId) {
++              // First birth of this site family: ordinary 2-view create,
++              // byte-identical gates and reject counters to the untouched
++              // non-conflict path below.
++              const std::optional<Eigen::Vector2d> un1 =
++                  s->camera.CamFromImg(prev.points[i1]);
++              const std::optional<Eigen::Vector2d> un2 =
++                  s->camera.CamFromImg(rec.points[i2]);
++              if (!un1 || !un2) {
++                ++s->stat_create_reject_reproj;
++                continue;
++              }
++              Eigen::Vector3d Xb_world;
++              if (!colmap::TriangulatePoint(P_prev, P_cur, *un1, *un2,
++                                            &Xb_world)) {
++                ++s->stat_create_reject_tri_angle;
++                continue;
++              }
++              const Eigen::Vector3d Xb_prev = prev.cam_from_world * Xb_world;
++              const Eigen::Vector3d Xb_cur = rec.cam_from_world * Xb_world;
++              if (Xb_prev.z() <= 0.0 || Xb_cur.z() <= 0.0) {
++                ++s->stat_create_reject_cheirality;
++                continue;
++              }
++              if (colmap::CalculateTriangulationAngle(c_prev, c_cur,
++                                                      Xb_world) <
++                  kMinTriAngleRad) {
++                ++s->stat_create_reject_tri_angle;
++                continue;
++              }
++              const std::optional<Eigen::Vector2d> br1 =
++                  s->camera.ImgFromCam(Xb_prev);
++              const std::optional<Eigen::Vector2d> br2 =
++                  s->camera.ImgFromCam(Xb_cur);
++              if (!br1 || !br2) {
++                ++s->stat_create_reject_reproj;
++                continue;
++              }
++              if ((*br1 - prev.points[i1]).norm() > kMaxCreateReprojPx ||
++                  (*br2 - rec.points[i2]).norm() > kMaxCreateReprojPx) {
++                ++s->stat_create_reject_reproj;
++                continue;
++              }
++              colmap::Track birth_track;
++              birth_track.AddElement(prev.image_id, i1);
++              birth_track.AddElement(image_id, i2);
++              const colmap::point3D_t born_pid = s->live_recon->AddPoint3D(
++                  Xb_world, std::move(birth_track), Eigen::Vector3ub::Zero());
++              touched.insert(born_pid);
++              ++s->stat_stage2_union_births;
++              s->stat_stage2_alias_claimed += ClaimExactSiteOwnerV2Aliases(
++                  *s->live_recon, &prev, i1);
++              s->stat_stage2_alias_claimed += ClaimExactSiteOwnerV2Aliases(
++                  *s->live_recon, &rec, i2);
++              continue;
++            }
++            // Established owner(s): support picks the winner system.
++            colmap::point3D_t winner_pid;
++            if (pid1 != colmap::kInvalidPoint3DId &&
++                pid2 != colmap::kInvalidPoint3DId && pid1 != pid2) {
++              ++s->stat_stage2_competing_owner_pairs;
++              const size_t len1 =
++                  s->live_recon->Point3D(pid1).track.Length();
++              const size_t len2 =
++                  s->live_recon->Point3D(pid2).track.Length();
++              winner_pid = (len1 > len2)   ? pid1
++                           : (len2 > len1) ? pid2
++                                           : std::min(pid1, pid2);
++            } else {
++              winner_pid =
++                  (pid1 != colmap::kInvalidPoint3DId) ? pid1 : pid2;
++            }
++            const auto stage2_transfer = [&](const colmap::image_t obs_image,
++                                             const uint32_t obs_idx,
++                                             const FrameRecord& obs_frame) {
++              const Stage2TransferVerdict verdict = EvaluateStage2Transfer(
++                  *s->live_recon, s->camera, winner_pid, obs_image,
++                  obs_frame.cam_from_world, obs_frame.points[obs_idx]);
++              switch (verdict) {
++                case Stage2TransferVerdict::kOk:
++                  s->live_recon->AddObservation(
++                      winner_pid, colmap::TrackElement(obs_image, obs_idx));
++                  touched.insert(winner_pid);
++                  ++s->stat_stage2_transfer_accepted;
++                  break;
++                case Stage2TransferVerdict::kDupImage:
++                  ++s->stat_stage2_transfer_dedup;
++                  break;
++                case Stage2TransferVerdict::kDepth:
++                  ++s->stat_stage2_transfer_reject_depth;
++                  break;
++                case Stage2TransferVerdict::kReproj:
++                  ++s->stat_stage2_transfer_reject_reproj;
++                  break;
++                case Stage2TransferVerdict::kAngle:
++                  ++s->stat_stage2_transfer_reject_angle;
++                  break;
++              }
++            };
++            stage2_transfer(prev.image_id, i1, prev);
++            stage2_transfer(image_id, i2, rec);
++            // Route future variant matches of both endpoint sites into the
++            // union: claim toward the observation that now carries the site
++            // (the transferred one if accepted, otherwise the site's own
++            // established owner observation).
++            const auto stage2_claim = [&](FrameRecord* claim_frame,
++                                          const uint32_t born_idx,
++                                          const std::optional<uint32_t>&
++                                              found_owner) {
++              const colmap::Image& img =
++                  s->live_recon->Image(claim_frame->image_id);
++              if (born_idx < img.NumPoints2D() &&
++                  img.Point2D(born_idx).HasPoint3D()) {
++                s->stat_stage2_alias_claimed += ClaimExactSiteOwnerV2Aliases(
++                    *s->live_recon, claim_frame, born_idx);
++              } else if (found_owner) {
++                s->stat_stage2_alias_claimed += ClaimExactSiteOwnerV2Aliases(
++                    *s->live_recon, claim_frame, *found_owner);
++              }
++            };
++            stage2_claim(&prev, i1, owner1);
++            stage2_claim(&rec, i2, owner2);
++            continue;
++          }
+           if (ConflictMultiViewBirthEnabled() &&
+               (IsExactSiteConflict(prev, i1) ||
+                IsExactSiteConflict(rec, i2))) {
+@@ -7778,6 +8096,25 @@
+         if (s->live_recon->ExistsPoint3D(pid)) touched.insert(pid);
+       }
+       s->live_triangulator->ClearModifiedPoints3D();
++    }
++
++    // [E12 STAGE2 FINE KNIFE 2026-07-19] Bite telemetry, mirrored on the
++    // conflict-multiview cadence: union_events==0 means the arm never
++    // engaged (check the env), transfers/rejects expose the per-observation
++    // gate ledger for the A/B report.
++    if (Stage2MergeTransferEnabled() &&
++        (frame_id == 1 || (frame_id + 1) % 20 == 0)) {
++      LOG(WARNING) << "[aether_sfm] stage2-merge-transfer frames="
++                   << (frame_id + 1)
++                   << " union_events=" << s->stat_stage2_union_events
++                   << " union_births=" << s->stat_stage2_union_births
++                   << " transfers=" << s->stat_stage2_transfer_accepted
++                   << " dedup=" << s->stat_stage2_transfer_dedup
++                   << " rej_depth=" << s->stat_stage2_transfer_reject_depth
++                   << " rej_reproj=" << s->stat_stage2_transfer_reject_reproj
++                   << " rej_angle=" << s->stat_stage2_transfer_reject_angle
++                   << " alias_claimed=" << s->stat_stage2_alias_claimed
++                   << " competing=" << s->stat_stage2_competing_owner_pairs;
+     }
+ 
+     // ── Windowed local bundle adjustment (Cauchy) over the last W frames ──
