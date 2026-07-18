@@ -1,0 +1,35 @@
+{
+  "method": "agent visual audit of audit_crops/*.jpg + audit_sheet_*.jpg (each sampled point projected into the best-visible real capture photo, E4 replay refined pose + patched K, RAW 3840x2160 coords - same projection recipe E4 colorize verified at median |dRGB|~8). Labels: TRUE_KILL = killed point is a physically-impossible / specular-ghost point (correct kill); REAL = point is real scene geometry; AMB = specular-capable surface, cannot exclude reflected content. Single-rater (E7 agent), NOT user-approved ground truth. Sampling seeded (7), rule already frozen before audit - no feedback into the rule.",
+  "auditor": "E7 agent (Claude), 2026-07-18",
+  "cap40": {
+    "killed_e3_risk_layer": {"pool": 27, "audited": 24, "verdict": "24/24 TRUE_KILL", "confidence": "high 21 / medium 3",
+      "note": "every crop lands on the high-gloss varnished laminate floor or lacquered wardrobe-door panels; all fh <= -0.10 (below the reconstructed floor plane, deeper than the known 2-3.5cm double-floor band => constructively impossible). medium-confidence 3 = door-panel projections (reflection content plausible, physical impossibility argument still holds). fh outliers -1.43/-8.74 included."},
+    "kept_risk_netvisible": {"pool": 395, "audited": 12, "verdict": "12/12 REAL-or-AMB (10 REAL, 2 AMB on glossy wardrobe panels)", "confidence": "high",
+      "note": "bed-frame edge, skirting, plain walls, blind rail/fabric, monitor edge - no clear mirror ghost wrongly kept in sample"},
+    "kept_risk_multiview": {"pool": 280, "audited": 12, "verdict": "12/12 REAL (wardrobe doors, quilt, bed footboard, boxes, sheets)", "confidence": "high"},
+    "streak_kept": {"pool": 53, "audited": 6, "verdict": "3 REAL / 3 AMB (glossy-floor glare region at fh 0.06-0.28 above floor)", "confidence": "medium"},
+    "streak_killed": {"pool": 2, "audited": 2, "verdict": "both are S1 theta<2deg culls (E4-B-approved layer), zero streak points killed by the E3 risk layer"},
+    "behind_kept": {"pool": 99, "audited": 12, "verdict": "12/12 REAL (bed sheets/quilt/bed frame - S_behind FPs correctly rescued by the vote)", "confidence": "high"},
+    "bh3_differential": {"pool": 14, "audited": 14, "verdict": "14/14 REAL (sheets, quilts, bed rails, mattress side; corridor hits 3-6 through bed clutter)",
+      "meaning": "spec-faithful bh=3 would kill all 14 real points; frozen bh=8 spares all => cap50's red line (bh=3 kills true geometry) REPRODUCED INDEPENDENTLY in the new scene", "confidence": "high"},
+    "underbed_minefield": {"baseline_pts_in_underbed_volume": 0, "verdict": "hole correctly preserved upstream; knife had nothing to kill and killed nothing there"}
+  },
+  "cap41": {
+    "killed_e3_risk_layer": {"pool": 202, "audited": 24, "verdict": "24/24 TRUE_KILL", "confidence": "high 22 / medium 2",
+      "note": "all crops land on the glossy laminate floor (bed-side reflection layer), fh -0.10..-0.26"},
+    "kept_risk_netvisible": {"pool": 298, "audited": 12, "verdict": "12/12 REAL (bed frame, headboard panels, mattress/sheet, dresser top)", "confidence": "high"},
+    "kept_risk_multiview": {"pool": 365, "audited": 12, "verdict": "7 REAL / 5 SUSPECT-GHOST (glossy-floor points at fh -0.11..-0.20 BELOW the floor plane kept via path-1 multiview)", "confidence": "medium",
+      "note": "see finding F2 below - the only systematic keep-side concern found"},
+    "streak_kept": {"pool": 47, "audited": 6, "verdict": "6/6 REAL (coat hooks, wardrobe door edges, wall, sheet)", "confidence": "high"},
+    "streak_killed": {"pool": 3, "audited": 3, "verdict": "all S1 theta culls, zero E3-risk streak kills"},
+    "behind_kept": {"pool": 127, "audited": 12, "verdict": "12/12 REAL (socks, quilt, pillow, wardrobe, bed)", "confidence": "high"},
+    "bh3_differential": {"pool": 21, "audited": 21, "verdict": "21/21 REAL (quilts, sheets, bed footboard, mattress side, headboard)",
+      "meaning": "same as cap40: bh=3 red line reproduced; bh=8 spares all", "confidence": "high"},
+    "underbed_minefield": {"baseline_pts_in_underbed_volume": 0, "verdict": "hole correctly preserved; no under-bed hallucination in these captures"}
+  },
+  "findings": {
+    "F1_bh8_validated": "zero audited true-geometry kills at bh=8 on both caps (0/98 kept-side audited points wrongly killed; 48/48 audited kills correct); the bh sweep is FLAT for bh>=7 (cap40 310 culls for bh 7..12; cap41 387 for bh 8..12), so bh=8 sits on a robust plateau, not a scene-tuned knife-edge; and the bh3-differential audit (35/35 REAL) independently reproduces the cap50 red line that forced bh>=8. No operating-point drift.",
+    "F2_belowfloor_path1_leak_NEW": "the E3 claim 'below-floor standing oppose = constructive 100% annihilation' does NOT fully transfer: path-1 (>=3 recovered obs) outranks the below-floor veto in the frozen rule, and planar-mirror virtual points can be multiview-consistent. cap40 keeps 18/49 (37%) below-floor points, cap41 163/373 (44%), median fh -0.15, all via keep_risk_multiview (cap50/51 had zero such points, so E3 never saw this). Audited samples look like glossy-floor reflection ghosts. This is NOT a bh=8 issue (corridor vote untouched); flagged as a candidate rule refinement (below-floor veto should arguably outrank path-1) that would be a RULE CHANGE requiring separate sign-off - E7 did not apply it.",
+    "F3_corridor_inert_in_bedroom": "at bh=8 the corridor net-visibility vote adds ZERO kills beyond the below-floor veto in this scene (all 27/202 E3-risk kills are cull_risk_belowfloor); its cleaning value (deep-penetration mirror trails) remains demonstrated only on cap50; in the bedroom its role is purely protective (not killing real geometry), which it passes."
+  }
+}

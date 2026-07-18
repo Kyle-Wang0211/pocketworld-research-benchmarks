@@ -1,0 +1,71 @@
+=== cap40 n=74500 ===
+solid voxels 3090 / 9880
+S_behind 104 (suspects 4797)
+S_below 49
+S_streak 55 in 7 strings
+S_out 580
+TRAIL CANDIDATES 727 (0.98%)
+{
+ "S_behind": {
+  "n": 104,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 49,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 55,
+  "n_strings": 7,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 580,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 727,
+ "union_pct": 0.976,
+ "overlap": {
+  "behind&below": 2,
+  "behind&streak": 1,
+  "below&streak": 0,
+  "out&streak": 38,
+  "out&behind": 8
+ }
+}
+=== cap41 n=62161 ===
+solid voxels 2330 / 8303
+S_behind 133 (suspects 4110)
+S_below 373
+S_streak 50 in 6 strings
+S_out 501
+TRAIL CANDIDATES 886 (1.43%)
+{
+ "S_behind": {
+  "n": 133,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 373,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 50,
+  "n_strings": 6,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 501,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 886,
+ "union_pct": 1.425,
+ "overlap": {
+  "behind&below": 3,
+  "behind&streak": 1,
+  "below&streak": 0,
+  "out&streak": 30,
+  "out&behind": 11
+ }
+}
+E7 DETECT DONE
