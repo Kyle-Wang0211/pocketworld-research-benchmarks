@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 run_dir, fed_path, photos_dir, out_json = sys.argv[1:5]
+MAXPX = int(sys.argv[5]) if len(sys.argv) > 5 else 1280
 
 fed = {}
 with open(fed_path) as fh:
@@ -69,7 +70,7 @@ for iid in sorted(req):
     pil = Image.open(path).convert("RGB")
     W, H = pil.size
     im_full = np.asarray(pil)
-    scale = 1280.0 / max(W, H)
+    scale = float(MAXPX) / max(W, H)
     lw, lh = max(1, round(W * scale)), max(1, round(H * scale))
     im_lo = np.asarray(pil.resize((lw, lh), Image.BILINEAR))
     sxf, syf = W / gw, H / gh
