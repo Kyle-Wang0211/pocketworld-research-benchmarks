@@ -97,6 +97,13 @@ RS Mobile 存在**完整的非 AR 拍摄路径**,且逐版本加强:
 2. real-scale 承诺绑定 AR 模式这一点与我们"同 gauge 直出禁 Sim3"一致,可作为对外行为对标锚。
 3. RS 每个可视化点/位姿都来自真实分析产物(与 07-19 记忆"RS 预览每点=真实匹配+BA"一致),本查未发现任何"无中生有的 AR 投影点"证据。
 
+## 用户实机一手证据(2026-07-18 追加,E3-U 级=本项目用户长期实测)
+
+- **实机截图(iOS,2026-07 现行版)**:三模式选择页确认 1.8 结构;AR Guidance 文案逐字:"Evaluate your scan's quality instantly with a real time point cloud on top of your subject using augmented reality."
+- **用户实测行为**:"AR 是需要联网的,需要上传照片的" —— AR Guidance 模式**依赖网络、边拍边上传**。
+- **裁决 U6/Q1(实时点云在哪算)**:与 1.3 Unguided 文档("avoid uploading photos as you scan" 时同时失去 "real-time point clouds and preview models")互为印证 —— **AR 模式的实时点云=云端增量 SfM 对已上传照片的分析结果回传,叠加显示在 AR 实景上;不是端上算的**。AR 位姿在此的角色=显示层配准(把云端点云/相机位摆回实景),与 ③ 的 INF 推断一致,现升为行为级证实。
+- **战略含义**:RS 的"零鬼层预览"是**云端算力**(全图集配对/长 track/全局 BA)买来的,其"real time"本质是云回传;我们全端上、断网可用、逐帧粒度反而是架构性超出。复刻对象是它的**机制**(全局匹配→长 track→BA→重投影裁剪),不是它的云拓扑。
+
 ## 来源(全列)
 
 一手 mobile 官方(E1/E2):
