@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+    <title>Keys and Values - RealityScan Help</title>
+    <meta charset="UTF-8"/>
+    <meta name="author" content="Epic Games Slovakia s.r.o." />
+    <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+    <link type="text/css" rel="stylesheet" href="../../styles/style.css" />
+    <link type="text/css" rel="stylesheet" href="../../styles/colors.css" />
+    <link type="text/css" rel="stylesheet" href="../../styles/flagStyles.css"/>
+    <script src="../scripts/textVars.js" type="text/javascript"></script>
+    <script src="../../scripts/localization.js" type="text/javascript"></script>
+    <script src="../../scripts/main.js" type="text/javascript"></script>
+    <script type="text/javascript">InitializeHelpSlide();</script>
+</head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+    <div data-id="div_cs" class="content_slide">
+
+        <!-- content slide -->
+
+        <script type="text/javascript">RenderToolNavigation();</script>
+
+        <div data-id="div_head" class="head">
+            <h1 data-id="h1" data-vn="1">Keys and Values</h1>
+            <div data-id="p_h1" data-vn="2">
+                The command-line interface (CLI) of RealityScan allows its users to change various settings of the application with the <a href="../tutorials/commandline_4.htm"><span class="command">set</span></a> or <a href="../tutorials/commandline_4.htm"><span class="command">preset</span></a> command. 
+                This command requires a <span class="parameter">key</span> (identifying the setting you want to change) and a <span class="parameter">value</span>. The tables below contain keys and value types for the basic settings.
+
+                <div data-id="div_im_vari" data-vn="1" class="importantMessage">TIP: We recommend to try various settings in the application user interface first, and after that work with these settings in the CLI.</div>
+
+            </div>
+        </div>
+
+        <div data-id="div_sb_apse" class="slideblock splitSpacing">
+            <h2 data-id="h2_apse" data-vn="1">App Settings</h2>
+            <p data-id="p_h2_apse" data-vn="1" class="lod1">
+                You can find these settings in the <span class="appribbon">Workflow</span> tab.
+                To learn more about the application settings, visit <a href="../appbasics/appsettings.htm">this page</a>.
+            </p>
+
+            <table class="tableofcommands">
+                <thead data-id="thead_apse" data-vn="1">
+                <tr>
+                    <th>Name</th> <th>Key</th> <th>Value</th> <th>Default value</th>
+                </tr>
+                </thead>
+                <tr data-id="tr_apse_insu" data-vn="1">
+                    <td>Include subdirectories<br/><span class="note">*relevant for: addFolder command</span></td>
+                    <td class="command">appIncSubdirs</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_apse_lofi" data-vn="1">
+                    <td>Log file</td>
+                    <td class="command">appLog</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_apse_oplo" data-vn="1">
+                    <td>Operation log data</td>
+                    <td class="command">operationLog</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_apse_autosamo" data-vn="1">
+                    <td>Auto save mode</td>
+                    <td class="command">appAutoSaveMode</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_apse_handaut" data-vn="2">
+                    <td rowspan="4">Handling of autosaved projects*<br/><span class="note">*defines how to load autosaved projects (if present) when using load command. 
+                    <br/>
+                    More information about Autosave feature <a href="../appbasics/autosave.htm">here</a>.</span></td>
+                    <td class="command" rowspan="4">appAutoSaveCliHandling</td>
+                    <td class="parameter">delete</td>
+                    <td rowspan="4">delete</td>
+                </tr>
+                <tr data-id="tr_apse_handre" data-vn="1">
+                    <td class="parameter">recover</td>
+                </tr>
+                <tr data-id="tr_apse_handab" data-vn="1">
+                    <td class="parameter">abort</td>
+                </tr>
+                <tr data-id="tr_apse_handask" data-vn="1">
+                    <td class="parameter">ask</td>
+                </tr>
+                <tr data-id="tr_apse_maxp" data-vn="1">
+                    <td>Max points to display</td>
+                    <td class="command">appMaxPointsToDisplay</td>
+                    <td class="parameter">integer</td>
+                    <td>10000000</td>
+                </tr>
+                <tr data-id="tr_calo__v1" data-vn="1">
+                    <td rowspan="2">Cache location</td>
+                    <td rowspan="2" class="command">appCacheLocation</td> 
+                    <td class="parameter">SystemTemp</td>  
+                    <td rowspan="2">SystemTemp</td>
+                </tr>
+                <tr data-id="tr_apse_cust" data-vn="1">
+                    <td class="parameter">Custom</td>
+                </tr>
+                <tr data-id="tr_apse_cacl" data-vn="1">
+                    <td>Cache custom location*<br/><span class="note">*relevant for: "appCacheLocation=Custom"</span></td>
+                    <td class="command">appCacheCustomLocation</td> 
+                    <td class="parameter">path</td>  
+                    <td></td>
+                </tr>
+                <tr data-id="tr_apse_ccoe" data-vn="2">
+                    <td rowspan="7">Clear cache on exit</td>
+                    <td class="command" rowspan="7">appAutoClearCache</td>
+                    <td class="parameter">999999 – Do not clear cache</td>
+                    <td rowspan="7">7 – Items older than 1 week</td>
+                </tr>
+                <tr data-id="tr_apse_clal" data-vn="1">
+                    <td class="parameter">0 – Clear all cache items</td>
+                </tr>
+                <tr data-id="tr_apse_old3" data-vn="1">
+                    <td class="parameter">3 – Items older than 3 days</td>
+                </tr>
+                <tr data-id="tr_apse_old7" data-vn="1">
+                    <td class="parameter">7 – Items older than 1 week</td>
+                </tr>
+                <tr data-id="tr_apse_ol14" data-vn="1">
+                    <td class="parameter">14 – Items older than 2 weeks</td>
+                </tr>
+                <tr data-id="tr_apse_al30" data-vn="1">
+                    <td class="parameter">30 – Items older than 1 month</td>
+                </tr>
+                <tr data-id="tr_apse_al90" data-vn="1">
+                    <td class="parameter">90 – Items older than 3 months</td>
+                </tr>
+                <tr data-id="tr_apse_came" data-vn="1">
+                    <td>Cache image metadata</td>
+                    <td class="command">appCacheImageMetadata</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_apse_came1" data-vn="1">
+                    <td>Allow Read Only*<br/><span class="note">*when set to true, it is possible to open the same project in 2 instances.</span></td>
+                    <td class="command">allowReadOnly</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_apse_vila" data-vn="1">
+                    <th colspan="4">Visual and language settings</th>
+                </tr>
+                <tr data-id="tr_apse_zoom" data-vn="1">
+                    <td rowspan="6">Zoom</td>
+                    <td class="command" rowspan="6">appThemeZoom</td>
+                    <td class="parameter">0 - Use Windows Settings</td>
+                    <td rowspan="6">0 - Use Windows Settings</td>
+                </tr>
+                <tr data-id="tr_apse_z100" data-vn="1">
+                    <td class="parameter">1 - 100%</td> 
+                </tr>
+                <tr data-id="tr_apse_z125" data-vn="1">
+                <td class="parameter">1.25 - 125%</td>
+                </tr>
+                <tr data-id="tr_apse_z150" data-vn="1">
+                <td class="parameter">1.5 - 150%</td>
+                </tr>
+                <tr data-id="tr_apse_z200" data-vn="1">
+                <td class="parameter">2 - 4K (200%)</td>
+                </tr>
+                <tr data-id="tr_apse_z300" data-vn="1">
+                <td class="parameter">3 - 300%</td>
+                </tr>
+                <tr data-id="tr_apse_anui" data-vn="1">
+                    <td>Animated UI</td>
+                    <td class="command">appUIAnim</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_apse_uila" data-vn="3">
+                    <td rowspan="10">UI Language</td>
+                    <td class="command" rowspan="10">UserInterfaceLanguageId</td> 
+                    <td class="parameter">2052 - Chinese (simplified)</td>  
+                    <td rowspan="10"></td>
+                </tr>
+                <tr data-id="tr_apse_1028" data-vn="1">
+                    <td class="parameter">1028 - Chinese (traditional)</td> 
+                </tr>
+                <tr data-id="tr_apse_1029" data-vn="1">
+                    <td class="parameter">1029 - Czech</td> 
+                </tr>
+                <tr data-id="tr_apse_1033" data-vn="1">
+                    <td class="parameter">1033 - English</td> 
+                </tr>
+                <tr data-id="tr_apse_1036" data-vn="1">
+                <td class="parameter">1036 - French</td>
+                </tr>
+                <tr data-id="tr_apse_1031" data-vn="1">
+                <td class="parameter">1031 - German</td>
+                </tr>
+                <tr data-id="tr_apse_1040" data-vn="1">
+                <td class="parameter">1040 - Italian</td>
+                </tr>
+                <tr data-id="tr_apse_1041" data-vn="1">
+                <td class="parameter">1041 - Japanese</td>
+                </tr>
+                <tr data-id="tr_apse_1042" data-vn="1">
+                <td class="parameter">1042 - Korean</td>
+                </tr>
+                <tr data-id="tr_apse_3082" data-vn="1">
+                <td class="parameter">3082 - Spanish</td>
+                </tr>
+
+                <tr data-id="tr_apse_imse" data-vn="1">
+                    <th colspan="4">Import settings</th>
+                </tr>
+                <tr data-id="tr_apse_grex" data-vn="1">
+                    <td>Group calibration by exif</td>
+                    <td class="command">appGroupCalibrationByExif</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_apse_coic" data-vn="1">
+                    <td>Copy imported components to cache</td>
+                    <td class="command">appCopyImportedComponentsToCache</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_apse_igex" data-vn="1">
+                    <td>Ignore exif GPS</td>
+                    <td class="command">appIgnoreExifGPS</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+
+                <tr data-id="tr_apse_prno" data-vn="1">
+                    <th colspan="4">Progress and notification</th>
+                </tr>
+                <tr data-id="tr_apse_mipd" data-vn="1">
+                    <td>Minimal process duration</td>
+                    <td class="command">appProcessActionTime</td> 
+                    <td class="parameter">int</td>  
+                    <td>15</td>
+                </tr>
+                <tr data-id="tr_apse_acti" data-vn="1">
+                    <td rowspan="3">Action</td>
+                    <td class="command" rowspan="3">appProcessAction</td> 
+                    <td class="parameter">None</td>  
+                    <td rowspan="3">None</td>
+                </tr>
+                <tr data-id="tr_apse_plso" data-vn="1">
+                    <td class="parameter">PlaySound</td>
+                </tr>
+                <tr data-id="tr_apse_expr" data-vn="1">
+                    <td class="parameter">ExecuteProgram</td>
+                </tr>
+                <tr data-id="tr_apse_clpr" data-vn="1">
+                    <td>Command-line process*<br/><span class="note">*relevant for: "appProcessAction=ExecuteProgram"</span></td>
+                    <td class="command">appProcessExecCmd</td> 
+                    <td class="parameter">string</td>  
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-id="div_sb_alse" class="slideblock splitSpacing">
+            <h2 data-id="h2_alse" data-vn="1">Alignment Settings</h2>
+            <p data-id="p_h2_alse" data-vn="1" class="lod1">
+                You can find these settings in the <span class="appribbon">Alignment</span> tab.
+                To learn more about the alignment settings, visit <a href="../appbasics/alignsettings.htm">this page</a>.
+            </p>
+
+            <table class="tableofcommands">
+                <thead data-id="thead_alse" data-vn="1">
+                    <tr>
+                    <th>Name</th> <th>Key</th> <th>Value</th> <th>Default value</th>
+                    </tr>
+                </thead>
+                <tr data-id="tr_alse_fdqu" data-vn="1">
+                    <td rowspan="2">Feature detection quality</td>
+                    <td class="command" rowspan="2">sfmFeatureDetectionQuality</td>
+                    <td class="parameter">High</td>
+                    <td rowspan="2">High</td>
+                </tr>
+                <tr data-id="tr_alse_fdqun" data-vn="1">
+                    <td class="parameter">Normal</td>
+                </tr>
+                <tr data-id="tr_alse_mfpm" data-vn="1">
+                    <td>Max features per mpx</td>
+                    <td class="command">sfmMaxFeaturesPerMpx</td> 
+                    <td class="parameter">int</td>  
+                    <td>10000</td>
+                </tr>
+                <tr data-id="tr_alse_mfpi" data-vn="1">
+                    <td>Max features per image</td>
+                    <td class="command">sfmMaxFeaturesPerImage</td> 
+                    <td class="parameter">int</td>  
+                    <td>40000</td>
+                </tr>
+                <tr data-id="tr_alse_imov" data-vn="1">
+                    <td rowspan="3">Images' overlap</td>
+                    <td class="command" rowspan="3">sfmImagesOverlap</td> 
+                    <td class="parameter">Low</td>  
+                    <td rowspan="3">Medium</td>
+                </tr>
+                <tr data-id="tr_alse_mediov" data-vn="1">
+                    <td class="parameter">Medium</td>  
+                </tr>
+                <tr data-id="tr_alse_highov" data-vn="1">
+                    <td class="parameter">High</td>  
+                </tr>
+                <tr data-id="tr_alse_imdfov" data-vn="1">
+                    <td>Image downscale factor</td>
+                    <td class="command">sfmImageDownscaleFactor</td> 
+                    <td class="parameter">int</td>  
+                    <td>1</td>
+                </tr>
+                <tr data-id="tr_alse_mfre" data-vn="1">
+                    <td>Max feature reprojection error</td>
+                    <td class="command">sfmMaxFeatureReprojectionError</td> 
+                    <td class="parameter">float</td>  
+                    <td>2.0</td>
+                </tr>
+
+                <tr data-id="tr_alse_capr" data-vn="2">
+                    <th colspan="4">Camera priors settings</th>
+                </tr>
+                <tr data-id="tr_alse_enab" data-vn="2">
+                    <td>Use camera priors for georeferencing</td>
+                    <td class="command">sfmEnableCameraPrior</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_alse_xacc" data-vn="1">
+                    <td>Position X accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyX</td> 
+                    <td class="parameter">float</td>  
+                    <td>10.0</td>
+                </tr>
+                <tr data-id="tr_alse_yacc" data-vn="1">
+                    <td>Position Y accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyY</td> 
+                    <td class="parameter">float</td>  
+                    <td>10.0</td>
+                </tr>
+                <tr data-id="tr_alse_zacc" data-vn="1">
+                    <td>Position Z accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyZ</td> 
+                    <td class="parameter">float</td>  
+                    <td>20.0</td>
+                </tr>
+                <tr data-id="tr_alse_poprhard" data-vn="1">
+                    <td>Position prior hardness</td>
+                    <td class="command">sfmCameraPriorWeight</td> 
+                    <td class="parameter">float</td>  
+                    <td>1.0</td>
+                </tr>
+                <tr data-id="tr_alse_yaw" data-vn="1">
+                    <td>Yaw accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyYaw</td> 
+                    <td class="parameter">float</td>  
+                    <td>10.0</td>
+                </tr>
+                <tr data-id="tr_alse_pitch" data-vn="1">
+                    <td>Pitch accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyPitch</td> 
+                    <td class="parameter">float</td>  
+                    <td>10.0</td>
+                </tr>
+                <tr data-id="tr_alse_roll" data-vn="1">
+                    <td>Roll accuracy</td>
+                    <td class="command">sfmCameraPriorAccuracyRoll</td> 
+                    <td class="parameter">float</td>  
+                    <td>10.0</td>
+                </tr>
+                <tr data-id="tr_alse_oriehard" data-vn="1">
+                    <td>Orientation prior hardness</td>
+                    <td class="command">sfmCameraPriorWeightOrientation</td> 
+                    <td class="parameter">float</td>  
+                    <td>1.0</td>
+                </tr>
+                <tr data-id="tr_alse_cppr" data-vn="1">
+                    <th colspan="4">Control point prior settings</th>
+                </tr>
+                <tr data-id="tr_alse_immeasacc" data-vn="1">
+                    <td>Image measurement accuracy [px]</td>
+                    <td class="command">sfmControPointImageMeasAccuracy</td> 
+                    <td class="parameter">float</td>  
+                    <td>2.0</td>
+                </tr>
+                <tr data-id="tr_alse_cpx" data-vn="1">
+                    <td>Position X accuracy</td>
+                    <td class="command">sfmControlPointXAccuracy</td> 
+                    <td class="parameter">float</td>  
+                    <td>0.05</td>
+                </tr>
+                <tr data-id="tr_alse_cpy" data-vn="1">
+                    <td>Position Y accuracy</td>
+                    <td class="command">sfmControlPointYAccuracy</td> 
+                    <td class="parameter">float</td>  
+                    <td>0.05</td>
+                </tr>
+                <tr data-id="tr_alse_cpz" data-vn="1">
+                    <td>Position Z accuracy</td>
+                    <td class="command">sfmControlPointZAccuracy</td> 
+                    <td class="parameter">float</td>  
+                    <td>0.10</td>
+                </tr>
+                <tr data-id="tr_alse_dist" data-vn="1">
+                    <td>Defined distance accuracy</td>
+                    <td class="command">sfmDefinedDistanceAccuracy</td> 
+                    <td class="parameter">float</td>  
+                    <td>0.10</td>
+                </tr>
+
+                <tr data-id="tr_alse_drmo" data-vn="1">
+                    <th colspan="4">Draft mode</th>
+                </tr>
+                <tr data-id="tr_alse_ovim" data-vn="1">
+                    <td rowspan="3">Overlap of images</td>
+                    <td class="command" rowspan="3">sfmImagesOverlapDraftMode</td> 
+                    <td class="parameter">Low</td>  
+                    <td rowspan="3">Medium</td>
+                </tr>
+                <tr data-id="tr_alse_medidm" data-vn="1">
+                    <td class="parameter">Medium</td>
+                </tr>
+                <tr data-id="tr_alse_highdm" data-vn="1">
+                    <td class="parameter">High</td>
+                </tr>
+                <tr data-id="tr_alse_imdfdm" data-vn="1">
+                    <td>Image downscale factor</td>
+                    <td class="command">sfmImageDownscaleFactorDraftMode</td> 
+                    <td class="parameter">integer</td>  
+                    <td>2</td>
+                </tr>
+                <tr data-id="tr_alse_fmop" data-vn="1">
+                    <td>Final model optimization</td>
+                    <td class="command">sfmFinalModelOptimizationDraftMode</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+
+                <tr data-id="tr_alse_adva" data-vn="1">
+                    <th colspan="4">Advanced</th>
+                </tr>
+                <tr data-id="tr_alse_arra" data-vn="1">
+                    <td>Add a reconstruction region after alignment</td>
+                    <td class="command">sfmAutoReconRegionAfterAlignment</td> 
+                    <td class="parameter">bool</td>  
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_alse_fcre" data-vn="1">
+                    <td>Force component rematch</td>
+                    <td class="command">sfmForceComponentRematch</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_alse_prfe" data-vn="1">
+                    <td>Preselector features</td>
+                    <td class="command">sfmPreselectorFeatures</td> 
+                    <td class="parameter">int</td>  
+                    <td>10000</td>
+                </tr>
+                <tr data-id="tr_alse_dese" data-vn="1">
+                    <td rowspan="4">Detector sensitivity</td>
+                    <td rowspan="4" class="command">sfmDetectorSensitivity</td> 
+                    <td class="parameter">Low</td>  
+                    <td rowspan="4">Medium</td>
+                </tr>
+                <tr data-id="tr_alse_medids" data-vn="1">
+                    <td class="parameter">Medium</td>  
+                </tr>
+                <tr data-id="tr_alse_highds" data-vn="1">
+                    <td class="parameter">High</td>  
+                </tr>
+                <tr data-id="tr_alse_ultr" data-vn="1">
+                    <td class="parameter">Ultra</td>  
+                </tr>
+                <tr data-id="tr_alse_mgec" data-vn="1">
+                    <td>Merge georeferenced components</td>
+                    <td class="command">sfmMergeGeoreferencedComponents</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_alse_dimo" data-vn="1">
+                    <td rowspan="7">Distortion model</td>
+                    <td class="command" rowspan="7">sfmDistortionModel</td> 
+                    <td class="parameter">Division</td>  
+                    <td rowspan="7">Brown3</td>
+                </tr>
+                <tr data-id="tr_alse_bro3" data-vn="1">
+                    <td class="parameter">Brown3</td>
+                </tr>
+                <tr data-id="tr_alse_bro4" data-vn="1">
+                    <td class="parameter">Brown4</td>
+                </tr>
+                <tr data-id="tr_alse_br3t" data-vn="1">
+                    <td class="parameter">Brown3WithTangential2</td>
+                </tr>
+                <tr data-id="tr_alse_br4t" data-vn="1">
+                    <td class="parameter">Brown4WithTangential2</td>
+                </tr>
+                <tr data-id="tr_alse_kb3t" data-vn="1">
+                    <td class="parameter">KplusBrown3WithTangential2</td>
+                </tr>
+                <tr data-id="tr_alse_kb4t" data-vn="1">
+                    <td class="parameter">KplusBrown4WithTangential2</td>
+                </tr>
+                <tr data-id="tr_alse_przf" data-vn="2">
+                    <td>Prefer images as feature source during import of Z+F scans</td>
+                    <td class="command">lisPreferImagesAsFeatureSource</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-id="div_sb_rese" class="slideblock splitSpacing">
+            <h2 data-id="h2_rese" data-vn="1">Reconstruction Settings</h2>
+            <p data-id="p_h2_rese" data-vn="3" class="lod1">
+                You can find these settings in the <span class="apppanel">Create Mesh</span> part of the <span class="appribbon">MESH &amp; COLOR</span> tab.
+                To learn more about reconstruction settings, visit <a href="../appbasics/modelsettings.htm">this page</a>.
+            </p>
+
+            <!-- tato tabulka bola vygenerovana priamo zo setting panelu - kukni SettingsPanels.h/.cpp revision 2433, casti kodu pod makrom EXPORT_HELP_TABLE_ON_SETUP -->
+            <table class="tableofcommands">
+                <thead data-id="thead_rese" data-vn="1">
+                <tr>
+                    <th>Name</th> <th>Key</th> <th>Value</th> <th>Default value</th>
+                </tr>
+                </thead>
+                <tr data-id="tr_rese_prev" data-vn="1">
+                    <th colspan="4">Image depth map calculation - Preview model</th>
+                </tr>
+                <tr data-id="tr_rese_idpr" data-vn="1">
+                    <td>Image downscale</td>
+                    <td class="command">mvsPreviewDownscaleFactor</td>
+                    <td class="parameter">int</td>
+                    <td>4</td>
+                </tr>
+
+                <tr data-id="tr_rese_norm" data-vn="1">
+                    <th colspan="4">Image depth map calculation - Normal model</th>
+                </tr>
+                <tr data-id="tr_rese_idno" data-vn="1">
+                    <td>Image downscale</td>
+                    <td class="command">mvsNormalDownscaleFactor</td>
+                    <td class="parameter">int</td>
+                    <td>2</td>
+                </tr>
+
+                <tr data-id="tr_rese_lasc" data-vn="2">
+                    <th colspan="4">LiDAR scans</th>
+                </tr>
+                <tr data-id="tr_rese_mid2" data-vn="1">
+                    <td>Minimal distance between two points</td>
+                    <td class="command">mvsMinSampleDistanceLaserScan</td>
+                    <td class="parameter">float</td>
+                    <td>0.002</td>
+                </tr>
+                <tr data-id="tr_rese_pcgr" data-vn="1">
+                    <td>Point-cloud cropping radius</td>
+                    <td class="command">mvsMaxSampleDistanceLaserScan</td>
+                    <td class="parameter">float</td>
+                    <td>150.0</td>
+                </tr>
+                <tr data-id="tr_rese_miin" data-vn="1">
+                    <td>Minimal intensity</td>
+                    <td class="command">mvsMinIntensityLaserScan</td>
+                    <td class="parameter">float</td>
+                    <td>0.03</td>
+                </tr>
+
+                <tr data-id="tr_rese_meca" data-vn="1">
+                    <th colspan="4">Mesh calculation</th>
+                </tr>
+                <tr data-id="tr_rese_gpuacc" data-vn="1">
+                    <td>GPU acceleration</td>
+                    <td class="command">MvsGeometryGpuAccel</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_rese_remmarg" data-vn="1">
+                    <td>Remove marginal triangles</td>
+                    <td class="command">MvsGeometryMarginStyle</td>
+                    <td class="parameter">bool</td>
+                    <td>false</td>
+                </tr>           
+                <tr data-id="tr_rese_md2v" data-vn="1">
+                    <td>Minimal distance between two vertices</td>
+                    <td class="command">mvsMinSampleDistance</td>
+                    <td class="parameter">float</td>
+                    <td>0.0</td>
+                </tr>
+
+                <tr data-id="tr_rese_mepr" data-vn="1">
+                    <th colspan="4">Mesh calculation - Preview model</th>
+                </tr>
+                <tr data-id="tr_rese_mecs" data-vn="1">
+                    <td rowspan="2">Mesh calculaton strategy</td>
+                    <td class="command" rowspan="2">mvsPreviewMeshStrategy</td>
+                    <td class="parameter">sfm - Use sparse point cloud</td>
+                    <td rowspan="2">sfm</td>
+                </tr>
+                <tr data-id="tr_alse_veco" data-vn="1">
+                    <td class="parameter">vertexCount - Max vertex count</td>
+                </tr>
+                <tr data-id="tr_rese_mvspms" data-vn="1">
+                    <td>Max vertex count*<br/><span class="note">*relevant for: "mvsPreviewMeshStrategy=vertexCount"</span></td>
+                    <td class="command">mvsPreviewMaxVetrexCountInModel</td>
+                    <td class="parameter">int</td>
+                    <td>10000000</td>
+                </tr>
+                <tr data-id="tr_rese_adva" data-vn="1">
+                    <th colspan="4">Advanced</th>
+                </tr>
+                <tr data-id="tr_rese_mvcip" data-vn="1">
+                    <td>Maximal vertex count per part</td>
+                    <td class="command">mvsMaxVertexCountInPart</td>
+                    <td class="parameter">int</td>
+                    <td>5000000</td>
+                </tr>
+                <tr data-id="tr_rese_mvsdedf" data-vn="1">
+                    <td>Detail decimation factor</td>
+                    <td class="command">mvsDecimationFactor</td>
+                    <td class="parameter">float</td>
+                    <td>1.0</td>
+                </tr>
+                <tr data-id="tr_dpth_ver1" data-vn="1">
+                    <td rowspan="2">Depth map algorithm version</td>
+                    <td class="command" rowspan="2">MvsDepthMapsLibVersion</td>
+                    <td class="parameter">0 - Version 1</td>
+                    <td rowspan="2">1</td>
+                </tr>
+                <tr data-id="tr_dpth_ver2" data-vn="1">
+                    <td class="parameter">1 - Version 2</td>
+                </tr>            
+                <tr data-id="tr_rese_adbs" data-vn="1">
+                    <td>Adaptive blending start</td>
+                    <td class="command">mvsAdaptiveBlendingStart</td>
+                    <td class="parameter">float</td>
+                    <td>0.45</td>
+                </tr>
+                <tr data-id="tr_rese_smoo" data-vn="1">
+                    <td>Smoothing</td>
+                    <td class="command">mvsSmoothingWeight</td>
+                    <td class="parameter">float</td>
+                    <td>1.5</td>
+                </tr>
+                <tr data-id="tr_rese_adph" data-vn="1">
+                    <th colspan="4">Advanced - Photogrammetry</th>
+                </tr>
+                <tr data-id="tr_rese_degf" data-vn="1">
+                    <td>Default grouping factor</td>
+                    <td class="command">mvsDefaultGroupingFactor</td>
+                    <td class="parameter">float</td>
+                    <td>1.0</td>
+                </tr>
+                <tr data-id="tr_rese_ltgf" data-vn="1">
+                    <td>Low texture grouping factor</td>
+                    <td class="command">mvsLowTextureGroupingFactor</td>
+                    <td class="parameter">float</td>
+                    <td>0.25</td>
+                </tr>
+                <tr data-id="tr_rese_denf" data-vn="1">
+                    <td>Default noise factor</td>
+                    <td class="command">mvsDefaultNoiseFactor</td>
+                    <td class="parameter">float</td>
+                    <td>1.0</td>
+                </tr>
+                <tr data-id="tr_rese_ltnf" data-vn="1">
+                    <td>Low texture noise factor</td>
+                    <td class="command">mvsLowTextureNoiseFactor</td>
+                    <td class="parameter">float</td>
+                    <td>2.0</td>
+                </tr>
+
+                <tr data-id="tr_rese_admf" data-vn="1">
+                    <th colspan="4">Advanced - Mesh filtration</th>
+                </tr>
+                <tr data-id="tr_rese_fira" data-vn="1">
+                    <td>Filter radius</td>
+                    <td class="command">mvsFilteringRadius</td>
+                    <td class="parameter">float</td>
+                    <td>3.0</td>
+                </tr>
+                <tr data-id="tr_rese_fist" data-vn="1">
+                    <td>Filter strength</td>
+                    <td class="command">mvsFilteringStrength</td>
+                    <td class="parameter">int</td>
+                    <td>2</td>
+                </tr>
+
+                <tr data-id="tr_rese_admi" data-vn="1">
+                    <th colspan="4">Advanced - Model import</th>
+                </tr>
+                <tr data-id="tr_rese_mvcppmi" data-vn="1">
+                    <td>Maximal vertices' count per part</td>
+                    <td class="command">mvsImportMaxTrianglesPerPart</td>
+                    <td class="parameter">int</td>
+                    <td>100000000</td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-id="div_sb_ctse" class="slideblock splitSpacing">
+            <h2 data-id="h2_ctse" data-vn="1">Color and Texture Settings</h2>
+            <p data-id="p_h2_ctse" data-vn="3" class="lod1">
+                You can find these settings in the <span class="apppanel">Color &amp; Texture</span> part of the <span class="appribbon">MESH &amp; COLOR</span> tab. To learn more about reconstruction settings, 
+                visit <a href="../appbasics/modelsettings.htm">this page</a>.
+            </p>
+            <table class="tableofcommands">
+                <thead data-id="thead_ctse" data-vn="1">
+                <tr>
+                    <th>Name</th> <th>Key</th> <th>Value</th> <th>Default value</th>
+                </tr>
+                </thead>
+                <tr data-id="tr_ctse_deup" data-vn="1">
+                    <th colspan="4">Default unwrap parameters</th>
+                </tr>
+                <tr data-id="tr_ctse_gutt" data-vn="1">
+                    <td>Gutter</td>
+                    <td class="command">unwrapGutter</td>
+                    <td class="parameter">int</td>
+                    <td>2</td>
+                </tr>
+                <tr data-id="tr_ctse_mitr" data-vn="1">
+                    <td rowspan="6">Minimal texture resolution</td>
+                    <td rowspan="6" class="command">unwrapMinTexResolution</td>
+                    <td class="parameter">512</td>
+                    <td rowspan="6">512</td>
+                </tr>
+                <tr data-id="tr_ctmi_1024">
+                    <td class="parameter">1024</td>
+                </tr>
+                <tr data-id="tr_ctmi_2048">
+                    <td class="parameter">2048</td>
+                </tr>
+                <tr data-id="tr_ctmi_4096">
+                    <td class="parameter">4096</td>
+                </tr>
+                <tr data-id="tr_ctmi_8192">
+                    <td class="parameter">8192</td>
+                </tr>
+                <tr data-id="tr_ctmi_16384">
+                    <td class="parameter">16384</td>
+                </tr>
+                <tr data-id="tr_ctse_matr" data-vn="1">
+                    <td rowspan="6">Maximal texture resolution</td>
+                    <td rowspan="6" class="command">unwrapMaxTexResolution</td>
+                    <td class="parameter">512</td>
+                    <td rowspan="6">8192</td>
+                </tr>
+                <tr data-id="tr_ctse_1024">
+                    <td class="parameter">1024</td>
+                </tr>
+                <tr data-id="tr_ctse_2048">
+                    <td class="parameter">2048</td>
+                </tr>
+                <tr data-id="tr_ctse_4096">
+                    <td class="parameter">4096</td>
+                </tr>
+                <tr data-id="tr_ctse_8192">
+                    <td class="parameter">8192</td>
+                </tr>
+                <tr data-id="tr_ctse_16384">
+                    <td class="parameter">16384</td>
+                </tr>
+                <tr data-id="tr_ctse_ltrt" data-vn="1">
+                    <td>Large triangle removal threshold</td>
+                    <td class="command">unwrapLargeTriangleRemovalThr</td>
+                    <td class="parameter">int</td>
+                    <td>10</td>
+                </tr>
+                <tr data-id="tr_ctse_styl" data-vn="1">
+                    <td rowspan="3">Style</td>
+                    <td rowspan="3" class="command">unwrapStyle</td>
+                    <td class="parameter">MaxTexturesCount</td>
+                    <td rowspan="3">MaxTexturesCount</td>
+                </tr>
+                <tr data-id="tr_ctse_fits" data-vn="1">
+                    <td class="parameter">FixedTexelSize</td>
+                </tr>
+                <tr data-id="tr_ctse_adts" data-vn="1">
+                    <td class="parameter">AdaptiveTexelSize</td>
+                </tr>
+                <tr data-id="tr_ctse_matc" data-vn="1">
+                    <td>Maximal textures' count*<br/><span class="note">*relevant for: "unwrapStyle=MaxTexturesCount"</span></td>
+                    <td class="command">unwrapMaximalTexCount</td>
+                    <td class="parameter">int</td>
+                    <td>1</td>
+                </tr>
+
+                <tr data-id="tr_ctse_tesi" data-vn="1">
+                    <td rowspan="6">Texel size*<br/><span class="note">*relevant for: "unwrapStyle=FixedTexelSize"</span></td>
+                    <td rowspan="6" class="command">unwrapFixedTexelSizeType</td>
+                    <td class="parameter">0 - Optimal</td>
+                    <td rowspan="6">0</td>
+                </tr>
+                <tr data-id="tr_ctse_tesi1" data-vn="1">
+                    <td class="parameter">1 - 2x optimal (50% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_tesi2" data-vn="1">
+                    <td class="parameter">2 - 4x optimal (25% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_tesi3" data-vn="1">
+                    <td class="parameter">3 - 10x optimal (10% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_tesi4" data-vn="1">
+                    <td class="parameter">4 - 100x optimal (1% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_tesi5" data-vn="1">
+                    <td class="parameter">5 - Custom</td>
+                </tr>
+                <tr data-id="tr_ctse_cuts" data-vn="1">
+                    <td>Custom texel size*<br/><span class="note">*relevant for: "unwrapStyle=FixedTexelSize"<br /> "unwrapFixedTexelSizeType =5"</span></td>
+                    <td class="command">unwrapFixedTexelSize</td>
+                    <td class="parameter">float</td>
+                    <td>0.01</td>
+                </tr>
+
+                <tr data-id="tr_ctse_mrts" data-vn="1">
+                    <td rowspan="6">Minimal required texel size*<br/><span class="note">*relevant for: "unwrapStyle=AdaptiveTexelSize"</span></td>
+                    <td rowspan="6" class="command">unwrapMinTexelSize</td>
+                    <td class="parameter">0 - Optimal</td>
+                    <td rowspan="6">0</td>
+                </tr>
+                <tr data-id="tr_ctse_mir1" data-vn="1">
+                    <td class="parameter">1 – 2x optimal (50% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mir2" data-vn="1">
+                    <td class="parameter">2 – 4x optimal (25% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mir3" data-vn="1">
+                    <td class="parameter">3 – 10x optimal (10% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mir4" data-vn="1">
+                    <td class="parameter">4 – 100x optimal (1% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mir5" data-vn="1">
+                    <td class="parameter">5 - Custom</td>
+                </tr>
+
+                <tr data-id="tr_ctse_cumi" data-vn="1">
+                    <td>Custom minimal required texel size*<br/><span class="note">*relevant for: "unwrapStyle=FixedTexelSize"<br /> "unwrapFixedTexelSizeType =5"</span></td>
+                    <td class="command">unwrapMinTexelSize</td>
+                    <td class="parameter">float</td>
+                    <td>0.01</td>
+                </tr>
+
+                <tr data-id="tr_ctse_mare" data-vn="1">
+                    <td rowspan="6">Maximal required texel size*<br/><span class="note">*relevant for: "unwrapStyle=AdaptiveTexelSize"</span></td>
+                    <td rowspan="6" class="command">unwrapMaxTexelSize</td>
+                    <td class="parameter">0 - Optimal</td>
+                    <td rowspan="6">4</td>
+                </tr>
+                <tr data-id="tr_ctse_mare1" data-vn="1">
+                    <td class="parameter">1 – 2x optimal (50% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mare2" data-vn="1">
+                    <td class="parameter">2 – 4x optimal (25% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mare3" data-vn="1">
+                    <td class="parameter">3 – 10x optimal (10% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mare4" data-vn="1">
+                    <td class="parameter">4 – 100x optimal (1% texture quality)</td>
+                </tr>
+                <tr data-id="tr_ctse_mare5" data-vn="1">
+                    <td class="parameter">5 - Custom</td>
+                </tr>
+
+                <tr data-id="tr_ctse_cuma" data-vn="1">
+                    <td>Custom maximal required texel size*<br/><span class="note">*relevant for: "unwrapStyle=FixedTexelSize"<br /> "unwrapFixedTexelSizeType =5"</span></td>
+                    <td class="command">unwrapMaxTexelSize</td>
+                    <td class="parameter">float</td>
+                    <td>10</td>
+                </tr>
+
+                <tr data-id="tr_ctse_cote" data-vn="1">
+                    <th colspan="4">Coloring/Texturing</th>
+                </tr>
+                <tr data-id="tr_cote_imdtp" data-vn="1">
+                    <td rowspan="6">Imported model default texture resolution</td>
+                    <td rowspan="6" class="command">txtImportDefaultTexResolution</td>
+                    <td class="parameter">512</td>
+                    <td rowspan="6">8192</td>
+                </tr>
+                <tr data-id="tr_cote_1024">
+                    <td class="parameter">1024</td>
+                </tr>
+                <tr data-id="tr_cote_2048">
+                    <td class="parameter">2048 </td>
+                </tr>
+                <tr data-id="tr_cote_4096">
+                    <td class="parameter">4096</td>
+                </tr>
+                <tr data-id="tr_cote_8192">
+                    <td class="parameter">8192</td>
+                </tr>
+                <tr data-id="tr_cote_16384">
+                    <td class="parameter">16384</td>
+                </tr>
+                <tr data-id="tr_cote_come" data-vn="1">
+                    <td rowspan="2">Coloring method</td>
+                    <td rowspan="2" class="command">txtMethod</td>
+                    <td class="parameter">Linear</td>
+                    <td rowspan="2">MultiBand</td>
+                </tr>
+                <tr data-id="tr_cote_muba" data-vn="1">
+                    <td class="parameter">MultiBand</td>
+                </tr>
+                <tr data-id="tr_cote_cost" data-vn="1">
+                    <td rowspan="2">Coloring style</td>
+                    <td rowspan="2" class="command">colStyle</td>
+                    <td class="parameter">PhotoConsistencyBased</td>
+                    <td rowspan="2">VisibilityBased</td>
+                </tr>
+                <tr data-id="tr_cote_viba" data-vn="1">
+                    <td class="parameter">VisibilityBased</td>
+                </tr>
+                <tr data-id="tr_cote_colimglay" data-vn="2">
+                    <td rowspan="3">Coloring image layer</td>
+                    <td rowspan="3" class="command">ImageLayerForColoring</td>
+                    <td class="parameter">geometry/name_of_geometry_layer</td>
+                    <td rowspan="3">geometry (if no texturing layer is present)<br/>
+                    texture01 (if any texturing layer is present)
+                    </td>
+                </tr>
+                <tr data-id="tr_cote_txt1" data-vn="2">
+                    <td class="parameter">texture01/name_of_texture_layer</td>
+                </tr>
+                <tr data-id="tr_cote_txt2" data-vn="2">
+                    <td class="parameter">texture2/name_of_texture_layer2</td>
+                </tr>
+                <tr data-id="tr_cote_test" data-vn="2">
+                    <td rowspan="6">Texturing style</td>
+                    <td rowspan="6" class="command">txtStyle</td>
+                    <td class="parameter">PhotoConsistencyBased</td>
+                    <td rowspan="6">VisibilityBased</td>
+                </tr>
+                <tr data-id="tr_test_viba" data-vn="1">
+                    <td class="parameter">VisibilityBased</td>
+                </tr>
+                <tr data-id="tr_test_moba" data-vn="1">
+                    <td class="parameter">MosaicingBased</td>
+                </tr>
+                <tr data-id="tr_test_main" data-vn="1">
+                    <td class="parameter">MaximalIntensity</td>
+                </tr>
+                <tr data-id="tr_test_miin" data-vn="1">
+                    <td class="parameter">MinimalIntensity</td>
+                </tr>
+                <tr data-id="tr_test_avin" data-vn="1">
+                    <td class="parameter">AverageIntensity</td>
+                </tr>
+                <tr data-id="tr_cote_teximglay" data-vn="1">
+                    <td rowspan="4">Texturing image layer</td>
+                    <td rowspan="4" class="command">ImageLayerForTexturing</td>
+                    <td class="parameter">geometry/name_of_geometry_layer</td>
+                    <td rowspan="4">all (All texturing layers)
+                    </td>
+                </tr>
+                <tr data-id="tr_teximglay_txt1" data-vn="1">
+                    <td class="parameter">texture01/name_of_texture_layer</td>
+                </tr>
+                <tr data-id="tr_teximglay_txt2" data-vn="1">
+                    <td class="parameter">texture2/name_of_texture_layer2</td>
+                </tr>
+                <tr data-id="tr_teximglay_txtall" data-vn="1">
+                    <td class="parameter">all</td>
+                </tr>
+                <tr data-id="tr_test_difbt" data-vn="1">
+                    <td>Downscale images before texturing</td>
+                    <td class="command">txtImageDownscaleTexture</td>
+                    <td class="parameter">int</td>
+                    <td>1</td>
+                </tr>
+                <tr data-id="tr_test_difbc" data-vn="1">
+                    <td>Downscale images before coloring</td>
+                    <td class="command">txtImageDownscaleColor</td>
+                    <td class="parameter">int</td>
+                    <td>2</td>
+                </tr>
+                <tr data-id="tr_test_fiucp" data-vn="1">
+                    <td>Fill in uncolored parts</td>
+                    <td class="command">txtFillInUncoloredParts</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_test_fiutp" data-vn="1">
+                    <td>Fill in untextured parts</td>
+                    <td class="command">txtFillInUntextoredParts</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_test_remat" data-vn="1">
+                    <td>Recolor model after texturing</td>
+                    <td class="command">txtRecolorAfterTexturing</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+                <tr data-id="tr_cote_dococo" data-vn="1">
+                    <td>Correct colors</td>
+                    <td class="command">MvsDoCorrectColors</td>
+                    <td class="parameter">bool</td>
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_cote_igncoco" data-vn="1">
+                    <td>Ignore color correction</td>
+                    <td class="command">MvsIgnoreCorrectColors</td>
+                    <td class="parameter">bool</td>
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_test_hdr" data-vn="1">
+                    <td>Prefer 16-bit/HDR texture generation</td>
+                    <td class="command">MvsGeometryTexturingDoHdr</td>
+                    <td class="parameter">bool</td>
+                    <td>true</td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-id="div_sb_erhs" class="slideblock splitSpacing">
+            <h2 data-id="h2_erhs" data-vn="1">Error-handling Settings</h2>
+            <p data-id="p_h2_erhs" data-vn="1" class="lod1">
+                With the following settings, you can handle potential errors occurring during the command-line processing:
+            </p>
+            <table class="tableofcommands">
+                <thead data-id="thead_erhs" data-vn="1">
+                <tr>
+                    <th>Name</th> <th>Key</th> <th>Value</th> <th>Default value</th>
+                </tr>
+                </thead>
+                <tr data-id="tr_erhs_quoe" data-vn="1">
+                    <td>Quit on error</td>
+                    <td class="command">appQuitOnError</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_erhs_qurr" data-vn="1">
+                    <td>Quit on required restart</td>
+                    <td class="command">appQuitOnReset</td> 
+                    <td class="parameter">bool</td>  
+                    <td>false</td>
+                </tr>
+                <tr data-id="tr_erhs_supp" data-vn="1">
+                    <td>Suppress error messages</td>
+                    <td class="command">suppressErrors</td>
+                    <td class="parameter">bool</td>
+                    <td>false</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="clear splitSpacing">
+            <!-- clear -->
+        </div>
+
+        <div data-id="div_bc" class="blocksContainer">
+
+            <a href="../tutorials/commandline_4.htm">
+                <div class="block TileColor2">
+                    <h2 data-id="h2_bc_seco" data-vn="1">Learn how to use the Set Command</h2>
+                    <p data-id="p_h2_bc_seco" data-vn="1">See the tutorial on the command-line interface</p>
+                </div>
+            </a>
+
+            <script type="text/javascript">RenderBackToStartTile();</script>
+        </div>
+
+        <div class="clear">
+            <!-- clear -->
+        </div>
+
+        <!-- content slide end -->
+
+    </div>
+
+    <script type="text/javascript">RenderCopyrightText();</script>
+
+
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>

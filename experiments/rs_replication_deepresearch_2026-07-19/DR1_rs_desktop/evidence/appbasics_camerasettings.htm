@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+        <title>Camera Settings - RealityScan Help</title>
+        <meta charset="UTF-8"/>
+        <meta name="author" content="Epic Games Slovakia s.r.o."/>
+        <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/style.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/colors.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/flagStyles.css"/>
+        <script src="../scripts/textVars.js" type="text/javascript"></script>
+        <script src="../../scripts/localization.js" type="text/javascript"></script>
+        <script src="../../scripts/main.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+        <div data-id="div_cs" class="content_slide">
+
+            <!-- content slide -->
+            <script type="text/javascript">RenderToolNavigation();</script>
+
+            <div data-id="div_head" class="head">
+
+                <h1 data-id="h1" data-vn="1">Camera Settings</h1>
+                <p data-id="p_h1" data-vn="3">During image alignment or registration process, RealityScan calculates parameters and the pose where was the image taken. 
+                    This camera pose is illustrated in the <span class="appaspecttype">3Ds</span> view as a small white cone with a small image.</p>
+                <p data-id="p_h1_more" data-vn="1">Providing more information about cameras which were used can simplify and speed-up this process.</p>
+            </div>
+
+            <div data-id="div_sb_calib" class="slideblock">
+
+                <h2 data-id="h2_calib" data-vn="1">Calibration Groups</h2>
+
+                <p data-id="p_h2_calib" data-vn="1">
+                    By defining a calibration group we state that all images in this group have the same properties, e.g. the same focal length,
+                    the same principal point or the same lens distortion coefficients. 
+                    These groups can be created automatically using image metadata, a user can alternatively create groups manually.
+                </p>
+                <h3 data-id="h3_calib" data-vn="1">What are calibration groups good for?</h3>
+                <p data-id="p_h3_calib" data-vn="1">
+                    To give you a use-case example, using calibration groups can be useful:
+                </p>
+                <ul>
+                    <li data-id="li_calib_fixed" data-vn="1">for cameras with fixed optics (like GoPro) where it is expected to get the same focal length and lens distortion for each calculated camera pose,</li>
+                    <li data-id="li_calib_weak" data-vn="1">for reconstructing objects with a weak texture or small features' count. Grouping camera parameters helps camera registration as less feature points are needed for calculation of camera calibration,</li>
+                    <li data-id="li_calib_force" data-vn="1">or when you want to constrain/force a set of cameras to have the same focal length.</li>
+                </ul>
+                <br/>
+                <p data-id="p_h3_calib_general" data-vn="2">
+                    In general, images with the same body/optics must have the same or very similar calibration parameters. These parameters may 
+                    vary due to small movements of optics caused by focusing, mechanical movement or temperature changes.
+                    These differences are negligible for small resolution cameras, while for high resolution cameras, e.g. 60 Mpx and more, these differences are more visible.
+                    On the other hand, by grouping calibration parameters together RealityScan will need to calculate less parameters which results in a faster computation.
+                </p>
+                <br/>
+            </div>
+
+            <div data-id="div_sb_auto" class="slideblock">
+
+                <h2 data-id="h2_auto" data-vn="1">Automatic Grouping</h2>
+                <ul>
+                    <li data-id="li_auto_exif" data-vn="3">Images can be grouped automatically based on their camera parameters when they are added to the project. To enable or disable this option go to the <span class="appribbon">WORKFLOW</span> tab and open <span class="appribbonbutton">Settings</span> in the <span class="apppanel">Aplication</span> section. After that, enable the <span class="appproperty">Group calibration by exif</span> setting in the <span class="appproperty">Import Settings</span>.</li>
+                    <li data-id="li_auto_group" data-vn="2">To <span class="appbutton">Group</span>/<span class="appbutton">Ungroup</span> images which have already been added into the project, use the <span class="apppanel">Inputs</span> panel which shows up when clicking once on the Images root in the <span class="appaspecttype">1Ds</span> panel. 
+                        When you ungroup calibration, each camera calibration will be optimized independently.
+                        <br/>
+                        <br/>
+                        <img src="images/Images-Inputs.png" alt="Images-Inputs" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/Images-Inputs.png';"/>
+                        <br/>
+                    </li>
+                    <li data-id="li_auto_constant" data-vn="1">You can also set a constant calibration to all images included in your project at once by <span class="appgesture">clicking</span> <span class="appbutton">Constant</span> in the <span class="apppanel">Images</span> panel / <span class="appproperty">Inputs</span>.</li>
+                </ul>
+
+                <br/>
+            </div>
+
+            <div data-id="div_sb_man" class="slideblock">
+
+                <h2 data-id="h2_man" data-vn="1">Manual Grouping</h2>
+
+                <p data-id="p_h2_man" data-vn="1">There is also a possibility to group images individually.</p>
+                <ul>
+                    <li data-id="li_man_select" data-vn="1">Select one or more images.</li>
+                    <li data-id="li_man_use" data-vn="1">In <span class="appproperty">Calibration group</span> and <span class="appproperty">Lens group</span> use "-1" if you do not want to group the parameters. 
+                        Any other number in these fields means to group the parameters.</li>
+                    <li data-id="li_man_assign" data-vn="1">To assign other images to the same group, just set them the same group values.</li>
+                </ul>
+                <br/>
+
+                <div data-id="div_im_afca" data-vn="1" class="importantMessage">
+                    TIP: After calculating a scene with grouped camera parameters, <span class="appbutton">ungroup</span> camera parameters and align the scene again. 
+                         It will fine-tune the camera parameters and the scene also stays well-conditioned. 
+                         This is recommended for scenes with weak texture or small image count. 
+                         Alignment in such case will take just a few seconds.
+                </div>
+            </div>
+
+            <div class="clear splitSpacing">
+                <!-- clear -->
+            </div>
+
+            <div data-id="div_bc" class="blocksContainer">
+
+                <a id="idContinue"  href="camerasettings_priors.htm">
+                    <div class="leadBlock block TileColor6">
+                        <h2 data-id="h2_bc_priors" data-vn="1">Camera Priors</h2>
+                        <p data-id="p_h2_bc_priors" data-vn="1">Define lens distortion priors</p>
+                    </div>
+                </a>
+
+                <script type="text/javascript">RenderBackToStartTile();</script>
+
+            </div>
+
+            <div class="clear">
+                <!-- clear -->
+            </div>
+
+            <div data-id="div_sa" class="rowblock">
+                <h3 data-id="h3_sa" data-vn="1">See also:</h3>
+                <ul class="intend">
+                    <li data-id="li_sa_dismodels" data-vn="1">Learn more about the application distortion models <a href="settings_distortion_models.htm">click here</a></li>
+                </ul>
+
+                <div class="clear">
+                    <!-- clear -->
+                </div>
+            </div>
+
+            <!-- content slide end -->
+
+        </div>
+
+        <script type="text/javascript">RenderCopyrightText();</script>
+
+        <script type="text/javascript">
+            InitializeHelpSlide();
+        </script>
+
+    
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>

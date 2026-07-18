@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+    <title>Parametric Files of Orthographic Projections - RealityScan Help</title>
+    <meta charset="UTF-8"/>
+    <meta name="author" content="Epic Games Slovakia s.r.o." />
+    <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+    <link type="text/css" rel="stylesheet" href="../../styles/style.css" />
+    <link type="text/css" rel="stylesheet" href="../../styles/colors.css" />
+    <script src="../scripts/textVars.js" type="text/javascript"></script>
+    <script src="../../scripts/localization.js" type="text/javascript"></script>
+    <script src="../../scripts/main.js" type="text/javascript"></script>
+    <script type="text/javascript">InitializeHelpSlide();</script>
+</head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+    <div data-id="div_cs" class="content_slide">
+
+        <!-- content slide -->
+
+        <script type="text/javascript">RenderToolNavigation();</script>
+
+        <div data-id="div_head" class="head">
+
+            <h1 data-id="h1" data-vn="1">Parametric Files of Orthographic Projections</h1>
+            <p data-id="p_h1" data-vn="2">
+                When creating orthographic projections using the command <span class="command">-calculateOrthoProjection</span>, 
+                a parametric file with the <span class="parameter">.rcortho</span> extension is used to define parameters of a rendered orthographic projection.
+                Let us take a closer look at its content.
+            </p>
+        </div>
+
+        <div class="clear splitSpacing">
+            <!-- clear -->
+        </div>
+
+        <div data-id="div_sb_rcor" class="slideblock">
+
+            <h2 data-id="h2_rcor" data-vn="1">*.rcortho for Calculation of Orthographic Projections</h2>
+            <p data-id="p_h2_rcor" data-vn="1">
+                When using the command <span class="command">-calculateOrthoProjection</span>, the application loads the parameters from a specified params.rcortho file. 
+                The file can be generated in a suitable format by creating an orthographic projection manually, exporting it into any format, and setting <span class="appproperty">exportProjectionParametersFile</span>
+                to <span class="appproperty">True</span> during the export.
+                <br />
+                An example of the .rcortho file content for calculation of an orthographic projection:
+            </p>
+
+            <div class="codeSample">
+<pre>
+&lt;OrthoProjection width="10011" height="8076" name="Ortho projection 1" modelName="Model 1"
+    colorType="texturing" boxSideConerIndex="13" bEmpty="0" backFaceColorType="1" backFaceColor="2130706687">
+    &lt;Header magic="5787472" version="1"/&gt;
+&lt;/OrthoProjection&gt;
+&lt;ReconstructionRegion globalCoordinateSystem="NONE" globalCoordinateSystemName="NONE" isGeoreferenced="0"
+    isLatLon="0" yawPitchRoll="0 -0 -0"&gt;
+    &lt;widthHeightDepth>29.8926887512207 29.9313926696777 24.1154346466064&lt;/widthHeightDepth&gt;
+    &lt;Header magic="5395016" version="2"/&gt;
+    &lt;CentreEuclid&gt;
+        &lt;centre&gt;-0.098011314868927 0.0846212208271027 12.4095182418823&lt;/centre&gt;
+    &lt;/CentreEuclid&gt;
+    &lt;Residual R="1 0 0 0 1 0 0 0 1" t="0 0 0" s="1"/&gt;
+&lt;/ReconstructionRegion>
+&lt;DTMParams classificationLayerId="-1">
+  &lt;ClassificationParams modelType="nature" postprocessType="soft_edges" sensitivity="0.5"/&gt;
+  &lt;Header magic="1480868688" version="1"/&gt;
+&lt;/DTMParams>
+</pre>
+            </div>
+
+            <p data-id="p_rcor_pars" data-vn="1">
+                We can generate the file in a suitable format by creating an orthographic projection manually, exporting it into any format and setting <span class="appproperty">exportProjectionParametersFile</span>
+                to <span class="appproperty">True</span> when exporting.
+                <br />
+                The first part of the file indicates the parameters needed to create a projection.
+            </p>
+            <h3 data-id="h3_rcor_pars" data-vn="1">Parameters:</h3>
+            <ul>
+                <li data-id="li_rcor_wihe" data-vn="1"><span class="appproperty">width/height </span>- a width/height of a projection</li>
+                <li data-id="li_rcor_name" data-vn="1"><span class="appproperty">name  </span>- a name of a projection</li>
+                <li data-id="li_rcor_mona" data-vn="1"><span class="appproperty">modelName </span>- a name of the model which we want to calculate the projection for</li>
+                <li data-id="li_rcor_bsci" data-vn="1"><span class="appproperty">boxSideConerIndex </span>- a number from 0 to 23; 
+                    it defines which side of the reconstruction region will be the projected plane, and which will be the upper-left corner of the final projection; 
+                    this number is not defined definitely because it depends on the rotation of the reconstruction region; 
+                    the best procedure, how to obtain this number, is to create one orthographic projection manually and export it with the projection parameters' file; 
+                    when making further projections, the use of the number from the boxSideConerIndex will suffice
+                </li>
+                <li data-id="li_rcor_coty" data-vn="1"><span class="appproperty">colorType </span>- alternatives: texturing, coloring</li>
+                <li data-id="li_rcor_bemp" data-vn="1"><span class="appproperty">bEmpty </span>- alternatives: 0 - an orthographic projection will be calculated; an equivalent to pressing the Render button in the Ortho Projection Tool settings. 
+                    1 - an orthographic projection will not be calculated; an equivalent to pressing the Add to batch button in the Ortho Projection Tool settings.
+                    We recommend you to leave this parameter set to 0</li>
+                <li data-id="li_rcor_bfct" data-vn="1"><span class="appproperty">backFaceColorType </span>- alternatives:     0 - None - the inner parts of a model projection are not colored differently from the outer ones.
+                    1 - FixedColor - the inner parts of a model projection are colored differently from the outer ones; 
+                    the color is defined in the backFaceColor.</li>
+                <li data-id="li_rcor_bfc" data-vn="1"><span class="appproperty">backFaceColor </span>- the color of the inner parts of a model</li>
+            </ul>
+            <br/>
+            <p data-id="p_rcor_parr" data-vn="1">
+                The second part describes parameters of a reconstruction region whose one side represents a projected plane. This part can be obtained by setting the reconstruction region manually and then exporting it.
+            </p>
+            <p data-id="p_rcor_pardtm" data-vn="1">
+                The third part (between "DTMParams" tags) contains the parameters needed to create a digital terrain model (DTM).
+            </p>
+            <h3 data-id="h3_dtm_pars" data-vn="1">Parameters:</h3>
+            <ul>
+                <li data-id="li_dtm_clid" data-vn="1"><span class="appproperty">classificationLayerId </span>- ID of a classification layer from which the DTM is created. "-1" means that a new classification is calculated during rendering. In such case, the user needs to define also <span class="appproperty">ClassificationParams</span> (see below).</li>
+                <li data-id="li_dtm_moty" data-vn="1"><span class="appproperty">modelType  </span>- type of a classification based on the nature of the scene. Alternatives: "industrial_complex", "mixed", "city", "nature", "meadows", "countryside", "mountains".</li>
+                <li data-id="li_dtm_ppty" data-vn="1"><span class="appproperty">postprocessType </span>- type of the postprocessor that will execute a process after classification to clean a model. Alternatives: "none", "soft_edges", "hard_edges". </li>
+                <li data-id="li_dtm_sens" data-vn="1"><span class="appproperty">sensitivity </span>- value between 0 and 1. If set to 0, everything will be classified as "Artificial object", if set to 1, everything will be classified as "Ground". </li>
+            </ul>
+            <br/>
+            <p data-id="p_learn_pcc" data-vn="1">
+                To learn more about the point cloud classification, visit <a href="../tools/classification.htm">this page</a>.
+            </p>
+        </div>
+
+        <div class="clear splitSpacing">
+            <!-- clear -->
+        </div>
+
+        <div data-id="div_bc" class="blocksContainer">
+            
+            <a href="../tutorials/commandline_3.htm">
+                <div class="block TileColor2">
+                    <h2 data-id="h2_bc_cli" data-vn="1">Learn How to Use Them</h2>
+                    <p data-id="p_h2_bc_cli" data-vn="1">See a tutorial for the command line interface</p>
+                </div>
+            </a>
+
+            <script type="text/javascript">RenderBackToStartTile();</script>
+        </div>
+
+        <div class="clear">
+            <!-- clear -->
+        </div>
+
+        <!-- content slide end -->
+
+    </div>
+
+    <script type="text/javascript">RenderCopyrightText();</script>
+
+
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>

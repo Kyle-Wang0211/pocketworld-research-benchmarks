@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+        <title>Component Workflow - RealityScan Help</title>
+        <meta charset="UTF-8"/>
+        <meta name="author" content="Epic Games Slovakia s.r.o."/>
+        <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/style.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/colors.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/flagStyles.css"/>
+        <script src="../scripts/textVars.js" type="text/javascript"></script>
+        <script src="../../scripts/localization.js" type="text/javascript"></script>
+        <script src="../../scripts/main.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+
+        <div data-id="div_cs" class="content_slide">
+
+            <!-- content slide -->
+            <script type="text/javascript">RenderToolNavigation();</script>
+
+            <div data-id="div_head" class="head">
+
+                <h1 data-id="h1" data-vn="2">Component Workflow</h1>
+
+                <p data-id="p_h1" data-vn="1">A component is a part of a model - a group of images aligned together. Sometimes you get more components after alignment. 
+                   This may happen when your photo collection contains more than one disjoint object, object's texture is weak, there are not enough images or the change in perspective is too high.</p>
+            </div>
+
+            <div data-id="div_sb_merge" class="slideblock">
+
+                <h2 data-id="h2_merge" data-vn="1">Merging or Fixing Scenes</h2>
+
+                <p data-id="p_h2_merge" data-vn="1">Components can be used for many different purposes. The most important are:</p>
+                <ul>
+                    <li data-id="li_merge_create" data-vn="1">To create a scene in smaller pieces, check each piece separately and merge them to a larger whole later.
+                        <p data-id="p_li_merge_create" data-vn="1">
+                           Sometimes it is more convenient, especially when creating a large reconstruction, to split the task into smaller pieces first and then merge them together.
+                           For example, consider you are scanning a castle. You can align photos covering each room individually, then merge rooms to form floors, merge the floors to complete the interior and
+                           finally merge the interior with exterior. It is extremely useful to utilize components when working in parallel on more computers. The components' framework enables creating huge reconstructions efficiently w.r.t. computer resources, since only the information which is relevant to connection 
+                           of components is maintained, rather than all input data.</p>
+                    </li>
+                    <li data-id="li_merge_correct" data-vn="2">To correct an existing scene, e.g. cracks on walls.
+                        <p data-id="p_li_merge_correct" data-vn="3">It might happen that a scene contains some unwanted artefacts caused by reflections, missing images, wrong alignment and so on.
+                           With the component framework, you can select a part of the scene which is faulty and export it as a component. 
+                           Then import this component into an empty scene, fix it separately by adding control points or more images or by adding constraints.
+                           Finally import the fixed component back into the original scene and press the <span class="appbutton">Align Images</span> button again.
+                           RealityScan engine will apply fixes from the corrected component.</p>
+                    </li>
+                </ul>
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_export" class="slideblock">
+                <h2 data-id="h2_export" data-vn="1" id="ExportComponent">Export a Component</h2>
+                <p data-id="p_h2_export" data-vn="1">Any subset of aligned cameras can be exported as a component.</p>
+                <ul>
+                    <li data-id="li_export_select" data-vn="1">Select the parts of a model (images / cameras / points) to be exported. To export all components, leave this selection empty.</li>
+                    <li data-id="li_export_export" data-vn="2">To export a component, <span class="appgesture">click</span> on the <span class="appribbonbutton">Registration</span> button in the <span class="apppanel">Export</span> section of the <span class="appribbon">ALIGNMENT</span> tab.</li>
+                    <li data-id="li_export_save" data-vn="2">These are the save-as possibilities that will pop up. <b>When exporting a component, always choose the first one (RealityScan alignment component - only this one preserves all features of the application)</b>, type the name, set a destination folder and <span class="appgesture">click</span> <span class="appmenuitem">Save</span>:</li>
+                </ul>
+
+                <div style="padding: 20px 10px 10px 25px"><img src="images/Save-Component-As.png" alt="Save-Component-As" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/Save-Component-As.png';"/></div>
+
+                <ul>
+                    <li data-id="li_export_complete" data-vn="1">A complete component is exported if the current selection is empty or it is a single camera selection.</li>
+                </ul>
+                <ul>
+                    <li data-id="li_export_cpoints" data-vn="1">If there are control points placed on the component, they will also be exported with the component.</li>
+                </ul>
+                
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_import" class="slideblock">
+
+                <h2 data-id="h2_import" data-vn="1" id="ImportComponent">Import a Component</h2>
+                <p data-id="p_h2_import" data-vn="2">The RealityScan alignment component is, in fact, a small scene file. It holds image lists, image properties, camera poses and so on. You can add to the project as many components as you want.
+                   Components can also contain duplicate images or points. </p>
+                <ul>
+                    <li data-id="li_import_find" data-vn="2">To import a component, find the <span class="apppanel">Import Metadata</span> part of the <span class="appribbon">WORKFLOW</span> tab and <span class="appgesture">click</span> on <span class="appribbonbutton">Component</span>. There is also another possibility - you can simply <span class="appgesture">drag and drop</span> a component file (saved on your drive) into the <span class="appaspecttype">1Ds</span> view of a project.</li>
+                  <li data-id="li_import_note" data-vn="1">Note that any imported component has a small star icon in the <span class="appaspecttype">1Ds</span> view.</li>
+                  <li data-id="li_import_cpimport" data-vn="1">If your imported component has a control point with the same name as an existing control point in your project, but a different placement, it will be imported (control point) with the imported component's name as a suffix.</li>
+                </ul>
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_set" class="slideblock">
+
+                <h2 data-id="h2_set" data-vn="1">Useful Component-related Settings</h2>
+
+                <p data-id="p_h2_set" data-vn="1">Depending on a type of components you can choose more components integration strategies by selecting which features you would like to be included 
+                    in a new alignment of components (separately for each component). You can do it in the <span class="appproperty">Features source</span> in the Selected input(s) panel:</p>
+
+                <img src="images/Features-Source.png" alt="Features-Source" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/Features-Source.png';"/>
+
+                <br/>
+
+                <ul>
+                    <li data-id="li_set_overlap" data-vn="1">
+                        <span class="appproperty">Merge using overlaps</span> The software will use solely the components' images/points which are in common 
+                        (the same in all components) = overlap of the same images in both components - see the illustration which follows.
+                         Merging components using overlaps extremely speeds up the reconstruction process, as well as reduces computer memory consumption.
+                        <br/>
+                        <br/>
+                        <img src="images/Component-Overlap.jpg" alt="Component-Overlap" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/Component-Overlap.jpg';"/>
+                    </li>
+                    <li data-id="li_set_features" data-vn="1">
+                        <span class="appproperty">Use component features</span> This is the most common and fastest type. It is especially beneficial with RAM shortage. 
+                        When chosen, the application will use only the points used in the alignment of the imported component. Hence, it is important to create components which have more points in common.
+                    </li>
+                    <li data-id="li_set_all" data-vn="1">
+                        <span class="appproperty">Use all image features</span> The slowest process of all these, recommended for a small number of camera poses. The program will use all images/points.
+                    </li>
+                </ul>
+            </div>
+
+            <br/>
+
+            <div class="clear splitSpacing">
+                <!-- clear -->
+            </div>
+
+            <div data-id="div_bc" class="blocksContainer">
+
+                <a href="../tutorials/mergecomponents.htm">
+                    <div class="block TileColor3">
+                        <h2 data-id="h2_bc" data-vn="1">Merge Components</h2>
+                        <p data-id="p_h2_bc" data-vn="1">Learn how to merge components using additional photos or control points</p>
+                    </div>
+                </a>
+
+                <script type="text/javascript">RenderBackToStartTile();</script>
+
+            </div>
+
+            <div class="clear">
+                <!-- clear -->
+            </div>
+
+            <div data-id="div_sa" class="rowblock">
+                <h3 data-id="h3_sa" data-vn="1">See also:</h3>
+                <ul class="intend">
+                    <li data-id="li_sa_relset" data-vn="1">Related alignment settings <a href="alignsettings.htm">click here</a>.</li>
+                    <li data-id="li_sa_undit" data-vn="1">The process of creating undistorted images for export <a href="../tools/undistort.htm">click here</a>.</li>
+                </ul>
+            </div>
+
+            <!-- content slide end -->
+        </div>
+
+        <script type="text/javascript">RenderCopyrightText();</script>
+
+        <script type="text/javascript">
+            InitializeHelpSlide();
+        </script>
+
+    
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>

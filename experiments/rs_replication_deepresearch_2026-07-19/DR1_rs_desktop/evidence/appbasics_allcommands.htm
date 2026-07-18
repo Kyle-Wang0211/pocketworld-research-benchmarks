@@ -1,0 +1,1722 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+        <title>List of All CLI Commands - RealityScan Help</title>
+        <meta charset="utf-8"/>
+        <meta name="author" content="Epic Games Slovakia s.r.o."/>
+        <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/style.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/colors.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/flagStyles.css"/>
+        <script src="../scripts/textVars.js" type="text/javascript"></script>
+        <script src="../../scripts/localization.js" type="text/javascript"></script>
+        <script src="../../scripts/main.js" type="text/javascript"></script>
+        <script type="text/javascript">InitializeHelpSlide();</script>
+    </head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+        <div data-id="div_cs" class="content_slide">
+
+            <!-- content slide -->
+
+            <script type="text/javascript">RenderToolNavigation();</script>
+
+            <div data-id="div_head" class="head">
+                <h1 data-id="h1" data-vn="1">List of All CLI Commands</h1>
+                <p data-id="p_h1__v1" data-vn="1">
+                    Use CLI commands to automate your workflow and make iterative processing easier.
+                </p>
+            </div>
+
+            <div data-id="div_sb_project" class="slideblock splitSpacing">
+                <h2 data-id="h2_project" data-vn="1">Project and Images</h2>
+                <p data-id="p_h2_project" data-vn="2" class="lod1">
+                    Add images to your project or change the project/instance settings.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_project_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_project_headless" data-vn="1">
+                        <td class="command">headless</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Hides user interface. Find more about this command <a href="../tutorials/headless.htm">here</a>.</td>
+                    </tr>
+                    <tr data-id="tr_project_hideui" data-vn="1">
+                        <td class="command">hideUI</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Hide user interface. Unlike <span class="command">headless</span>, this command doesn't need to be run at startup and does not suppress actions that require user interaction.</td>
+                    </tr>
+                    <tr data-id="tr_project_showui" data-vn="1">
+                        <td class="command">showUI</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Shows hidden user interface. Unlike <span class="command">headless</span>, this command doesn't need to be run at startup.</td>
+                    </tr>                
+                    <tr data-id="tr_project_newscene" data-vn="1">
+                        <td class="command">newScene</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Create a new empty scene.</td>
+                    </tr>
+                    <tr data-id="tr_project_load" data-vn="3">
+                        <td class="command">load</td>
+                        <td class="parameter">MyProject.rsproj</td>
+                        <td class="parameter">recoverAutosave&#124;deleteAutosave</td>
+                        <td>
+                            Load an existing project from the MyProject.rsproj file. Use optional parameters to define the action if there is an autosaved file present for this project. Using <span class="command">recoverAutosave</span> will open the autosaved project, while <span class="command">deleteAutosave</span> will delete the autosaved project and load the original one.
+                            More information about the Autosave feature can be found <a href="../appbasics/autosave.htm">here</a>.<br />
+                            To set the preference globally for all projects, use <span class="command">set</span> command with <span class="command">appAutoSaveCliHandling</span> key.
+                            Find more information in the section <a href="../tutorials/setkeyvaluetable.htm">CLI Settings Keys &amp; Values</a>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_saor" data-vn="2">
+                        <td class="command">save</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">MyProject.rsproj</td>
+                        <td>Save the current project to its original location or save as MyProject.rsproj.</td>
+                    </tr>
+                    <tr data-id="tr_project_start" data-vn="2">
+                        <td class="command">start</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Run the processes configured for the <span class="appribbonbutton">Start</span> button. Adjust these settings in the <span class="apppanel">Start button</span> settings which can be accesed from the <span class="appbutton">Start</span> button dropdown menu.</td>
+                    </tr>
+                    <tr data-id="tr_project_unlock" data-vn="3">
+                        <td class="command">unlockPPIProject</td>
+                        <td class="parameter">myProject.rcproj</td>
+                        <td class="parameter"></td>
+                        <td>Save and unlock your PPI projects to make them compatible for use with the latest RealityScan versions. Use the whole path with the project's name and extension where you want to store the unlocked project.</td>
+                    </tr>
+                    <tr data-id="tr_project_add" data-vn="2">
+                        <td class="command">add</td>
+                        <td class="parameter">imageName</td>
+                        <td class="parameter"></td>
+                        <td>Import one or more images from a specified file path or from an image list. The image list is a text file with the .imagelist extension, containing full paths to the images, each on a separate line.</td>
+                    </tr>
+                    <tr data-id="tr_project_addfolder" data-vn="2">
+                        <td class="command">addFolder</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter"></td>
+                        <td>Add all images to the specified folder. To include subdirectories, use the command <span class="command">set</span> with a key 
+                            <span class="command">appIncSubdirs</span> as follows: <span class="command">-set "appIncSubdirs=true"</span>.
+                            Find more information in the section <a href="../tutorials/setkeyvaluetable.htm">CLI Settings Keys &amp; Values</a>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_importvideo" data-vn="1">
+                        <td class="command">importVideo</td>
+                        <td class="parameter">videoFileName<br /> extractedVideoFramesLocation<br /> jumpsLength</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import frames extracted from a video (videoFileName including the path).
+                            The frames are extracted into a folder (extractedVideoFramesLocation) using an interval between frames defined by the jumpsLength (in seconds).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_ilblk" data-vn="1">
+                        <td class="command">importLeicaBlk3D</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import image sequence with .cmi extension (fileName including path) captured by Leica BLK3D.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_importscan" data-vn="2">
+                        <td class="command">importLaserScan</td>
+                        <td class="parameter">laserscanName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Add a LiDAR scan or a LiDAR scan list using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">LiDAR Scan Import</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_importscanfolder" data-vn="2">
+                        <td class="command">importLaserScanFolder</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>Add all LiDAR scans in the specified folder using settings from the params.xml file. You can export these settings from the application in the <span class="apppanel">LiDAR Scan Import</span> dialog.</td>
+                    </tr>
+                    <tr data-id="tr_project_ihdr" data-vn="1">
+                        <td class="command">importHDRimages</td>
+                        <td class="parameter">fileName&#124;folderName&#124;imageList</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Import HDR image (imageName), list of images (imageList) or all images from a folder (folderName) using the current settings or the settings from params.xml.
+                            You can export these settings from the application in the <span class="apppanel">16-bit/HDR Images Import</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_project_imxmp" data-vn="1">
+                        <td class="command">addImageWithCalibration</td>
+                        <td class="parameter">fileName<br/> xmpFileName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import an image as well as the corresponding XMP file. Use whole paths to the files.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_selimages_importsel" data-vn="2">
+                        <td class="command">importImageSelection</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter"></td>
+                        <td>Select some scene images and/or LiDAR scans listed in a file (filename including the path).</td>
+                    </tr>
+                    <tr data-id="tr_selimages_selimgs" data-vn="2">
+                        <td class="command">selectImage</td>
+                        <td class="parameter">imagePath&#124;regexp</td>
+                        <td class="parameter">set<br /> union<br /> sub<br /> intersect<br /> toggle</td>
+                        <td>Select a specified image (imagePath) or images defined by regular expression (regexp). See below <a href="#exselectimgs">examples</a>. One of the optional parameters may be used to more select images with more flexibility.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_selimages_selall" data-vn="1">
+                        <td class="command">selectAllImages</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select all images in the project.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_deselall" data-vn="1">
+                        <td class="command">deselectAllImages</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Deselect all images in the project.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_invsel" data-vn="1">
+                        <td class="command">invertImageSelection</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Invert the current image selection.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_removecal" data-vn="1">
+                        <td class="command">removeCalibrationGroups</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Clear all inputs from their calibration groups.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_aimask" data-vn="1">
+                        <td class="command">generateAIMasks</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Use AI Masking to generate masks by isolating the object of interest in your images.</td>
+                    </tr>                              
+                    <tr data-id="tr_selimages_exmas" data-vn="2">
+                        <td class="command">exportMasks</td>
+                        <td class="parameter">folderPath params.xml</td>
+                        <td class="parameter"></td>
+                        <td>Export the mask images currently used in the project. Specify the output folder and, optionally, the full path to the XML file with export parameters (this file can be exported from the <span class="apppanel">Export Mask Images</span> dialog).</td>
+                    </tr>
+                    <tr data-id="tr_images_setImageLayer" data-vn="2">
+                        <td class="command">setImageLayer</td>
+                        <td class="parameter">index pathImage layerType</td>
+                        <td class="parameter"></td>
+                        <td>Set the layer from the image defined with the <span class="appproperty">pathImage</span> parameter (path to the layer image) to the image defined with the <span class="appproperty">index</span> parameter. The index corresponds to the image order in the <span class="appaspecttype">1Ds</span> view, starting at 0 (zero). The <span class="appproperty">layerType</span> parameter defines which layer to set onto the chosen image (e.g., mask, texture).</td>
+                    </tr>
+                    <tr data-id="tr_selimages_setImagesLayer" data-vn="1">
+                        <td class="command">setImagesLayer</td>
+                        <td class="parameter">pathImage layerType</td>
+                        <td class="parameter"></td>
+                        <td>Set the layer from the image defined with the <span class="appproperty">pathImage</span> parameter (path to the layer image) to the selection of images. The <span class="appproperty">layerType</span> parameter defines which layer to set onto the selected images (e.g., mask, texture).</td>
+                    </tr>
+                    <tr data-id="tr_selimages_remImageLayer" data-vn="1">
+                        <td class="command">removeImageLayer</td>
+                        <td class="parameter">layerType</td>
+                        <td class="parameter"></td>
+                        <td>Remove the layers corresponding to the <span class="appproperty">layerType</span> parameter (e.g. mask, texture) from the selected images.</td>
+                    </tr>                    
+                    <tr data-id="tr_project_importcache" data-vn="1">
+                        <td class="command">importCache</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter"></td>
+                        <td>Import resource cache data from a specified folder.</td>
+                    </tr>
+                    <tr data-id="tr_project_clearcache" data-vn="1">
+                        <td class="command">clearCache</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Clear the application cache. You must save the project before clearing the application cache.</td>
+                    </tr>
+                    <tr data-id="tr_project_rccmd" data-vn="3">
+                        <td class="command">execRSCMD</td>
+                        <td class="parameter">Commands.rscmd</td>
+                        <td class="parameter"></td>
+                        <td>Execute commands from an .rscmd (or .rccmd file), optionally using report parameters. The file format and syntax are described in the <a href="../tutorials/commandline_rscmd.htm">Commands Outside Command Prompt</a> section. You can define up to nine arguments, acting as variables, by listing them after the path to the .rscmd file. Inside the file, reference these variables using $(arg1)–$(arg9).</td>
+                    </tr>
+                    <tr data-id="tr_project_quit" data-vn="1">
+                        <td class="command">quit</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Quit the application.</td>
+                    </tr>
+                </table>
+
+                <h3 data-id="h3_selimages" data-vn="1">Commands for Selected Images</h3>
+                <p data-id="p_h3_selimages" data-vn="1">The following ones enable you to set some preferences for further processing of images.</p>
+                    
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_selimages_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_selimages_feso" data-vn="1">
+                        <td class="command">setFeatureSource</td>
+                        <td class="parameter">0&#124;1&#124;2</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Define a feature source mode for the selected images:<br />
+                            0 – Merge using overlaps,<br />
+                            1 – Use component features,<br />
+                            2 – Use all image features.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_selimages_alignment" data-vn="1">
+                        <td class="command">enableAlignment</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Enable/disable selected images in the registration process.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_meshing" data-vn="1">
+                        <td class="command">enableMeshing</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Enable/disable selected images in the model computation/meshing.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_texturing" data-vn="1">
+                        <td class="command">enableTexturingAndColoring</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Enable/disable selected images during the coloring and texture calculation.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_weight" data-vn="1">
+                        <td class="command">setWeightInTexturing</td>
+                        <td class="parameter">&lt;0,1&gt;</td>
+                        <td class="parameter"></td>
+                        <td>Set weight for selected images during the coloring and texture calculation.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_ecnr" data-vn="1">
+                        <td class="command">enableColorNormalizationReference</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Set selected images as color references in the color normalization process. The colors for these images will not be changed.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_ecno" data-vn="1">
+                        <td class="command">enableColorNormalization</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Enable or disable selected images in the color normalization process.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_downscale" data-vn="1">
+                        <td class="command">setDownscaleForDepthMaps</td>
+                        <td class="parameter">integer</td>
+                        <td class="parameter"></td>
+                        <td>Set a downscale factor for depth-map computation for the selected images.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_component" data-vn="1">
+                        <td class="command">enableInComponent</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Enable selected images in meshing and continue. Applicable only for the registered images.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_groupbyexif" data-vn="1">
+                        <td class="command">setCalibrationGroupByExif</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Set the calibration group of all inputs based on their Exif.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_groupbyselect" data-vn="1">
+                        <td class="command">setConstantCalibrationGroups</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Group all selected inputs into a single calibration group.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_pose" data-vn="1">
+                        <td class="command">lockPoseForContinue</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td class="parameter"></td>
+                        <td>Set relative camera pose unchanged for the selected images during the next registration. Applicable only for the registered images.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_prior" data-vn="1">
+                        <td class="command">setPriorCalibrationGroup</td>
+                        <td class="parameter">number</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Set a prior calibration group for the selected images:<br />
+                            -1 - do not group,<br />
+                            another number - group into the same calibration group.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_selimages_lens" data-vn="1">
+                        <td class="command">setPriorLensGroup</td>
+                        <td class="parameter">number</td>
+                        <td class="parameter"></td>
+                        <td>Set a prior lens group for the selected images. Using -1 means do not group; any other number means to group the selected images into the same distortion group.</td>
+                    </tr>
+                    <tr data-id="tr_selimages_editinputselect" data-vn="1">
+                        <td class="command">editInputSelection</td>
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Edit the settings of the selected inputs based on the value in the <span class="apppanel">Selected inputs</span> panel or its key. More information can be found <a href="../tutorials/editselectioncommand.htm">here</a>.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="slideblock splitSpacing">
+                <h2 data-id="h2_delco" data-vn="1">Delegate commands</h2>
+                <p data-id="p_h2_delco" data-vn="2" class="lod1">
+                    You can use these commands to delegate actions to a certain RealityScan instance. You can find out more about the delegation of commands <a href="../tutorials/commandline_deleg.htm">here</a>.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_delco_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_delco_setins" data-vn="2">
+                        <td class="command">setInstanceName</td>
+                        <td class="parameter">instanceName</td>
+                        <td class="parameter"></td>
+                        <td>Assign a name to a RealityScan instance.</td>
+                    </tr>
+                    <tr data-id="tr_delco_delegto" data-vn="2">
+                        <td class="command">delegateTo</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Delegate a command or a sequence of commands to a specific instance of RealityScan (instanceName) or to the first available instance (using the * symbol as a parameter).</td>
+                    </tr>
+                    <tr data-id="tr_delco_waitcom" data-vn="2">
+                        <td class="command">waitCompleted</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Pause execution of other commands until the current process is finished in a specified instance of RealityScan (instanceName) or in the first available instance (using the * as a parameter).</td>
+                    </tr>
+                    <tr data-id="tr_delco_getst" data-vn="2">
+                        <td class="command">getStatus</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Return the progress status of a running process in a specified instance of RealityScan (instanceName) or in the first available instance (using the * symbol as a parameter).</td>
+                    </tr>
+                    <tr data-id="tr_delco_pauseins" data-vn="2">
+                        <td class="command">pauseInstance</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Pause a currently running process in a specified instance of RealityScan (instanceName) or in the first available instance (using the * symbol as a parameter).</td>
+                    </tr>
+                    <tr data-id="tr_delco_unpausins" data-vn="2">
+                        <td class="command">unpauseInstance</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Unpause a currently paused process in a specified instance of RealityScan (instanceName) or in the first available instance (using the * symbol as a parameter).</td>
+                    </tr>
+                    <tr data-id="tr_delco_abortins" data-vn="3">
+                        <td class="command">abortInstance</td>
+                        <td class="parameter">instanceName&#124;*</td>
+                        <td class="parameter"></td>
+                        <td>Abort a currently running process in a specified instance of RealityScan (instanceName) or in the first available instance (using the * symbol as a parameter). If processing is done using the CLI commands, all processes after the running process will also be aborted.</td>
+                    </tr>
+                    <tr data-id="tr_delco_exec" data-vn="2">
+                        <td class="command">execRSCMDIndirect</td>
+                        <td class="parameter">instanceName&#124;* commands.rscmd</td>
+                        <td class="parameter"></td>
+                        <td>Execute commands listed in the .rscmd (or .rccmd) file in the specified instance, optionally using report parameters. The file format and syntax are described in the <a href="../tutorials/commandline_rscmd.htm">Commands Outside Command Prompt</a> section. You can define up to nine arguments, acting as variables, by listing them after the path to the .rscmd file. Inside the file, reference these variables using $(arg1)–$(arg9).</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div data-id="div_sb_alignment" class="slideblock splitSpacing">
+                <h2 data-id="h2_alignment" data-vn="1">Alignment</h2>
+                <p data-id="p_h2_alignment" data-vn="1" class="lod1">
+                    The following commands can be used to calculate camera poses and calibration and to handle components and control points.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_alignment_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_alignment_align" data-vn="1">
+                        <td class="command">align</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Align images using the current settings.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_draft" data-vn="1">
+                        <td class="command">draft</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Align images in the draft mode using the current settings.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_update" data-vn="1">
+                        <td class="command">update</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Update all components and models by a rigid transformation to fit the actual constraints and control points.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_features" data-vn="1">
+                        <td class="command">detectFeatures</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Run feature detection according to the alignment settings. Detected features will be saved in the application cache.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_mrgcomp" data-vn="1">
+                        <td class="command">mergeComponents</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Merge already created components. When using this command, no new images are added to the existing components.</td>
+                    </tr>                    
+                    <tr data-id="tr_alignment_xmp" data-vn="1">
+                        <td class="command">exportXMP</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml </td>
+                        <td>
+                            Export camera metadata of components created in the last alignment in the XMP format using the current settings or the settings from params.xml file (optional parameter).
+                            You can export this file from the <span class="apppanel">XMP metadata export</span> dialog. The components must fulfill the condition defined by the command setMinComponentSize.<br />
+                            NOTE: XMP files are stored in the same folder as the respective images.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_xmpcomp" data-vn="1">
+                        <td class="command">exportXMPForSelectedComponent</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export camera metadata of a selected component in XMP format using the current settings. An example is available in the paragraph "Metadata (XMP) Export Settings" below.<br />
+                            NOTE: XMP files are stored in the same folder as the respective images.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_importcomp" data-vn="2">
+                        <td class="command">importComponent</td>
+                        <td class="parameter">component.rsalign</td>
+                        <td class="parameter"></td>
+                        <td>Import a component from the component.rsalign file.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_importbundler" data-vn="1">
+                        <td class="command">importBundler</td>
+                        <td class="parameter">filePath</td>
+                        <td class="parameter">params.xml</td>
+                        <td>Import a Bundler project. The command requires the path to the Bundler file and, optionally, a configuration file that defines the scene transformation settings saved from the import dialog. The configuration file can be used to adjust the coordinate system or apply custom transformations during import.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_importcolmap" data-vn="1">
+                        <td class="command">importColmap</td>
+                        <td class="parameter">filePath</td>
+                        <td class="parameter">params.xml</td>
+                        <td>Import a COLMAP project. The command requires the path to the COLMAP file (any of the three text files) and, optionally, a configuration file that defines the scene transformation settings saved from the import dialog. The configuration file can be used to adjust the coordinate system or apply custom transformations during import.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportlatest" data-vn="2">
+                        <td class="command">exportLatestComponents</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export components created in the last alignment as RealityScan Alignment Components (.rsalign) into a specified folder.
+                            The components must fulfill the condition defined by the command setMinComponentSize.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_size" data-vn="1">
+                        <td class="command">setMinComponentSize</td>
+                        <td class="parameter">size</td>
+                        <td class="parameter"></td>
+                        <td>Specify the minimal component size for export when using the exportLatestComponents and exportXMP commands. The default value is 5.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportselcompdir" data-vn="2">
+                        <td class="command">exportSelectedComponentDir</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter"></td>
+                        <td>Export the selected component into a folder (folderName including the path) as a RealityScan Alignment Component (.rsalign).</td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportselcompfile" data-vn="2">
+                        <td class="command">exportSelectedComponentFile</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter"></td>
+                        <td>Export the selected component into a RealityScan Alignment Component file.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportreg" data-vn="1">
+                        <td class="command">exportRegistration</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export registration to a specified file using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Registration</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportunimages" data-vn="1">
+                        <td class="command">exportUndistortedImages</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export undistorted images into a specified folder using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Registration</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_exstmap" data-vn="1">
+                        <td class="command">exportSTMap</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">folderName params.xml</td>
+                        <td>
+                            Export ST maps for the selected images. If folderName and params.xml are not specified, results are stored along with the original images using the current settings.
+                            You can export the settings file from the application in the <span class="apppanel">Export Registration</span> dialog.
+                        </td>
+                    </tr>                    
+                    <tr data-id="tr_alignment_exportspc" data-vn="1">
+                        <td class="command">exportSparsePointCloud</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export 3D tie points (a sparse point cloud) into a specified file (fileName including the path and format extension) using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application within the <span class="apppanel">Export Point Cloud</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_selcomp" data-vn="1">
+                        <td class="command">selectComponent</td>
+                        <td class="parameter">componentName</td>
+                        <td class="parameter"></td>
+                        <td>Select a component with the specified name (componentName) for further processing.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_selmaxcomp" data-vn="1">
+                        <td class="command">selectMaximalComponent</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select the largest component for further processing.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_leastrep" data-vn="1">
+                        <td class="command">selectComponentWithLeastReprojectionError</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select the component with the smallest reprojection error, based on the calculated Mean error [pixels], for further processing.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_renameselcomp" data-vn="1">
+                        <td class="command">renameSelectedComponent</td>
+                        <td class="parameter">newComponentName</td>
+                        <td class="parameter"></td>
+                        <td>Rename the currently selected component.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_deleteselcomp" data-vn="1">
+                        <td class="command">deleteSelectedComponent</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Delete the currently selected component.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_deletecompindex" data-vn="1">
+                        <td class="command">deleteComponent</td>
+                        <td class="parameter">index</td>
+                        <td class="parameter"></td>
+                        <td>Delete a component based on the chosen index. Keep in mind that index numbers start at 0 (zero).</td>
+                    </tr>
+                    <tr data-id="tr_alignment_deleteallcomp" data-vn="1">
+                        <td class="command">deleteAllComponents</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Delete all components.</td>
+                    </tr>
+                    <tr data-id="tr_alignment_importfl" data-vn="2">
+                        <td class="command">importFlightLog</td>
+                        <td class="parameter">flFileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Import a trajectory file using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Import Trajectory</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_importgcp" data-vn="1">
+                        <td class="command">importGroundControlPoints</td>
+                        <td class="parameter">gcpFileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Import ground control points using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Ground Control Points</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_importcp" data-vn="1">
+                        <td class="command">importControlPointsMeasurements</td>
+                        <td class="parameter">cpmFileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Import measurements of control points (CPs) using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Control Points Measurements</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_editcpselection" data-vn="1">
+                        <td class="command">editControlPointSelection</td>
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Edit the settings/parameters of the selected control points based on the value in the <span class="apppanel">Selected control point(s)</span> panel or its key. More information can be found <a href="../tutorials/editselectioncommand.htm">here</a>.
+                        </td>
+                    </tr>
+                    
+                    <tr data-id="tr_alignment_listcp" data-vn="1">
+                        <td class="command">listControlPoints</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export a list of control points to the specified file path, including the file name and extension (fileName paramater). Each control point will be listed with its index.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_selectcp" data-vn="1">
+                        <td class="command">selectControlPoint</td>
+                        <td class="parameter">controlPointName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select a control point by its name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_invselcp" data-vn="1">
+                        <td class="command">invertControlPointSelection</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>
+                            Invert the control point selection. If no control points are selected, all will be selected.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_renamecp" data-vn="1">
+                        <td class="command">renameControlPoint</td>
+                        <td class="parameter">controlPointName newName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Rename a control point. Specify control point by its current name (controlPointName) and the new name you want to assign (newName).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_renselcp" data-vn="1">
+                        <td class="command">renameSelectedControlPoint</td>
+                        <td class="parameter">newName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Rename the selected control point to the specified new name (newName).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_deletecp" data-vn="1">
+                        <td class="command">deleteControlPoint</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">index</td>
+                        <td>
+                            Delete a selected control point. If an optional parameter index is used, a control point with a corresponding index will be removed. Index numbers start at 0 (zero) and follow the order of control points in the <span class="appaspecttype">1Ds</span> view.
+                        </td>
+                    </tr>     
+                    <tr data-id="tr_alignment_selcpmeserror" data-vn="1">
+                        <td class="command">selectMeasurementByError</td>
+                        <td class="parameter">errorValue</td>
+                        <td class="parameter">controlPointName</td>
+                        <td>
+                            Select any measurement with a position error (in pixels) equal to or greater than the specified errorValue (float value). If no control point is specified (controlPointName), the selection applies to all measurements regardless of their assigned control point.
+                        </td>
+                    </tr>  
+                    <tr data-id="tr_alignment_selcpmesind" data-vn="1">
+                        <td class="command">selectMeasurementByIndex</td>
+                        <td class="parameter">controlPointName index</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select a control point measurement by its index within the specified control point.
+                        </td>
+                    </tr>   
+                    <tr data-id="tr_alignment_deletecpmeasurement" data-vn="1">
+                        <td class="command">deleteControlPointMeasurement</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>
+                            Remove selected control point measurements (images assigned to a control point). Images have to be selected in the <span class="appaspecttype">1Ds</span> view under the corresponding control point.
+                        </td>
+                    </tr>                                         
+                    <tr data-id="tr_alignment_exportgcp" data-vn="1">
+                        <td class="command">exportGroundControlPoints</td>
+                        <td class="parameter">gcpFileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export ground control points using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Ground Control</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_exportcp" data-vn="1">
+                        <td class="command">exportControlPointsMeasurements</td>
+                        <td class="parameter">cpmFileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export measurements of control points using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Export Control Points Measurements</span> dialog
+                            when pressing the Shift key together with the button <span class="appribbonbutton">Control Points</span> in the Export part of the <span class="appribbon">Alignment</span> tab.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_defdis" data-vn="1">
+                        <td class="command">defineDistance</td>
+                        <td class="parameter">PointNameA PointNameB distance</td>
+                        <td class="parameter">constraintName</td>
+                        <td>
+                            Define a distance constraint between two control points. If constraintName is not defined, the distance name is created automatically.
+                            Alternatively, you can load distance constraints from a file (see below).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_defdisf" data-vn="1">
+                        <td class="command">defineDistance</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Import a distance constraint from a file (filename including path) using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the application in the <span class="apppanel">Import Distance Definitions </span>dialog.
+                            The list of supported formats distancedefinitions.xml can be found in the installation folder.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_editconselection" data-vn="1">
+                        <td class="command">editConstraintSelection</td>
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td data-id="td_alignment_editconselection" data-vn="1">
+                            Edit the settings/parameters of the selected constraints based on the value in the <span class="apppanel">Selected constraint(s)</span> panel or its key. More information can be found <a href="../tutorials/editselectioncommand.htm">here</a>.
+                        </td>
+                    </tr>                   
+                    <tr data-id="tr_alignment_deleteconstraint" data-vn="2">
+                        <td class="command">deleteConstraint</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">index</td>
+                        <td data-id="td_alignment_deleteconstraint" data-vn="2">
+                            Remove the selected distance constraints. The constraints must be selected in the <span class="appaspecttype">1Ds</span> view. You can use an index as an optional parameter to specify which constraint to remove. Indexes start at 0 and follow the order of constraints in the <span class="appaspecttype">1Ds</span> view.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_markers" data-vn="1">
+                        <td class="command">detectMarkers</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Detect markers in images using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the <span class="appribbonbutton">Detect Markers</span> tool in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_alignment_gravity" data-vn="1">
+                        <td class="command">setCamerasGravityDirection</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">componentID</td>
+                        <td>If the image's XMP file contains gravity information (xcr:Gravity), the component will be rotated so the -z vector is in the direction of the gravity vector. This does not apply to the dense point cloud (mesh/model), only to the sparse point cloud (alignment). Will apply to the selected component or to the component defined with the optional parameters (component ID).
+                        </td>
+                    </tr>
+                    
+                </table>
+            </div>
+
+            <div data-id="div_sb_recon" class="slideblock splitSpacing">
+                <h2 data-id="h2_recon" data-vn="1">Reconstruction</h2>
+                <p data-id="p_h2_recon" data-vn="1" class="lod1">
+                    These commands can be used to calculate models and perform coloring and texturing.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_recon_read" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_recon_resetground" data-vn="1">
+                        <td class="command">resetGround</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Set the ground plane back to its original orientation and position.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_groundtorecon" data-vn="1">
+                        <td class="command">setGroundPlaneFromReconstructionRegion</td> 
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Automatically center a model using a reconstruction region into the middle of the grid, adjusting both rotation and transformation.</td>
+                    </tr>
+                    <tr data-id="tr_recon_setauto" data-vn="1">
+                        <td class="command">setReconstructionRegionAuto</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Set a reconstruction region automatically.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_setregion" data-vn="2">
+                        <td class="command">setReconstructionRegion</td> 
+                        <td class="parameter">box.rsbox</td>  
+                        <td class="parameter"></td> 
+                        <td>Import a reconstruction region from the box.rsbox file.</td> 
+                    </tr>
+                    <tr data-id="tr_reco_setregionCP" data-vn="1">
+                        <td class="command">setReconstructionRegionOnCPs</td> 
+                        <td class="parameter">controlPoint<br/>controlPoint<br/>controlPoint<br/>controlPoint&#124;heightValue</td>  
+                        <td class="parameter"></td> 
+                        <td>Set a reconstruction region on existing control points. Three control points define the base of the region, and the height of the region is defined by the fourth control point or by entering the height value. 
+                        You can find more about this command in the examples <a href="../tutorials/commandline_2.htm">here</a>.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_regden" data-vn="2">
+                        <td class="command">setReconstructionRegionByDensity</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Set the reconstruction region to the part of the sparse point cloud with the highest density.</td> 
+                    </tr>
+                    <tr data-id="tr_reco_scale" data-vn="1">
+                        <td class="command">scaleReconstructionRegion</td> 
+                        <td class="parameter">scaleX<br/>scaleY<br/>scaleZ</td>
+                        <td class="parameter">origin&#124;center absolute&#124;factor</td>
+                        <td>Scale the reconstruction region in each axis (<span class="command">scaleX</span>, <span class="command">scaleY</span>, and <span class="command">scaleZ</span>). Scale parameters can be treated either as absolute values (<span class="command">absolute</span>)
+                        or scale factors (<span class="command">factor</span>) from the center of the region (<span class="command">center</span>) or its origin (<span class="command">origin</span>) defined 
+                        by the first control point when using <span class="command">setReconstructionRegionOnCPs</span> command. Default values are "absolute" and "center". You can find more about this command in the examples <a href="../tutorials/commandline_2.htm">here</a>.</td>
+                    </tr>
+                    <tr data-id="tr_recon_move" data-vn="1">
+                        <td class="command">moveReconstructionRegion</td> 
+                        <td class="parameter">moveX<br/>moveY<br/>moveZ</td>  
+                        <td class="parameter"></td> 
+                        <td>Move the reconstruction region along the region's axes. The values are in the coordinate system’s units. You can find more about this command in the examples <a href="../tutorials/commandline_2.htm">here</a>.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_rotate" data-vn="1">
+                        <td class="command">rotateReconstructionRegion</td> 
+                        <td class="parameter">rotateX<br/>rotateY<br/>rotateZ</td>  
+                        <td class="parameter"></td> 
+                        <td>Rotate the reconstruction region around its axes. All values are in degrees. You can find more about this command in the examples <a href="../tutorials/commandline_2.htm">here</a>.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_offset" data-vn="1">
+                        <td class="command">offsetReconstructionRegion</td> 
+                        <td class="parameter">offsetX<br/>offsetY<br/>offsetZ</td>  
+                        <td class="parameter"></td> 
+                        <td data-id="td_recon_offset" data-vn="1">Offset the reconstruction region on its axes by the values of its dimensions.  You can find more about this command in the examples <a href="../tutorials/commandline_2.htm">here</a>.</td> 
+                    </tr>
+                    
+                    <tr data-id="tr_recon_exportregion" data-vn="3">
+                        <td class="command">exportReconstructionRegion</td> 
+                        <td class="parameter">box.rsbox</td>  
+                        <td class="parameter"></td> 
+                        <td>Export a reconstruction region to the box.rsbox file.</td>
+                    </tr>
+                    <tr data-id="tr_recon_calcpreview" data-vn="1">
+                        <td class="command">calculatePreviewModel</td>
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Calculate 3D mesh in the preview quality.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_calcnormal" data-vn="1">
+                        <td class="command">calculateNormalModel</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Calculate 3D mesh in the normal quality.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_calchigh" data-vn="1">
+                        <td class="command">calculateHighModel</td>
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Calculate 3D mesh in the highest quality.</td> 
+                    </tr>
+                    <tr data-id="tr_recon_contcalc" data-vn="1">
+                        <td class="command">continueModelCalculation</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>If the model calculation was paused or if there was a crash, it is possible to continue the calculation using this command. 
+                        Find more about this command <a href="../tutorials/commandline_2.htm">here</a>.
+                        </td> 
+                    </tr>
+                </table>
+            </div>
+
+            <div data-id="div_sb_model" class="slideblock splitSpacing">
+                <h2 data-id="h2_model" data-vn="1">Model Tools</h2>
+                <p data-id="p_h2_model" data-vn="1" class="lod1">
+                    When you have successfully created a model, you can use these tools to process it further by means of the command line.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_model_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_model_selmodel" data-vn="1">
+                        <td class="command">selectModel</td>
+                        <td class="parameter">modelName</td>
+                        <td class="parameter"></td>
+                        <td>Select a model with the specified name (modelName).</td>
+                    </tr>
+                    <tr data-id="tr_model_deleteselmodel" data-vn="1">
+                        <td class="command">deleteSelectedModel</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Delete the currently selected model.</td>
+                    </tr>
+                    <tr data-id="tr_model_duplicateselmodel" data-vn="1">
+                        <td class="command">duplicateSelectedModel</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Duplicate the selected model (including textures).</td>
+                    </tr>
+                    <tr data-id="tr_model_renameselmodel" data-vn="1">
+                        <td class="command">renameSelectedModel</td>
+                        <td class="parameter">newModelName</td>
+                        <td class="parameter"></td>
+                        <td>Rename the currently selected model.</td>
+                    </tr>
+                    <tr data-id="tr_model_coco" data-vn="1">
+                        <td class="command">correctColors</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">layerName</td>
+                        <td>Run color correction for all layers or a specified layer (layerName) in the selected component.</td>
+                    </tr>
+                    <tr data-id="tr_model_unwrap" data-vn="1">
+                        <td class="command">unwrap</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Calculate the unwrap of a model using the current settings or the settings from the params.xml (optional parameter).
+                            You can export these settings from the <span class="appribbonbutton">Unwrap</span> tool in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_calctexture" data-vn="2">
+                        <td class="command">calculateTexture</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml </td>
+                        <td>Calculate texture using the current settings or the settings from the params.xml file (optional parameter). You can export these settings from the <span class="apppanel">Color and Texture Settings</span> panel in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_qualtext" data-vn="1">
+                        <td class="command">calculateQualityTexture</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Calculate texture using mesh quality values which can be calculated using the <span class="apptool">Quality Analysis</span> tool. The values don't have to be calculated prior to using this command.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_reprojecttexture" data-vn="1">
+                        <td class="command">reprojectTexture</td>
+                        <td class="parameter">sourceModel resultModel</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Reproject texture from a textured model (sourceModel) to an unwrapped model (resultModel) using the current settings or the settings from the params.xml file (optional parameter).
+                            sourceModel and resultModel are model names from the application.
+                            You can export these settings from the <span class="appribbonbutton">Texture Reprojection</span> tool in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_calcvcolors" data-vn="1">
+                        <td class="command">calculateVertexColors</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Calculate coloring using the current settings.</td>
+                    </tr>
+                    <tr data-id="tr_model_calcprevvcolors" data-vn="1">
+                        <td class="command">calculatePreviewVertexColors</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Calculate draft coloring using the current settings.</td>
+                    </tr>
+                    <tr data-id="tr_model_qualcol" data-vn="1">
+                        <td class="command">calculateQualityColors</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Calculate vertex colors using mesh quality values which can be calculated using the <span class="apptool">Quality Analysis</span> tool. The values don't have to be calculated prior to using this command.</td>
+                    </tr>
+                    
+                    
+                    <tr data-id="tr_model_simplify" data-vn="2">
+                        <td class="command">simplify</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">targetTriangleCount or params.xml</td>
+                        <td>
+                            Simplify a selected model using the current settings (use it without any parameters) to the selected triangle count (targetTriangleCount) or using the settings from the params.xml file.
+                            You can export these settings from the <span class="appribbonbutton">Simplify</span> tool in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_smooth" data-vn="2">
+                        <td class="command">smooth</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Smooth a selected model using the current settings or the settings from the params.xml file.
+                            You can export these settings from the <span class="appribbonbutton">Smooth</span> tool in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_holes" data-vn="1">
+                        <td class="command">closeHoles</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">maxEdgesCount</td>
+                        <td>Close model holes using the current settings or a specified maximal number of edges (maxEdgesCount).</td>
+                    </tr>
+                    <tr data-id="tr_model_cleanmodel" data-vn="1">
+                        <td class="command">cleanModel</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Clean the selected model: remove non-manifold edges and vertices, close small holes, etc.</td>
+                    </tr>
+                    <tr data-id="tr_model_trianglesinside" data-vn="1">
+                        <td class="command">selectTrianglesInsideReconReg</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select triangles inside the reconstruction region.</td>
+                    </tr>
+                    <tr data-id="tr_model_trianglesoutside" data-vn="1">
+                        <td class="command">selectTrianglesOutsideReconReg</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select triangles outside the reconstruction region.</td>
+                    </tr>
+                    <tr data-id="tr_model_margtriangles" data-vn="1">
+                        <td class="command">selectMarginalTriangles</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select triangles that enclose the volume but are not part of the current reconstruction.</td>
+                    </tr>
+                    <tr data-id="tr_model_trianglesabs" data-vn="1">
+                        <td class="command">selectLargeTrianglesAbs</td>
+                        <td class="parameter">edgeSizeThreshold</td>
+                        <td class="parameter"></td>
+                        <td>Select triangles with edge lengths larger than the threshold (edgeSizeThreshold).</td>
+                    </tr>
+                    <tr data-id="tr_model_trianglesres" data-vn="1">
+                        <td class="command">selectLargeTrianglesRel</td>
+                        <td class="parameter">edgeSizeThreshold</td>
+                        <td class="parameter"></td>
+                        <td>Select triangles with an edge length larger than the threshold (edgeSizeThreshold) multiplied by the average edge length.</td>
+                    </tr>
+                    <tr data-id="tr_model_largestcomp" data-vn="1">
+                        <td class="command">selectLargestModelComponent</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select triangles that belong to the largest connected component of the model.</td>
+                    </tr>
+                    <tr data-id="tr_model_inverttriangles" data-vn="1">
+                        <td class="command">invertTrianglesSelection</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Invert a selection of triangles.</td>
+                    </tr>
+                    <tr data-id="tr_model_deseltriangles" data-vn="1">
+                        <td class="command">deselectModelTriangles</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Deselect all model triangles.</td>
+                    </tr>
+                    <tr data-id="tr_model_removetriangles" data-vn="1">
+                        <td class="command">removeSelectedTriangles</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Create a new model with selected triangles left out (the same behavior as achieved with the <span class="appribbonbutton">Filter Selection</span> tool).</td>
+                    </tr>
+                    <tr data-id="tr_model_cutbybox" data-vn="1">
+                        <td class="command">cutByBox</td>
+                        <td class="parameter">inner&#124;outer</td>
+                        <td class="parameter">fillHoles</td>
+                        <td>Filter out the triangles inside or outside of the reconstruction region. The required parameter defines which triangles will be filtered out, and the optional parameter <span class="appproperty">fillHoles</span> determines if the cut holes will be filled (can be set to <span class="appproperty">true</span> or <span class="appproperty">false</span>, corresponding to the <span class="appproperty">Yes</span> and <span class="appproperty">No</span> values). If the optional parameter is not chosen, the default value will be used (<span class="appproperty">Yes</span>).  This tool creates a new model.</td>
+                    </tr>
+                    
+                    <!--            <tr>
+        <td class="command">undercut</td>
+        <td class="parameter"></td>
+        <td class="parameter"></td>
+        <td>Undercut the selected model so that each part contains geometry just in its cluster box.</td>
+    </tr>--> 
+                    <tr data-id="tr_model_export" data-vn="2">
+                        <td class="command">exportModel</td>
+                        <td class="parameter">modelName fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export a model (modelName from the project) as a file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter). 
+                            You can export the file from the <span class="apppanel">Export model</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportsel" data-vn="2">
+                        <td class="command">exportSelectedModel</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export the selected model as a file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter).
+                            You can export the file from the <span class="apppanel">Export model</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportmzip" data-vn="1">
+                        <td class="command">exportModelToZip</td>
+                        <td class="parameter">filePath</td>
+                        <td class="parameter">modelFormat</td>
+                        <td>
+                            Export the selected model into a compressed archive. Specify the path where the archive will be saved and the name of the exported file. Including the file extension for the archive format is optional. Additionally, you can specify the model format (e.g., .obj or .fbx) as an optional parameter.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_import" data-vn="2">
+                        <td class="command">importModel</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>Import a model from a file. Specify the full path to the model, as well as its name and format extension. Additionally, use the settings file (exported from the import dialog) to adjust the import settings.</td>
+                    </tr>
+                    <tr data-id="tr_model_calcortho" data-vn="2">
+                        <td class="command">calculateOrthoProjection</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">rsorthoFile rsboxFile </td>
+                        <td>
+                            Calculate an orthographic projection using the current settings. You can optionally use a projection parameters file (.rsortho) to define the calculation settings. This file can be exported together with an ortho projection, and its structure is described <a href="../tools/xmlparamsfiles.htm">here</a>. An additional optional parameter, the exported reconstruction region file (.rsbox), can be used to specify the area included in the ortho projection.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selortho" data-vn="1">
+                        <td class="command">selectOrthoProjection</td>
+                        <td class="parameter">orthoName</td>
+                        <td class="parameter"></td>
+                        <td>Select an orthographic projection with the specified name (orthoName).</td>
+                    </tr>
+                    <tr data-id="tr_model_editorthoselect" data-vn="1">
+                        <td class="command">editOrthoProjectionSelection</td>
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Edit the settings/parameters of the selected ortho projections based on the value in the <span class="apppanel">Selected ortho photo(s)</span> panel or its key. More information can be found <a href="../tutorials/editselectioncommand.htm">here</a>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportortho1" data-vn="1">
+                        <td class="command" rowspan="3">exportOrthoProjection</td>
+                        <td class="parameter">orthoName fullPath params.xml</td>
+                        <td class="parameter"></td>
+                        <td rowspan="3">
+                            Export the orthographic projection (orthophoto, DSM, or DTM) using settings from the <span class="appproperty">params.xml</span> file, which can be exported from the corresponding export dialog. The command can be written in three ways, depending on which parameters are used. The <span class="appproperty">params.xml</span> file defines the export settings; <span class="appproperty">orthoName</span> is the name of the projection as it appears in the project; <span class="appproperty">fullPath</span> specifies the complete path to the exported file; <span class="appproperty">folderPath</span> defines the directory where the file will be saved; and <span class="appproperty">exportName</span> sets the name of the exported file. For <span class="appproperty">fullPath</span> and <span class="appproperty">exportName</span>, the format extension is optional—if omitted, a TIFF file is created.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportortho2" data-vn="1">
+                        <td class="parameter">orthoName folderPath exportName params.xml</td>
+                        <td class="parameter"></td>
+                    </tr>
+                    <tr data-id="tr_model_exportortho3" data-vn="1">
+                        <td class="parameter">fullPath params.xml</td>
+                        <td class="parameter"></td>
+                    </tr>
+                    <tr data-id="tr_model_calculatecrosssections" data-vn="1">
+                        <td class="command">calculateCrossSections</td>
+                        <td class="parameter"> </td>
+                        <td class="parameter">step axis</td>
+                        <td>
+                            Calculate Cross Sections either using current settings or by setting the axis (local axis of reconstruction region) and the step between each cross section.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportcrosssections" data-vn="1">
+                        <td class="command">exportCrossSections</td>
+                        <td class="parameter">fileName </td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export selected cross sections as a file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter).
+                            You can export the file from the <span class="apppanel">Export Cross Sections</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_renamecrosssections" data-vn="1">
+                        <td class="command">renameCrossSections</td>
+                         <td class="parameter">crossSectionsName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Rename selected cross sections.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selectcrosssectionss" data-vn="1">
+                        <td class="command">selectCrossSections</td>
+                         <td class="parameter">crossSectionsName </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select cross sections by name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_computecontours" data-vn="1">
+                        <td class="command">computeContours</td>
+                        <td class="parameter"> </td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Compute contours for the selected Ortho using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the <span class="apppanel">Contours Tool</span> in the application.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportcontours" data-vn="1">
+                        <td class="command">exportContours</td>
+                         <td class="parameter">fileName </td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export selected contours as a file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter).
+                            You can export the file from the <span class="apppanel">Export Contours</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_renamecontours" data-vn="1">
+                        <td class="command">renameContours</td>
+                         <td class="parameter">contoursName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Rename selected contours.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selectcontours" data-vn="1">
+                        <td class="command">selectContours</td>
+                         <td class="parameter">contoursName </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select contours by name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportshapes" data-vn="1">
+                        <td class="command">exportShapes</td>
+                        <td class="parameter">fileName </td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export selected shapes as a file (fileName including path and file extension .json) using the current settings or the settings from the params.xml (optional parameter).
+                            You can export the file from the <span class="apppanel">Export Shapes</span> dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_importshapesto selectedortho" data-vn="1">
+                        <td class="command">importShapesToSelectedOrtho</td>
+                        <td class="parameter">fileName mosaicing&#124;measurements </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import shapes from a file (fileName including path and file extension) to the selected ortho. Their type will be defined based on which shape-creating tool is activated: <span class="appribbonbutton">Measure</span> or <span class="appribbonbutton">Enhance Mosaic</span>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_importshapesto_ortho" data-vn="1">
+                        <td class="command">importShapesToOrtho</td>
+                        <td class="parameter">fileName orthoProjectionName mosaicing&#124;measurements </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import shapes from a file (fileName including path and file extension) to ortho (orthoProjectionName). Their type will be defined based on which shape-creating tool is activated: <span class="appribbonbutton">Measure</span> or <span class="appribbonbutton">Enhance Mosaic</span>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selectshape" data-vn="1">
+                        <td class="command">selectShape</td>
+                        <td class="parameter">shapeName </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select shape by name
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_addshape" data-vn="2">
+                        <td class="command">addShapeToSelection</td>
+                        <td class="parameter">shapeName </td>
+                        <td class="parameter"></td>
+                        <td>
+                            Add a shape to the current selection by name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exportrep" data-vn="2">
+                        <td class="command">exportReport</td>
+                        <td class="parameter">outputFileName templateFileName</td>
+                        <td class="parameter">true&#124;false</td>
+                        <td>
+                            Export a report into a file (outputFileName including the path and the .html extension) using a template (templateFileName including the path).
+                            The default templates are stored in the installation folder\Reports. Use the optional boolean paramater (true or false) to export a file with reports found in the specified template.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_printreport" data-vn="1">
+                        <td class="command">printReport</td>
+                        <td class="parameter">reportString</td>
+                        <td class="parameter"></td>
+                        <td data-id="td_printreport" data-vn="2">
+                            Write out report texts in the Command Prompt. This command can be used when RealityScan is run with a batch file. It does not work with delegation. Learn more about report customization <a href="../appbasics/reports_functions_and_variables.htm">here</a>.
+                        </td>
+                    </tr>  
+                    <tr data-id="tr_model_maskmesh" data-vn="1">
+                        <td class="command">generateMaskFromMesh</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td data-id="td_maskmesh" data-vn="1">
+                            Generate mask images out of the existing camera views (images) and selected model. Everything around the model as seen from the camera will be masked out.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exdm" data-vn="2">
+                        <td class="command">exportMapsAndMask</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">folderName params.xml</td>
+                        <td>
+                            Export masks generated from the camera view over the model, along with depth and normal maps for the selected images. If folderName and params.xml are not specified, the results are saved alongside the original images using the current settings. The parameters file can be exported from the export dialog for maps and masks.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_exlod" data-vn="1">
+                        <td class="command">exportLod</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export the selected model as a linear Level-of-Detail model into a file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter). 
+                            You can export the file from the <span class="apppanel">Export LoD</span> dialog. For export to Cesium 3D Tiles (.json) file format, use the command <span class="command">export3dTiles</span>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_ex3dT" data-vn="1">
+                        <td class="command">export3dTiles</td>
+                        <td class="parameter">fileName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Export the selected model as a hierarchical Level-of-Detail model into a .json file (fileName including path and file extension) using the current settings or the settings from the params.xml (optional parameter). 
+                            You can export the file from the <span class="apppanel">Export LoD</span> dialog after selecting Cesium 3D Tiles (.json) file format.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_camsn" data-vn="1">
+                        <td class="command">exportCameraSnapshots</td>
+                        <td class="parameter">folderName</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Render images of a model from the camera positions using all images if none or just one is selected, or using only the selected images. Specify the path of a folder where images will be stored, and use the optional file with parameters to use settings from the export dialog.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selcamsn" data-vn="1">
+                        <td class="command">exportSelectedCamerasSnapshots</td>
+                        <td class="parameter">folderName fileFormat</td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Render images of a model from the selected camera positions. Specify the path of a folder where images will be stored and the file format of the exported images (e.g. jpg or png). Use the optional file with parameters to use settings from the export dialog.
+                        </td>
+                    </tr>
+					<tr data-id="tr_model_rYPR" data-vn="2">
+                        <td class="command">renderMeshFromCustomPositionYPR</td>
+                        <td class="parameter">fileName params.xml&#124;fileName width height focalLength x y z yaw pitch roll
+						</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export a render of the model from a camera position with the viewpoint defined by yaw, pitch, and roll orientation.
+							<br/>
+                            Example for a render from above of a model at 0,0,0 in local Euclidean space:
+                            <div class="codeSample">
+                                RealityScan.exe -renderMeshFromCustomPositionYPR "D:/Project/render.png" 1280 720 100 0 0 150 0 0 0
+                            </div>
+                        </td>
+                    </tr>
+					<tr data-id="tr_model_ratv" data-vn="3">
+                        <td class="command">renderMeshFromCustomPositionLookAt</td>
+                        <td class="parameter">fileName params.xml&#124;fileName width height focalLength x y z atX atY atZ
+                        </td>
+                        <td class="parameter">upX upY upZ</td>
+                        <td>
+                            Export a render of a model from a camera position, which looks at another defined position, with an option to specify the vertical axis.
+							<br/>
+						  Example for a side view of a model at 0,0,0 in local Euclidean space while defining the vertical axis going up the Z axis:
+                            <div class="codeSample">
+                                RealityScan.exe -renderMeshFromCustomPositionLookAt "D:/Project/render.png" 1280 720 50 0 -100 0 0 0 10 0 0 1</div>
+                      </td>
+                    </tr>           
+                    <tr data-id="tr_model_rgridypr" data-vn="1">
+                        <td class="command">renderMeshFromCustomGridPositionYPR</td>
+                        <td class="parameter">fileName params.xml&#124;fileName width height focalLength x y z yaw pitch roll
+						</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export a render of the model from a custom grid position, with the viewpoint defined by yaw, pitch, and roll orientation.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_rgridla" data-vn="1">
+                        <td class="command">renderMeshFromCustomGridPositionLookAt</td>
+                        <td class="parameter">fileName params.xml&#124;fileName width height focalLength x y z atX atY atZ
+						</td>
+                        <td class="parameter">upX upY upZ</td>
+                        <td>
+                            Export a model render from a custom grid position, with the viewpoint directed toward a defined target, and the option to specify the vertical axis.
+                        </td>
+                    </tr> 
+                    <tr data-id="tr_model_utsketch" data-vn="1">
+                        <td class="command">uploadToSketchfab</td>
+                        <td class="parameter">APIToken</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Upload your model to Sketchfab. The required parameter is the Sketchfab API token and it can be found in the account settings of your Sketchfab account.
+                        </td>
+                    </tr>	
+                </table>
+                
+                <h3 data-id="h3_classcomm" data-vn="1">Classification Commands</h3>
+                <p data-id="p_h3_classcomm" data-vn="1">Use these settings to create and adjust classifications.</p>
+                    
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_classcomm_head" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_model_dtmclassify" data-vn="2">
+                        <td class="command">dtmClassify</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Classify vertices of the selected model into pre-defined classes using the current settings or the settings from the params.xml file (optional parameter).
+                            You can export these settings from the <span class="apppanel">Classify</span> tool in the application.
+                        </td>
+                    </tr>   
+                    <tr data-id="tr_model_selectclassf" data-vn="1">
+                        <td class="command">selectClassification</td>
+                        <td class="parameter">classificationName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Select a classification using its specified name (classificationName parameter).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_renameclassf" data-vn="1">
+                        <td class="command">renameSelectedClassification</td>
+                        <td class="parameter">newClassificationName</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Rename the selected classification to the specified new name (newClassificationName).
+                        </td>
+                    </tr>
+                    <tr data-id="transferclassf" data-vn="1">
+                        <td class="command">transferClassification</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">params.xml</td>
+                        <td>
+                            Transfer classification from the labels layer images. A file with parameters exported from the <span class="apppanel">AI Classify tool</span> panel can be used as an optional parameter.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_expclassset" data-vn="1">
+                        <td class="command">exportClassificationSettings</td>
+                        <td class="parameter">XMLfilePath</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Export settings from the <span class="apppanel">AI Classify tool</span> panel. For the required parameter (XMLfilePath) specify the full path for export, including the file name and format extension (.xml).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_impclassset" data-vn="1">
+                        <td class="command">importClassificationSettings</td>
+                        <td class="parameter">XMLfilePath</td>
+                        <td class="parameter"></td>
+                        <td>
+                            Import settings to the <span class="apppanel">AI Classify tool</span> panel. For the required parameter (XMLfilePath) specify the full path for import, including the file name and format extension (.xml).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_oververt" data-vn="1">
+                        <td class="command">overrideSelectedVertices</td>
+                        <td class="parameter"></td>
+                        <td class="parameter">className</td>
+                        <td>Override the selected vertices and change their class to the currently selected class, or to the class specified by name (optional).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_slctclass" data-vn="1">
+                        <td class="command">selectClass</td>
+                        <td class="parameter">className</td>
+                        <td class="parameter"></td>
+                        <td>Select a class from the selected classification using the specified class name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_dsltclass" data-vn="1">
+                        <td class="command">deselectClass</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Deselect all selected classes.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_rnmselcl" data-vn="1">
+                        <td class="command">renameSelectedClass</td>
+                        <td class="parameter">newClassName</td>
+                        <td class="parameter"></td>
+                        <td>Change the name of the selected class to the specified new class name (newClassName).
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_sscldtm" data-vn="1">
+                        <td class="command">setSelectedClassAsGroundForDTM</td>
+                        <td class="parameter">true OR false</td>
+                        <td class="parameter"></td>
+                        <td>Change the <span class="appproperty">Use as ground for DTM</span> setting in the <span class="apppanel">Selected Class</span> panel for the selected class. Set to <span class="appproperty">true</span> to use it as ground for DTM, or <span class="appproperty">false</span> to exclude it.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_ssclexp" data-vn="1">
+                        <td class="command">setSelectedClassAsGroundForExport</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Change the <span class="appproperty">Export class LAS</span> setting in the <span class="apppanel">Selected Class</span> panel to <span class="appproperty">Ground (2)</span>.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_ssclas" data-vn="1">
+                        <td class="command">setSelectedClassLasFormat</td>
+                        <td class="parameter">0 - 12</td>
+                        <td class="parameter"></td>
+                        <td>Change the <span class="appproperty">Export class LAS</span> setting to a value corresponding to a number from 0 to 12. 
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_svrtsc" data-vn="2">
+                        <td class="command">selectVerticesOfSelectedClass</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Select model vertices based on the selected class.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_selclfr" data-vn="1">
+                        <td class="command">selectClassificationFormat</td>
+                        <td class="parameter">classificationFormatName</td>
+                        <td class="parameter"></td>
+                        <td>Select the classification format based on the specified classification format name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_rscfr" data-vn="1">
+                        <td class="command">renameSelectedClassificationFormat</td>
+                        <td class="parameter">newClassificationFormatName</td>
+                        <td class="parameter"></td>
+                        <td>Rename the selected classification format to the specified new classification format name.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_expscfr" data-vn="2">
+                        <td class="command">exportSelectedClassificationFormat</td>
+                        <td class="parameter">filePath</td>
+                        <td class="parameter"></td>
+                        <td>Export the selected classification format by specifying the full path, including the file name and the .cfd extension.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_expcfr" data-vn="2">
+                        <td class="command">exportClassificationFormat</td>
+                        <td class="parameter">classificationFormatName filePath</td>
+                        <td class="parameter"></td>
+                        <td>Export the classification format by specifying its name and the output file path, including the file name and the .cfd extension.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_impcfr" data-vn="1">
+                        <td class="command">importClassificationFormat</td>
+                        <td class="parameter">filePath</td>
+                        <td class="parameter"></td>
+                        <td>Import the classification format by specifying its full path and name, including the .cfd extension.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_colscl" data-vn="1">
+                        <td class="command">colorModelBySelectedClassification</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Colorize the model according to the classes in the selected classification.
+                        </td>
+                    </tr>
+                    <tr data-id="tr_model_delscl" data-vn="1">
+                        <td class="command">deleteSelectedClassification</td>
+                        <td class="parameter"></td>
+                        <td class="parameter"></td>
+                        <td>Delete the selected classification.
+                        </td>
+                    </tr>  
+                </table>
+            </div>
+
+            <div data-id="div_sb_error" class="slideblock splitSpacing">
+                <h2 data-id="h2_error" data-vn="1">Settings' and Error-handling Commands</h2>
+                <p data-id="p_h2_error" data-vn="1" class="lod1">
+                    You can use these commands to alter the settings and behavior of the application.
+                </p>
+
+                <table class="tableofcommands">
+                    <thead>
+                        <tr data-id="tr_error_thead" data-vn="1">
+                            <th>Command Name</th>
+                            <th>Required Parameter</th>
+                            <th>Optional Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tr data-id="tr_error_set" data-vn="2">
+                        <td class="command">set</td> 
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td>Change an application setting. Learn more about how to use this command <a href="../tutorials/setkeyvaluetable.htm">here</a>.</td> 
+                    </tr>
+                    <tr data-id="tr_error_preset" data-vn="1">
+                        <td class="command">preset</td> 
+                        <td class="parameter">"key=value"</td>
+                        <td class="parameter"></td>
+                        <td>Change an application setting during the setup phase. Ideal for changes that require a reset of the application. Learn more about how to use this command <a href="../tutorials/setkeyvaluetable.htm">here</a>.</td> 
+                    </tr>
+                    <tr data-id="tr_error_reset" data-vn="2">
+                        <td class="command">reset</td>
+                        <td class="parameter">ui &#124; cfg &#124; cfgui &#124; all</td>
+                        <td class="parameter"></td>
+                        <td>Reset the user interface, settings, or both. It is also possible to make RealityScan like a clean install. This command works only when used in a batch file, and it won't work with delegation commands. What is going to be reset is determined by the chosen parameter: <span class="appproperty">ui</span> - reset user interface, <span class="appproperty">cfg</span> - reset application settings, <span class="appproperty">cfgui</span> - reset both interface and settings, <span class="appproperty">all</span> - make it like a clean install.</td>                         
+                    </tr>
+                    <tr data-id="tr_error_silent" data-vn="3">
+                        <td class="command">silent</td> 
+                        <td class="parameter">crashReportPath</td>  
+                        <td class="parameter"></td> 
+                        <td>Suppress warning dialogs and uploading of the crash reports. The application will store reports in the specified location instead of showing the upload wizard. This command has to be used at the startup.</td>                         
+                    </tr>
+                    <tr data-id="tr_error_progress" data-vn="2">
+                        <td class="command">writeProgress</td> 
+                        <td class="parameter">fileName </td>  
+                        <td class="parameter">timeout</td> 
+                        <td>Write any new progress change into a specified file (fileName including the path). Optional timeout parameter will also output during a defined period of time (timeout in seconds). 
+                        More about the file structure can be found in the section <a href="../tutorials/commandline_5.htm">Error-handling Commands</a>.</td>
+                    </tr>
+					<tr data-id="tr_error_printprogress" data-vn="1">
+                        <td class="command">printProgress</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter">timeout</td>
+                        <td>Print progress change into the Windows Command Prompt for any new change. Optional timeout parameter will also output during a defined period of time (timeout in seconds).</td> 
+                    </tr>
+					<tr data-id="tr_error_tag" data-vn="1">
+                        <td class="command">tag</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td>
+                        <td>Writes out a tag into the Windows Command Prompt. It respects the order of the used commands and will be run after the process ran before it finishes.</td> 
+                    </tr>                    
+                    <tr data-id="tr_error_stdconsole" data-vn="1">
+                        <td class="command">stdConsole</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td>
+                        <td>Enables console redirection to the application standard output. When used, you will see the application console content mirrored also in the standard Windows console. This also enables further redirections for CLI purposes.</td> 
+                    </tr>
+                    <tr data-id="tr_error_disableonline__v1" data-vn="1">
+                        <td class="command">disableOnlineCommunication</td> 
+                        <td class="parameter"></td>  
+                        <td class="parameter"></td> 
+                        <td>Disable any online communication.</td> 
+                    </tr>
+                    <tr data-id="tr_error_importgs" data-vn="1">
+                        <td class="command">importGlobalSettings</td> 
+                        <td class="parameter">settings.rcconfig</td>  
+                        <td class="parameter"></td> 
+                        <td>Import application global settings from the settings.rcconfig file.</td>
+                    </tr>
+                    <tr data-id="tr_error_exportgs" data-vn="1">
+                        <td class="command">exportGlobalSettings</td> 
+                        <td class="parameter">settings.rcconfig</td>  
+                        <td class="parameter"></td> 
+                        <td>Export application global settings to the settings.rcconfig file.</td>
+                    </tr>
+                    <tr data-id="tr_error_setpcs" data-vn="1">
+                        <td class="command">setProjectCoordinateSystem</td> 
+                        <td class="parameter">authority:id</td>  
+                        <td class="parameter"></td> 
+                        <td>Set a project coordinate system defined by an authority, and its ID (can be found in a specific database, e.g. epsg.xml and local.xml).
+                        An example can be found <a href="../tutorials/commandline_4.htm">here</a>.</td>
+                    </tr>
+                    <tr data-id="tr_error_setocs" data-vn="1">
+                        <td class="command">setOutputCoordinateSystem</td> 
+                        <td class="parameter">authority:id</td>  
+                        <td class="parameter"></td> 
+                        <td>Set an output coordinate system defined by an authority, and its ID (can be found in a specific database, e.g. epsg.xml and local.xml).
+                        An example can be found <a href="../tutorials/commandline_4.htm">here</a>.</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="clear splitSpacing">
+                <!-- clear -->
+            </div>
+
+            <div class="blocksContainer">
+
+                <a href="../tutorials/commandline.htm">
+                    <div class="block TileColor2">
+                        <h2 data-id="h2_bc_cli" data-vn="1">More about the CLI</h2>
+                        <p data-id="p_h2_bc_cli" data-vn="1">See the tutorial on the command-line interface</p>
+                    </div>
+                </a>
+
+                <script type="text/javascript">RenderBackToStartTile();</script>
+            </div>
+
+            <div class="clear">
+                <!-- clear -->
+            </div>
+
+            <!-- content slide end -->
+
+        </div>
+
+        <script type="text/javascript">RenderCopyrightText();</script>
+
+    
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>

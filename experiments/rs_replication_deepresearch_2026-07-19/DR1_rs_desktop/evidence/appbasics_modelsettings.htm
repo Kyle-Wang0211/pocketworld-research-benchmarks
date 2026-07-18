@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	    <script>
+            window._epicEnableCookieGuard = true;
+            window._epicTrackingCookieDomainId = "7c727b26-cedc-4409-87d1-5077acb3298b";
+            window.__tracking_base = "https://tracking.epicgames.com";
+        </script>
+        <script src="https://tracking.epicgames.com/tracking.js" async=""></script>
+		<script type="module" crossorigin="anonymous" src="https://components.unrealengine.com/navigation/realitycapture-navigation.mjs"></script>
+        <script src="https://components.unrealengine.com/footer/realitycapture-footer.mjs" async="true" type="module" crossorigin="anonymous" data-nscript="afterInteractive"></script>
+        <title>Reconstruction Settings - RealityScan Help</title>
+        <meta charset="UTF-8"/>
+        <meta name="author" content="Epic Games Slovakia s.r.o."/>
+        <meta http-equiv="X-UA-Compatible" content="IE=10"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/style.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/colors.css"/>
+        <link type="text/css" rel="stylesheet" href="../../styles/flagStyles.css"/>
+        <script src="../scripts/textVars.js" type="text/javascript"></script>
+        <script src="../../scripts/localization.js" type="text/javascript"></script>
+        <script src="../../scripts/main.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <realitycapture-navigation id="header" disableLocale="true" disableSearch="true" displayName="" isLoggedIn="false" domain="https://www.realityscan.com" locale="en-US" signinlinkhref="https://www.capturingreality.com/my" signoutlinkhref="https://www.capturingreality.com/auth.sign.out"></realitycapture-navigation>
+
+        <div data-id="div_cs" class="content_slide">
+
+            <script type="text/javascript">RenderToolNavigation();</script>
+
+            <div data-id="div_head" class="head">
+
+                <h1 data-id="h1" data-vn="1">Reconstruction Settings</h1>
+                <p data-id="p_h1" data-vn="4">
+                    Settings related to the reconstruction process can be found in the <span class="apppanel">Create Mesh</span> part of the <span class="appribbon">MESH &amp; COLOR</span> tab.    
+                </p>
+            </div>
+
+            <div data-id="div_sb_depth" class="slideblock">
+                <h2 data-id="h2_depth" data-vn="1">Image Depth-map Calculation</h2>
+                <p data-id="p_h2_depth" data-vn="1">
+                    The first part of a model calculation is a depth-map calculation for each image. Here, you can set up the parameters of this part. This part of the calculation uses mainly the GPU. Please close all applications that are using GPU in order to lower GPU memory usage. <br/>
+                </p>
+                <div data-id="div_im_depth" data-vn="1" class="importantMessage">
+                    TIP: You can select images that you do not want to use in a model computation by image multi-selection and the selected inputs' panel (prior to the model computation).
+                </div>
+
+                <br/>
+                <img src="images/reconstruction-settings-depth-map.png" alt="reconstruction-settings-depth-map" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/reconstruction-settings-depth-map.png';">
+                <br/>
+
+                <ul>
+                    <li data-id="li_depth_preview" data-vn="1"><span class="appproperty">Preview model</span> These settings are applied just if you use the preview quality model computation.
+                        <ul>
+                            <li data-id="li_depth_downscale" data-vn="1"><span class="appproperty">Image downscale</span> Images scaled down by this factor are used for the depth map computation instead of the original resolution of images. The higher the number, the faster the computation, but it results in a lower detail. Using number 1 means no change in the scale (100% resolution), using number 2 means that each side of an image will be two times smaller (25% of the original image resolution), etc.</li>
+                            <li data-id="li_depth_prmaxdm" data-vn="2"><span class="appproperty">Maximal depth-map pixel count</span> The maximum depth-map pixel count. This value does not override the Image downscale value; both will be applied and may affect resolution. The default value of <span class="appproperty">0</span> means the setting is ignored. To use this setting, ensure you set a high value.</li>
+                        </ul>
+                    </li>
+                    <li data-id="li_depth_normal" data-vn="1"><span class="appproperty">Normal model</span> These settings are applied just if you select normal quality model computation.
+                        <ul>
+                            <li data-id="li_depth_above" data-vn="2"><span class="appproperty">Image downscale</span> Images scaled down by this factor are used for the depth map computation instead of the original resolution of images. The higher the number, the faster the computation, but it results in a lower detail. Whereas using number 1 means no change in the scale (100% resolution), using number 2 means that each side of an image will be 2 times smaller (25% of the original image resolution), etc. The <span class="apptool">High Detail</span> meshing mode always uses full resolution (value 1) and therefore does not include this option.</li>
+                            <li data-id="li_depth_nomaxdm" data-vn="2"><span class="appproperty">Maximal depth-map pixel count</span> The maximum depth-map pixel count. This value does not override the Image downscale value; both will be applied and may affect resolution. The default value of <span class="appproperty">0</span> means the setting is ignored. To use this setting, ensure you set a high value.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <br />
+
+                <div data-id="div_im_depth_downscale" data-vn="1" class="importantMessage">
+                    NOTE: <span class="appproperty">Downscale for depth maps</span> (defined in the 1Ds Selected input(s) panel for selected pictures) 
+                    x <span class="appproperty">Image downscale</span> (defined in Reconstruction settings) = resulting downscale for selected images for depth-map computation.
+                </div>
+
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_scans" class="slideblock">
+                <h2 data-id="h2_scans" data-vn="2">LiDAR Scans</h2>
+                <p data-id="p-h2_scans" data-vn="2">
+                    These settings are used when a LiDAR scan is being used during a model computation.
+                </p>
+                <img src="images/reconstruction-settings-lasers.png" alt="reconstruction-settings-lasers" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/reconstruction-settings-lasers.png';">
+                <br/>
+                <ul>
+                    <li data-id="li_scans_mind" data-vn="2"><span class="appproperty">Minimal distance between two points</span> Use this setting to define the final density of the scan-related parts of the model. However, parts of the model that come from images (photogrammetry) can be denser. Use <span class="appproperty">Mesh calculation / Minimal distance between two vertices</span> to control the overall density of the final model.</li>
+                    <li data-id="li_scans_crop" data-vn="1"><span class="appproperty">Point-cloud cropping radius</span> Points of a scanner that are further from the scanner position than this value will not be used in the model computation. Use this setting when you know that far points have low accuracy and you do not want to use them in the final model.</li>
+                    <li data-id="li_scans_mini" data-vn="1"><span class="appproperty">Minimal intensity</span> Use this setting to disable using points with intensity lower than this value. See your scanner specification. Usually, low-intensity points are not accurate enough, and you may not want them to be reconstructed.</li>
+                    <li data-id="li_scans_class" data-vn="1"><span class="appproperty">Filtering based on classification</span> Choose which LiDAR classes will be included or excluded from mesh creation. For easier selection, you can also enable or disable all classes at once.</li>
+                </ul>
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_mesh" class="slideblock">
+                <h2 data-id="h2_mesh" data-vn="1">Mesh Calculation</h2>
+                <p data-id="p_h2_mesh" data-vn="1">
+                    Mesh is created after depth maps are calculated. Use these parameters to control the properties of the final mesh.
+                </p>
+                
+                <img src="images/reconstruction-settings-mesh-preview-1.png" alt="reconstruction-settings-mesh-preview-1" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/reconstruction-settings-mesh-preview-1.png';">
+                <br/>
+                <ul>
+                    <li data-id="li_mesh_accel" data-vn="2"><span class="appproperty">GPU acceleration</span> Enable this option to speed up the mesh calculation. It is enabled by default.
+                    </li>
+                    <li data-id="li_mesh_marginal" data-vn="1"><span class="appproperty">Remove marginal triangles</span> Enabling this setting removes marginal triangles, resulting in a non-watertight mesh.
+                    </li>
+                    <li data-id="li_mesh_mind" data-vn="2"><span class="appproperty">Minimal distance between two vertices</span> Use this setting to define the final density of a model. WARNING: use this just if you are sure that you know the scale of the model. If your scene is geo-referenced, then this number will be in meters/feet. Do not forget to change it accordingly before another model computation in the next project.
+                    </li>
+                    <li data-id="li_mesh_prev" data-vn="1"><span class="appproperty">Preview model</span> These settings apply just if you select the preview quality model computation. The model computed in a preview mode is always singleton, i.e., consists of a single part.
+                        <ul>
+                            <li data-id="li_mesh_sparse" data-vn="2"><span class="appproperty">Mesh Calculation Strategy </span> You can choose to <span class="appproperty">Use sparse point cloud</span>. If you use this setting, then the <span class="appproperty">Image depth map calculation / Preview model / Image downscale</span> and <span class="appproperty">Mesh calculation / Preview model / Max vertices count</span> will not be used and will be hidden as they become irrelevant. Or you can choose <span class="appproperty">Max vertex count</span>. With this option, you can define the maximum number of vertices that the final model can contain. A proper decimation factor is estimated in this case. However, of course, the number of vertices will not be exactly the same as you had selected.</li>
+                            <li data-id="li_mesh_maxvc" data-vn="2"><span class="appproperty">Max vertex count</span> If the <span class="appproperty">Mesh calculation strategy</span> is set to <span class="appproperty">Max vertex count</span>, then this option is visible. It defines the maximal number of vertices that the final model can contain. A proper decimation factor is estimated in this case. However, of course, the number of vertices will not be exactly the same as you had selected.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <br/>
+
+            <div data-id="div_sb_adv" class="slideblock">
+                <h2 data-id="h2_adv" data-vn="1">Advanced</h2>
+
+                <img src="images/reconstruction-settings-advanced.png" alt="reconstruction-settings-advanced" class="autoimg" onerror="this.onerror=null;this.src='../../en-US/appbasics/images/reconstruction-settings-advanced.png';">
+
+                <br/>
+                <ul>
+                    <li data-id="li_mesh_maxvcpp" data-vn="1"><span class="appproperty">Maximal vertex count per part</span> Defines the maximal count of vertices in a part. We do not recommend changing this value.</li>
+                    <li data-id="li_mesh_dedefa" data-vn="1"><span class="appproperty">Detail decimation factor</span> The bigger the value, the lower the detail and the lower the number of triangles in the final model.</li>
+					<li data-id="li_mesh_demaav" data-vn="1"><span class="appproperty">Depth map algorithm version</span> Select the version of the algorithm to use for calculating the depth maps (Version 1 is the legacy algorithm).</li>
+					<li data-id="li_mesh_adblst" data-vn="2"><span class="appproperty">Adaptive blending start</span> Is useful mostly with LiDAR scans and metric data, and it determines the level of detail that is going to be created. The higher the value, the greater the detail. It is not recommended to use a non-default value (0.45).</li>
+					<li data-id="li_mesh_smooth" data-vn="2"><span class="appproperty">Smoothing</span> The smoothing setting works similarly to the <span class="apptool">Smooth</span> tool. The higher the number, the smoother the model will be.</li>
+                    <li data-id="li_adv_pgm" data-vn="1">Photogrammetry settings
+                    <br/><span class="appproperty">Default grouping factor</span> and <span class="appproperty">Low-texture grouping factor</span> define the final density of mesh vertices.
+                    <br/><span class="appproperty">Default noise factor</span> and <span class="appproperty">Low-texture noise factor</span> define the final smoothness of mesh.
+                        <ul>
+                            <li data-id="li_adv_group_1" data-vn="3"><span class="appproperty">Default grouping factor</span> The default density. If set to 2, then there should be 2x2=4 times less vertices. You can also lose detail when setting it to a higher than the default value. This setting can also be used when images are having a negative impact on the quality of a mesh; when both images and LiDAR scans are being used to mesh, increasing this value will mean the laser scans will be prioritized for meshing.</li>
+                            <li data-id="li_adv_low" data-vn="1"><span class="appproperty">Low-texture grouping factor</span> The bigger the value, the lower the density of vertices in the low-textured parts of mesh.</li>
+                            <li data-id="li_adv_noise" data-vn="1"><span class="appproperty">Default noise factor</span> The bigger noise the factor, the smoother the mesh. You can also lose detail when setting it to a higher value than the default one.</li>  
+                            <li data-id="li_adv_low_noise" data-vn="1"><span class="appproperty">Low-texture noise factor</span> The bigger value, the smoother the low-textured parts of a mesh.</li>
+                        </ul>
+                    </li>
+					<li data-id="li_adv_mfil" data-vn="1">Mesh filtration settings
+						<ul>
+                            <li data-id="li_mesh_filrad" data-vn="1"><span class="appproperty">Filter radius</span> Filter radius is used in depth map calculation. This setting should not be modified.</li>
+							<li data-id="li_mesh_filstr" data-vn="1"><span class="appproperty">Filter strength</span> Filter strength is used in depth map calculation. This setting should not be modified.</li>
+                        </ul>
+					</li>
+                    <li data-id="li_adv_pgm1" data-vn="1">Model import settings
+                        <ul>
+                            <li data-id="li_mesh_maxvcpp1" data-vn="1"><span class="appproperty">Maximal vertex count per part</span> Defines the maximal count of vertices in a part for the imported model.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="clear splitSpacing">
+                <!-- clear -->
+            </div>
+
+            <div data-id="bc" class="blocksContainer">
+
+                <a href="../tools/texturing.htm">
+                    <div class="block TileColor2">
+                        <h2 data-id="h2_bc" data-vn="1">Coloring and Texturing</h2>
+                        <p data-id="p_h2_bc" data-vn="1">More on how to turn your 3D into color</p>
+                    </div>
+                </a>
+
+                <script type="text/javascript">RenderBackToStartTile();</script>
+
+            </div>
+
+            <div class="clear">
+            <!-- clear -->
+            </div>
+
+        </div>  <!-- content slide end -->
+
+        <script type="text/javascript">RenderCopyrightText();</script>
+
+        <script type="text/javascript">
+            InitializeHelpSlide();
+        </script>
+
+    
+		<realitycapture-footer domain="https://www.realityscan.com" locale="" countryCode="" class="epicgames-footer"></realitycapture-footer>
+    </body>
+</html>
