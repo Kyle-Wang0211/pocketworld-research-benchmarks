@@ -1,0 +1,30 @@
+{
+  "auditor": "agent single-rater (same protocol as E7 audit; NOT user sign-off)",
+  "date": "2026-07-18",
+  "protocol": "every crop judged against the hard gate: any TRUE geometry below the main floor plane (sunken floor, step-down, real sub-floor structure) = FAIL the whole E10 fix",
+  "cap40": {
+    "audited": 18, "pool": 18, "coverage": "exhaustive (all delta kills)",
+    "correct_kills": 18, "true_geometry_kills": 0,
+    "verdict": "PASS",
+    "scene_notes": [
+      "17/18 observations land on high-gloss laminate floor planks or lacquered wardrobe door panels; triangulated 0.11-1.21 m BELOW the floor plane - constructively impossible in this single-level bedroom; classic planar-mirror virtual points",
+      "kill07 (pt27872, fh=-0.329, ns=4) is the only non-floor observation: lands on the satin/cotton bedsheet with clothes; sheet top is ~0.6 m ABOVE the floor while the 3D point is 0.33 m BELOW it - specular-fabric mis-triangulation (quilt_satin hot zone known since E2-A), judged correct kill; flagged for transparency",
+      "kill16 (pt63278, fh=-1.205) and kill17 (pt71174, fh=-0.107, ns=6, motion-blurred frame) both impossible depths - ghosts"
+    ]
+  },
+  "cap41": {
+    "audited": 24, "pool": 163, "coverage": "seeded sample (rng 7), 14.7%",
+    "correct_kills": 24, "true_geometry_kills": 0,
+    "verdict": "PASS",
+    "scene_notes": [
+      "24/24 observations on the same high-gloss dark laminate floor (plus bed-frame post / wardrobe-door context in 4 crops); triangulated 0.10-1.46 m below the floor plane - all reflection ghosts",
+      "kill21 (pt50492, fh=-1.459, ns=3) projects next to the white bedsheet on dark wardrobe wood - 1.46 m below floor, impossible - ghost",
+      "no sunken floor, no steps, no real sub-floor structure anywhere in the scene"
+    ]
+  },
+  "combined": {"audited": 42, "correct_kills": 42, "true_geometry_kills": 0, "hard_gate": "PASS"},
+  "honesty": [
+    "cap41 audited by 24-point seeded sample, not exhaustively (163 kills); fh distribution of the unaudited remainder matches the audited sample (median -0.153, all < -0.10)",
+    "single-rater agent audit; user eyeball approval via compare links still required before any promotion"
+  ]
+}
