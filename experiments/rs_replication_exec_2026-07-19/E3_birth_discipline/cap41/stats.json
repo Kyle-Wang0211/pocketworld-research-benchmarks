@@ -1,0 +1,212 @@
+{
+  "cap": "cap41",
+  "inputs": {
+    "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs/sfm_live.db",
+    "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs/sfm_sparse_meta.json",
+    "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs/sfm_sparse.ply",
+    "baseline_ply_sha256": "301cccb81185d9f743412d5b0a6c05841d988921ca12eaf7ec1fb76ccfd6d8b5",
+    "e2a_fingerprints": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/cap41/fingerprints.npz",
+    "e2a_trail_detect": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/cap41/trail_detect.npz",
+    "e2a_sha_check": "fingerprints_info ply_sha256 == baseline sha (asserted)"
+  },
+  "gauge": "production refined poses; PLY frame == meta frame (S1 probe verified); NO Sim3",
+  "rule": {
+    "baseline": "S1 unified 2-view lifecycle, byte-identical constants (3px reproj, 2deg theta, provenance-blind)",
+    "risk_signature": "E2-A four-signature union reused verbatim (S_behind|S_below|S_streak|S_out)",
+    "earn_existence": {
+      "path1_multiview_obs": 3,
+      "path2_net_visibility": "per-support-frame corridor votes, clear(+1)/blocked(-1), blocked = >= 8 solid 0.05m-voxel crossings (E2-A march constants); floor plane = standing occluder for floor_h < -0.1; 0-obs points: 1 nearest-camera proxy vote (flagged); survive iff net >= 0"
+    },
+    "layering": "non-risk points keep their S1 verdict unchanged (no global tightening; E2-B lesson)",
+    "operating_point_provenance": "vote_block_hits=8 selected FROM the sweep as the smallest threshold with zero audited true-geometry kills on cap50; calibrated on the protected set (disclosed overfit risk); spec-faithful bh=3 result kept in sweep"
+  },
+  "verdicts": {
+    "cull_risk_belowfloor": 8029,
+    "cull_risk_occluded": 4,
+    "cull_s1_theta_lt2deg": 27,
+    "keep_2view_pass": 203,
+    "keep_multiview": 8212,
+    "keep_risk_multiview": 126,
+    "keep_risk_netvisible": 250,
+    "keep_unmatched_honest": 36258,
+    "keep_unverified_pair_honest": 9052
+  },
+  "n_risk": 8411,
+  "n_risk_proxy_vote": 6168,
+  "check_a_protected_true_geometry": {
+    "applicable": false,
+    "pass": null,
+    "note": "no audited-FP true-geometry clusters on this cap (E2-A audited clusters here are TRUE/AMB mirror trails)"
+  },
+  "check_b_four_rulers": {
+    "ruler_1_points": {
+      "baseline": 62161,
+      "candidate": 54101,
+      "delta": -8060,
+      "delta_pct": -12.97
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -0.6574,
+      "baseline": {
+        "n_floor_slab": 27834,
+        "thickness_med_cell_p90p10_m": 0.027397751808166504,
+        "thickness_p90_cell_m": 0.0659515404701233,
+        "n_thickness_cells": 767,
+        "thickness_global_std_m": 0.03134989838204922,
+        "cover_cells_2cm": 3943,
+        "cover_area_m2": 1.5772
+      },
+      "candidate": {
+        "n_floor_slab": 27816,
+        "thickness_med_cell_p90p10_m": 0.027397751808166504,
+        "thickness_p90_cell_m": 0.0659515404701233,
+        "n_thickness_cells": 767,
+        "thickness_global_std_m": 0.03134740495791737,
+        "cover_cells_2cm": 3940,
+        "cover_area_m2": 1.576
+      }
+    },
+    "ruler_3_coverage": {
+      "baseline_cells_2cm": 3943,
+      "candidate_cells_2cm": 3940,
+      "floor_cover_loss_pct": 0.076,
+      "gate": "loss > 1% = FAIL"
+    },
+    "ruler_4_wallclock_host_proxy_s": {
+      "load_s": 0.5,
+      "support_recovery_s": 0.5,
+      "s1_rule_s": 0.0,
+      "corridor_votes_s": 0.2,
+      "risk_rule_s": 0.004
+    },
+    "chair_roi": {
+      "roi": null,
+      "baseline": null,
+      "candidate": null
+    },
+    "pass": true
+  },
+  "check_c_trail_kill_accounting": {
+    "risk_candidates_excl_protected": 8411,
+    "killed_excl_protected": 8035,
+    "kill_frac": 0.955,
+    "zones": {
+      "below_floor": {
+        "n": 8134,
+        "killed": 8030,
+        "kill_frac": 0.987
+      },
+      "other": {
+        "n": 277,
+        "killed": 5,
+        "kill_frac": 0.018
+      }
+    }
+  },
+  "sweep_vote_block_hits": [
+    {
+      "vote_block_hits": 3,
+      "risk_killed_excl_protected": 8097,
+      "risk_total_excl_protected": 8411,
+      "protected_killed": 0,
+      "protected_total": 0,
+      "total_cull": 8122,
+      "zone_kill": {
+        "below_floor": [
+          8030,
+          8134
+        ],
+        "other": [
+          67,
+          277
+        ]
+      }
+    },
+    {
+      "vote_block_hits": 4,
+      "risk_killed_excl_protected": 8056,
+      "risk_total_excl_protected": 8411,
+      "protected_killed": 0,
+      "protected_total": 0,
+      "total_cull": 8081,
+      "zone_kill": {
+        "below_floor": [
+          8030,
+          8134
+        ],
+        "other": [
+          26,
+          277
+        ]
+      }
+    },
+    {
+      "vote_block_hits": 5,
+      "risk_killed_excl_protected": 8043,
+      "risk_total_excl_protected": 8411,
+      "protected_killed": 0,
+      "protected_total": 0,
+      "total_cull": 8068,
+      "zone_kill": {
+        "below_floor": [
+          8030,
+          8134
+        ],
+        "other": [
+          13,
+          277
+        ]
+      }
+    },
+    {
+      "vote_block_hits": 6,
+      "risk_killed_excl_protected": 8041,
+      "risk_total_excl_protected": 8411,
+      "protected_killed": 0,
+      "protected_total": 0,
+      "total_cull": 8066,
+      "zone_kill": {
+        "below_floor": [
+          8030,
+          8134
+        ],
+        "other": [
+          11,
+          277
+        ]
+      }
+    },
+    {
+      "vote_block_hits": 8,
+      "risk_killed_excl_protected": 8035,
+      "risk_total_excl_protected": 8411,
+      "protected_killed": 0,
+      "protected_total": 0,
+      "total_cull": 8060,
+      "zone_kill": {
+        "below_floor": [
+          8030,
+          8134
+        ],
+        "other": [
+          5,
+          277
+        ]
+      }
+    }
+  ],
+  "honesty": [
+    "evidence rebuilt from sfm_live.db in observation space; NOT byte-exact production finalize; 3px support radius errs toward keep",
+    "44103 pts have <2 recoverable obs (S1 known floor ~65%); risk-flagged ones among them get a single nearest-camera proxy corridor vote - direction may be wrong for moved objects (cluster09-type)",
+    "E2-A signature FP rate 15-35% point-level (single-rater audit); the layered gate + net-visibility vote is the mitigation, sweep curve provided",
+    "march/voxel thresholds are E2-A forensic constants, not certified production config; nothing here ships without sign-off",
+    "wallclock = host python proxy, not device numbers"
+  ],
+  "outputs_sha256": {
+    "e3_candidate_cap41.ply": "e8735a9e24ef0f21c1c6125e3bb947f20e7279655b0da6379fbea2faaa8ea48e",
+    "diff_cap41.ply": "81d87523d9b60c7ac93b2336270f4f92afc65dd4e0ee93ebbc4a3adcaedb20bf",
+    "side_by_side_cap41.png": "4234cd6e7e5ff9902b92f7bdfde14d65ebae1111de86b425c04c87b123370585",
+    "trail_before_after_cap41.png": "6fa0e67b35cdb9f9d9fe7fffb77740ab0675bd3fa934cdd13762306704ee1b8d",
+    "sweep_curve_cap41.png": "ad30e3e23f82663725275af71d898f5a5cadec84a55293de190c6de492fdb18a"
+  }
+}

@@ -72,3 +72,76 @@ corridor votes for 14466 risk pts 0.4s
 E3 DONE
 === cap40 done ok=1 21:36:36
 === REPLAY cap41 21:36:36
+replay rc=0
+RESULT incr=off n_reg=102 n_points=62161 track3plus=29890 n_obs=217566 mean_reproj_px=1.0421 stream_ms=6758.4 finalize_ms=21868.5 total_ms=28626.9
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/replays/cap41_base_r1/replay_finalize_rgb.ply: n=62161 colored=62161 gray=0 frames_missing_photo=0
+wrote /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs/sfm_sparse_meta.json: 102 poses, registered=102
+=== cap41 ===
+points=62161 frames=102 pairs=822
+support recovery 0.5s
+fingerprints (obs) done
+local PCA 0.2s
+floor plane: cam heights med=0.758
+see-through on 13188 suspects 0.3s
+{"0": 26856, "1": 17247, "2": 9720, "3": 4623, "4": 2225, "5": 904}
+DONE
+=== cap41 n=62161 ===
+solid voxels 2330 / 8303
+S_behind 237 (suspects 3235)
+S_below 8134
+S_streak 22 in 3 strings
+S_out 501
+TRAIL CANDIDATES 8411 (13.53%)
+{
+ "S_behind": {
+  "n": 237,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 8134,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 22,
+  "n_strings": 3,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 501,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 8411,
+ "union_pct": 13.531,
+ "overlap": {
+  "behind&below": 144,
+  "behind&streak": 0,
+  "below&streak": 4,
+  "out&streak": 7,
+  "out&behind": 21
+ }
+}
+DONE
+=== cap41 ===
+points=62161 risk(E2-A union)=8411
+support recovery 0.5s
+S1 baseline culls=27
+corridor votes for 8409 risk pts 0.2s
+ sweep bh=3: cull=8122 protected_killed=0
+ sweep bh=4: cull=8081 protected_killed=0
+ sweep bh=5: cull=8068 protected_killed=0
+ sweep bh=6: cull=8066 protected_killed=0
+ sweep bh=8: cull=8060 protected_killed=0
+{
+ "cull_risk_belowfloor": 8029,
+ "cull_risk_occluded": 4,
+ "cull_s1_theta_lt2deg": 27,
+ "keep_2view_pass": 203,
+ "keep_multiview": 8212,
+ "keep_risk_multiview": 126,
+ "keep_risk_netvisible": 250,
+ "keep_unmatched_honest": 36258,
+ "keep_unverified_pair_honest": 9052
+}
+E3 DONE
+=== cap41 done ok=1 21:37:22
+=== C4041 DONE 2026-07-18T21:37:22+08:00
