@@ -1,0 +1,275 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>同 gauge 对照 + RS 式 quality 重着色(display-only 原型)</title>
+<style>
+  body { margin:0; background:#101014; color:#ddd; font:13px -apple-system,sans-serif; overflow:hidden; }
+  #hud { position:fixed; top:0; left:0; right:0; padding:8px 12px; background:rgba(16,16,20,.9); z-index:10; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  button { background:#22242c; color:#ddd; border:1px solid #444; border-radius:4px; padding:4px 10px; cursor:pointer; }
+  button.active { background:#2e5f8a; border-color:#7fd4ff; }
+  #modebtns button.active { background:#2e8a4f; border-color:#7fffb0; }
+  #panes { display:flex; height:100vh; }
+  .pane { position:relative; width:50%; height:100%; }
+  .pane + .pane { border-left:1px solid #333; }
+  .label { position:absolute; top:44px; left:10px; z-index:5; font-weight:bold; padding:2px 8px; border-radius:4px; background:rgba(0,0,0,.5); }
+  .label.orig { color:#7fd4ff; }
+  .label.cand { color:#ffb054; }
+  .count { position:absolute; bottom:8px; left:10px; z-index:5; color:#9a9; }
+  canvas { display:block; width:100%; height:100%; }
+  #delta { color:#e0b060; }
+  #legend { display:none; position:fixed; bottom:12px; right:12px; z-index:10; background:rgba(0,0,0,.6); padding:8px 10px; border-radius:6px; }
+  #legend .bar { width:180px; height:12px; border-radius:3px;
+    background:linear-gradient(90deg,#e03a2a 0%,#e0b02a 50%,#2ae03a 100%); }
+  #legend .lab { display:flex; justify-content:space-between; margin-top:3px; color:#bbb; font-size:11px; }
+  body.quality #legend { display:block; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <b>同 gauge 对照</b>
+  <span id="modebtns"><button id="btnColor" class="active">color</button><button id="btnQuality">quality</button></span>
+  <span id="viewbtns"></span>
+  <span id="delta">loading…</span>
+  <span id="qnote" style="color:#777"></span>
+  <span style="color:#777">拖拽=旋转 滚轮=缩放 shift拖=平移(双栏同步)· 1-4 切视角 · c/q 切模式 · 同一世界坐标直出,无任何对齐</span>
+</div>
+<div id="panes">
+  <div class="pane"><div class="label orig" id="leftLabel">左</div><div class="count" id="c0"></div><canvas id="cv0"></canvas></div>
+  <div class="pane"><div class="label cand" id="candLabel">右</div><div class="count" id="c1"></div><canvas id="cv1"></canvas></div>
+</div>
+<div id="legend"><div class="bar"></div><div class="lab"><span>低支持(0)</span><span id="legendMid"></span><span>高支持(≥p70)</span></div></div>
+<script>
+"use strict";
+// E6-B S4 显示层原型 — RS 式 quality 重着色。
+// display-only 铁证:本文件对 PLY 只 fetch 读取,quality 颜色仅存在于内存 Float32Array
+// 与 GPU 顶点缓冲;没有任何写文件/上传路径,PLY 字节零改动(见 README SHA 复核)。
+const q = new URLSearchParams(location.search);
+const LEFT = q.get('left');
+const RIGHT = q.get('right');
+if(!LEFT || !RIGHT){ document.getElementById('delta').textContent = 'ERROR: 需要 ?left=…&right=…(两个 PLY 路径,同一场景同一 gauge)'; throw new Error('missing params'); }
+document.getElementById('leftLabel').textContent = '基准:' + (q.get('llabel') || LEFT.split('/').pop());
+document.getElementById('candLabel').textContent = '候选:' + (q.get('rlabel') || RIGHT.split('/').pop());
+
+const sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm3=a=>{const l=Math.hypot(...a);return [a[0]/l,a[1]/l,a[2]/l];};
+const add3=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], scale3=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+function lookAt(e,t){ const z=norm3(sub3(e,t)), x=norm3(cross3([0,1,0],z)), y=cross3(z,x);
+  return new Float32Array([x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot3(x,e),-dot3(y,e),-dot3(z,e),1]); }
+function persp(fovy,asp,n,f){ const t=1/Math.tan(fovy*Math.PI/360);
+  return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0]); }
+function m4mul(a,b){ const o=new Float32Array(16);
+  for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+j]*b[i*4+k];o[i*4+j]=s;} return o; }
+
+// stride 感知 PLY 解析:按 header property 表算偏移,支持 float/double/uchar 混排;ascii 兜底
+function parsePLY(buf){
+  const u8=new Uint8Array(buf), hdrEnd=(()=>{ const s=new TextDecoder().decode(u8.slice(0,8192)); const i=s.indexOf('end_header\n'); if(i<0) throw 'bad PLY header'; return i+11; })();
+  const hdr=new TextDecoder().decode(u8.slice(0,hdrEnd));
+  const n=+hdr.match(/element vertex (\d+)/)[1];
+  const ascii=/format ascii/.test(hdr);
+  const SZ={float:4,float32:4,double:8,float64:8,uchar:1,uint8:1,char:1,int8:1,short:2,ushort:2,int:4,uint:4,int32:4,uint32:4};
+  const props=[]; let stride=0;
+  for(const line of hdr.split('\n')){ const m=line.match(/^property\s+(\w+)\s+(\w+)/);
+    if(m){ props.push({type:m[1],name:m[2],off:stride,idx:props.length}); stride+=SZ[m[1]]||4; } }
+  const P={}; for(const p of props) P[p.name]=p;
+  const need=['x','y','z']; for(const k of need) if(!P[k]) throw 'PLY missing '+k;
+  const hasCol=P.red&&P.green&&P.blue;
+  // 真 quality 字段探测:nviews / support / track_len(生产 PLY 目前没有,见 README)
+  const qProp=P.nviews||P.support||P.track_len||null;
+  const pos=new Float32Array(n*3), col=new Float32Array(n*3);
+  const qval=qProp?new Float32Array(n):null;
+  if(ascii){
+    const text=new TextDecoder().decode(u8.slice(hdrEnd));
+    const lines=text.split('\n');
+    for(let i=0;i<n;i++){ const t=lines[i].trim().split(/\s+/);
+      pos[i*3]=+t[P.x.idx]; pos[i*3+1]=+t[P.y.idx]; pos[i*3+2]=+t[P.z.idx];
+      if(hasCol){ col[i*3]=+t[P.red.idx]/255; col[i*3+1]=+t[P.green.idx]/255; col[i*3+2]=+t[P.blue.idx]/255; }
+      else { col[i*3]=col[i*3+1]=col[i*3+2]=0.8; }
+      if(qProp) qval[i]=+t[qProp.idx]; }
+  } else {
+    const dv=new DataView(buf,hdrEnd);
+    const rd=(p,b)=>{ switch(p.type){ case 'double': case 'float64': return dv.getFloat64(b+p.off,true);
+      case 'uchar': case 'uint8': return dv.getUint8(b+p.off); default: return dv.getFloat32(b+p.off,true); } };
+    for(let i=0;i<n;i++){ const b=i*stride;
+      pos[i*3]=rd(P.x,b); pos[i*3+1]=rd(P.y,b); pos[i*3+2]=rd(P.z,b);
+      if(hasCol){ col[i*3]=rd(P.red,b)/255; col[i*3+1]=rd(P.green,b)/255; col[i*3+2]=rd(P.blue,b)/255; }
+      else { col[i*3]=col[i*3+1]=col[i*3+2]=0.8; }
+      if(qProp) qval[i]=rd(qProp,b); }
+  }
+  return {n,pos,col,qval};
+}
+
+// ---------- RS 式 quality 重着色(display-only,数据不动) ----------
+// 每点局部支持度:若 PLY 带 nviews/support 字段则直接用(真 RS 语义);
+// 否则用密度代理:半径 r=场景最大边/64 的球内邻居计数(均匀网格哈希,O(n))。
+// 色标:percentile 70 锚定 —— score>=p70 → 纯绿;score=0 → 纯红;中间红→黄→绿线性。
+// 全量重着色,不过滤任何点(RS 已证行为:重着色非过滤)。
+function densityScore(pos,n,r){
+  const inv=1/r, grid=new Map();
+  const key=(ix,iy,iz)=>ix+','+iy+','+iz;
+  const cell=new Int32Array(n*3);
+  for(let i=0;i<n;i++){
+    const ix=Math.floor(pos[i*3]*inv), iy=Math.floor(pos[i*3+1]*inv), iz=Math.floor(pos[i*3+2]*inv);
+    cell[i*3]=ix; cell[i*3+1]=iy; cell[i*3+2]=iz;
+    const k=key(ix,iy,iz); let a=grid.get(k); if(!a){a=[];grid.set(k,a);} a.push(i);
+  }
+  const r2=r*r, score=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    const x=pos[i*3],y=pos[i*3+1],z=pos[i*3+2];
+    let cnt=0;
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)for(let dz=-1;dz<=1;dz++){
+      const a=grid.get(key(cell[i*3]+dx,cell[i*3+1]+dy,cell[i*3+2]+dz));
+      if(!a) continue;
+      for(const j of a){ const ux=pos[j*3]-x,uy=pos[j*3+1]-y,uz=pos[j*3+2]-z;
+        if(ux*ux+uy*uy+uz*uz<=r2) cnt++; }
+    }
+    score[i]=cnt-1; // 去掉自身
+  }
+  return score;
+}
+function percentile(arr,p){
+  const s=Float32Array.from(arr).sort();
+  const i=Math.min(s.length-1,Math.max(0,Math.floor(p/100*(s.length-1))));
+  return s[i];
+}
+// 红(0)→黄(0.5)→绿(1),与图例渐变同色标:#e03a2a → #e0b02a → #2ae03a
+function heat(t){
+  t=Math.max(0,Math.min(1,t));
+  const RED=[0.88,0.23,0.16], YEL=[0.88,0.69,0.16], GRN=[0.16,0.88,0.23];
+  const mix=(a,b,u)=>[a[0]+(b[0]-a[0])*u, a[1]+(b[1]-a[1])*u, a[2]+(b[2]-a[2])*u];
+  return t<0.5 ? mix(RED,YEL,t*2) : mix(YEL,GRN,(t-0.5)*2);
+}
+function buildQualityColors(data, sceneExt){
+  let score, src;
+  if(data.qval){ score=data.qval; src='nviews'; }
+  else { score=densityScore(data.pos,data.n,sceneExt/64); src='density'; }
+  const p70=Math.max(percentile(score,70),1e-9);
+  const qcol=new Float32Array(data.n*3);
+  for(let i=0;i<data.n;i++){
+    const c=heat(score[i]/p70);
+    qcol[i*3]=c[0]; qcol[i*3+1]=c[1]; qcol[i*3+2]=c[2];
+  }
+  return {qcol,p70,src};
+}
+
+const VS=`attribute vec3 p; attribute vec3 col; uniform mat4 mvp; varying vec3 vc;
+void main(){ gl_Position=mvp*vec4(p,1.0); gl_PointSize=2.0*${devicePixelRatio.toFixed(1)}; vc=col; }`;
+const FS=`precision mediump float; varying vec3 vc; void main(){ gl_FragColor=vec4(vc,1.0); }`;
+
+function makePane(canvasId, data, qcol){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{preserveDrawingBuffer:true,antialias:true});
+  function sh(t,s){ const o=gl.createShader(t); gl.shaderSource(o,s); gl.compileShader(o);
+    if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; }
+  const prog=gl.createProgram(); gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const posBuf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,data.pos,gl.STATIC_DRAW);
+  const locP=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(locP); gl.vertexAttribPointer(locP,3,gl.FLOAT,false,0,0);
+  // 两套颜色缓冲:原色 + quality 重着色;切模式只换 attribute 绑定(纯显示层)
+  const colBuf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,colBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,data.col,gl.STATIC_DRAW);
+  const qBuf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,qcol,gl.STATIC_DRAW);
+  const locC=gl.getAttribLocation(prog,'col'); gl.enableVertexAttribArray(locC);
+  const pane={canvas,gl,prog,n:data.n,colBuf,qBuf,locC};
+  pane.setMode=m=>{ gl.bindBuffer(gl.ARRAY_BUFFER, m==='quality'?qBuf:colBuf);
+    gl.vertexAttribPointer(locC,3,gl.FLOAT,false,0,0); };
+  pane.setMode('color');
+  return pane;
+}
+
+let views=null, cam=null, panes=[], mode='color';
+function setMode(m){
+  mode=m;
+  for(const p of panes) p.setMode(m);           // 两栏同步切换
+  document.body.classList.toggle('quality',m==='quality');
+  document.getElementById('btnColor').classList.toggle('active',m==='color');
+  document.getElementById('btnQuality').classList.toggle('active',m==='quality');
+  draw();
+}
+document.getElementById('btnColor').onclick=()=>setMode('color');
+document.getElementById('btnQuality').onclick=()=>setMode('quality');
+
+function draw(){ if(!cam) return;
+  for(const p of panes){
+    const {canvas,gl,prog}=p;
+    const W=canvas.clientWidth*devicePixelRatio, H=canvas.clientHeight*devicePixelRatio;
+    if(canvas.width!==W||canvas.height!==H){ canvas.width=W; canvas.height=H; }
+    gl.viewport(0,0,W,H);
+    gl.clearColor(0.063,0.063,0.078,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    const d=Math.hypot(...sub3(cam.eye,cam.target));
+    const mvp=m4mul(persp(cam.fov,W/H,d*0.001,d*20), lookAt(cam.eye,cam.target));
+    gl.uniformMatrix4fv(gl.getUniformLocation(prog,'mvp'),false,mvp);
+    gl.drawArrays(gl.POINTS,0,p.n);
+  } }
+addEventListener('resize',draw);
+
+function setView(name){ const v=views[name]; cam={eye:[...v.eye],target:[...v.target],fov:v.fov};
+  document.querySelectorAll('#viewbtns button').forEach(b=>b.classList.toggle('active',b.textContent===name));
+  draw(); }
+
+let drag=null;
+addEventListener('mousedown',e=>{ if(e.target.tagName==='CANVAS') drag={x:e.clientX,y:e.clientY,shift:e.shiftKey}; });
+addEventListener('mouseup',()=>drag=null);
+addEventListener('mousemove',e=>{ if(!drag||!cam) return;
+  const dx=(e.clientX-drag.x)/innerWidth, dy=(e.clientY-drag.y)/innerHeight; drag.x=e.clientX; drag.y=e.clientY;
+  let off=sub3(cam.eye,cam.target);
+  if(drag.shift){ const d=Math.hypot(...off), z=norm3(off), x=norm3(cross3([0,1,0],z)), y=cross3(z,x);
+    const m=add3(scale3(x,-dx*d),scale3(y,dy*d)); cam.eye=add3(cam.eye,m); cam.target=add3(cam.target,m); }
+  else{ const r=Math.hypot(...off); let th=Math.atan2(off[0],off[2]), ph=Math.asin(off[1]/r);
+    th-=dx*4; ph=Math.max(-1.55,Math.min(1.55,ph+dy*3));
+    cam.eye=add3(cam.target,[r*Math.cos(ph)*Math.sin(th), r*Math.sin(ph), r*Math.cos(ph)*Math.cos(th)]); }
+  draw(); });
+addEventListener('wheel',e=>{ if(e.target.tagName!=='CANVAS'||!cam) return; e.preventDefault();
+  const off=sub3(cam.eye,cam.target), s=Math.exp(e.deltaY*0.001);
+  cam.eye=add3(cam.target,scale3(off,s)); draw(); },{passive:false});
+
+// 从两云联合包围盒自动生成 4 个预设视角(同一世界坐标,双栏同一相机)
+function buildViews(L,R){
+  const lo=[1/0,1/0,1/0], hi=[-1/0,-1/0,-1/0];
+  for(const d of [L,R]) for(let i=0;i<d.n;i++) for(let k=0;k<3;k++){
+    const v=d.pos[i*3+k]; if(v<lo[k])lo[k]=v; if(v>hi[k])hi[k]=v; }
+  const c=[(lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2];
+  const ext=Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]);
+  const r=ext*1.1;
+  return {ext, views:{
+    overview:{eye:add3(c,[r*0.8,r*0.55,r*0.8]),target:c,fov:50},
+    top:{eye:add3(c,[0.001,r*1.4,0.001]),target:c,fov:50},
+    front:{eye:add3(c,[0,r*0.15,r*1.3]),target:c,fov:50},
+    side:{eye:add3(c,[r*1.3,r*0.15,0]),target:c,fov:50},
+  }};
+}
+
+async function main(){
+  const [lb, rb]=await Promise.all([
+    fetch(LEFT).then(r=>{if(!r.ok)throw 'LEFT 404: '+LEFT;return r.arrayBuffer()}),
+    fetch(RIGHT).then(r=>{if(!r.ok)throw 'RIGHT 404: '+RIGHT;return r.arrayBuffer()})]);
+  const L=parsePLY(lb), R=parsePLY(rb);
+  const bv=buildViews(L,R); views=bv.views;
+  // quality 重着色预计算(每云独立 p70 锚,与 RS 每云自适应色标一致)
+  const QL=buildQualityColors(L,bv.ext), QR=buildQualityColors(R,bv.ext);
+  panes=[makePane('cv0',L,QL.qcol), makePane('cv1',R,QR.qcol)];
+  document.getElementById('c0').textContent=L.n.toLocaleString()+' pts';
+  document.getElementById('c1').textContent=R.n.toLocaleString()+' pts';
+  const d=R.n-L.n;
+  document.getElementById('delta').textContent=`Δ点数 ${d>=0?'+':''}${d.toLocaleString()} (${(100*d/L.n).toFixed(2)}%)`;
+  const srcNote = QL.src==='nviews' ? 'quality=真 nviews 字段' :
+    `quality=密度代理(r=场景/64 邻居数;PLY 无 nviews 字段)· p70 锚:左${QL.p70.toFixed(0)} 右${QR.p70.toFixed(0)}`;
+  document.getElementById('qnote').textContent=srcNote;
+  document.getElementById('legendMid').textContent='p70 锚';
+  const vb=document.getElementById('viewbtns');
+  for(const name of Object.keys(views)){ const b=document.createElement('button');
+    b.textContent=name; b.onclick=()=>setView(name); vb.appendChild(b); }
+  addEventListener('keydown',e=>{ const ks=Object.keys(views); const i=+e.key-1; if(ks[i]) setView(ks[i]);
+    if(e.key==='q') setMode('quality'); if(e.key==='c') setMode('color'); });
+  setView(q.get('view')||'overview');
+  if(q.get('mode')==='quality') setMode('quality');
+  window.compareReady=true;
+}
+main().catch(e=>{ document.getElementById('delta').textContent='ERROR: '+e; });
+</script>
+</body>
+</html>
