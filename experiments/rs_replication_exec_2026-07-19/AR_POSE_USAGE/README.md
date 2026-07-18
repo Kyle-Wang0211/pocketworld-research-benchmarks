@@ -127,3 +127,198 @@ RS Mobile 存在**完整的非 AR 拍摄路径**,且逐版本加强:
 - https://www.fabbaloo.com/news/hands-on-with-realityscan-part-2(经搜索摘要引用)
 
 明确弃用(桌面域,用户令):rshelp.capturingreality.com 全部页面、realityscan.com 桌面 2.x news、dev.epicgames.com/documentation/realityscan(无 -mobile 后缀)。
+
+
+---
+
+# RealityScan Mobile AR 模式深查附录(四路信源合并终审)
+
+- **调查日期**:2026-07-18;**对象**:RealityScan **Mobile**(iOS/Android 手机 app),最新版 1.8.1
+- **信源纪律**:仅采信 `dev.epicgames.com/documentation/*/realityscan-mobile/*`、realityscan.com/mobile、官方商店页、Epic staff 论坛回复及明确标注的第三方 mobile 评测;桌面 RealityCapture 文档一律未采信(仅一处 staff 回复标注了桌面语境用作反面参照)。
+- **证据分级**:E1=mobile 官方文档逐字 / E2=官方 release notes、商店页、Epic staff 论坛回复 / E3=第三方 mobile 评测、用户观察 / INF=明确标注的推断 / UNRESOLVED=查无来源。
+
+---
+
+## Q1 — AR Guidance 的 "real time point cloud" 到底在哪算?
+
+### 汇合证据(四路信源全部收敛,无内部冲突)
+
+**E1 · 点云不是即时的:20 张门槛 + 上传先行**
+> "Images will start uploading the moment you begin capturing them, and they will be analyzed after you take 20 images."
+> "The processes of uploading and analyzing are interleaved, with uploading occurring first, followed by initial analysis, then uploading again, and so on."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-step-by-step-guide
+
+**E1 · "分析"的官方定义就是 SfM 语义(算位姿+检测共同特征→产点云),不是 ARKit 特征点语义**
+> "Analyzing images calculates camera positions and detects common features from which the point cloud will be created."
+> 同上 URL
+
+**E1 · 点云在"初次分析之后"才出现,且是覆盖质量渲染(quality render),不是 RGB 点云**
+> "The point cloud shows up in the camera view after the initial analysis in the quality render mode, helping you to notice parts where the image coverage could be improved."
+> 同上 URL
+
+**E1 · 点云可见性以"图像已被分析"为前置条件;AR 仅是显示通道(Camera Control 模式点云无法以 AR 显示,但点云本身仍存在)**
+> "Toggle the point cloud visibility in the camera view if images have been analyzed."
+> "In Camera Control mode, the point cloud cannot be displayed in the AR view, but it offers more control over the camera settings."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-camera-view
+
+**E1 · "分析"受联网门控——不联网不分析**
+> "You can change the data usage and opt to analyze your images and process your projects only when you are connected to the selected internet connection."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-application-settings
+
+**E2 · 最硬的构造性证据:1.3 版把"实时点云"与"边拍边上传"绑成同一个 Live Guidance 开关——不上传即无实时点云**
+> "Turn off Live Guidance in the Settings to avoid uploading photos as you scan, and to disable live guidance features like real-time point clouds and preview models. This replaces the previous Offline Mode option."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-1-3-version
+
+**E2 · 离线路径真实存在(1.2 离线拍摄回网再传),结合上条推得离线时无实时点云**
+> "Save time, data, and battery life by capturing images while offline and uploading them later when you're back online."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-1-2-version
+
+**E3 · 第三方评测同口径**
+> "While you can use RealityScan in offline mode, you will lose its AR features and be unable to export the final 3D object."
+> https://www.makeuseof.com/how-to-use-realityscan-create-3d-models/
+
+### 唯一反向证据(冲突并列,不隐瞒)
+
+**E3 · Falkingham(2023-11,Android,pre-1.8 年代)称稀疏点云"在设备上算"——孤证**
+> "When you've got a bunch of photos, it will create a sparse 3D point cloud. Note that it does this on device, it's still uploading the full resolution images at this point."
+> 但同文亦确认:"It works purely through photogrammetry, and does most of the processing in the cloud. … That it's cloud-based isn't ideal (data charges, limited availability if no signal)."
+> 以及:"As you take photos of the object, it shows previous photos in Augmented Reality around the object, showing that it's aligning cameras as it goes."
+> https://peterfalkingham.com/2023/11/24/realityscan-photogrammetry-on-android/
+
+**冲突评估**:Falkingham 的"on device"是博主推断,依据仅为"全分辨率图还在上传时点云已出现"——这与官方"上传先行、分析后随"可用"低分辨率版本先行上传分析"调和;且与其自己"most of the processing in the cloud"并存。E3 孤证不足以对抗 E1×3 + E2 构造性绑定的证据链。
+
+### Q1 裁决(INF,高置信)
+"real time point cloud" = **云端增量 SfM(20 张起步、批式交错)回传的覆盖质量稀疏云**,由端上 ARKit/ARCore 位姿做**显示层锚定**叠加到实景;商店页 "Evaluate your scan's quality instantly" 的 "instantly" 指"拍摄期间即可见反馈"的体验话术,不指端上即时计算。AR 在此模式的职责是**渲染通道 + auto-capture 触发**("Enable or disable the auto-capture. Available only with the AR Guidance."),不是点云的计算来源。
+
+---
+
+## Q2 — AR 位姿有没有进入算法链(尺度之外)?
+
+**E2 · 官方绑定 AR 模式的唯一输出属性 = 正确尺度,机制未披露**
+> "In the augmented reality mode, your models appear at the right scale and accurately reflect the real object."
+> https://www.realityscan.com/mobile
+
+**E3(由 E2 降级)· 早期 FAQ 帖明说用 AR 位置算 scale——但作者账号已匿名化(Anonymous_60b8d98be8),staff 身份无法确证**
+> "Yes, it is scaled. The app uses the AR positions of the cams to calculate the scale."
+> https://forums.unrealengine.com/t/faq-about-realityscan-application/712415
+
+**E2 · staff 口径:用户可拿到的只有图像,位姿不提供**
+> OndrejTrhan(2025-01):"Hi, it is not stored there, only the images."
+> https://forums.unrealengine.com/t/possibility-to-export-reality-scan-images-with-camera-pose-to-reality-capture/2115522
+> kumateCR 谈上传亦只提 images:"If your images were uploaded, then you will be able to see them as a 'project' in the list of projects…"
+> https://forums.unrealengine.com/t/can-i-save-photos-and-export-out-of-realityscan-app/721368
+
+**E3 · 🔥本轮唯一实质新证据:论坛用户逐字节检查过官方 iOS mobile app 的采集产物,每图带 XMP,记录相对旋转 + 局部空间坐标(即 AR 轨迹位姿)**
+> "I compared it with the XMP data collected by the official iOS RealityScan mobile app. The official app records relative rotation and local spatial coordinates, and the resulting model poses are all fine."
+> https://forums.unrealengine.com/t/problem-with-model-rotation-in-realityscan-when-using-absolute-rotation-data-arkit-instead-of-relative-rotation/2675121
+
+**E2 · 同帖 staff 回复涉及重力先验——但语境是桌面 CLI 命令,不能移植为 mobile 云端管线声明**
+> OndrejTrhan:"If your images contains gravity information you can use the command setCamerasGravityDirection to apply it for the alignment."
+> 同上 URL
+
+**E1 · 项目数据整体可选上行(ML 训练开关)——旁证项目级数据(含 AR files)有上行通道,但非对齐用途声明**
+> "Allow anonymous machine learning use of the data from your projects."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-application-settings
+
+**E2 · 隐私标签粒度不足以裁决**
+> App Store:"App Functionality: Location (Coarse Location), User Content (Photos or Videos, Customer Support, Other User Content), Identifiers (User ID, Device ID)" — "Other User Content" 是 AR 位姿唯一可能落的桶,但证明不了内容。
+> https://apps.apple.com/us/app/realityscan-mobile/id1584832280
+
+**INF · 云端对齐不依赖 AR 位姿的反向构造证据**:Object Mode 官方允许拍摄中途翻转/移动物体(破坏 AR 静态世界假设)仍能对齐;Unguided 模式(不边拍边传、无 AR 引导)拍完仍正常送云处理——对齐主力必为纯图像 SfM,AR 位姿至多可选辅助。
+> "you can rotate your object in place and RealityScan Mobile will isolate it with precision, and you can flip the object mid-scan to capture difficult angles"
+> https://www.realityscan.com/news/realityscan-mobile-new-release-exciting-new-features
+
+### Q2 裁决
+"AR 位姿是否随图上传、是否被云端对齐用作初始化/先验/校验"——**核心问题维持 UNRESOLVED**,但边界收紧了:XMP 观察(E3)证明 AR 位姿数据**以 per-image XMP camera-prior 形态存在于采集产物**,与 staff "only the images" 存在张力(可能是文档年代差,或 staff 特指"无用户可复用格式")。位姿数据"存在且形态适配 RC 生态的 alignment prior"是新事实;"被云端消费"仍无任何一手声明,正反都没有。
+
+---
+
+## Q3 — "The AR files" 是什么?
+
+**E1 · 官方 Project Files 文档逐字列出,独立条目、零解释**
+> "The images in HEIF format (or JPG on Android) … A project file in the JSON format … The cropping box files … The point cloud and camera files … The AR files … A subfolder with the model and texture files"
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/RealityScan-Project-Files
+
+**E3 · 用户翻过文件夹,但无人晒出 AR files 内容物**
+> iOS 路径 "Files -> On My iPhone -> RealityScan -> Captures";Android "Android\data\com.epicgames.realityscan\files\projects\"(https://forums.unrealengine.com/t/can-i-save-photos-and-export-out-of-realityscan-app/721368)
+> Android 用户提及 project.json/xmp/EXIF 存在:"It isnt clear why gps data is sometimes in the files and sometimes not."(https://forums.unrealengine.com/t/gps-exif-realityscan-mobile-android/2654212)
+> 最接近的一手记录 = Q2 的 XMP 检查帖(相对旋转+局部空间坐标),但那是随图 XMP,未必等于 "The AR files" 本体。
+
+### Q3 裁决
+**UNRESOLVED**(ARWorldMap?位姿 json?格式全无记录)。注意三方张力:文档列出 point cloud/camera/AR files ↔ staff "only the images" ↔ 用户实见 xmp。**最快钉死路径:用户自己 iPhone 上 Files.app 实翻 Captures 目录,30 秒可做。**
+
+---
+
+## Q4 — AR 模式 vs Standard/Object 的质量差异?
+
+**E2 · 官方自认 1.8 之前 Android AR 模式输入端有系统性质量缺陷(已修)**
+> "Poor image quality & large HEIF file size for scans made in AR mode"
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-mobile-1-8
+
+**E1 · 结构性取舍成文:各牺牲一头**
+> Camera Control:"full manual control over your camera settings, allowing you to adjust focus, shutter speed, ISO values, white balance and flash … Camera Control Mode does not include the real-time point cloud or camera position overlay"
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-mobile-1-6-release-notes
+> "The point cloud cannot be displayed in the AR view, but it offers more control over the camera settings. Auto-capture is also not available."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/RealityScan-Camera-View
+
+### Q4 裁决
+模式差异**仅在采集侧成文**(AR 模式无手动相机控制 + 历史画质 bug;Camera Control 无点云引导/auto-capture)。**成品质量/对齐成功率/尺度表现的用户实测对比:四路全渠道查无,UNRESOLVED**(1.8 发布仅 8 个月,社区对比未出现;媒体文章全是官方稿转述)。
+
+---
+
+## Q5 — 版本时间线与最新官方口径
+
+**E2 · 截至 2026-07,mobile 最新版 = 1.8.1(2025-12-02),纯 bugfix,无 1.9/2.0;桌面 2.x 是另一产品线勿混淆**
+> "RealityScan 1.8.1 is now available. Bugs fixed: - Issue with ISO in object/standard mode - Black camera view on clean install"
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-release-notes
+> Google Play 最近更新仅修上传:"Updated on Jun 17, 2026 … Fix for Sketchfab upload issue."
+> https://play.google.com/store/apps/details?id=com.epicgames.realityscan&hl=en_US
+
+**E2 · AR Guidance 最新官方定义(1.8,2025-11-19,Epic 员工 Piotr Ignatowicz 发布)——措辞只谈 display,未提 AR 参与重建**
+> "AR Guidance– Uses Augmented Reality to display a live quality point cloud over your subject, along with real-time visualization of your captured photo positions, allowing you to check where more pictures are needed as you scan."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/realityscan-mobile-1-8
+> 1.6 称 AR 模式为原生模式:"This is the original mode of RealityScan. It provides a real-time point cloud and displays camera positions to guide you during the scanning process."(realityscan-mobile-1-6-release-notes)
+> 1.8.1 修复项确认离线路径存在:"Tutorial video crashes the app in offline mode"(realityscan-mobile-1-8-1)
+
+**E1 · AR 能力是全 app 准入门槛(不只是 AR 模式)**
+> "RealityScan is compatible with iOS devices, which can run version 16 and higher, and Android devices, which support ARCore and can run version 7 (API level 24) and higher."
+> https://dev.epicgames.com/documentation/en-us/realityscan-mobile/RealityScan-System-Requirements-and-Installation
+
+---
+
+## 既有结论逐条裁决
+
+| 既有结论 | 裁决 | 判据 |
+|---|---|---|
+| **RS 云端对齐主力 = 纯图像 SfM** | **维持并加强** | E1 官方把 analyze 定义为"calculates camera positions and detects common features"(纯 SfM 语义);Object Mode 翻转物体破坏 AR 静态世界假设仍对齐(E2+INF);Unguided 模式无 AR 引导仍可正常处理。加强项:分析联网门控(E1)+ Live Guidance=上传开关(E2)把计算位置也钉向云端。 |
+| **AR 位姿唯一明说算法用途 = real-scale** | **维持(证据降级)** | 官方页 "right scale"(E2)仍成立;但 "AR positions … calculate the scale" 原帖作者匿名化,该句从 E2 降为 E3。本轮未发现任何第二个明说用途。 |
+| **上传主语只有 images** | **维持官方口径,但加注张力** | staff 两处口径一致(E2);但 XMP 检查帖(E3)证明官方 app 每图伴随相对旋转+局部坐标的 XMP——"只传 images"不再等价于"只传像素",位姿数据存在事实上的随图上行通道。此张力必须记录,不可再当无保留结论引用。 |
+
+---
+
+## 特别裁决
+
+### 一、AR Guidance "real time point cloud" 的计算位置,现有证据最多支持到哪一级?
+
+**最多支持到:高置信 INF(由 E1×4 + E2×2 构造性证据链闭合),不是 E1/E2 逐字事实。**
+
+- 官方**从未逐字写过**"the point cloud is computed on our servers"——所以不能标 E1。
+- 但证据链是构造性的:①点云由 analyze 产出(E1);②analyze 受联网门控(E1);③20 张门槛+上传先行交错(E1);④关掉上传 = 失去实时点云(E2,1.3 Live Guidance 开关,最硬一条)。四条合围,点云计算依赖上传管线在文档层面无出口。
+- 唯一反证是 Falkingham 2023 的 E3 孤证("on device"),且与其自述"most of the processing in the cloud"并存、属 pre-1.8 年代、依据可被"低清先传"调和——**不足以翻案**。
+- **要升格为事实只剩一条路:飞行模式真机实测**(AR Guidance 下断网,看点云是否完全不出现)。全网无此实测记录。
+
+### 二、"AR 位姿进云端对齐"有没有任何新的一手证据?
+
+**没有官方一手声明——正反都没有,核心问题维持 UNRESOLVED。** 但本轮有一条实质性新一手观察改变了证据地形:
+
+- **新证据(E3)**:论坛用户实检官方 iOS app 产物,确认每图带 XMP(相对旋转+局部空间坐标)——AR 位姿数据以 RC 生态标准的 camera-prior 形态**存在**于采集产物。这推翻了"AR 位姿只存在于内存/仅用于渲染"的最弱解读。
+- 但"存在"≠"上传"≠"被对齐消费":staff 的 gravity/alignment 回复是**桌面 CLI 语境**,不可移植;mobile 云端管线是否读这些 XMP 当先验,查无任何拆包/抓包/官方声明(信源 4 专项排查落空:无 MITM 记录,appbrain 403)。
+- 结论:用户"我们低估了 AR 模式"的质疑**部分成立但不在对齐环节**——被低估的是 (a) AR 位姿以 XMP 形态随图存在的事实,(b) AR 追踪对显示层锚定与 auto-capture 的深度绑定;"AR 位姿进云端对齐当先验"依然一条一手证据都没有,INF 上限是"很可能至少用于尺度标定"。
+
+## 残留 UNRESOLVED 清单(后续钉死路径)
+
+1. **Q1**:飞行模式下 AR Guidance 实机行为(能否进入/点云是否出现)——需真机实测,全网无记录。
+2. **Q2**:XMP 位姿是否随 HEIF 上传、云端是否消费——需抓包或 Epic 一手声明;隐私标签与 Play 数据安全页粒度不足("and 3 others" 未能展开)。
+3. **Q3**:"The AR files" 内容物(ARWorldMap?位姿 json?)——用户自己 iPhone Files.app 实翻 30 秒可钉死。
+4. **Q4**:三模式成品质量/对齐成功率/尺度实测对比——社区内容尚未出现,建议自测。
+5. 信道缺口:Reddit 检索被 403 全挡(代理亦拦);1.4/1.5.x release notes 未逐页抓取(索引显示无 AR 相关变更,优先级低);带 revision_hash_id 的旧版文档链接 403,已用现行版锚定。
