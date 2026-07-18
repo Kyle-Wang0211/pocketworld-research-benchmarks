@@ -269,5 +269,255 @@
       "diff_cap51.ply": "dffd374f6837dba48b1f217f226d716190d2b96e86998b00f675e2de2e93f2c3",
       "rescue_candidates_cap51.ply": "49c535d814eda4594b84a3be735817bf770dfda10229b42f4d0d2386a00c2d28"
     }
+  },
+  "cap40": {
+    "cap": "cap40",
+    "inputs": {
+      "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap40/device_full_pull_2026-07-17/sfm_live.db",
+      "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap40/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+      "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap40/device_full_pull_2026-07-17/sfm_sparse.ply",
+      "baseline_ply_sha256": "658a566e0e38093366b1d20650b3c95cc632c327e54ce4d8d84c41075f99b7ce"
+    },
+    "gauge": "production refined poses/frame; PLY frame == meta pose frame (probe_gauge: rotation 0.11deg, residual unchanged => same gauge); NO Sim3, NO realignment",
+    "rule": {
+      "refit": "structure-only DLT from 2 recovered obs, poses+K frozen (refined production)",
+      "reproj_gate_px": 3.0,
+      "theta_gate_deg": 2.0,
+      "provenance_blind": true,
+      "replaces": [
+        "R2#6 temporal-detail publish-without-BA",
+        "R2#13 kill-by-provenance (frame-gap)"
+      ],
+      "survivor_position": "production position kept (rule re-adjudicates life/death only)"
+    },
+    "obs_recovery": {
+      "method": "project prod point into all registered frames; verified-matched keypoint within 3px = support obs",
+      "n_pairs_db": 920,
+      "n_inlier_edges": 451943,
+      "support_frames_hist": {
+        "0": 59820,
+        "1": 2220,
+        "2": 477,
+        "3": 127,
+        "4": 37,
+        "5": 10,
+        "6": 0,
+        "7": 0
+      },
+      "support_frames_ge8": 0,
+      "wall_s": 0.3
+    },
+    "verdicts": {
+      "cull_theta_lt2deg": 3,
+      "keep_2view_pass": 2,
+      "keep_multiview": 174,
+      "keep_unmatched_honest": 62040,
+      "keep_unverified_pair_honest": 472
+    },
+    "cull_total": 3,
+    "quality_of_adjudication": {
+      "theta_deg_2view": {
+        "p10": 1.5094,
+        "p50": 1.9083,
+        "p90": 5.4854
+      },
+      "refit_maxres_px_2view": {
+        "p10": 0.0994,
+        "p50": 0.5021,
+        "p90": 1.1536
+      },
+      "refit_disp_m_2view": {
+        "p10": 0.1036,
+        "p50": 0.1614,
+        "p90": 1.2725
+      },
+      "n_unverified_pair": 472
+    },
+    "rescue": {
+      "n_verified_pairs_passing_rule": 8747,
+      "n_absent_from_prod_not_injected": 8747
+    },
+    "ruler_1_points": {
+      "baseline": 62691,
+      "candidate": 62688,
+      "delta": -3,
+      "delta_pct": -0.0
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -15.5209,
+      "baseline": {
+        "n_floor_slab": 5206,
+        "thickness_med_cell_p90p10_m": null,
+        "thickness_p90_cell_m": null,
+        "n_thickness_cells": 0,
+        "thickness_global_std_m": 0.03424626195182385,
+        "cover_cells_2cm": 2420,
+        "cover_area_m2": 0.968
+      },
+      "candidate": {
+        "n_floor_slab": 5206,
+        "thickness_med_cell_p90p10_m": null,
+        "thickness_p90_cell_m": null,
+        "n_thickness_cells": 0,
+        "thickness_global_std_m": 0.03424626195182385,
+        "cover_cells_2cm": 2420,
+        "cover_area_m2": 0.968
+      }
+    },
+    "ruler_3_coverage": {
+      "baseline_cells_2cm": 2420,
+      "candidate_cells_2cm": 2420,
+      "baseline_area_m2": 0.968,
+      "candidate_area_m2": 0.968
+    },
+    "ruler_4_wallclock": {
+      "support_recovery_host_s": 0.3,
+      "refit_rule_host_s": 0.0,
+      "note": "host python proxy; NOT a device number; on-device structure-only refit must be measured before any ship claim (single wall clocks +-30% untrustworthy)"
+    },
+    "chair_roi": {
+      "roi": null,
+      "baseline": null,
+      "candidate": null
+    },
+    "honesty": [
+      "Prototype recovers evidence from sfm_live.db in observation space; NOT byte-exact production finalize replication.",
+      "Support radius 3px can absorb a neighboring verified feature => a true 2-view point may be classified multiview and kept (errs toward status quo, never extra culling).",
+      "keep_unmatched_honest=62040 points had <2 recoverable obs; keep_unverified_pair_honest=472 had 2 obs not transitively matched; all kept unchanged.",
+      "Rescue candidates NOT injected into candidate PLY (colorize path + production identity not reproducible here); reported/visualized only.",
+      "Wall clocks are host python proxies."
+    ],
+    "outputs": {
+      "s1_caseA_cap40.ply": "7a970f15ebaaea0c948ea50c77bb5efc8160530982caca17017e8b202c25fb8f",
+      "diff_cap40.ply": "f9f9b989b22c6775b3fcd6c9fdd61601f388c3a2bca1c680a02ce8d2633d6df8",
+      "rescue_candidates_cap40.ply": "4cdc7b0baab5297f7f8c58ab5985428e86961eb52cfb6f96edd0b90c7966bf35"
+    },
+    "valid_for_acceptance": false,
+    "validity": "PRECONDITION FAIL: pulled sfm_live.db two_view_geometries are geometrically INCONSISTENT with sfm_sparse_meta.json refined poses (per-pair median Sampson p50 ~15px, frac<3px ~0.09-0.10 vs cap50 control 1.4px/0.89; see db_meta_consistency.json). cap50/51 finalize was phase1=live_reuse (poses continuous with live db); cap40/41 finalize was a full re-solve (solve_ms 57.6s/25.3s), and the delivered refined poses do not fit the live-db matches. Exhaustive pose-assignment search confirms frame_id=image_id-1 mapping is correct \u2014 the inconsistency is real, not an index bug. S1 observation recovery therefore collapses (cap40: 99.0% of points unrecoverable, 174 multiview, 5 candidates adjudicated of 477; cap41: 88.0% unrecoverable) and the adjudication numbers below MUST NOT be used for the 4-scene acceptance. Unblock options: (a) re-pull cap40/41 after a fresh on-device finalize with live_reuse, or (b) recapture, or (c) re-solve poses from the pulled db itself (would break production-gauge requirement)."
+  },
+  "cap41": {
+    "cap": "cap41",
+    "inputs": {
+      "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap41/device_db_pull_2026-07-17/sfm_live.db",
+      "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap41/device_db_pull_2026-07-17/sfm_sparse_meta.json",
+      "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap41/device_db_pull_2026-07-17/sfm_sparse.ply",
+      "baseline_ply_sha256": "b1079c9984ca219ff2b97430e9f9a3cac9d3bfd02f7cd9255e42197091ada00b"
+    },
+    "gauge": "production refined poses/frame; PLY frame == meta pose frame (probe_gauge: rotation 0.11deg, residual unchanged => same gauge); NO Sim3, NO realignment",
+    "rule": {
+      "refit": "structure-only DLT from 2 recovered obs, poses+K frozen (refined production)",
+      "reproj_gate_px": 3.0,
+      "theta_gate_deg": 2.0,
+      "provenance_blind": true,
+      "replaces": [
+        "R2#6 temporal-detail publish-without-BA",
+        "R2#13 kill-by-provenance (frame-gap)"
+      ],
+      "survivor_position": "production position kept (rule re-adjudicates life/death only)"
+    },
+    "obs_recovery": {
+      "method": "project prod point into all registered frames; verified-matched keypoint within 3px = support obs",
+      "n_pairs_db": 822,
+      "n_inlier_edges": 387403,
+      "support_frames_hist": {
+        "0": 39156,
+        "1": 5741,
+        "2": 3129,
+        "3": 1656,
+        "4": 772,
+        "5": 346,
+        "6": 128,
+        "7": 43
+      },
+      "support_frames_ge8": 29,
+      "wall_s": 0.4
+    },
+    "verdicts": {
+      "cull_theta_lt2deg": 5,
+      "keep_2view_pass": 18,
+      "keep_multiview": 2974,
+      "keep_unmatched_honest": 44897,
+      "keep_unverified_pair_honest": 3106
+    },
+    "cull_total": 5,
+    "quality_of_adjudication": {
+      "theta_deg_2view": {
+        "p10": 1.7839,
+        "p50": 3.8533,
+        "p90": 10.9785
+      },
+      "refit_maxres_px_2view": {
+        "p10": 0.1481,
+        "p50": 0.7189,
+        "p90": 1.5345
+      },
+      "refit_disp_m_2view": {
+        "p10": 0.0992,
+        "p50": 0.4832,
+        "p90": 2.8302
+      },
+      "n_unverified_pair": 3106
+    },
+    "rescue": {
+      "n_verified_pairs_passing_rule": 8174,
+      "n_absent_from_prod_not_injected": 8174
+    },
+    "ruler_1_points": {
+      "baseline": 51000,
+      "candidate": 50995,
+      "delta": -5,
+      "delta_pct": -0.01
+    },
+    "ruler_2_floor_thickness": {
+      "y_floor": -25.5895,
+      "baseline": {
+        "n_floor_slab": 1804,
+        "thickness_med_cell_p90p10_m": null,
+        "thickness_p90_cell_m": null,
+        "n_thickness_cells": 0,
+        "thickness_global_std_m": 0.03507551077641866,
+        "cover_cells_2cm": 818,
+        "cover_area_m2": 0.3272
+      },
+      "candidate": {
+        "n_floor_slab": 1804,
+        "thickness_med_cell_p90p10_m": null,
+        "thickness_p90_cell_m": null,
+        "n_thickness_cells": 0,
+        "thickness_global_std_m": 0.03507551077641866,
+        "cover_cells_2cm": 818,
+        "cover_area_m2": 0.3272
+      }
+    },
+    "ruler_3_coverage": {
+      "baseline_cells_2cm": 818,
+      "candidate_cells_2cm": 818,
+      "baseline_area_m2": 0.3272,
+      "candidate_area_m2": 0.3272
+    },
+    "ruler_4_wallclock": {
+      "support_recovery_host_s": 0.4,
+      "refit_rule_host_s": 0.0,
+      "note": "host python proxy; NOT a device number; on-device structure-only refit must be measured before any ship claim (single wall clocks +-30% untrustworthy)"
+    },
+    "chair_roi": {
+      "roi": null,
+      "baseline": null,
+      "candidate": null
+    },
+    "honesty": [
+      "Prototype recovers evidence from sfm_live.db in observation space; NOT byte-exact production finalize replication.",
+      "Support radius 3px can absorb a neighboring verified feature => a true 2-view point may be classified multiview and kept (errs toward status quo, never extra culling).",
+      "keep_unmatched_honest=44897 points had <2 recoverable obs; keep_unverified_pair_honest=3106 had 2 obs not transitively matched; all kept unchanged.",
+      "Rescue candidates NOT injected into candidate PLY (colorize path + production identity not reproducible here); reported/visualized only.",
+      "Wall clocks are host python proxies."
+    ],
+    "outputs": {
+      "s1_caseA_cap41.ply": "178b1ccd8ff350067a8a7879754a7e185a53e7d8b620ac4164268ab4cb6843e2",
+      "diff_cap41.ply": "3079c0e807d8fb33d84130316074d9688d5067daa65644f2a4025e8bbb017be8",
+      "rescue_candidates_cap41.ply": "e502ce7bd41fced652f0994e33d48d50093fab84af584711d60886250ef4fdc0"
+    },
+    "valid_for_acceptance": false,
+    "validity": "PRECONDITION FAIL: pulled sfm_live.db two_view_geometries are geometrically INCONSISTENT with sfm_sparse_meta.json refined poses (per-pair median Sampson p50 ~15px, frac<3px ~0.09-0.10 vs cap50 control 1.4px/0.89; see db_meta_consistency.json). cap50/51 finalize was phase1=live_reuse (poses continuous with live db); cap40/41 finalize was a full re-solve (solve_ms 57.6s/25.3s), and the delivered refined poses do not fit the live-db matches. Exhaustive pose-assignment search confirms frame_id=image_id-1 mapping is correct \u2014 the inconsistency is real, not an index bug. S1 observation recovery therefore collapses (cap40: 99.0% of points unrecoverable, 174 multiview, 5 candidates adjudicated of 477; cap41: 88.0% unrecoverable) and the adjudication numbers below MUST NOT be used for the 4-scene acceptance. Unblock options: (a) re-pull cap40/41 after a fresh on-device finalize with live_reuse, or (b) recapture, or (c) re-solve poses from the pulled db itself (would break production-gauge requirement)."
   }
 }

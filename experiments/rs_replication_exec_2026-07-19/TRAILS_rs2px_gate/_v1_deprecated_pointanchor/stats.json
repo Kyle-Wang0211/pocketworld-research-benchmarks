@@ -1,0 +1,359 @@
+{
+  "experiment": "E2-B RS 2.0px reprojection gate on cap50 production cloud",
+  "rs_key": "Max feature reprojection error = 2.0 px (VERIFIED official default) vs ours 4px BA-post filter / 10px live create",
+  "inputs": {
+    "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_live.db",
+    "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+    "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/device_full_pull_2026-07-17/sfm_sparse.ply",
+    "baseline_ply_sha256": "a41bd10f9d5832f9f98bbbaf8d566890d21d2bffa7d3142da27db0bfdb8f36df"
+  },
+  "gauge": "production refined poses; PLY frame == meta pose frame (S1 probe_gauge: rotation-only 0.11deg); NO Sim3, NO realignment",
+  "method": {
+    "obs_recovery": "project into all 139 registered frames, best verified-matched keypoint within 6.0px/frame, majority union-find component identity guard",
+    "rule": "obs residual > gate => obs deleted; point survives iff >=2 surviving obs (distinct frames); survivors keep production position+color",
+    "residual_reference": "production BA point position, poses+K frozen (structure not refit; declared)"
+  },
+  "obs_recovery_stats": {
+    "n_pairs_db": 738,
+    "n_inlier_edges": 252014,
+    "adjudicable_pts": 26121,
+    "unadjudicable_kept_honest": 66728,
+    "obs_residual_median_px": 3.984,
+    "obs_residual_hist_edges_px": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      2.5,
+      3,
+      3.5,
+      4,
+      5,
+      6
+    ],
+    "obs_residual_hist": [
+      552,
+      1694,
+      2855,
+      3995,
+      5089,
+      5961,
+      6740,
+      7649,
+      16622,
+      17417
+    ],
+    "wall_s": 0.8
+  },
+  "trail_signature": {
+    "SIG_ISO": "d10 > 3x median (55.6mm): 6736 pts",
+    "DENSE": "d10 < median (18.5mm): 46424 pts",
+    "outside_camera_hull_pts": 75327,
+    "note": "self-computed simple signature (E2-A parallel not consumed); SIG_ISO=trail proxy, DENSE=true-surface proxy"
+  },
+  "baseline": {
+    "n_points": 92849,
+    "y_floor": -1.1109,
+    "floor": {
+      "n_floor_slab": 10422,
+      "thickness_med_cell_p90p10_m": 0.04842954874038696,
+      "thickness_p90_cell_m": 0.0774793291091918,
+      "n_thickness_cells": 380,
+      "cover_cells_2cm": 2185,
+      "cover_area_m2": 0.874
+    },
+    "chair_roi": {
+      "n_roi": 6968,
+      "n_roi_near_floor_5cm": 93,
+      "roi_y_p10": -1.3492377877235413,
+      "roi_y_p50": -0.6757133901119232,
+      "roi_y_p90": 0.6558309972286225
+    }
+  },
+  "gate_sweep": {
+    "1.5": {
+      "culled": 25499,
+      "survival_pct": 72.54,
+      "cull_in_SIG_ISO": 504,
+      "cull_in_DENSE": 17416,
+      "trail_kill_rate_pct": 7.48,
+      "dense_false_kill_pct": 37.515,
+      "cull_outside_hull": 22571,
+      "outside_hull_kill_pct": 29.96,
+      "cull_in_floorband3cm": 916,
+      "cull_median_d10_mm": 14.6,
+      "keep_median_d10_mm": 20.9,
+      "ruler_1_points": {
+        "candidate": 67350,
+        "delta_pct": -27.46
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 8986,
+        "thickness_med_cell_p90p10_m": 0.0490010261535645,
+        "thickness_p90_cell_m": 0.07517545700073251,
+        "n_thickness_cells": 363,
+        "cover_cells_2cm": 2072,
+        "cover_area_m2": 0.8288
+      },
+      "ruler_3_roi": {
+        "n_roi": 5489,
+        "n_roi_near_floor_5cm": 82,
+        "roi_y_p10": -1.349282193183899,
+        "roi_y_p50": -0.5886093974113464,
+        "roi_y_p90": 0.6569232702255249
+      }
+    },
+    "2.0": {
+      "culled": 24644,
+      "survival_pct": 73.46,
+      "cull_in_SIG_ISO": 496,
+      "cull_in_DENSE": 16772,
+      "trail_kill_rate_pct": 7.36,
+      "dense_false_kill_pct": 36.128,
+      "cull_outside_hull": 21805,
+      "outside_hull_kill_pct": 28.95,
+      "cull_in_floorband3cm": 900,
+      "cull_median_d10_mm": 14.6,
+      "keep_median_d10_mm": 20.8,
+      "ruler_1_points": {
+        "candidate": 68205,
+        "delta_pct": -26.54
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 9014,
+        "thickness_med_cell_p90p10_m": 0.0490010261535645,
+        "thickness_p90_cell_m": 0.07563733577728274,
+        "n_thickness_cells": 363,
+        "cover_cells_2cm": 2074,
+        "cover_area_m2": 0.8296
+      },
+      "ruler_3_roi": {
+        "n_roi": 5558,
+        "n_roi_near_floor_5cm": 82,
+        "roi_y_p10": -1.3492101550102233,
+        "roi_y_p50": -0.5988137423992157,
+        "roi_y_p90": 0.6570848882198334
+      }
+    },
+    "2.5": {
+      "culled": 23222,
+      "survival_pct": 74.99,
+      "cull_in_SIG_ISO": 475,
+      "cull_in_DENSE": 15748,
+      "trail_kill_rate_pct": 7.05,
+      "dense_false_kill_pct": 33.922,
+      "cull_outside_hull": 20526,
+      "outside_hull_kill_pct": 27.25,
+      "cull_in_floorband3cm": 864,
+      "cull_median_d10_mm": 14.7,
+      "keep_median_d10_mm": 20.5,
+      "ruler_1_points": {
+        "candidate": 69627,
+        "delta_pct": -25.01
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 9067,
+        "thickness_med_cell_p90p10_m": 0.0490010261535645,
+        "thickness_p90_cell_m": 0.07586240291595457,
+        "n_thickness_cells": 365,
+        "cover_cells_2cm": 2084,
+        "cover_area_m2": 0.8336
+      },
+      "ruler_3_roi": {
+        "n_roi": 5646,
+        "n_roi_near_floor_5cm": 83,
+        "roi_y_p10": -1.3491747975349426,
+        "roi_y_p50": -0.5985231697559357,
+        "roi_y_p90": 0.6567550301551819
+      }
+    },
+    "3.0": {
+      "culled": 21324,
+      "survival_pct": 77.03,
+      "cull_in_SIG_ISO": 441,
+      "cull_in_DENSE": 14431,
+      "trail_kill_rate_pct": 6.55,
+      "dense_false_kill_pct": 31.085,
+      "cull_outside_hull": 18845,
+      "outside_hull_kill_pct": 25.02,
+      "cull_in_floorband3cm": 813,
+      "cull_median_d10_mm": 14.7,
+      "keep_median_d10_mm": 20.3,
+      "ruler_1_points": {
+        "candidate": 71525,
+        "delta_pct": -22.97
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 9149,
+        "thickness_med_cell_p90p10_m": 0.04919699430465696,
+        "thickness_p90_cell_m": 0.07599163055419922,
+        "n_thickness_cells": 366,
+        "cover_cells_2cm": 2092,
+        "cover_area_m2": 0.8368
+      },
+      "ruler_3_roi": {
+        "n_roi": 5772,
+        "n_roi_near_floor_5cm": 84,
+        "roi_y_p10": -1.3490331530570985,
+        "roi_y_p50": -0.6225053668022156,
+        "roi_y_p90": 0.6564346611499786
+      }
+    },
+    "3.5": {
+      "culled": 18969,
+      "survival_pct": 79.57,
+      "cull_in_SIG_ISO": 400,
+      "cull_in_DENSE": 12773,
+      "trail_kill_rate_pct": 5.94,
+      "dense_false_kill_pct": 27.514,
+      "cull_outside_hull": 16762,
+      "outside_hull_kill_pct": 22.25,
+      "cull_in_floorband3cm": 742,
+      "cull_median_d10_mm": 14.8,
+      "keep_median_d10_mm": 20.0,
+      "ruler_1_points": {
+        "candidate": 73880,
+        "delta_pct": -20.43
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 9263,
+        "thickness_med_cell_p90p10_m": 0.049305939674377464,
+        "thickness_p90_cell_m": 0.07564026713371275,
+        "n_thickness_cells": 366,
+        "cover_cells_2cm": 2104,
+        "cover_area_m2": 0.8416
+      },
+      "ruler_3_roi": {
+        "n_roi": 5887,
+        "n_roi_near_floor_5cm": 84,
+        "roi_y_p10": -1.349111223220825,
+        "roi_y_p50": -0.6316920518875122,
+        "roi_y_p90": 0.6565866470336914
+      }
+    },
+    "4.0": {
+      "culled": 16117,
+      "survival_pct": 82.64,
+      "cull_in_SIG_ISO": 350,
+      "cull_in_DENSE": 10838,
+      "trail_kill_rate_pct": 5.2,
+      "dense_false_kill_pct": 23.346,
+      "cull_outside_hull": 14223,
+      "outside_hull_kill_pct": 18.88,
+      "cull_in_floorband3cm": 636,
+      "cull_median_d10_mm": 14.8,
+      "keep_median_d10_mm": 19.7,
+      "ruler_1_points": {
+        "candidate": 76732,
+        "delta_pct": -17.36
+      },
+      "ruler_2_floor": {
+        "n_floor_slab": 9432,
+        "thickness_med_cell_p90p10_m": 0.049050104618072576,
+        "thickness_p90_cell_m": 0.07697851061820984,
+        "n_thickness_cells": 368,
+        "cover_cells_2cm": 2115,
+        "cover_area_m2": 0.846
+      },
+      "ruler_3_roi": {
+        "n_roi": 6049,
+        "n_roi_near_floor_5cm": 85,
+        "roi_y_p10": -1.3491578102111816,
+        "roi_y_p50": -0.6389551758766174,
+        "roi_y_p90": 0.6562615156173706
+      }
+    }
+  },
+  "cull_frac_vs_outside_envelope_at_2px": [
+    {
+      "outside_m": "[0.00,0.00)",
+      "n": 17522,
+      "cull_frac_pct_at_2px": 16.2
+    },
+    {
+      "outside_m": "[0.00,0.10)",
+      "n": 17819,
+      "cull_frac_pct_at_2px": 31.04
+    },
+    {
+      "outside_m": "[0.10,0.25)",
+      "n": 22046,
+      "cull_frac_pct_at_2px": 25.82
+    },
+    {
+      "outside_m": "[0.25,0.50)",
+      "n": 18986,
+      "cull_frac_pct_at_2px": 28.35
+    },
+    {
+      "outside_m": "[0.50,1.00)",
+      "n": 15987,
+      "cull_frac_pct_at_2px": 32.32
+    },
+    {
+      "outside_m": "[1.00,2.00)",
+      "n": 381,
+      "cull_frac_pct_at_2px": 5.51
+    },
+    {
+      "outside_m": "[2.00,100.00)",
+      "n": 108,
+      "cull_frac_pct_at_2px": 10.19
+    }
+  ],
+  "cull_frac_vs_isolation_at_2px": [
+    {
+      "d10_over_med": "[0,1)",
+      "n": 46424,
+      "cull_frac_pct_at_2px": 36.13
+    },
+    {
+      "d10_over_med": "[1,2)",
+      "n": 30156,
+      "cull_frac_pct_at_2px": 20.52
+    },
+    {
+      "d10_over_med": "[2,3)",
+      "n": 9533,
+      "cull_frac_pct_at_2px": 12.46
+    },
+    {
+      "d10_over_med": "[3,5)",
+      "n": 5105,
+      "cull_frac_pct_at_2px": 7.87
+    },
+    {
+      "d10_over_med": "[5,8)",
+      "n": 1128,
+      "cull_frac_pct_at_2px": 5.14
+    },
+    {
+      "d10_over_med": "[8,1000000000.0)",
+      "n": 503,
+      "cull_frac_pct_at_2px": 7.16
+    }
+  ],
+  "wallclock": {
+    "total_host_s": 2.0,
+    "note": "host python proxy, NOT a device number"
+  },
+  "mem_free_gb": {
+    "start": 0.06,
+    "end": 0.39
+  },
+  "honesty": [
+    "Residuals measured against production BA positions (structure frozen); RS re-triangulates after obs deletion \u2014 our one-pass rule is the conservative approximation (no rescue-by-refit), may over-cull points a refit would save.",
+    "66728 points had <2 recoverable in-component obs; kept unchanged in ALL candidates (never culled) \u2014 cull rates are lower bounds.",
+    "Support radius 6px + majority-component guard is evidence reconstruction from sfm_live.db, NOT byte-exact production finalize track identity.",
+    "4px control doubles as methodology validation: production already filters at 4px, so its cull count measures our recovery error floor.",
+    "Trail signature is self-computed (isolation + camera-hull envelope), pending reconciliation with E2-A trail set.",
+    "Wall clocks host-only."
+  ],
+  "outputs": {
+    "rs2px_cap50.ply": "212a8ea5f4d33c87323fb11196da8b3f14af6dd3102a8bd71debe84272e7f029",
+    "mid3px_cap50.ply": "898d753fd41c6004be1634c547fff1120ac0281d9f8ee53370b5cad6404b4b99",
+    "prod4px_cap50.ply": "bc8916a0b6d82962ef9942b2ff67e3e651f32d9dd4e5015595fdc96500a1de10",
+    "diff_tiers_cap50.ply": "041fb5e69d1928f469fff064693dd034139a5eba38f6ec3bb9250460fc29dd79"
+  }
+}

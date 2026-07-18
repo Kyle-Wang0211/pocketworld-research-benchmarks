@@ -1,0 +1,37 @@
+{
+  "method": "human visual audit of audit_crops/*.jpg (cluster members + 20 random candidates projected into a real capture photo, refined production pose, frozen K). Labels: TRUE=image region is mirror/glass/specular/glossy content consistent with a virtual-reflection or specular-smear point; AMB=specular-capable but could be real surface (satin quilt, varnished wardrobe); FP=looks like real solid geometry or plain weak-texture surface (detector false positive for the specular-trail hypothesis).",
+  "auditor": "E2-A agent (Claude), 2026-07-18; single-rater, not user-approved ground truth",
+  "cap50": {
+    "clusters": {
+      "cluster00_n205": {"label": "AMB", "scene": "high-gloss satin quilt on bed (S_behind dominant); deformable+specular fabric, points sit on/behind quilt surface"},
+      "cluster01_n88": {"label": "TRUE", "scene": "glossy varnished wood floor next to polished cabinet; points 12cm BELOW floor = floor reflection ghosts"},
+      "cluster02_n69": {"label": "TRUE", "scene": "black piano-lacquer surface with clear window-blind reflections; points on reflected content (behind far wall, fh 2.08)"},
+      "cluster03_n57": {"label": "TRUE", "scene": "chrome radiator rails + glossy floor edge; specular metal"},
+      "cluster04_n43": {"label": "TRUE", "scene": "glossy wood floor by chair leg; points 13cm below floor = reflections"},
+      "cluster05_n36": {"label": "FP", "scene": "plain white ceiling + crown molding; weak-texture floater, not specular"},
+      "cluster06_n33": {"label": "TRUE", "scene": "glass window pane with room reflections; virtual points at Z=-6.6 behind glass"},
+      "cluster09_n19": {"label": "FP", "scene": "backpack straps + white wall; real geometry flagged by S_behind (likely wrong primary-camera or moved object)"},
+      "cluster12_n15": {"label": "FP", "scene": "real adjacent-room shelves seen THROUGH real door opening (Z=-9.1); real far geometry, not a reflection (matches earlier mirror-cull verdict: real doorway)"},
+      "cluster13_n14": {"label": "TRUE", "scene": "polished dark varnished bed-frame wood with sheen; specular streak"},
+      "not_viewed": ["cluster07_n29", "cluster08_n27", "cluster10_n16", "cluster11_n15"]
+    },
+    "random20": {"TRUE": 12, "AMB": 5, "FP": 3,
+      "notes": "TRUE mostly on glossy floor, chrome radiator + LED reflections, dark glass, mirror-backed chrome bed pipe; AMB on satin quilt/wardrobe; FP: blurred white fabric, plain desk surface"},
+    "fp_rate_point_level": "3/20 = 15% clear FP; upper bound incl. ambiguous 8/20 = 40%",
+    "fp_rate_cluster_level": "3/10 viewed clusters clear FP (cluster05 ceiling wisp, cluster09 real backpack/wall, cluster12 real geometry through door opening)"
+  },
+  "cap51": {
+    "clusters": {
+      "cluster00_n101": {"label": "AMB", "scene": "satin quilt draped over rail against sunlit window+glass panes; specular fabric + backlight + possibly moved between frames"},
+      "cluster01_n53": {"label": "TRUE", "scene": "metallic gold brocade curtain valance; specular metallic threads"}
+    },
+    "random20": {"TRUE": 8, "AMB": 5, "FP": 7,
+      "notes": "TRUE on sunlit window glare, metallic/silver fabrics, wet window glass, mirrored cabinet; FP mostly plain ceiling/wall/door weak-texture floaters"},
+    "fp_rate_point_level": "7/20 = 35% clear FP; upper bound incl. ambiguous 12/20 = 60%"
+  },
+  "honesty": [
+    "single human-rater judgment from one projected view per item; no user sign-off; some AMB items can only be resolved with multi-view flipbook or dense verification",
+    "cluster verdicts based on <=20 sampled members per cluster (member_idx_sample)",
+    "cap51 has fewer specular trails; its candidate set is dominated by weak-texture floaters (still preview-visible dust, but NOT mirror trails)"
+  ]
+}
