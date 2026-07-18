@@ -1,0 +1,124 @@
+{
+  "cap": "cap51",
+  "inputs": {
+    "db": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_live.db",
+    "meta": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse_meta.json",
+    "baseline_ply": "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap51/device_full_pull_2026-07-17/sfm_sparse.ply",
+    "baseline_ply_sha256": "fb2db1e1ee89692ed47b0bd3d38773fc42f37ecb94ccd485fc7a1952b13fe3f7"
+  },
+  "gauge": "production refined poses/frame; PLY frame == meta pose frame (probe_gauge: rotation 0.11deg, residual unchanged => same gauge); NO Sim3, NO realignment",
+  "rule": {
+    "refit": "structure-only DLT from 2 recovered obs, poses+K frozen (refined production)",
+    "reproj_gate_px": 3.0,
+    "theta_gate_deg": 2.0,
+    "provenance_blind": true,
+    "replaces": [
+      "R2#6 temporal-detail publish-without-BA",
+      "R2#13 kill-by-provenance (frame-gap)"
+    ],
+    "survivor_position": "production position kept (rule re-adjudicates life/death only)"
+  },
+  "obs_recovery": {
+    "method": "project prod point into all registered frames; verified-matched keypoint within 3px = support obs",
+    "n_pairs_db": 570,
+    "n_inlier_edges": 206229,
+    "support_frames_hist": {
+      "0": 45970,
+      "1": 12811,
+      "2": 3935,
+      "3": 1168,
+      "4": 349,
+      "5": 104,
+      "6": 38,
+      "7": 5
+    },
+    "support_frames_ge8": 12,
+    "wall_s": 0.4
+  },
+  "verdicts": {
+    "cull_reproj_gt3px": 2,
+    "cull_theta_lt2deg": 247,
+    "keep_2view_pass": 1189,
+    "keep_multiview": 1676,
+    "keep_unmatched_honest": 58781,
+    "keep_unverified_pair_honest": 2497
+  },
+  "cull_total": 249,
+  "quality_of_adjudication": {
+    "theta_deg_2view": {
+      "p10": 1.5992,
+      "p50": 3.9529,
+      "p90": 13.3105
+    },
+    "refit_maxres_px_2view": {
+      "p10": 0.0912,
+      "p50": 0.6047,
+      "p90": 1.5974
+    },
+    "refit_disp_m_2view": {
+      "p10": 0.002,
+      "p50": 0.0117,
+      "p90": 0.0711
+    },
+    "n_unverified_pair": 2497
+  },
+  "rescue": {
+    "n_verified_pairs_passing_rule": 28224,
+    "n_absent_from_prod_not_injected": 8538
+  },
+  "ruler_1_points": {
+    "baseline": 64392,
+    "candidate": 64143,
+    "delta": -249,
+    "delta_pct": -0.39
+  },
+  "ruler_2_floor_thickness": {
+    "y_floor": -0.8976,
+    "baseline": {
+      "n_floor_slab": 21788,
+      "thickness_med_cell_p90p10_m": 0.011801937222480796,
+      "thickness_p90_cell_m": 0.04336000740528109,
+      "n_thickness_cells": 770,
+      "thickness_global_std_m": 0.019046750163785046,
+      "cover_cells_2cm": 4369,
+      "cover_area_m2": 1.7476
+    },
+    "candidate": {
+      "n_floor_slab": 21735,
+      "thickness_med_cell_p90p10_m": 0.01172623932361605,
+      "thickness_p90_cell_m": 0.04235821366310122,
+      "n_thickness_cells": 766,
+      "thickness_global_std_m": 0.01902175894417086,
+      "cover_cells_2cm": 4363,
+      "cover_area_m2": 1.7452
+    }
+  },
+  "ruler_3_coverage": {
+    "baseline_cells_2cm": 4369,
+    "candidate_cells_2cm": 4363,
+    "baseline_area_m2": 1.7476,
+    "candidate_area_m2": 1.7452
+  },
+  "ruler_4_wallclock": {
+    "support_recovery_host_s": 0.4,
+    "refit_rule_host_s": 0.0,
+    "note": "host python proxy; NOT a device number; on-device structure-only refit must be measured before any ship claim (single wall clocks +-30% untrustworthy)"
+  },
+  "chair_roi": {
+    "roi": null,
+    "baseline": null,
+    "candidate": null
+  },
+  "honesty": [
+    "Prototype recovers evidence from sfm_live.db in observation space; NOT byte-exact production finalize replication.",
+    "Support radius 3px can absorb a neighboring verified feature => a true 2-view point may be classified multiview and kept (errs toward status quo, never extra culling).",
+    "keep_unmatched_honest=58781 points had <2 recoverable obs; keep_unverified_pair_honest=2497 had 2 obs not transitively matched; all kept unchanged.",
+    "Rescue candidates NOT injected into candidate PLY (colorize path + production identity not reproducible here); reported/visualized only.",
+    "Wall clocks are host python proxies."
+  ],
+  "outputs": {
+    "s1_caseA_cap51.ply": "81428bfe65b3f103174a29088c2473ed73cbaf62ce40d32db7ba185644251428",
+    "diff_cap51.ply": "dffd374f6837dba48b1f217f226d716190d2b96e86998b00f675e2de2e93f2c3",
+    "rescue_candidates_cap51.ply": "49c535d814eda4594b84a3be735817bf770dfda10229b42f4d0d2386a00c2d28"
+  }
+}
