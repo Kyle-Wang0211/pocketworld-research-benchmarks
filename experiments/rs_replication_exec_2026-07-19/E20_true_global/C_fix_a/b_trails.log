@@ -1,0 +1,58 @@
+Traceback (most recent call last):
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/detect_trails.py", line 29, in <module>
+    import matplotlib.pyplot as plt
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/pyplot.py", line 57, in <module>
+    import matplotlib.image
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/image.py", line 25, in <module>
+    from matplotlib.backend_bases import FigureCanvasBase
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/backend_bases.py", line 49, in <module>
+    from matplotlib import (
+        _api, backend_tools as tools, cbook, colors, _docstring, text,
+        _tight_bbox, transforms, widgets, is_interactive, rcParams)
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/text.py", line 16, in <module>
+    from .font_manager import FontProperties
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/font_manager.py", line 41, in <module>
+    import plistlib
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/plistlib.py", line 70, in <module>
+    from xml.parsers.expat import ParserCreate
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/xml/parsers/expat.py", line 4, in <module>
+    from pyexpat import *
+ImportError: dlopen(/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/lib-dynload/pyexpat.cpython-314-darwin.so, 0x0002): Symbol not found: _XML_SetAllocTrackerActivationThreshold
+  Referenced from: <D0DB16D1-2328-35CF-A8E9-883EB039B811> /opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/lib-dynload/pyexpat.cpython-314-darwin.so
+  Expected in:     <850FB22F-BB06-316B-B5F4-FCD1C0385184> /usr/lib/libexpat.1.dylib
+=== cap50_fixA n=93540 ===
+solid voxels 3515 / 13140
+S_behind 251 (suspects 7122)
+S_below 1671
+S_streak 137 in 8 strings
+S_out 822
+TRAIL CANDIDATES 2666 (2.85%)
+{
+ "S_behind": {
+  "n": 251,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 1671,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 137,
+  "n_strings": 8,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 822,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 2666,
+ "union_pct": 2.85,
+ "overlap": {
+  "behind&below": 32,
+  "behind&streak": 1,
+  "below&streak": 1,
+  "out&streak": 115,
+  "out&behind": 12
+ }
+}
+DONE

@@ -39,6 +39,11 @@ ROOT = "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_be
 CAPS = {
     "cap50": f"{ROOT}/data/pocketworld_captures/cap50/device_full_pull_2026-07-17",
     "cap51": f"{ROOT}/data/pocketworld_captures/cap51/device_full_pull_2026-07-17",
+    # E3 extension (2026-07-18): assembled input dirs (symlinks; ghost plane for
+    # cap40/41 = E4 host-replay production-recipe plane, device pull lacks it)
+    "cap40": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap40_inputs",
+    "cap41": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs",
+    "cap50_fixA": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E20_true_global/C_fix_a/cap50_fixA_inputs",
 }
 OUT_BASE = f"{ROOT}/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics"
 

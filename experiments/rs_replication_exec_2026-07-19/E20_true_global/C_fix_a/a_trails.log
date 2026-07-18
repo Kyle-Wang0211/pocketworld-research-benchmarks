@@ -1,0 +1,101 @@
+Traceback (most recent call last):
+  File "/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/detect_trails.py", line 29, in <module>
+    import matplotlib.pyplot as plt
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/pyplot.py", line 57, in <module>
+    import matplotlib.image
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/image.py", line 25, in <module>
+    from matplotlib.backend_bases import FigureCanvasBase
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/backend_bases.py", line 49, in <module>
+    from matplotlib import (
+        _api, backend_tools as tools, cbook, colors, _docstring, text,
+        _tight_bbox, transforms, widgets, is_interactive, rcParams)
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/text.py", line 16, in <module>
+    from .font_manager import FontProperties
+  File "/opt/homebrew/lib/python3.14/site-packages/matplotlib/font_manager.py", line 41, in <module>
+    import plistlib
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/plistlib.py", line 70, in <module>
+    from xml.parsers.expat import ParserCreate
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/xml/parsers/expat.py", line 4, in <module>
+    from pyexpat import *
+ImportError: dlopen(/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/lib-dynload/pyexpat.cpython-314-darwin.so, 0x0002): Symbol not found: _XML_SetAllocTrackerActivationThreshold
+  Referenced from: <D0DB16D1-2328-35CF-A8E9-883EB039B811> /opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/lib-dynload/pyexpat.cpython-314-darwin.so
+  Expected in:     <850FB22F-BB06-316B-B5F4-FCD1C0385184> /usr/lib/libexpat.1.dylib
+=== cap40 n=62691 ===
+solid voxels 1 / 55897
+S_behind 0 (suspects 62691)
+S_below 1049
+S_streak 1010 in 216 strings
+S_out 62691
+TRAIL CANDIDATES 62691 (100.00%)
+/opt/homebrew/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/homebrew/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/TRAILS_forensics/detect_trails.py:268: RuntimeWarning: Mean of empty slice
+  "clean": round(float((n_support[clean] == 0).mean()), 3)},
+/opt/homebrew/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1213: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+{
+ "S_behind": {
+  "n": 0,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 1049,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 1010,
+  "n_strings": 216,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 62691,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 62691,
+ "union_pct": 100.0,
+ "overlap": {
+  "behind&below": 0,
+  "behind&streak": 0,
+  "below&streak": 9,
+  "out&streak": 1010,
+  "out&behind": 0
+ }
+}
+=== cap41 n=51000 ===
+solid voxels 0 / 46986
+S_behind 0 (suspects 51000)
+S_below 50546
+S_streak 623 in 126 strings
+S_out 51000
+TRAIL CANDIDATES 51000 (100.00%)
+{
+ "S_behind": {
+  "n": 0,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 50546,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 623,
+  "n_strings": 126,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 51000,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 51000,
+ "union_pct": 100.0,
+ "overlap": {
+  "behind&below": 0,
+  "behind&streak": 0,
+  "below&streak": 623,
+  "out&streak": 623,
+  "out&behind": 0
+ }
+}
+DONE

@@ -99,6 +99,22 @@ CAPS = {
         "zone_ranks": {0: "quilt_satin", 1: "brocade_valance"},
         "window_z_max": None,
     },
+    # E3 extension (2026-07-18): cap40/41 device clouds (assembled dirs; ghost plane
+    # from E4 host-replay production recipe) and cap50_fixA (debt-repaid replay cloud).
+    # No audited clusters on these caps -> check (a) n/a, honest.
+    "cap40": {
+        "dir": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap40_inputs",
+        "chair_roi": None, "protected_ranks": {}, "zone_ranks": {}, "window_z_max": None,
+    },
+    "cap41": {
+        "dir": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap41_inputs",
+        "chair_roi": None, "protected_ranks": {}, "zone_ranks": {}, "window_z_max": None,
+    },
+    "cap50_fixA": {
+        "dir": f"{ROOT}/experiments/rs_replication_exec_2026-07-19/E20_true_global/C_fix_a/cap50_fixA_inputs",
+        "chair_roi": {"X": (0.25, 1.05), "Z": (-1.70, -0.55)},
+        "protected_ranks": {}, "zone_ranks": {}, "window_z_max": -4.3,
+    },
 }
 
 def log(*a): print(*a, flush=True)

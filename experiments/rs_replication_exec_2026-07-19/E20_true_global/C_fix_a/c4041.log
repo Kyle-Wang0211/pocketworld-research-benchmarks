@@ -1,0 +1,74 @@
+=== C4041 START 2026-07-18T21:35:37+08:00
+=== REPLAY cap40 21:35:37
+replay rc=0
+RESULT incr=off n_reg=86 n_points=74519 track3plus=39432 n_obs=263427 mean_reproj_px=0.9888 stream_ms=7706.9 finalize_ms=26030.4 total_ms=33737.3
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/replays/cap40_base_r1/replay_finalize_rgb.ply: n=74519 colored=74297 gray=222 frames_missing_photo=3
+wrote /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/experiments/rs_replication_exec_2026-07-19/E3_birth_discipline/cap40_inputs/sfm_sparse_meta.json: 86 poses, registered=86
+=== cap40 ===
+points=74519 frames=86 pairs=920
+support recovery 0.5s
+fingerprints (obs) done
+local PCA 0.2s
+floor plane: cam heights med=0.909
+see-through on 14787 suspects 0.3s
+{"0": 31544, "1": 21326, "2": 12118, "3": 5950, "4": 2379, "5": 852}
+DONE
+=== cap40 n=74519 ===
+solid voxels 3094 / 9879
+S_behind 173 (suspects 3967)
+S_below 14050
+S_streak 38 in 4 strings
+S_out 584
+TRAIL CANDIDATES 14483 (19.44%)
+{
+ "S_behind": {
+  "n": 173,
+  "rule": "ray-march 0.05m voxels(>= 6 pts=solid), >= 3 solid crossings, stop 0.2m short"
+ },
+ "S_below": {
+  "n": 14050,
+  "rule": "floor_h < -0.1 (production floor plane, below double-floor band)"
+ },
+ "S_streak": {
+  "n": 38,
+  "n_strings": 4,
+  "rule": "cnt10<=10, link 0.15m, n>=4, elong>=3.0, |cos(axis,ray)|>=0.8"
+ },
+ "S_out": {
+  "n": 584,
+  "rule": "cnt10<=10 AND dist-to-core(cnt10>=40) > 0.25m (data-driven scene shell)"
+ },
+ "union": 14483,
+ "union_pct": 19.435,
+ "overlap": {
+  "behind&below": 103,
+  "behind&streak": 3,
+  "below&streak": 14,
+  "out&streak": 11,
+  "out&behind": 15
+ }
+}
+DONE
+=== cap40 ===
+points=74519 risk(E2-A union)=14483
+support recovery 0.5s
+S1 baseline culls=166
+corridor votes for 14466 risk pts 0.4s
+ sweep bh=3: cull=13959 protected_killed=0
+ sweep bh=4: cull=13923 protected_killed=0
+ sweep bh=5: cull=13911 protected_killed=0
+ sweep bh=6: cull=13909 protected_killed=0
+ sweep bh=8: cull=13902 protected_killed=0
+{
+ "cull_risk_belowfloor": 13736,
+ "cull_s1_theta_lt2deg": 166,
+ "keep_2view_pass": 458,
+ "keep_multiview": 9224,
+ "keep_risk_multiview": 307,
+ "keep_risk_netvisible": 423,
+ "keep_unmatched_honest": 39561,
+ "keep_unverified_pair_honest": 10644
+}
+E3 DONE
+=== cap40 done ok=1 21:36:36
+=== REPLAY cap41 21:36:36
