@@ -137,13 +137,23 @@ addEventListener('wheel',e=>{ if(e.target.tagName!=='CANVAS'||!cam) return; e.pr
   cam.eye=add3(cam.target,scale3(off,s)); draw(); },{passive:false});
 
 // 从两云联合包围盒自动生成 4 个预设视角(同一世界坐标,双栏同一相机)
+// 2026-07-18 修:min/max 会被镜面长拖尾等远距离群点撑爆(cap51 场景缩成角落一小团),
+// 改为 P2-P98 分位数稳健包围盒(每轴独立,抽样上限 5 万点/云)。
 function buildViews(L,R){
-  const lo=[1/0,1/0,1/0], hi=[-1/0,-1/0,-1/0];
-  for(const d of [L,R]) for(let i=0;i<d.n;i++) for(let k=0;k<3;k++){
-    const v=d.pos[i*3+k]; if(v<lo[k])lo[k]=v; if(v>hi[k])hi[k]=v; }
+  const lo=[0,0,0], hi=[0,0,0];
+  for(let k=0;k<3;k++){
+    const vals=[];
+    for(const d of [L,R]){
+      const step=Math.max(1,Math.floor(d.n/50000));
+      for(let i=0;i<d.n;i+=step) vals.push(d.pos[i*3+k]);
+    }
+    vals.sort((a,b)=>a-b);
+    lo[k]=vals[Math.floor(vals.length*0.02)];
+    hi[k]=vals[Math.min(vals.length-1,Math.floor(vals.length*0.98))];
+  }
   const c=[(lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2];
   const ext=Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]);
-  const r=ext*1.1;
+  const r=ext*1.45;
   return {
     overview:{eye:add3(c,[r*0.8,r*0.55,r*0.8]),target:c,fov:50},
     top:{eye:add3(c,[0.001,r*1.4,0.001]),target:c,fov:50},
