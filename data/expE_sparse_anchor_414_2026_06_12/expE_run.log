@@ -1,0 +1,43 @@
+[expE 20:14:15] union frames: 45 (man[225:270])
+[expE 20:14:20] SIFT on 45 frames in 5s, mean kp 3167
+[expE 20:14:23] matched 249 pairs, 69869 epipolar-gated matches in 3s
+[expE 20:14:23] tracks 22891 -> anchors 1564 (rejects {'views': 17875, 'cheir': 432, 'reproj': 1836, 'parallax': 1184}), views/pt median 4
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[expE 20:14:26] loading DA3-BASE …
+[97m[INFO ] using MLP layer as FFN[0m
+Loading weights from local directory
+[97m[INFO ] Processed Images Done taking 0.4013540744781494 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+oracle_mps_chunked_sdpa query_shape=(18, 12, 2305, 64) key_tokens=2305 estimated_score_buffer_gib=4.28 query_chunk=256
+oracle_mps_chunked_sdpa query_shape=(1, 12, 41490, 64) key_tokens=41490 estimated_score_buffer_gib=76.95 query_chunk=256
+[97m[INFO ] Model Forward Pass Done. Time: 49.80749487876892 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.9451756477355957 seconds[0m
+[expE 20:15:20] win25: inferred in 52s, umeyama=0.6722, conf_med=11.81
+[97m[INFO ] Processed Images Done taking 2.8918631076812744 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 279.7886791229248 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.8096508979797363 seconds[0m
+[expE 20:20:05] win26: inferred in 285s, umeyama=0.7099, conf_med=11.49
+[97m[INFO ] Processed Images Done taking 2.8074710369110107 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 301.4712619781494 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.8019669055938721 seconds[0m
+[expE 20:25:10] win28: inferred in 306s, umeyama=0.7149, conf_med=2.82
+[expE 20:25:17] depths cached -> data/expE_sparse_anchor_414_2026_06_12/window_depths.npz
+[expE 20:25:17] win25: s_B=1.0035 from 14407 anchor obs (ratio IQR 0.043)
+[expE 20:25:17] win26: s_B=0.9768 from 14949 anchor obs (ratio IQR 0.045)
+[expE 20:25:17] win28: s_B=0.9737 from 13971 anchor obs (ratio IQR 0.133)
+[expE 20:25:17] V3 check: s_B ratios win26/win25=0.9733 (A: 0.9696), win28/win25=0.9702 (A: 0.9687)
+[expE 20:25:18] PRE 25->26: {'n': 3014792, 'abs_rel_median_pct': 3.077391495680526, 'abs_rel_p90_pct': 4.328047896940461, 'abs_cm_median': 3.2822087512308418, 'abs_cm_p90': 4.626612454738748}
+[expE 20:25:18] PRE 26->25: {'n': 2940339, 'abs_rel_median_pct': 3.0052626886601375, 'abs_rel_p90_pct': 4.191356301257494, 'abs_cm_median': 3.0575620018975513, 'abs_cm_p90': 4.535508801035989}
+[expE 20:25:18] PRE 25->28: {'n': 2200219, 'abs_rel_median_pct': 4.4651912055888365, 'abs_rel_p90_pct': 11.715793453785611, 'abs_cm_median': 3.5086472039004946, 'abs_cm_p90': 8.142948726062682}
+[expE 20:25:18] PRE 28->25: {'n': 2484937, 'abs_rel_median_pct': 2.3755161232331345, 'abs_rel_p90_pct': 5.395760076757813, 'abs_cm_median': 2.3429596547615006, 'abs_cm_p90': 5.237577715623516}
+[expE 20:25:19] PRE 26->28: {'n': 2674281, 'abs_rel_median_pct': 2.92805333002345, 'abs_rel_p90_pct': 9.479483320583581, 'abs_cm_median': 2.280238537083612, 'abs_cm_p90': 7.75020033588234}
+[expE 20:25:19] PRE 28->26: {'n': 2736507, 'abs_rel_median_pct': 1.3296511730485072, 'abs_rel_p90_pct': 4.750997875043648, 'abs_cm_median': 1.3421096971181434, 'abs_cm_p90': 5.071353827604932}
+[expE 20:25:19] POSTB 25->26: {'n': 3015250, 'abs_rel_median_pct': 0.6147637313216436, 'abs_rel_p90_pct': 1.7289776738438702, 'abs_cm_median': 0.6507192138421325, 'abs_cm_p90': 1.7372516755790792}
+[expE 20:25:19] POSTB 26->25: {'n': 2928528, 'abs_rel_median_pct': 0.6537991704538393, 'abs_rel_p90_pct': 1.5578417774737796, 'abs_cm_median': 0.6606629142744513, 'abs_cm_p90': 1.5714603749678795}
+[expE 20:25:20] POSTB 25->28: {'n': 2238980, 'abs_rel_median_pct': 2.5416003879016325, 'abs_rel_p90_pct': 10.887395634068234, 'abs_cm_median': 1.95845506449151, 'abs_cm_p90': 8.691221263143712}
+[expE 20:25:20] POSTB 28->25: {'n': 2492859, 'abs_rel_median_pct': 1.4031354883849656, 'abs_rel_p90_pct': 5.974309922884125, 'abs_cm_median': 1.3812327307965555, 'abs_cm_p90': 5.844708925570662}
+[expE 20:25:21] POSTB 26->28: {'n': 2466351, 'abs_rel_median_pct': 1.9577338883806417, 'abs_rel_p90_pct': 9.201936672606891, 'abs_cm_median': 1.4685000224102351, 'abs_cm_p90': 7.449222358130648}
+[expE 20:25:21] POSTB 28->26: {'n': 2778796, 'abs_rel_median_pct': 1.2547254557521703, 'abs_rel_p90_pct': 6.934816442665337, 'abs_cm_median': 1.2247113471828164, 'abs_cm_p90': 6.728449545649284}
+[expE 20:25:21] EXPE-DONE
