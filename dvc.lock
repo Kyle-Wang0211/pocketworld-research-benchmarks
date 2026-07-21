@@ -1,0 +1,496 @@
+schema: '2.0'
+stages:
+  b0_eval_prepare:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_evaluation_prepare --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_prepare/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_prepare/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase evaluation_prepare --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz.provenance.json
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_prepare_eval.py
+      --dmcache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/dmcache.npz
+      --model-cache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/model_cache.npz
+      --reconstruction-list
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/lists/cap50_93r22h_strict_reconstruction.txt
+      --heldout-list
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/lists/cap50_93r22h_strict_heldout.txt
+      --image-root
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/raw/photos_highres
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/b0_input_contract.py
+      hash: md5
+      md5: 13f06cc1d7d01cff31f56401ca8c3bf3
+      size: 19722
+    - path: tools/python/b0_prepare_eval.py
+      hash: md5
+      md5: 1200fce0c53e633bd408040a7c51180e
+      size: 66066
+    - path: tools/python/mesh_ab_eval.py
+      hash: md5
+      md5: cffe37e3a09f8bf673ffd6a40ea7c39e
+      size: 48749
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      hash: md5
+      md5: 6419d0931d7e58bcbedbae2cf257d62e
+      size: 6575822
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz.provenance.json
+      hash: md5
+      md5: 7ebff87f5c55ccacb626370e221b48e5
+      size: 20716
+  b0_tsdf_meshing:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_tsdf_meshing --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/tsdf_meshing/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/tsdf_meshing/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase tsdf_meshing --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/mesh.ply
+      --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/provenance.json
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/pw_tsdf_trio.py
+      ofull 6 --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf
+      --frame-list
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/lists/cap50_93r22h_strict_reconstruction.txt
+      --dmcache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/dmcache.npz
+      --model-cache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/model_cache.npz
+      --image-root
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/raw/photos_highres
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/b0_input_contract.py
+      hash: md5
+      md5: 13f06cc1d7d01cff31f56401ca8c3bf3
+      size: 19722
+    - path: tools/python/pw_tsdf_trio.py
+      hash: md5
+      md5: d960b2659e228554ca27a4729738ba40
+      size: 31593
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/mesh.ply
+      hash: md5
+      md5: f2ae5571d787388677495d64723c6c33
+      size: 54760500
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/provenance.json
+      hash: md5
+      md5: 1f49e615e615380d16c350bf9b2faebd
+      size: 61388
+  b0_fusecut_export:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_fusecut_export --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_export/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_export/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase fusecut_export --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export/provenance.json
+      --attest-tree
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_export_alicevision.py
+      --frame-list
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/lists/cap50_93r22h_strict_reconstruction.txt
+      --dmcache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/dmcache.npz
+      --model-cache
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_115_common_v3/model_cache.npz
+      --image-root
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/pocketworld-repro-contract-20260714/data/pocketworld_captures/cap50/raw/photos_highres
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/b0_export_alicevision.py
+      hash: md5
+      md5: 212f223b57b0e6a1ed1ec54b308932d4
+      size: 44205
+    - path: tools/python/b0_input_contract.py
+      hash: md5
+      md5: 13f06cc1d7d01cff31f56401ca8c3bf3
+      size: 19722
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export
+      hash: md5
+      md5: 3cb6817becd193fec2e195ce30fe231a.dir
+      size: 31093551
+      nfiles: 188
+  b0_fusecut_meshing:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_fusecut_meshing --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_meshing/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_meshing/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase fusecut_meshing --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/mesh.obj
+      --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/dense.sfm
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_export/status.json
+      --
+      /Users/kaidongwang/av_task_c/build/alicevision-generate/Darwin-arm64/aliceVision_meshing-4_0
+      --input
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export/scene.sfm
+      --depthMapsFolder
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export/depthMaps
+      --output
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/dense.sfm
+      --outputMesh
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/mesh.obj
+      --partitioning singleBlock --repartition multiResolution
+      --estimateSpaceFromSfM false --addLandmarksToTheDensePointCloud false
+      --colorizeOutput false --minStep 1 --maxInputPoints 42663936 --maxPoints
+      7468701 --maxPointsPerVoxel 6000000 --minVis 2 --simFactor 15
+      --angleFactor 15 --universePercentile 0.999 --estimateSpaceMinObservations
+      3 --estimateSpaceMinObservationAngle 10 --pixSizeMarginInitCoef 2
+      --pixSizeMarginFinalCoef 1 --voteMarginFactor 4 --contributeMarginFactor 2
+      --simGaussianSizeInit 10 --simGaussianSize 10 --minAngleThreshold 0.1
+      --refineFuse true --helperPointsGridSize 10 --densifyNbFront 0
+      --densifyNbBack 0 --densifyScale 1 --maskHelperPointsWeight 0
+      --maskBorderSize 1 --nPixelSizeBehind 4 --fullWeight 1
+      --saveRawDensePointCloud false --voteFilteringForWeaklySupportedSurfaces
+      true --invertTetrahedronBasedOnNeighborsNbIterations 10
+      --minSolidAngleRatio 0.2 --nbSolidAngleFilteringIterations 2
+      --maxNbConnectedHelperPoints 50 --exportDebugTetrahedralization false
+      --seed 20260721 --verboseLevel info
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export
+      hash: md5
+      md5: 3cb6817becd193fec2e195ce30fe231a.dir
+      size: 31093551
+      nfiles: 188
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/dense.sfm
+      hash: md5
+      md5: b4f2af7d81905e6e50555597fb413fbe
+      size: 386001395
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/mesh.obj
+      hash: md5
+      md5: 31200e2c6aefc7789eea7b6649b6a8a2
+      size: 36645313
+  b0_evaluate_tsdf:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_evaluate_tsdf --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_tsdf/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_tsdf/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase evaluate_tsdf --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/tsdf.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/tsdf_meshing/status.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_prepare/status.json
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/pw_mesh_bench.py
+      evaluate-mesh --frames
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      --mesh
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/mesh.ply
+      --mesh-frame contract_model --route-provenance
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/provenance.json
+      --route-monitor-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/tsdf_meshing/status.json
+      --prepared-provenance
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz.provenance.json
+      --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/tsdf.json
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      hash: md5
+      md5: 6419d0931d7e58bcbedbae2cf257d62e
+      size: 6575822
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/tsdf/mesh.ply
+      hash: md5
+      md5: f2ae5571d787388677495d64723c6c33
+      size: 54760500
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/mesh_ab_eval.py
+      hash: md5
+      md5: cffe37e3a09f8bf673ffd6a40ea7c39e
+      size: 48749
+    - path: tools/python/pw_mesh_bench.py
+      hash: md5
+      md5: 08a65d6a04e41033eafaf8f49960f425
+      size: 62399
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/tsdf.json
+      hash: md5
+      md5: 72e0f67fd352dc090bca0f4db1b67780
+      size: 13662
+  b0_evaluate_fusecut:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_evaluate_fusecut --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_fusecut/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_fusecut/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase evaluate_fusecut --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/fusecut.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_meshing/status.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_prepare/status.json
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/pw_mesh_bench.py
+      evaluate-mesh --frames
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      --mesh
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/mesh.obj
+      --mesh-frame alicevision_obj --route-provenance
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/export/provenance.json
+      --route-monitor-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/fusecut_meshing/status.json
+      --prepared-provenance
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz.provenance.json
+      --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/fusecut.json
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      hash: md5
+      md5: 6419d0931d7e58bcbedbae2cf257d62e
+      size: 6575822
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/fusecut/mesh.obj
+      hash: md5
+      md5: 31200e2c6aefc7789eea7b6649b6a8a2
+      size: 36645313
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/mesh_ab_eval.py
+      hash: md5
+      md5: cffe37e3a09f8bf673ffd6a40ea7c39e
+      size: 48749
+    - path: tools/python/pw_mesh_bench.py
+      hash: md5
+      md5: 08a65d6a04e41033eafaf8f49960f425
+      size: 62399
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/fusecut.json
+      hash: md5
+      md5: 9503711aa4eb3c34e1712e2f3d956fe2
+      size: 13823
+  b0_compare:
+    cmd:
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/b0_run_monitored.py
+      --label cap50-real-115_evaluation_compare --resource-log
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_compare/resources.ndjson
+      --status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluation_compare/status.json
+      --disk-path / --start-available-gib 15 --stop-available-gib 6
+      --sample-interval-seconds 1800 --resource-poll-seconds 1 --peak-rss-gib 12
+      --swap-growth-gib 4 --wall-time-seconds 14400 --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --phase evaluation_compare --attest-file
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/comparison.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_tsdf/status.json
+      --require-prior-status
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/monitor/evaluate_fusecut/status.json
+      --
+      /opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/b0-fusecut-tsdf-20260722/tools/python/pw_mesh_bench.py
+      compare --tsdf
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/tsdf.json
+      --fusecut
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/fusecut.json
+      --frames
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz
+      --prepared-provenance
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/prepared_input_masks.npz.provenance.json
+      --preregistered-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      --input-contract
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/input_contract.raw.json
+      --split-id cap50_93r22h_strict --bootstrap-replicates 10000
+      --bootstrap-seed 20260721 --out
+      /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/comparison.json
+    deps:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/fusecut.json
+      hash: md5
+      md5: 9503711aa4eb3c34e1712e2f3d956fe2
+      size: 13823
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/tsdf.json
+      hash: md5
+      md5: 72e0f67fd352dc090bca0f4db1b67780
+      size: 13662
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json
+      hash: md5
+      md5: ffe7dbd81c6a7f41212c10d1343693a2
+      size: 104123
+    - path: experiments/b0_cap50_fusecut_vs_tsdf/input_identity.json
+      hash: md5
+      md5: 38c524c32cd3e752fb44d86f48b790b7
+      size: 4257
+    - path: tools/python/mesh_ab_eval.py
+      hash: md5
+      md5: cffe37e3a09f8bf673ffd6a40ea7c39e
+      size: 48749
+    - path: tools/python/pw_mesh_bench.py
+      hash: md5
+      md5: 08a65d6a04e41033eafaf8f49960f425
+      size: 62399
+    - path: uv.lock
+      hash: md5
+      md5: f0d0bc1693b7a7bcc288230416efb3ff
+      size: 273344
+    outs:
+    - path:
+        /Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_93r22h_ab_v3/evaluation/comparison.json
+      hash: md5
+      md5: be31e653547f06c43cfe9c3fa0b3cb4d
+      size: 6305

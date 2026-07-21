@@ -1,349 +1,829 @@
-"""Depth-frame TSDF volumetric reconstruction (o3d ScalableTSDFVolume).
+"""Build the controlled B0 TSDF arm from a contract-bound depth cache.
 
-Replaces the Poisson mesher: integrate every masked depth frame into a voxel
-grid; each voxel is a multi-ray weighted running average -> naturally smooth,
-NO reliance on (jittery re-estimated KNN) normals. Marching-cubes surface.
+The command is deliberately fail closed.  Before constructing a TSDF volume it
+verifies a separately frozen input contract against the exact depth cache,
+camera cache, reconstruction list, complete frame universe, and source-image
+bytes.  The resulting mesh stays in the input model frame: this route never
+applies Sim(3), ICP, smoothing, or route-specific filtering.
 
-The ONLY difference between the 'ofull' (o baseline) and 'ofsxq' (cleaned final)
-meshes is the pass-2 per-ref `final` boolean mask (same depth cache, different
-fusion gates). We recompute exactly the pipeline's `final` mask per ref, apply it
-to the depth, integrate the masked depth into a per-tag TSDF volume, extract the
-mesh, then transform vertices into the ARKit metric frame with (s_al,R_al,t_al)
-so the output overlays the existing point clouds / Poisson meshes.
-
-Usage: KMP_DUPLICATE_LIB_OK=TRUE python3.11 pw_tsdf_trio.py TAG [VOXEL_MM] [REF_LIMIT]
-  TAG in {ofull, ofsxq};  VOXEL_MM (float, ARKit metres*1000, default 6);
-  REF_LIMIT (int) = only first N refs (smoke test).
+Only the frozen ``ofull`` mask and the physical 6 mm TSDF configuration are
+supported.  The positional arguments remain for compatibility, but using any
+other tag or voxel size is rejected rather than treated as an experiment knob.
 """
 from __future__ import annotations
-import os, sys, time
-os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
+import argparse
+import hashlib
+import json
+import math
+import os
+import sys
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-import numpy as np
+from typing import Iterable, Mapping, Sequence
+
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import cv2
+import numpy as np
 import open3d as o3d
 
-# Reuse the exact fusion pipeline (loaders, alignment, gates, geom-cons).
-import pw_diffmvs_sfm_trio as T
-import pw_diffmvs_run as R
-
-SCRATCH = Path("/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/"
-               "7fc69efe-e09c-4359-8afb-04378874d3a1/scratchpad")
-sys.path.insert(0, str(SCRATCH))
-import geom_metrics as g  # noqa: E402
-
-sys.path.insert(0, str(Path(__file__).resolve().parent / "diffmvs"))
-from filter import check_geometric_consistency  # noqa: E402
-
-OUTDIR = Path(os.path.expanduser("~/Desktop/tiled_414_viewer"))
-OUT = R.OUT
-# Base viewer filenames at the DEFAULT 6mm voxel. Non-6mm voxels get a suffix
-# (e.g. mesh_o_tsdf.ply @6mm vs mesh_o_tsdf4.ply @4mm) so finer-voxel runs never
-# clobber the certified 6mm meshes. See viewer_ply_name().
-VIEWER_PLY = {"ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
-              "7full": "mesh_7full_tsdf.ply", "blend": "mesh_blend_tsdf.ply",
-              "ofsonly": "mesh_ofsonly_tsdf.ply"}
-
-# Which frozen p1cache each tag reads, and the pass-2 fusion config.
-# blend has its OWN stride1 MPS cache (casdiffmvs_blend.ckpt) + a blend-scale gate
-# (blend conf << DTU, so a matched-low PHOTO is required; see BLEND_CFG below).
-CACHE_FILE = {"ofull": "p1cache_trio_7full.npz", "ofsxq": "p1cache_trio_7full.npz",
-              "7full": "p1cache_trio_7full.npz", "blend": "p1cache_trio_blend.npz",
-              "ofsonly": "p1cache_trio_7full.npz"}
-# Calibrated blend fusion gate (src=lapa, blend ckpt @896x512). PHOTO is set to the
-# blend-scale value chosen from the conf-distribution probe (matched to o coverage).
-BLEND_CFG = {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3}
+import b0_input_contract as input_contract
 
 
-def viewer_ply_name(tag: str, voxel_mm: float) -> str:
-    """6mm keeps the base name; any other voxel appends the mm as an int suffix
-    (4.0 -> '4', 4.5 -> '4p5'). Guarantees the certified 6mm meshes are never
-    overwritten by a finer-voxel experiment."""
-    base = VIEWER_PLY[tag]
-    if abs(voxel_mm - 6.0) < 1e-6:
-        return base
-    if abs(voxel_mm - round(voxel_mm)) < 1e-6:
-        suf = str(int(round(voxel_mm)))
-    else:
-        suf = ("%g" % voxel_mm).replace(".", "p")
-    stem, ext = os.path.splitext(base)
-    return f"{stem}{suf}{ext}"
+SCRIPT_PATH = Path(__file__).resolve()
+LEGACY_VIEWER_DIR = Path.home() / "Desktop/tiled_414_viewer"
+INPUT_CONTRACT_SCHEMA = input_contract.INPUT_CONTRACT_SCHEMA_VERSION
+SUPPORTED_TAG = "ofull"
+PHYSICAL_VOXEL_MM = 6.0
+SDF_TRUNC_VOXELS = 4.0
+MASK_SEMANTICS = "isfinite(dm) & (dm > 0)"
+FROZEN_METRES_PER_LAPA_UNIT = input_contract.RAW_LAPA_METRES_PER_MODEL_UNIT
 
 
-def compute_final_mask(n, refs, depth, conf, drng, K_of, w2c_of, center_of,
-                       cfg, min_base_fuse):
-    """Recompute the pipeline pass-2 `final` boolean mask for ref `n`, plus the
-    geo-consistency-averaged depth d_avg. Verbatim gate logic from
-    pw_diffmvs_sfm_trio.main (STRICT cfg dict controls which gates are active)."""
-    GEO_MASK = cfg["GEO_MASK"]; PHOTO = cfg["PHOTO"]
-    GEO_PIX, GEO_DEP = T.GEO_PIX, T.GEO_DEP
-    NORMAL_COS = cfg.get("NORMAL_COS", 0.5)
-    BOUND_REL = cfg.get("BOUND_REL", 0.03)
-    photo_color = cfg.get("PHOTO_COLOR", None)
-    photo_color_n = cfg.get("PHOTO_COLOR_N", 1)
-    erode_px = cfg.get("ERODE_PX", 0)
-    freespace_n = cfg.get("FREESPACE_N", None)
-    freespace_tau = cfg.get("FREESPACE_TAU", 0.02)
-    reproj_err_max = cfg.get("REPROJ_ERR_MAX", None)
-
-    d_ref = depth[n]; K_ref = K_of[n].astype(np.float64)
-    ext_ref = w2c_of[n].astype(np.float64)
-    dmin, dmax = drng[n]
-
-    def getnrm(m):
-        return T.world_normals(depth[m], K_of[m].astype(np.float64),
-                               w2c_of[m].astype(np.float64))
-
-    n_ref = getnrm(n)
-    ref_rgb01 = R.load_image(T._name2mi[n]) if photo_color is not None else None
-    geo_sum = np.zeros_like(d_ref, np.int32); depth_acc = d_ref.copy()
-    color_agree_sum = np.zeros_like(d_ref, np.int32)
-    freespace_sum = np.zeros_like(d_ref, np.int32)
-    rerr_acc = np.zeros_like(d_ref, np.float32)
-
-    for nb in T.__dict__["_nearest"](n, T.NEIGH, refs, min_base_fuse):
-        mask, depth_reproj, x2d, y2d = check_geometric_consistency(
-            d_ref, K_ref, ext_ref, depth[nb], K_of[nb].astype(np.float64),
-            w2c_of[nb].astype(np.float64), dmax, dmin, GEO_PIX, GEO_DEP)
-        nb_n = cv2.remap(getnrm(nb), x2d, y2d, interpolation=cv2.INTER_LINEAR)
-        mask = mask & (np.sum(n_ref * nb_n, axis=2) > NORMAL_COS)
-        geo_sum += mask.astype(np.int32); depth_acc += depth_reproj * mask
-        if reproj_err_max is not None:
-            rerr_acc += (np.abs(depth_reproj - d_ref) / np.maximum(d_ref, 1e-6)) * mask
-        if photo_color is not None:
-            nb_rgb01 = cv2.remap(R.load_image(T._name2mi[nb]), x2d, y2d,
-                                 interpolation=cv2.INTER_LINEAR)
-            col_diff = np.abs(nb_rgb01 - ref_rgb01).mean(axis=2)
-            color_agree_sum += (mask & (col_diff < photo_color)).astype(np.int32)
-        if freespace_n is not None:
-            samp_src = cv2.remap(depth[nb], x2d, y2d, interpolation=cv2.INTER_LINEAR)
-            d_ref_in_nb = T.ref_depth_in_src(d_ref, K_ref, ext_ref,
-                                             w2c_of[nb].astype(np.float64))
-            seen_through = (samp_src > 0) & (d_ref > 0) & \
-                (samp_src - d_ref_in_nb > freespace_tau * np.maximum(d_ref_in_nb, 1e-6))
-            freespace_sum += seen_through.astype(np.int32)
-
-    final = (geo_sum >= GEO_MASK) & (conf[n].astype(np.float32) > PHOTO) \
-        & T.boundary_keep(d_ref, rel=BOUND_REL)
-    if photo_color is not None:
-        final = final & (color_agree_sum >= photo_color_n)
-    if freespace_n is not None:
-        final = final & (freespace_sum < freespace_n)
-    if reproj_err_max is not None:
-        rerr_mean = rerr_acc / np.maximum(geo_sum, 1)
-        final = final & (rerr_mean < reproj_err_max)
-    if erode_px and erode_px > 0:
-        k = 2 * int(erode_px) + 1
-        ker = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
-        final = cv2.erode(final.astype(np.uint8), ker).astype(bool)
-    d_avg = depth_acc / (geo_sum + 1)
-    return final, d_avg
+class ContractError(RuntimeError):
+    """A hard B0 experiment-contract violation."""
 
 
-# ─── Parallel per-ref prep for TSDF (2026-07-07) ───
-# The heavy part of the integrate loop is compute_final_mask (per-ref geometric-
-# consistency over NEIGH neighbors) + image load — both fully independent per
-# ref. Parallelize THAT; keep vol.integrate serial in main, called in refs order
-# (a single ScalableTSDFVolume is not thread-safe, and same-order integrate keeps
-# the weighted-average FP accumulation bit-identical to the serial baseline).
-# Workers return numpy arrays only (picklable); main builds the o3d objects.
-_TSDF_CTX: dict = {}
-# dm-cache: pw_diffmvs_sfm_trio's fusion writes the exact same masked depth this
-# stage would recompute. When a validated cache is loaded (main), skip the entire
-# compute_final_mask geometric-consistency pass — byte-identical, big TSDF win.
-_DM_CACHE: dict = {}
+def _not_equivalent() -> None:
+    raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT)
 
 
-def _tsdf_prep_one(n):
-    c = _TSDF_CTX
-    dm = _DM_CACHE.get(n)
-    if dm is not None:                                   # cache hit: no recompute
-        kf = float((dm > 0).mean())                      # dm>0 <=> final (d_avg>0 where kept)
-    else:
-        final, d_avg = compute_final_mask(n, c["refs"], c["depth"], c["conf"], c["drng"],
-                                          c["K_of"], c["w2c_of"], c["center_of"],
-                                          c["cfg"], c["min_base_fuse"])
-        kf = float(final.mean())
-        dm = np.where(final, d_avg, 0.0).astype(np.float32)
-    if not np.any(dm > 0):
-        return (n, None, None, kf)
-    rgb = (R.load_image(T._name2mi[n]) * 255).astype(np.uint8)
-    return (n, dm, np.ascontiguousarray(rgb), kf)
+@dataclass(frozen=True)
+class DMCache:
+    frames: list[str]
+    selected: dict[str, np.ndarray]
+    signature: str
+    sha256: str
+    shape: tuple[int, ...]
+    dtype: str
 
 
-def _tsdf_pool_init(ctx):
-    if ctx is not None:                 # spawn fallback: receive pickled ctx
-        _TSDF_CTX.update(ctx)
-    cv2.setNumThreads(1)                # no thread oversubscription in workers
+@dataclass(frozen=True)
+class ModelCache:
+    frames: list[str]
+    intrinsics: dict[str, np.ndarray]
+    world_to_camera: dict[str, np.ndarray]
 
 
-def main():
-    tag = sys.argv[1]
-    voxel_mm = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
-    ref_limit = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-    assert tag in ("ofull","ofsxq","7full","blend","ofsonly"), \
-        "tag must be ofull/ofsxq/7full/blend"
-    cfg = BLEND_CFG if tag == "blend" else T.STRICT[tag]
-    print(f"[{tag}] TSDF cfg={cfg} voxel={voxel_mm}mm(ARKit)", flush=True)
+@dataclass(frozen=True)
+class RouteContract:
+    path: Path
+    sha256: str
+    dataset_id: str
+    split_id: str
+    coordinate_frame: str
+    metres_per_model_unit: float
+    transductive_policy: dict[str, object]
+    dmcache_sha256: str
+    dmcache_signature: str
+    dmcache_shape: tuple[int, int, int]
+    dmcache_dtype: str
+    frame_universe: list[str]
+    dm_frame_order_sha256: str
+    model_cache_sha256: str
+    model_frame_order: list[str]
+    model_frame_order_sha256: str
+    reconstruction_frames: list[str]
+    reconstruction_file_sha256: str
+    reconstruction_semantic_sha256: str
+    heldout_frames: list[str]
+    heldout_file_sha256: str
+    heldout_semantic_sha256: str
+    image_root_manifest_sha256: str
+    images_by_name: dict[str, dict[str, object]]
 
-    # ---- load model dump, refs, ARKit alignment (same as pipeline) ----
-    name2mi = T.name2mi_map()
-    T._name2mi = name2mi
-    T._nearest = None  # placeholder; real nearest is a closure below
-    pool, refs = T.build_refs()
-    if ref_limit:
-        refs = refs[:ref_limit]
-    ark = g.arkit_centers_and_R()
-    model_tag = cfg["src"]  # 'lapa'
-    mnames, K_of, w2c_of, center_of, obs, pts_arr = T.load_model(model_tag)
-    missing = [n for n in pool if n not in K_of]
-    if missing:
-        pool = [n for n in pool if n in K_of]
-        refs = [n for n in refs if n in K_of]
-    s_al, R_al, t_al = T.robust_align(center_of, ark)
-    min_base_fuse = T.MIN_BASE_FUSE_M / s_al
 
-    def _nearest(n, k, cand, min_base):
-        c0 = center_of[n]
-        d = sorted((np.linalg.norm(center_of[m] - c0), m) for m in cand if m != n)
-        return [m for dist, m in d if dist >= min_base][:k]
-    T._nearest = _nearest
+@dataclass(frozen=True)
+class ValidatedInputs:
+    output_dir: Path
+    contract: RouteContract
+    frame_list_path: Path
+    dmcache_path: Path
+    model_cache_path: Path
+    image_root: Path
+    dmcache: DMCache
+    model: ModelCache
+    image_paths: dict[str, Path]
 
-    # ---- load frozen depth+conf cache (7full for o-family; blend's own cache) ----
-    p1cache = OUT / CACHE_FILE[tag]
-    assert p1cache.exists(), f"missing {p1cache}"
-    z = np.load(p1cache, allow_pickle=True)
-    fr = z["frames"].tolist(); zd, zc, zr = z["depth"], z["conf"], z["drange"]
-    depth, conf, drng = {}, {}, {}
-    for i, nm in enumerate(fr):
-        depth[nm] = zd[i].astype(np.float32); conf[nm] = zc[i]; drng[nm] = tuple(zr[i])
-    refs = [n for n in refs if n in depth]
-    print(f"[{tag}] loaded cache {len(refs)} refs; align scale={s_al:.4f}", flush=True)
 
-    # ---- dm-cache: reuse fusion's masked depth (byte-identical) → skip the whole
-    # compute_final_mask geometric-consistency pass. Sig-guarded: mismatch = recompute.
-    _dmc = OUT / f"dmcache_trio_{tag}.npz"
-    _my_sig = (f"g{cfg['GEO_MASK']}_p{cfg['PHOTO']}_bnd{cfg.get('BOUND_REL', 0.03)}_"
-               f"nrm{cfg.get('NORMAL_COS', 0.5)}_pc{cfg.get('PHOTO_COLOR', None)}_"
-               f"pcn{cfg.get('PHOTO_COLOR_N', 1)}_fs{cfg.get('FREESPACE_N', None)}_"
-               f"fst{cfg.get('FREESPACE_TAU', 0.02)}_re{cfg.get('REPROJ_ERR_MAX', None)}_"
-               f"er{cfg.get('ERODE_PX', 0)}")
-    if not os.environ.get("AETHER_NO_DMCACHE") and _dmc.exists():
-        dz = np.load(_dmc, allow_pickle=True)
-        if str(dz["sig"]) == _my_sig:
-            dfr = [str(x) for x in dz["frames"].tolist()]
-            ddm = dz["dm"]
-            for i, nm in enumerate(dfr):
-                _DM_CACHE[nm] = ddm[i].astype(np.float32)
-            print(f"[{tag}] dm-cache HIT ({len(_DM_CACHE)} refs) — skip compute_final_mask", flush=True)
-        else:
-            print(f"[{tag}] dm-cache sig MISMATCH -> recompute ({str(dz['sig'])} != {_my_sig})", flush=True)
-    else:
-        print(f"[{tag}] dm-cache absent/disabled -> recompute", flush=True)
+_DM_CACHE: dict[str, np.ndarray] = {}
+_IMAGE_PATHS: dict[str, Path] = {}
+_IMAGE_SIZE: tuple[int, int] = (0, 0)
 
-    # ---- TSDF setup (GLOMAP/camera metric frame; convert ARKit voxel by 1/s_al) ----
-    voxel_len = (voxel_mm / 1000.0) / s_al          # GLOMAP units
-    sdf_trunc = voxel_len * 4.0                     # ~24mm ARKit at 6mm voxel
-    vol = o3d.pipelines.integration.ScalableTSDFVolume(
-        voxel_length=voxel_len, sdf_trunc=sdf_trunc,
-        color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8)
-    print(f"[{tag}] TSDF voxel_len={voxel_len:.5f} sdf_trunc={sdf_trunc:.5f} "
-          f"(GLOMAP units; ARKit voxel={voxel_mm}mm trunc={voxel_mm*4:.0f}mm)", flush=True)
 
-    W, H = T.PROC_W, T.PROC_H
-    t0 = time.time(); n_int = 0; kept_frac = []
+def _path(value: str) -> Path:
+    return Path(value).expanduser()
 
-    # Integrate one prepped frame. Called in refs order (serial path AND the
-    # ordered imap below) -> the single-volume weighted-average FP accumulation
-    # is bit-identical to the pre-parallel baseline.
-    def _integrate(item, i):
-        nonlocal n_int
-        n, dm, rgb, kf = item
-        kept_frac.append(kf)
-        if dm is None:                                  # nothing kept this frame
-            return
-        color_o3d = o3d.geometry.Image(np.ascontiguousarray(rgb))
-        depth_o3d = o3d.geometry.Image(np.ascontiguousarray(dm))
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Controlled B0 6 mm TSDF arm using a frozen input contract."
+    )
+    parser.add_argument("tag", choices=(SUPPORTED_TAG,))
+    parser.add_argument(
+        "voxel_mm", nargs="?", default=PHYSICAL_VOXEL_MM, type=float,
+        help="fixed physical voxel edge length; only 6 mm is accepted",
+    )
+    parser.add_argument("--out", required=True, type=_path, metavar="NEW_DIR")
+    parser.add_argument("--frame-list", required=True, type=_path, metavar="FILE")
+    parser.add_argument("--dmcache", required=True, type=_path, metavar="NPZ")
+    parser.add_argument("--model-cache", required=True, type=_path, metavar="NPZ")
+    parser.add_argument("--image-root", required=True, type=_path, metavar="DIR")
+    parser.add_argument("--input-contract", required=True, type=_path, metavar="JSON")
+    parser.add_argument("--split-id", required=True, metavar="ID")
+    parser.add_argument(
+        "--p1cache", type=_path, default=None,
+        help="legacy-compatible argument; recorded as not read",
+    )
+    return parser
+
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if (
+        not math.isfinite(args.voxel_mm)
+        or not math.isclose(args.voxel_mm, PHYSICAL_VOXEL_MM, rel_tol=0.0, abs_tol=1e-12)
+    ):
+        parser.error("VOXEL_MM is frozen at exactly 6")
+    if not args.split_id or args.split_id != args.split_id.strip():
+        parser.error("--split-id must be a non-empty unpadded string")
+    return args
+
+
+def validate_frozen_route_parameters(tag: object, voxel_mm: object) -> None:
+    try:
+        voxel = float(voxel_mm)
+    except (TypeError, ValueError):
+        raise ContractError("TSDF route parameters differ from frozen ofull/6 mm")
+    if (
+        tag != SUPPORTED_TAG
+        or not math.isfinite(voxel)
+        or not math.isclose(voxel, PHYSICAL_VOXEL_MM, rel_tol=0.0, abs_tol=1e-12)
+    ):
+        raise ContractError("TSDF route parameters differ from frozen ofull/6 mm")
+
+
+def _sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _ordered_frames_sha256(frames: Sequence[str]) -> str:
+    try:
+        return input_contract.ordered_frame_names_sha256(frames)
+    except input_contract.RouteInputNotEquivalent as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+
+
+def image_identity_manifest_sha256(
+    frame_order: Sequence[str], identities: Mapping[str, Mapping[str, object]]
+) -> str:
+    try:
+        return input_contract.image_identity_manifest_sha256(
+            frame_order, identities
+        )
+    except input_contract.RouteInputNotEquivalent as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+
+
+def physical_mm_to_model_units(voxel_mm: float, metres_per_model_unit: float) -> float:
+    try:
+        millimetres = float(voxel_mm)
+        scale = float(metres_per_model_unit)
+    except (TypeError, ValueError):
+        _not_equivalent()
+    if not all(math.isfinite(value) and value > 0 for value in (millimetres, scale)):
+        _not_equivalent()
+    return (millimetres / 1000.0) / scale
+
+
+def _require_file(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_file():
+        _not_equivalent()
+    return resolved
+
+
+def _require_directory(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_dir():
+        _not_equivalent()
+    return resolved
+
+
+def _is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_output_dir(out: Path, protected_roots: Iterable[Path]) -> Path:
+    """Validate without creating anything; existing parent symlinks resolve."""
+    resolved = out.expanduser().resolve(strict=False)
+    if (
+        out.exists()
+        or out.is_symlink()
+        or resolved.exists()
+        or not resolved.parent.is_dir()
+    ):
+        raise ContractError("--out must be a new directory with an existing parent")
+    for protected in protected_roots:
+        protected_resolved = protected.expanduser().resolve(strict=False)
+        if resolved == protected_resolved or _is_within(resolved, protected_resolved):
+            raise ContractError("--out is inside a protected legacy/input tree")
+    return resolved
+
+
+def read_frame_list(path: Path) -> list[str]:
+    try:
+        return input_contract.parse_frame_list(path)
+    except input_contract.RouteInputNotEquivalent as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+
+
+def load_route_contract(path: Path, split_id: str) -> RouteContract:
+    source = _require_file(path)
+    try:
+        payload, contract_sha256 = input_contract.load_input_contract(source)
+        selected_split = input_contract.select_input_contract_split(
+            payload, split_id
+        )
+    except input_contract.RouteInputNotEquivalent as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+
+    policy = dict(payload["transductive_policy"])
+    if policy["route_allowed"] is not True:
+        _not_equivalent()
+    if selected_split.get("route_allowed", True) is not True:
+        _not_equivalent()
+    dm = payload["dmcache"]
+    model = payload["model_cache"]
+    depth = dm["depth"]
+    images = payload["images"]
+    reconstruction = selected_split["reconstruction"]
+    heldout = selected_split["heldout"]
+
+    return RouteContract(
+        path=source,
+        sha256=contract_sha256,
+        dataset_id=str(payload["dataset_id"]),
+        split_id=split_id,
+        coordinate_frame=str(payload["coordinate_frame"]),
+        metres_per_model_unit=float(payload["metres_per_model_unit"]),
+        transductive_policy=policy,
+        dmcache_sha256=str(dm["sha256"]),
+        dmcache_signature=str(dm["signature"]),
+        dmcache_shape=tuple(int(value) for value in depth["shape"]),
+        dmcache_dtype=str(depth["dtype"]),
+        frame_universe=list(dm["frame_order"]),
+        dm_frame_order_sha256=str(dm["frame_order_sha256"]),
+        model_cache_sha256=str(model["sha256"]),
+        model_frame_order=list(model["frame_order"]),
+        model_frame_order_sha256=str(model["frame_order_sha256"]),
+        reconstruction_frames=list(reconstruction["frames"]),
+        reconstruction_file_sha256=str(reconstruction["file_sha256"]),
+        reconstruction_semantic_sha256=str(reconstruction["semantic_sha256"]),
+        heldout_frames=list(heldout["frames"]),
+        heldout_file_sha256=str(heldout["file_sha256"]),
+        heldout_semantic_sha256=str(heldout["semantic_sha256"]),
+        image_root_manifest_sha256=str(images["root_manifest_sha256"]),
+        images_by_name={
+            str(name): dict(identity)
+            for name, identity in images["by_name"].items()
+        },
+    )
+
+
+def load_dmcache(
+    path: Path, selected_frames: Sequence[str], contract: RouteContract
+) -> DMCache:
+    actual_sha = _sha256_file(path)
+    if actual_sha != contract.dmcache_sha256:
+        _not_equivalent()
+    try:
+        with np.load(path, allow_pickle=False) as archive:
+            if not {"frames", "dm", "sig"}.issubset(archive.files):
+                _not_equivalent()
+            frames = [str(value) for value in archive["frames"].tolist()]
+            signature_raw = np.asarray(archive["sig"])
+            depth = np.asarray(archive["dm"])
+    except ContractError:
+        raise
+    except Exception as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+    if signature_raw.shape != ():
+        _not_equivalent()
+    signature = str(signature_raw.item())
+    if (
+        frames != contract.frame_universe
+        or _ordered_frames_sha256(frames) != contract.dm_frame_order_sha256
+        or signature != contract.dmcache_signature
+        or tuple(depth.shape) != contract.dmcache_shape
+        or depth.dtype.name != contract.dmcache_dtype
+        or len(frames) != len(set(frames))
+    ):
+        _not_equivalent()
+    index = {name: i for i, name in enumerate(frames)}
+    if any(name not in index for name in selected_frames):
+        _not_equivalent()
+    selected = {name: depth[index[name]] for name in selected_frames}
+    return DMCache(
+        frames=frames,
+        selected=selected,
+        signature=signature,
+        sha256=actual_sha,
+        shape=tuple(depth.shape),
+        dtype=depth.dtype.name,
+    )
+
+
+def load_model_cache(path: Path, contract: RouteContract | None = None) -> ModelCache:
+    if contract is not None and _sha256_file(path) != contract.model_cache_sha256:
+        _not_equivalent()
+    try:
+        with np.load(path, allow_pickle=False) as archive:
+            if not {"names", "K", "w2c"}.issubset(archive.files):
+                _not_equivalent()
+            frames = [str(value) for value in archive["names"].tolist()]
+            intrinsics = np.asarray(archive["K"])
+            world_to_camera = np.asarray(archive["w2c"])
+    except ContractError:
+        raise
+    except Exception as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+    count = len(frames)
+    if (
+        not frames
+        or count != len(set(frames))
+        or intrinsics.shape != (count, 3, 3)
+        or intrinsics.dtype.kind != "f"
+        or world_to_camera.shape not in {(count, 3, 4), (count, 4, 4)}
+        or world_to_camera.dtype.kind != "f"
+        or not np.isfinite(intrinsics).all()
+        or not np.isfinite(world_to_camera).all()
+        or np.any(intrinsics[:, 0, 0] <= 0)
+        or np.any(intrinsics[:, 1, 1] <= 0)
+    ):
+        _not_equivalent()
+    if contract is not None:
+        if (
+            frames != contract.model_frame_order
+            or set(frames) != set(contract.frame_universe)
+            or _ordered_frames_sha256(frames) != contract.model_frame_order_sha256
+        ):
+            _not_equivalent()
+    return ModelCache(
+        frames=frames,
+        intrinsics={name: intrinsics[i] for i, name in enumerate(frames)},
+        world_to_camera={name: world_to_camera[i] for i, name in enumerate(frames)},
+    )
+
+
+def _validate_images(
+    image_root: Path, contract: RouteContract
+) -> dict[str, Path]:
+    result: dict[str, Path] = {}
+    observed: dict[str, dict[str, object]] = {}
+    for name in contract.frame_universe:
+        path = (image_root / name).resolve()
+        identity = contract.images_by_name[name]
+        if not path.is_file() or path.stat().st_size != identity["size_bytes"]:
+            _not_equivalent()
+        sha = _sha256_file(path)
+        if sha != identity["sha256"]:
+            _not_equivalent()
+        result[name] = path
+        observed[name] = {"sha256": sha, "size_bytes": path.stat().st_size}
+    if (
+        image_identity_manifest_sha256(contract.frame_universe, observed)
+        != contract.image_root_manifest_sha256
+    ):
+        _not_equivalent()
+    return result
+
+
+def validate_frame_join(
+    frames: Sequence[str], canonical_frames: Sequence[str],
+    dm_frames: set[str], model_frames: set[str],
+) -> None:
+    if not frames:
+        _not_equivalent()
+    universe = set(canonical_frames)
+    if any(
+        name not in universe or name not in dm_frames or name not in model_frames
+        for name in frames
+    ):
+        _not_equivalent()
+
+
+def validate_route_inputs(args: argparse.Namespace) -> ValidatedInputs:
+    contract_path = _require_file(args.input_contract)
+    frame_list_path = _require_file(args.frame_list)
+    dmcache_path = _require_file(args.dmcache)
+    model_path = _require_file(args.model_cache)
+    image_root = _require_directory(args.image_root)
+    contract = load_route_contract(contract_path, args.split_id)
+    selected_frames = read_frame_list(frame_list_path)
+    if (
+        selected_frames != contract.reconstruction_frames
+        or _sha256_file(frame_list_path) != contract.reconstruction_file_sha256
+        or _ordered_frames_sha256(selected_frames)
+        != contract.reconstruction_semantic_sha256
+    ):
+        _not_equivalent()
+    model = load_model_cache(model_path, contract)
+    dmcache = load_dmcache(dmcache_path, selected_frames, contract)
+    validate_frame_join(
+        selected_frames, contract.frame_universe, set(dmcache.frames), set(model.frames)
+    )
+    image_paths = _validate_images(image_root, contract)
+    output_dir = validate_output_dir(
+        args.out,
+        {
+            LEGACY_VIEWER_DIR,
+            contract_path.parent,
+            dmcache_path.parent,
+            model_path.parent,
+            image_root,
+        },
+    )
+    return ValidatedInputs(
+        output_dir=output_dir,
+        contract=contract,
+        frame_list_path=frame_list_path,
+        dmcache_path=dmcache_path,
+        model_cache_path=model_path,
+        image_root=image_root,
+        dmcache=dmcache,
+        model=model,
+        image_paths=image_paths,
+    )
+
+
+def semantic_manifest_provenance(
+    frames: Sequence[str],
+    depth_by_name: Mapping[str, np.ndarray],
+    intrinsics_by_name: Mapping[str, np.ndarray],
+    world_to_camera_by_name: Mapping[str, np.ndarray],
+) -> dict[str, object]:
+    per_frame_hashes: list[str] = []
+    try:
+        for name in frames:
+            depth_camera_z = np.asarray(depth_by_name[name])
+            mask = np.isfinite(depth_camera_z) & (depth_camera_z > 0)
+            per_frame_hashes.append(
+                input_contract.canonical_frame_semantic_sha256(
+                    name,
+                    mask,
+                    depth_camera_z,
+                    np.asarray(intrinsics_by_name[name]),
+                    np.asarray(world_to_camera_by_name[name]),
+                )
+            )
+        manifest_hash = input_contract.semantic_manifest_sha256(per_frame_hashes)
+    except (KeyError, input_contract.RouteInputNotEquivalent) as exc:
+        raise ContractError(input_contract.ROUTE_INPUT_NOT_EQUIVALENT) from exc
+    return {
+        "semantic_hash_schema": input_contract.SEMANTIC_HASH_VERSION,
+        "semantic_manifest_hash_schema": "b0-semantic-manifest-v1",
+        "semantic_components": {
+            "name": "exact_utf8_basename",
+            "mask": MASK_SEMANTICS,
+            "depth_camera_z": "original_dmcache_float_no_transform",
+            "K": "original_model_cache_float_no_transform",
+            "w2c": "original_model_cache_float_no_transform",
+        },
+        "semantic_frame_components": [
+            {"name": name, "sha256": semantic_hash}
+            for name, semantic_hash in zip(frames, per_frame_hashes, strict=True)
+        ],
+        "per_frame_semantic_sha256": per_frame_hashes,
+        "semantic_manifest_sha256": manifest_hash,
+    }
+
+
+def _load_rgb(name: str) -> np.ndarray:
+    path = _IMAGE_PATHS.get(name)
+    width, height = _IMAGE_SIZE
+    if path is None or width <= 0 or height <= 0:
+        _not_equivalent()
+    bgr = cv2.imread(str(path), cv2.IMREAD_COLOR)
+    if bgr is None:
+        _not_equivalent()
+    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    if rgb.shape[:2] != (height, width):
+        rgb = cv2.resize(rgb, (width, height), interpolation=cv2.INTER_AREA)
+    return np.ascontiguousarray(rgb, dtype=np.uint8)
+
+
+def _tsdf_prep_one(name: str) -> tuple[str, np.ndarray, np.ndarray, float]:
+    raw_depth = _DM_CACHE.get(name)
+    if raw_depth is None:
+        _not_equivalent()
+    mask = np.isfinite(raw_depth) & (raw_depth > 0)
+    depth = np.where(mask, raw_depth, 0.0).astype(np.float32, copy=False)
+    kept_fraction = float(np.count_nonzero(mask) / mask.size)
+    return name, depth, _load_rgb(name), kept_fraction
+
+
+def safe_depth_truncation(depth: np.ndarray) -> float:
+    valid = np.isfinite(depth) & (depth > 0)
+    positive = np.asarray(depth)[valid]
+    if positive.size == 0:
+        raise ContractError("cannot derive depth_trunc from an empty positive mask")
+    maximum = float(np.max(positive))
+    truncation = maximum + max(abs(maximum) * 1e-6, 1e-6)
+    if not math.isfinite(truncation) or not np.all(positive < truncation):
+        raise ContractError("derived depth_trunc would crop a positive depth")
+    return truncation
+
+
+def _as_open3d_extrinsic(value: np.ndarray) -> np.ndarray:
+    pose = np.asarray(value, dtype=np.float64)
+    if pose.shape == (4, 4):
+        return pose
+    if pose.shape == (3, 4):
+        result = np.eye(4, dtype=np.float64)
+        result[:3] = pose
+        return result
+    _not_equivalent()
+    raise AssertionError("unreachable")
+
+
+def validate_mesh(mesh: object) -> tuple[np.ndarray, np.ndarray]:
+    vertices = np.asarray(mesh.vertices)
+    triangles = np.asarray(mesh.triangles)
+    if vertices.ndim != 2 or vertices.shape[1:] != (3,) or len(vertices) == 0:
+        raise ContractError(f"empty or malformed mesh vertices: {vertices.shape}")
+    if triangles.ndim != 2 or triangles.shape[1:] != (3,) or len(triangles) == 0:
+        raise ContractError(f"empty or malformed mesh triangles: {triangles.shape}")
+    if not np.isfinite(vertices).all():
+        raise ContractError("mesh contains non-finite vertices")
+    if not np.issubdtype(triangles.dtype, np.integer):
+        if not np.isfinite(triangles).all() or not np.equal(triangles, np.floor(triangles)).all():
+            raise ContractError("mesh triangle indices are non-integral")
+    indices = triangles.astype(np.int64, copy=False)
+    if indices.min() < 0 or indices.max() >= len(vertices):
+        raise ContractError("mesh triangle index is outside the vertex array")
+    for attribute in ("vertex_normals", "vertex_colors"):
+        if hasattr(mesh, attribute):
+            values = np.asarray(getattr(mesh, attribute))
+            if values.size and not np.isfinite(values).all():
+                raise ContractError(f"mesh contains non-finite {attribute}")
+    return vertices, indices
+
+
+def write_outputs(out: Path, mesh: object, provenance: dict[str, object]) -> None:
+    validate_mesh(mesh)
+    out.mkdir(mode=0o755, parents=False, exist_ok=False)
+    mesh_path = out / "mesh.ply"
+    wrote = o3d.io.write_triangle_mesh(
+        str(mesh_path), mesh, write_vertex_normals=True,
+        write_vertex_colors=True, write_ascii=False,
+    )
+    if not wrote or not mesh_path.is_file() or mesh_path.stat().st_size == 0:
+        raise ContractError(f"Open3D failed to write a nonempty mesh: {mesh_path}")
+    payload = dict(provenance)
+    payload["mesh"] = {
+        **dict(payload.get("mesh", {})),
+        "path": "mesh.ply",
+        "bytes": mesh_path.stat().st_size,
+        "sha256": _sha256_file(mesh_path),
+    }
+    (out / "provenance.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _run(args: argparse.Namespace) -> None:
+    validate_frozen_route_parameters(args.tag, args.voxel_mm)
+    inputs = validate_route_inputs(args)
+    selected_frames = inputs.contract.reconstruction_frames
+    semantic_manifest = semantic_manifest_provenance(
+        selected_frames,
+        inputs.dmcache.selected,
+        inputs.model.intrinsics,
+        inputs.model.world_to_camera,
+    )
+    height, width = inputs.contract.dmcache_shape[1:]
+    voxel_length = physical_mm_to_model_units(
+        PHYSICAL_VOXEL_MM, inputs.contract.metres_per_model_unit
+    )
+    sdf_trunc = voxel_length * SDF_TRUNC_VOXELS
+
+    _DM_CACHE.clear()
+    _DM_CACHE.update(inputs.dmcache.selected)
+    _IMAGE_PATHS.clear()
+    _IMAGE_PATHS.update(
+        {name: inputs.image_paths[name] for name in selected_frames}
+    )
+    global _IMAGE_SIZE
+    _IMAGE_SIZE = (width, height)
+
+    volume = o3d.pipelines.integration.ScalableTSDFVolume(
+        voxel_length=voxel_length,
+        sdf_trunc=sdf_trunc,
+        color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8,
+    )
+    started = time.monotonic()
+    kept_fractions: list[float] = []
+    depth_truncations: dict[str, float] = {}
+    integrated = 0
+    for ordinal, name in enumerate(selected_frames, 1):
+        frame_name, depth, rgb, kept_fraction = _tsdf_prep_one(name)
+        kept_fractions.append(kept_fraction)
+        if not np.any(depth > 0):
+            continue
+        depth_truncation = safe_depth_truncation(depth)
+        depth_truncations[frame_name] = depth_truncation
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
-            color_o3d, depth_o3d, depth_scale=1.0,      # depth already in metric units
-            depth_trunc=float(max(drng[n]) * 1.5), convert_rgb_to_intensity=False)
-        K = K_of[n].astype(np.float64)
-        intr = o3d.camera.PinholeCameraIntrinsic(
-            W, H, K[0, 0], K[1, 1], K[0, 2], K[1, 2])
-        extr = w2c_of[n].astype(np.float64)             # world->camera == o3d extrinsic
-        vol.integrate(rgbd, intr, extr)
-        n_int += 1
-        if i % 40 == 0 or ref_limit:
-            print(f"  [{tag}] {i}/{len(refs)} {n} kept={kf*100:.0f}% "
-                  f"integrated={n_int}", flush=True)
+            o3d.geometry.Image(rgb),
+            o3d.geometry.Image(np.ascontiguousarray(depth, dtype=np.float32)),
+            depth_scale=1.0,
+            depth_trunc=depth_truncation,
+            convert_rgb_to_intensity=False,
+        )
+        intrinsic = inputs.model.intrinsics[frame_name].astype(np.float64)
+        camera = o3d.camera.PinholeCameraIntrinsic(
+            width, height,
+            intrinsic[0, 0], intrinsic[1, 1], intrinsic[0, 2], intrinsic[1, 2],
+        )
+        volume.integrate(
+            rgbd, camera,
+            _as_open3d_extrinsic(inputs.model.world_to_camera[frame_name]),
+        )
+        integrated += 1
+        if ordinal == 1 or ordinal % 20 == 0 or ordinal == len(selected_frames):
+            print(
+                f"[tsdf] {ordinal}/{len(selected_frames)} {frame_name} "
+                f"kept={kept_fraction * 100:.1f}% integrated={integrated}",
+                flush=True,
+            )
+    if integrated == 0:
+        raise ContractError("no selected frame contained a positive masked depth")
 
-    # [2026-07-07] Parallelize the heavy independent prep (compute_final_mask +
-    # image load); integrate stays serial. Default parallel; AETHER_TSDF_WORKERS=1
-    # forces serial (debug / bit-exact A/B).
-    _TSDF_CTX.clear()
-    _TSDF_CTX.update(dict(refs=refs, depth=depth, conf=conf, drng=drng, K_of=K_of,
-                          w2c_of=w2c_of, center_of=center_of, cfg=cfg,
-                          min_base_fuse=min_base_fuse))
-    _tsdf_default = str(min(8, max(1, (os.cpu_count() or 4) - 2)))
-    n_workers = int(os.environ.get("AETHER_TSDF_WORKERS", _tsdf_default))
-    if n_workers <= 1:
-        for i, n in enumerate(refs):                    # serial (env=1 explicit fallback)
-            _integrate(_tsdf_prep_one(n), i)
-    else:
-        import multiprocessing as _mp
-        n_workers = min(n_workers, max(1, (os.cpu_count() or 2) - 2), len(refs))
-        # OMP/BLAS pinned to 1 BEFORE forking so no multi-thread pool is live at
-        # fork (classic macOS libomp fork-hang guard); workers are single-thread.
-        for v in ("OMP_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "OPENBLAS_NUM_THREADS"):
-            os.environ.setdefault(v, "1")
-        cv2.setNumThreads(1)
-        try:
-            _ctx = _mp.get_context("fork"); _init = None      # COW-inherit cache + T/R
-        except ValueError:
-            _ctx = _mp.get_context("spawn"); _init = dict(_TSDF_CTX)
-        print(f"[{tag}] tsdf prep: parallel {n_workers} workers "
-              f"({_ctx.get_start_method()}) over {len(refs)} refs; integrate serial",
-              flush=True)
-        with _ctx.Pool(processes=n_workers, initializer=_tsdf_pool_init,
-                       initargs=(_init,)) as _pool:
-            # imap preserves refs order -> integrate order == serial -> bit-identical
-            for i, item in enumerate(_pool.imap(
-                    _tsdf_prep_one, refs,
-                    chunksize=max(1, len(refs) // (n_workers * 4)))):
-                _integrate(item, i)
-        cv2.setNumThreads(0)
-    print(f"[{tag}] integrated {n_int} frames kept/frame={np.mean(kept_frac)*100:.1f}% "
-          f"pass2+integrate={time.time()-t0:.1f}s", flush=True)
-
-    # ---- extract mesh, then transform into ARKit metric frame ----
-    mesh = vol.extract_triangle_mesh()
+    mesh = volume.extract_triangle_mesh()
     mesh.compute_vertex_normals()
-    V = np.asarray(mesh.vertices)
-    Va = (s_al * (R_al @ V.T).T + t_al)             # GLOMAP -> ARKit metric
-    mesh.vertices = o3d.utility.Vector3dVector(Va)
-    mesh.compute_vertex_normals()                    # recompute after transform
-    nv, nt = len(mesh.vertices), len(mesh.triangles)
-    print(f"[{tag}] TSDF mesh: {nv:,} verts {nt:,} tris "
-          f"(has_color={mesh.has_vertex_colors()})", flush=True)
+    vertices, triangles = validate_mesh(mesh)
+    elapsed = time.monotonic() - started
+    frozen_contract_provenance = {
+        "path": str(inputs.contract.path),
+        "sha256": inputs.contract.sha256,
+        "schema_version": INPUT_CONTRACT_SCHEMA,
+        "split_id": inputs.contract.split_id,
+        "validated_fields": {
+            "dataset_id": inputs.contract.dataset_id,
+            "coordinate_frame": inputs.contract.coordinate_frame,
+            "metres_per_model_unit": inputs.contract.metres_per_model_unit,
+            "transductive_policy": inputs.contract.transductive_policy,
+            "dmcache_frame_order_sha256": inputs.contract.dm_frame_order_sha256,
+            "model_cache_frame_order_sha256": (
+                inputs.contract.model_frame_order_sha256
+            ),
+            "reconstruction_file_sha256": (
+                inputs.contract.reconstruction_file_sha256
+            ),
+            "reconstruction_semantic_sha256": (
+                inputs.contract.reconstruction_semantic_sha256
+            ),
+            "heldout_file_sha256": inputs.contract.heldout_file_sha256,
+            "heldout_semantic_sha256": inputs.contract.heldout_semantic_sha256,
+            "image_root_manifest_sha256": (
+                inputs.contract.image_root_manifest_sha256
+            ),
+        },
+        "hash_algorithms": {
+            "frame_order_and_split_semantic": (
+                'SHA-256 of "".join(f"{name}\\n") UTF-8 in frozen order'
+            ),
+            "frame_list_file_sha256": "SHA-256 of exact raw frame-list file bytes",
+            "images_root_manifest": (
+                "SHA-256 of name<TAB>sha256<TAB>size_bytes<LF> UTF-8 "
+                "in dmcache.frame_order"
+            ),
+        },
+    }
+    provenance: dict[str, object] = {
+        "schema": "pocketworld.b0.tsdf.provenance.v2",
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "script": {"path": str(SCRIPT_PATH), "sha256": _sha256_file(SCRIPT_PATH)},
+        "tag": SUPPORTED_TAG,
+        "voxel_mm": PHYSICAL_VOXEL_MM,
+        "dataset_id": inputs.contract.dataset_id,
+        "split_id": inputs.contract.split_id,
+        "coordinate_frame": inputs.contract.coordinate_frame,
+        "metres_per_model_unit": inputs.contract.metres_per_model_unit,
+        "transductive_policy": inputs.contract.transductive_policy,
+        "frame_count": len(selected_frames),
+        "frame_order": selected_frames,
+        "frame_list_sha256": inputs.contract.reconstruction_file_sha256,
+        "dmcache_sha256": inputs.dmcache.sha256,
+        "dmcache_signature": inputs.dmcache.signature,
+        "model_cache_sha256": inputs.contract.model_cache_sha256,
+        **semantic_manifest,
+        "input_contract": frozen_contract_provenance,
+        "frozen_input_identity_contract": frozen_contract_provenance,
+        "inputs": {
+            "dmcache": {
+                "path": str(inputs.dmcache_path),
+                "bytes": inputs.dmcache_path.stat().st_size,
+                "sha256": inputs.dmcache.sha256,
+                "signature": inputs.dmcache.signature,
+                "shape": list(inputs.dmcache.shape),
+                "dtype": inputs.dmcache.dtype,
+                "frame_order_sha256": inputs.contract.dm_frame_order_sha256,
+            },
+            "model_cache": {
+                "path": str(inputs.model_cache_path),
+                "bytes": inputs.model_cache_path.stat().st_size,
+                "sha256": inputs.contract.model_cache_sha256,
+                "frame_order_sha256": inputs.contract.model_frame_order_sha256,
+            },
+            "frame_list": {
+                "path": str(inputs.frame_list_path),
+                "bytes": inputs.frame_list_path.stat().st_size,
+                "file_sha256": inputs.contract.reconstruction_file_sha256,
+                "semantic_sha256": inputs.contract.reconstruction_semantic_sha256,
+            },
+            "images": {
+                "root": str(inputs.image_root),
+                "root_manifest_sha256": inputs.contract.image_root_manifest_sha256,
+                "identity_count": len(inputs.contract.images_by_name),
+                "role": "RGB color only; image pixels do not alter TSDF geometry",
+            },
+        },
+        "input_equivalence_contract": {
+            **semantic_manifest,
+            "depth_semantics": "camera_z",
+            "mask_semantics": MASK_SEMANTICS,
+            "p1cache_dependency": False,
+            "legacy_p1cache_argument_not_read": (
+                str(args.p1cache.expanduser().resolve(strict=False))
+                if args.p1cache is not None else None
+            ),
+            "neighbor_policy": (
+                "not_recomputed; contract-bound masked depth is common to both arms"
+            ),
+            "status": "VALIDATED_FOR_TSDF_ARM",
+        },
+        "coordinate_transform": {
+            "mesh_output": inputs.contract.coordinate_frame,
+            "metres_per_model_unit": inputs.contract.metres_per_model_unit,
+            "transform_applied_by_route": False,
+            "sim3_applied_to_mesh": False,
+            "icp_applied_to_mesh": False,
+        },
+        "tsdf": {
+            "physical_voxel_mm": PHYSICAL_VOXEL_MM,
+            "model_frame_voxel_length": voxel_length,
+            "model_frame_sdf_trunc": sdf_trunc,
+            "sdf_trunc_voxels": SDF_TRUNC_VOXELS,
+            "route_parameter_tuning": False,
+            "depth_trunc_policy": (
+                "per-frame max finite positive depth plus deterministic epsilon"
+            ),
+            "depth_trunc_by_frame": depth_truncations,
+            "integration_order": selected_frames,
+            "selected_frames": len(selected_frames),
+            "integrated_frames": integrated,
+            "mean_positive_mask_fraction": float(np.mean(kept_fractions)),
+            "wall_seconds": elapsed,
+        },
+        "mesh": {
+            "vertices": int(len(vertices)),
+            "triangles": int(len(triangles)),
+            "bbox_min": vertices.min(axis=0).tolist(),
+            "bbox_max": vertices.max(axis=0).tolist(),
+            "finite": True,
+        },
+    }
+    write_outputs(inputs.output_dir, mesh, provenance)
+    print(
+        f"[tsdf] wrote isolated {inputs.contract.coordinate_frame} result "
+        f"{inputs.output_dir} ({len(vertices):,} vertices, "
+        f"{len(triangles):,} triangles, {elapsed:.1f}s)",
+        flush=True,
+    )
 
-    print(f"[{tag}] ALIGNED bbox: min={Va.min(0)} max={Va.max(0)} "
-          f"median={np.median(Va, 0)}", flush=True)
-    if ref_limit and os.environ.get("TSDF_SMOKE_WRITE"):
-        sp = Path(os.environ["TSDF_SMOKE_WRITE"])
-        o3d.io.write_triangle_mesh(str(sp), mesh, write_vertex_normals=True,
-                                   write_vertex_colors=True)
-        print(f"[smoke] wrote {sp}", flush=True)
-    if not ref_limit:
-        OUTDIR.mkdir(exist_ok=True)
-        outp = OUTDIR / viewer_ply_name(tag, voxel_mm)
-        o3d.io.write_triangle_mesh(str(outp), mesh, write_vertex_normals=True,
-                                   write_vertex_colors=True, write_ascii=False)
-        print(f"wrote {outp}  {os.path.getsize(outp)/1e6:.1f}MB", flush=True)
-        # also stash a copy next to the fused ply for provenance (voxel-suffixed)
-        prov_stem = os.path.splitext(viewer_ply_name(tag, voxel_mm))[0]
-        o3d.io.write_triangle_mesh(str(OUT / f"tsdf_trio_{prov_stem}.ply"), mesh,
-                                   write_vertex_normals=True, write_vertex_colors=True)
+
+def main(argv: Sequence[str] | None = None) -> int:
+    try:
+        _run(parse_args(argv))
+    except ContractError as exc:
+        print(f"B0_CONTRACT_ERROR: {exc}", file=sys.stderr, flush=True)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

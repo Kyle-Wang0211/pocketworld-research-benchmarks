@@ -1,0 +1,38 @@
+{
+  "schema_version": "b0-mlflow-run-pointer-v1",
+  "tracking_uri": "sqlite:////Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_mlflow_v2/mlflow.db",
+  "experiment_id": "1",
+  "run_id": "2233c8dcf5d54608a2e509a3570821f1",
+  "artifact_uri": "file:///Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_mlflow_v2/artifacts/2233c8dcf5d54608a2e509a3570821f1/artifacts",
+  "formal_contract_path": "/Users/kaidongwang/b0_mesh_ab_runs/20260722_cap50_prereg_v3/contract.json",
+  "formal_contract_sha256": "bc0055346cb76a90e42de4700a64b7ffe8d492207cff37514ffa5055bbfff330",
+  "dvc_pipeline_sha256": "e0309e4d0200039a3bf7fa4c7fc4427622953f15cb8340a66d5bd9aabe942aac",
+  "dvc_input_identity_sha256": "8c67ada09199b0fe066cdf76065704a2fc68f2f8c050e68d16fadc23a1000be0",
+  "dvc_pointer_sha256": "39137d9da57ef844f12a517ec7dac891764478472e35cfc121fde4f327a65a1c",
+  "initial_status": "RUNNING",
+  "final_status": "FINISHED",
+  "experiment_verdict": "FAIL",
+  "experiment_reason": "NONINFERIORITY_FAILED",
+  "dvc_lock_sha256": "b984979d927805abbcbeb18e882cea786240529a9f7e79f4d80de834f1689ce9",
+  "only_experimental_variable": "meshing_backend",
+  "preflight_deviations": [
+    {
+      "attempt": 1,
+      "status": "REJECTED_BEFORE_OUTPUT",
+      "reason": "DVC's audited uv wrapper prepended its own virtualenv to PATH; the formal runner rejected environment drift.",
+      "resolution": "The DVC graph retains the exact formal command arrays; phase execution uses the audited DVC binary with the preregistered PATH."
+    },
+    {
+      "attempt": 2,
+      "status": "GOVERNANCE_REWORK_ONLY",
+      "reason": "The first MLflow parent run referenced a misspelled source-bundle identity while no mesh existed.",
+      "resolution": "The bad run f5a08b887781436288fa13e5752ca138 was preserved as FAILED; this corrected parent run contains the exact contract, DVC, and source identities."
+    },
+    {
+      "attempt": 3,
+      "status": "EVALUATOR_SEMANTIC_FAILURE_BEFORE_QUALITY_METRICS",
+      "reason": "Formal v2 treated 17 local TSDF zero-area faces among 1,328,679 as a whole-mesh METRIC_UNDEFINED condition and emitted no quality metric.",
+      "resolution": "Run 9f0c5daa621e4b32b028d47bd3c76bc2 and all v2 artifacts remain preserved as FAILED. Formal v3 preregisters one symmetric area2 > float64-epsilon face filter, removes the unregistered nondegenerate gate, and reruns both routes."
+    }
+  ]
+}
