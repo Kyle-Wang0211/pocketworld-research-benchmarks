@@ -32,9 +32,9 @@
 
 ## 3. Verify and Report
 
-- [ ] 3.1 Verify all hashes, monitor statuses, resource evidence, and route-input
+- [x] 3.1 Verify all hashes, monitor statuses, resource evidence, and route-input
   equivalence; preserve all failed or invalid attempts.
-- [ ] 3.2 Obtain a fresh read-only review of code, evidence, and verdict.
-- [ ] 3.3 Write `B0_MESHING_AB_REPORT.md` and the B0 section of the combined
+- [x] 3.2 Obtain a fresh read-only review of code, evidence, and verdict.
+- [x] 3.3 Write `B0_MESHING_AB_REPORT.md` and the B0 section of the combined
   execution report with calibrated observation-consistency claims.
 - [ ] 3.4 Run the 413-frame gate only if the strict cap50 verdict is PASS.
