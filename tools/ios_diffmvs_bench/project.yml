@@ -11,14 +11,22 @@ targets:
       - DiffMVSBench
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.pocketworld.diffmvsbench
+        # [2026-07-31] 借 com.kyle.vggtbench 这个 App ID:门户里已给它注册了
+        # increased-memory-limit,而 com.pocketworld.diffmvsbench 没有(通配 profile
+        # 不带 capability,现开需要账号登陆门户)。vggtbench 没装在手机上,不覆盖任何东西。
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.vggtbench
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_NSCameraUsageDescription: "Used for the ARKit SLAM coverage preview (red/yellow/green feature-point feedback)."
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         DEVELOPMENT_TEAM: 26AH7V448L
+        # 保持 Automatic:本地已有 com.kyle.vggtbench 的 Xcode-managed profile,且它带的
+        # capability 与本 target 的 entitlements 完全一致,自动签名可以直接命中、不必联网建新的。
+        # (手动签名反而不行:Xcode-managed 的 profile 不允许被 Manual 模式指定。)
         CODE_SIGN_STYLE: Automatic
         SWIFT_OBJC_BRIDGING_HEADER: DiffMVSBench/DiffMVSBench-Bridging-Header.h
+        # 与生产 app 同预算(4.1GB),否则测的是 bench 的墙不是产品的墙
+        CODE_SIGN_ENTITLEMENTS: DiffMVSBench/DiffMVSBench.entitlements
         CLANG_CXX_LANGUAGE_STANDARD: "c++17"
         CLANG_CXX_LIBRARY: "libc++"

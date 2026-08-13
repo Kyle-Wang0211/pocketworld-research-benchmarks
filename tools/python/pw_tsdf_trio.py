@@ -40,7 +40,8 @@ OUT = R.OUT
 # Base viewer filenames at the DEFAULT 6mm voxel. Non-6mm voxels get a suffix
 # (e.g. mesh_o_tsdf.ply @6mm vs mesh_o_tsdf4.ply @4mm) so finer-voxel runs never
 # clobber the certified 6mm meshes. See viewer_ply_name().
-VIEWER_PLY = {"ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
+VIEWER_PLY = {"res2dtu": "mesh_res2dtu_tsdf.ply",
+              "ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
               "7full": "mesh_7full_tsdf.ply", "blend": "mesh_blend_tsdf.ply",
               "ofsonly": "mesh_ofsonly_tsdf.ply"}
 
@@ -49,7 +50,15 @@ VIEWER_PLY = {"ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
 # (blend conf << DTU, so a matched-low PHOTO is required; see BLEND_CFG below).
 CACHE_FILE = {"ofull": "p1cache_trio_7full.npz", "ofsxq": "p1cache_trio_7full.npz",
               "7full": "p1cache_trio_7full.npz", "blend": "p1cache_trio_blend.npz",
-              "ofsonly": "p1cache_trio_7full.npz"}
+              "ofsonly": "p1cache_trio_7full.npz",
+              # [2026-07-31] 官方分辨率 + dtu 权重。子集(120 refs)缓存,独立文件名。
+              "res2dtu": "p1cache_trio_res2dtu_1792x1024_120.npz"}
+# 每个 tag 的推理分辨率。TSDF 原来写死 896x512(所有 o 家族都是),但 res2dtu 是
+# 1792x1024 —— K 必须跟着重缩放,否则反投影全错(点云会整体缩放/错位)。
+TAG_RES = {"res2dtu": (1792, 1024)}
+# res2dtu 的 pass2 门 = 官方档:geo2,且关掉我们自己加的法向门/边缘门。
+RES2DTU_CFG = {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 2,
+               "NORMAL_COS": -1.0, "BOUND_REL": 1e9}
 # Calibrated blend fusion gate (src=lapa, blend ckpt @896x512). PHOTO is set to the
 # blend-scale value chosen from the conf-distribution probe (matched to o coverage).
 BLEND_CFG = {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3}
@@ -181,9 +190,14 @@ def main():
     tag = sys.argv[1]
     voxel_mm = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
     ref_limit = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-    assert tag in ("ofull","ofsxq","7full","blend","ofsonly"), \
-        "tag must be ofull/ofsxq/7full/blend"
-    cfg = BLEND_CFG if tag == "blend" else T.STRICT[tag]
+    assert tag in ("ofull","ofsxq","7full","blend","ofsonly","res2dtu"), \
+        "tag must be ofull/ofsxq/7full/blend/res2dtu"
+    cfg = (RES2DTU_CFG if tag == "res2dtu"
+           else BLEND_CFG if tag == "blend" else T.STRICT[tag])
+    # 分辨率必须在 load_model 之前设好:K 的重缩放依赖它。
+    if tag in TAG_RES:
+        T.PROC_W, T.PROC_H = TAG_RES[tag]
+        T.R.PROC_W, T.R.PROC_H = TAG_RES[tag]
     print(f"[{tag}] TSDF cfg={cfg} voxel={voxel_mm}mm(ARKit)", flush=True)
 
     # ---- load model dump, refs, ARKit alignment (same as pipeline) ----
@@ -196,6 +210,13 @@ def main():
     ark = g.arkit_centers_and_R()
     model_tag = cfg["src"]  # 'lapa'
     mnames, K_of, w2c_of, center_of, obs, pts_arr = T.load_model(model_tag)
+    if tag in TAG_RES:
+        # dump 的 K 烘焙在 896x512,按 (W/896, H/512) 重缩放 —— 与 trio 主流程逐字相同。
+        _sx, _sy = T.PROC_W / 896.0, T.PROC_H / 512.0
+        _Ks = np.diag([_sx, _sy, 1.0]).astype(np.float32)
+        K_of = {n: (_Ks @ K) for n, K in K_of.items()}
+        print(f"[{tag}] K rescaled by (sx={_sx:.4f}, sy={_sy:.4f}) "
+              f"-> {T.PROC_W}x{T.PROC_H}", flush=True)
     missing = [n for n in pool if n not in K_of]
     if missing:
         pool = [n for n in pool if n in K_of]

@@ -1,0 +1,72 @@
+--- module.py.pretile_bak	2026-07-31 20:05:35
++++ module.py	2026-07-31 20:06:33
+@@ -1,3 +1,4 @@
++import os
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+@@ -269,6 +270,13 @@
+     bottom = torch.zeros(P.shape[0], 1, 4, dtype=P.dtype, device=P.device)
+     bottom[:, 0, 3] = 1.0
+     return torch.cat([top, bottom], dim=1)
++
++
++# [2026-07-31] PW_NO_TILE:把"repeat 出一个大张量再逐元素乘"改成广播。
++# 实测(exp_corr_fusion.py):stage-1 这一处 896x512 省 16.1%、2048x1536 省 27.5%
++# 峰值,且输出**逐位相同**、速度反而 1.48-1.70x。导出图里对应 31 个 tile 算子,
++# 最大那个就是 [1,48,48,64,112]=63MB。默认关,置 1 才生效,便于 A/B 对照。
++_PW_NO_TILE = os.environ.get("PW_NO_TILE") == "1"
+ 
+ 
+ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values):
+@@ -293,8 +301,8 @@
+         xyz = torch.stack((x, y, torch.ones_like(x)))  # [3, H*W]
+         xyz = torch.unsqueeze(xyz, 0).repeat(B, 1, 1)  # [B, 3, H*W]
+         rot_xyz = torch.matmul(rot, xyz)  # [B, 3, H*W]
+-        rot_depth_xyz = (rot_xyz.unsqueeze(2).repeat(1, 1, num_depth, 1) * 
+-                        depth_values.view(B, 1, num_depth, -1))
++        _rx = rot_xyz.unsqueeze(2) if _PW_NO_TILE else rot_xyz.unsqueeze(2).repeat(1, 1, num_depth, 1)
++        rot_depth_xyz = (_rx * depth_values.view(B, 1, num_depth, -1))
+ 
+         proj_xyz = rot_depth_xyz + trans.view(B, 3, 1, 1)
+         proj_xyz[:, 2:3][proj_xyz[:, 2:3] == 0] += 1e-8
+@@ -613,7 +621,8 @@
+         mask = .25 * self.mask(context) # mask for upsampling depth map
+ 
+         # cost volume construction between reference image and each source image
+-        ref_volume = ref_feature.unsqueeze(2).repeat(1, 1, num_depth, 1, 1)
++        ref_volume = (ref_feature.unsqueeze(2) if _PW_NO_TILE
++                      else ref_feature.unsqueeze(2).repeat(1, 1, num_depth, 1, 1))
+         view_weight_sum = 1e-8
+         cor_feats = 0
+         view_weights = []
+@@ -636,7 +645,8 @@
+                 cor_feat = prod.mean(1).reshape(B, g, D, H, W)
+             else:
+                 warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                # -1 兼容两种 ref_volume:tile 版深度维是 D,广播版是 1(靠 mul 广播)
++                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, -1, H, W)
+                 cor_feat = (warped_src * ref_volume).mean(2)
+ 
+             view_weight = self.pixel_view_weight(cor_feat)
+@@ -741,7 +751,8 @@
+         C = ref_feature.shape[1]
+  
+         # step 2. differentiable homograph, build cost volume
+-        ref_volume = ref_feature.unsqueeze(2).repeat(1, 1, depth_range_samples.shape[1], 1, 1)
++        ref_volume = (ref_feature.unsqueeze(2) if _PW_NO_TILE
++                      else ref_feature.unsqueeze(2).repeat(1, 1, depth_range_samples.shape[1], 1, 1))
+         view_weight_sum = 1e-8
+         cor_feats = 0
+         i = 0
+@@ -763,7 +774,8 @@
+                 cor_feat = prod.mean(1).reshape(B, g, D, H, W)
+             else:
+                 warped_src = warped_src.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
+-                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, D, H, W)
++                # -1 兼容两种 ref_volume:tile 版深度维是 D,广播版是 1(靠 mul 广播)
++                ref_volume = ref_volume.reshape(B, self.group_dim, C//self.group_dim, -1, H, W)
+                 cor_feat = (warped_src * ref_volume).mean(2)
+             
+             del warped_src, src_proj, src_fea

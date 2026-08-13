@@ -27,6 +27,7 @@ import open3d as o3d
 import torch
 import pw_diffmvs_common as C
 import pw_diffmvs_run as R
+_FORCE_FRESH = os.environ.get('PW_FRESH') == '1'
 # NOTE: pycolmap is NOT imported here -- it cannot share a process with torch on
 # this Mac (duplicate libomp -> SIGSEGV). Run pw_diffmvs_sfm_trio_dump.py first.
 
@@ -90,6 +91,12 @@ MODELS = {
     "blendp30": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "r15bp15":  Path("/private/tmp/knifeLAPcert/LAPa/0"), "r15bp20":  Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "r2bp15":   Path("/private/tmp/knifeLAPcert/LAPa/0"), "r2bp20":   Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "r2bp04":   Path("/private/tmp/knifeLAPcert/LAPa/0"), "r2bp08":   Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "ofull15":  Path("/private/tmp/knifeLAPcert/LAPa/0"), "ofull85":  Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "official": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "official1792": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "res2dtu": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "res2ogate": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     # ---- REF_STRIDE=1 全量覆盖版(每帧算深度图,像 RealityScan)[2026-07-06]----
     # 唯一变量 = trio_refs.json refs 从 stride4(104)改 stride1(413);其余全同 STRICT o/gold。
     # 效率:7full 建 lapa stride1 cache,ofull 复用同一 cache 只换 PHOTO 融合(零重推理)。
@@ -132,6 +139,30 @@ BREAK = {
     "res15":      {"src": "lapa", "W": 1344, "H": 768,  "CKPT": "dtu",   "PHOTO": 0.5, "GEO_MASK": 3},
     "res15blend": {"src": "lapa", "W": 1344, "H": 768,  "CKPT": "blend", "PHOTO": 0.5, "GEO_MASK": 3},
     "res2blend":  {"src": "lapa", "W": 1792, "H": 1024, "CKPT": "blend", "PHOTO": 0.5, "GEO_MASK": 3},
+    # [2026-07-31] 100% 官方复刻。逐项对齐 cvg/diffmvs 的 test.py + filter.py 默认:
+    #   分辨率 1792x1024 = 官方像素预算(1.84Mpx,同 DTU 的 1600x1152)且不拉伸内容
+    #   ckpt   blend      = 官方为真实场景提供的权重(DTU 是转台小物件,域不对)
+    #   GEO_MASK 2        = 官方 geo_mask_thres(我们的 'o' 收紧到 3)
+    #   PHOTO 0.5         = 官方 photo_thres 末档(我们只有末档 conf,官方 [0.3,0.5,0.5])
+    #   GEO_PIX 1.0 / GEO_DEP 0.01 = 官方默认,本来就一致
+    #   NORMAL_COS/-1 与 BOUND_REL/1e9 = **关掉**我们自己加的两道门,官方没有
+    # 官方分辨率 1600x1152(4:3)。原图是 16:9,所以**中心裁切**到 4:3 再等比缩放,
+    # 内容零拉伸;代价是损失约 21% 水平视野。CROP_W 是 896 口径下保留的宽度:
+    # 512 * (1600/1152) = 711 -> 缩放系数 x 1600/711=2.2504, y 1152/512=2.25(差 0.02%)。
+    # 不裁切版:同像素预算、同 ckpt、同门,**只差裁不裁** —— 与 official 构成
+    # "官方 4:3 值不值得损失 21% 视野"的单变量对照。
+    "official1792": {"src": "lapa", "W": 1792, "H": 1024, "CKPT": "blend",
+                   "PHOTO": 0.5, "GEO_MASK": 2,
+                   "NORMAL_COS": -1.0, "BOUND_REL": 1e9},
+    # 缺失的第四臂:官方分辨率 + **dtu** 权重。前三臂里"分辨率"和"权重"始终绑在
+    # 一起,分不开。这一臂与 official1792 只差 ckpt,与 ofull 只差分辨率 —— 两个方向
+    # 都成单变量,才能回答"官方那个分辨率本身值不值"。
+    "res2dtu":    {"src": "lapa", "W": 1792, "H": 1024, "CKPT": "dtu",
+                   "PHOTO": 0.5, "GEO_MASK": 2,
+                   "NORMAL_COS": -1.0, "BOUND_REL": 1e9},
+    "official":   {"src": "lapa", "W": 1600, "H": 1152, "CKPT": "blend",
+                   "PHOTO": 0.5, "GEO_MASK": 2, "CROP_W": 711,
+                   "NORMAL_COS": -1.0, "BOUND_REL": 1e9},
 }
 # 严格度扫描的每档融合门(源自复用 base/lapa 的 p1cache,推理冻结;仅 pass2 变)
 STRICT = {
@@ -157,6 +188,21 @@ STRICT = {
     # res2blend@1792 + 正确 blend 门:
     "r2bp15":   {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
     "r2bp20":   {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3},
+    # [2026-07-31] 实测 blend 的 conf 中位 0.257 vs dtu 0.916;要达到 dtu@0.5 的
+    # 87.4% 过门率,blend 的等效门在 **0.043**。原计划 0.15/0.20 全在等效门之上,
+    # 就算跑完也扫不到等效位置 —— 补两档把等效点夹进来。
+    "r2bp04":   {"src": "lapa", "PHOTO": 0.04, "GEO_MASK": 3},
+    # [2026-07-31 A 组] dtu 侧对照,复用 7full(896/dtu/lapa/413refs)冻结缓存。
+    # ofull15 = 同数值门(0.15);ofull85 = **等过门率**门 —— blend@0.15 过门 62.8%,
+    # dtu 要同样过门率需要 0.85(实测 conf 分位反解)。两个都给,才能分清
+    # "差距来自门"还是"差距来自模型本身"。
+    # [2026-07-31] 官方分辨率 + **o 原门**。与 res2dtu 只差门(geo3+法向+边缘 vs geo2+无),
+    # 与 ofull 只差分辨率 —— 把"分辨率的功劳"和"松门的功劳"彻底分开的那一臂。
+    # 复用 res2dtu 的冻结推理缓存(同 1792+dtu,深度图逐字相同),零 MPS 重推理。
+    "res2ogate": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3},
+    "ofull15":  {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
+    "ofull85":  {"src": "lapa", "PHOTO": 0.85, "GEO_MASK": 3},
+    "r2bp08":   {"src": "lapa", "PHOTO": 0.08, "GEO_MASK": 3},
     # ---- REF_STRIDE=1 全量覆盖(413 refs via trio_refs.json)----
     # 896x512 DTU GEO_MASK3;1full/7full 各自 FRESH MPS stride1 推理(own cache);
     # ofull 走 CACHE_SRC 复用 7full 冻结 cache 只换 PHOTO0.5。
@@ -208,6 +254,9 @@ CACHE_SRC = {
     "blendp30": ("blend", 896, 512),
     "r15bp15":  ("res15blend", 1344, 768),  "r15bp20": ("res15blend", 1344, 768),
     "r2bp15":   ("res2blend", 1792, 1024),  "r2bp20":  ("res2blend", 1792, 1024),
+    "r2bp04":   ("res2blend", 1792, 1024),  "r2bp08":  ("res2blend", 1792, 1024),
+    "ofull15":  ("7full", 896, 512),        "ofull85": ("7full", 896, 512),
+    "res2ogate": ("res2dtu", 1792, 1024),
     # ofull 复用 7full 的 stride1 冻结 cache(896x512,冠军 lapa 深度图),只换 PHOTO0.5
     "ofull":    ("7full", 896, 512),
     # 清理正交扫描全部复用 7full stride1 冻结 cache(零 MPS 重推理),只改 pass2 清理旋钮
@@ -246,6 +295,8 @@ VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol
               "blendp20": "mvs_blendp20.ply", "blendp30": "mvs_blendp30.ply",
               "r15bp15": "mvs_r15bp15.ply", "r15bp20": "mvs_r15bp20.ply",
               "r2bp15": "mvs_r2bp15.ply", "r2bp20": "mvs_r2bp20.ply",
+              "ofull15": "mvs_ofull15.ply", "ofull85": "mvs_ofull85.ply",
+              "official": "mvs_official.ply", "official1792": "mvs_official1792.ply", "res2dtu": "mvs_res2dtu.ply", "res2ogate": "mvs_res2ogate.ply",
               "1full": "mvs_1full.ply", "7full": "mvs_7full.ply",
               "ofull": "mvs_ofull.ply",
               "ob02": "mvs_ob02.ply", "ob015": "mvs_ob015.ply", "ob01": "mvs_ob01.ply",
@@ -592,12 +643,18 @@ def main():
         break_cfg = BREAK[tag]
         PHOTO = break_cfg["PHOTO"]
         GEO_MASK = break_cfg["GEO_MASK"]
+        # 官方复刻需要**关掉**我们自己加的 pass2 门,所以 BREAK 也要能覆写它们
+        if "NORMAL_COS" in break_cfg: NORMAL_COS = break_cfg["NORMAL_COS"]
+        if "BOUND_REL" in break_cfg: BOUND_REL = break_cfg["BOUND_REL"]
         W, H = break_cfg["W"], break_cfg["H"]
         assert W % 32 == 0 and H % 32 == 0, f"res must be /32-aligned, got {W}x{H}"
         # 覆盖渲染分辨率:R.load_image 用 R.PROC_W/PROC_H 全局 resize 原生 jpeg;
         # 同步 patch 使图像 + 后续 K 缩放一致。
         PROC_W, PROC_H = W, H
         R.PROC_W, R.PROC_H = W, H
+        # 裁切:图像侧由 R.load_image 读 PW_CROP_W;K 侧在下面的重缩放里减掉偏移。
+        _CROP_W = break_cfg.get("CROP_W", 0)
+        os.environ["PW_CROP_W"] = str(_CROP_W)
         # checkpoint 域(dtu/blend)通过 env 传给 C.build_model
         os.environ["AETHER_CKPT"] = break_cfg["CKPT"]
         print(f"[{tag}] BREAK: src={break_cfg['src']} res={W}x{H} "
@@ -616,11 +673,17 @@ def main():
         # dump K is baked @896x512; rescale to the render resolution (fx,cx by W/896,
         # fy,cy by H/512). w2c is resolution-independent. Applies to BREAK res runs AND
         # gate-sweep tags reusing a hi-res cache (res15blend/res2blend @ 1344/1792).
-        sx, sy = PROC_W / 896.0, PROC_H / 512.0
+        # 裁切后 x 方向的有效基准宽度从 896 变成 CROP_W,且主点要先减掉裁切左偏移
+        _cw = int(os.environ.get("PW_CROP_W", "0")) or 896
+        _x0 = (896.0 - _cw) / 2.0
+        sx, sy = PROC_W / float(_cw), PROC_H / 512.0
+        # 裁切必须**先**把主点平移到裁切后的坐标系,再缩放 —— 顺序反了主点就错位。
+        # T 把 cx 减去左偏移 _x0(裁切时为正,不裁时为 0),Ks 再等比放大。
+        T = np.array([[1, 0, -_x0], [0, 1, 0], [0, 0, 1]], np.float32)
         Ks = np.diag([sx, sy, 1.0]).astype(np.float32)
-        K_of = {n: (Ks @ K) for n, K in K_of.items()}
-        print(f"[{tag}] K rescaled from 896x512 dump by (sx={sx:.4f}, sy={sy:.4f}) "
-              f"-> {PROC_W}x{PROC_H}", flush=True)
+        K_of = {n: (Ks @ T @ K) for n, K in K_of.items()}
+        print(f"[{tag}] K: crop x0={_x0:.1f}(基准宽 {_cw}) 再缩放 "
+              f"(sx={sx:.4f}, sy={sy:.4f}) -> {PROC_W}x{PROC_H}", flush=True)
     missing = [n for n in pool if n not in K_of]
     if missing:  # model did not register some pool frames -> drop them (DECLARE in report)
         print(f"[{tag}] WARNING: {len(missing)} pool frame(s) not in model, dropped: "
@@ -657,19 +720,45 @@ def main():
     # BREAK tags MUST re-run MPS inference at the new res/ckpt -> own cache path so a
     # stale/frozen cache is never loaded and the champion 'lapa' cache is never poisoned.
     # Gate-sweep tags read the SOURCE BREAK cache directly (frozen inference, no re-run).
-    p1cache = OUT / (f"p1cache_trio_{cache_src_tag}.npz" if cache_src_tag
-                     else f"p1cache_trio_{tag}.npz")
+    # [2026-07-31] 缓存名里必须带分辨率。原来只按 tag 命名 + 无条件复用,切分辨率时
+    # 会静默吃掉旧分辨率的深度图,跑出一份**假的**高分辨率结果且不报错 ——
+    # 这是能毁掉整个对照实验的坑。896x512 时后缀为空,与历史文件名逐字兼容。
+    _rs = "" if (R.PROC_W, R.PROC_H) == (896, 512) else f"_{R.PROC_W}x{R.PROC_H}"
+    p1cache = OUT / (f"p1cache_trio_{cache_src_tag}{_rs}.npz" if cache_src_tag
+                     else f"p1cache_trio_{tag}{_rs}.npz")
+    # legacy 回退:tag 配置(BREAK/STRICT 表)本身就把分辨率钉死了,历史文件名对这些
+    # tag 从来不歧义。带后缀的新命名是为了防住"同一 tag 跑多个分辨率"(PW_PROC 路径)
+    # 那种会静默串档的情况 —— 不该连带作废 7/6 冻结的那批 res15/res2blend 缓存。
+    if _rs and not p1cache.exists():
+        _legacy = OUT / p1cache.name.replace(_rs, "")
+        if _legacy.exists():
+            print(f"[cache] 用 legacy 缓存 {_legacy.name}(tag 已锁定 {R.PROC_W}x{R.PROC_H})",
+                  flush=True)
+            p1cache = _legacy
     depth, conf, drng = {}, {}, {}
+    _refs_full = refs[:]          # 缓存作废时要恢复的完整 ref 列表
     t_inf = 0.0
     mps_peak_mb = 0.0; dt_list = []
-    if p1cache.exists():
+    _cache_ok = False
+    if p1cache.exists() and not _FORCE_FRESH:
         z = np.load(p1cache, allow_pickle=True)
         fr = z["frames"].tolist(); zd, zc, zr = z["depth"], z["conf"], z["drange"]
         for i, n in enumerate(fr):
             depth[n] = zd[i].astype(np.float32); conf[n] = zc[i]; drng[n] = tuple(zr[i])
+        _want = len(refs)
         refs = [n for n in refs if n in depth]
-        print(f"loaded {p1cache.name} ({len(refs)} refs)", flush=True)
-    else:
+        # 缓存覆盖不全就整个作废重算:上一轮 REF_LIMIT=3 撞上只存了 1 个 ref 的旧缓存,
+        # 结果 geo>=3 一个点都过不了、静默出 0 点。宁可重算,不要半份缓存。
+        if len(refs) < _want and not cache_src_tag:
+            print(f"[cache] {p1cache.name} 只覆盖 {len(refs)}/{_want} refs -> 作废重算",
+                  flush=True)
+            depth, conf, drng = {}, {}, {}
+            refs = _refs_full[:]
+        else:
+            _cache_ok = True
+            _note = "(复用冻结源缓存,取交集)" if cache_src_tag else ""
+            print(f"loaded {p1cache.name} ({len(refs)}/{_want} refs){_note}", flush=True)
+    if not _cache_ok:
         dev = C.pick_device("mps")
         model, _ = C.build_model(METHOD, dev)
         _mps = dev.type == "mps"
@@ -719,7 +808,14 @@ def main():
               f"MPS_PEAK={mps_peak_mb:.0f}MB INFER_MED={med_dt:.3f}s/frame "
               f"INFER_MEAN={t_inf/max(1,len(dt_list)):.3f}s/frame N={len(dt_list)} "
               f"res={PROC_W}x{PROC_H} ckpt={os.environ.get('AETHER_CKPT','dtu')}", flush=True)
-        if not ref_limit:  # never poison the full-run cache with a smoke subset
+        # 子集运行默认不写缓存(防止用 smoke 子集污染全量缓存,原设计)。
+        # PW_CACHE_SUFFIX 给子集一个**独立文件名**,既能落盘供 TSDF 复用,
+        # 又碰不到全量那份 —— 两个目的不冲突。
+        _sfx = os.environ.get("PW_CACHE_SUFFIX", "")
+        if _sfx and ref_limit:
+            p1cache = p1cache.with_name(p1cache.stem + _sfx + p1cache.suffix)
+        if (not ref_limit) or _sfx:
+            print(f"[{tag}] 写缓存 {p1cache.name} ({len(refs)} refs)", flush=True)
             np.savez_compressed(p1cache,
                                 depth=np.stack([depth[n].astype(np.float16) for n in refs]),
                                 conf=np.stack([conf[n] for n in refs]),

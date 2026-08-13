@@ -20,8 +20,16 @@ OBASE = ROOT / "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ext
 EXPAC = ROOT / "data/expAC_rewindow_span_2026_06_13"
 ANCH = ROOT / "data/expF2_easy_clouds_2026_06_12/anchors_obs_414.npz"
 OUT = ROOT / "tools/python/diffmvs_out"
-PROC_H, PROC_W = 512, 896          # model needs H,W divisible by 32; npz native is 504x896
-NPZ_H = 504
+# [2026-07-31] 处理分辨率可配置:PW_PROC=WxH(须 32 的倍数)。默认仍是 896x512,
+# 与 'o' 认证配置逐字一致 —— 不设环境变量时行为完全不变。
+# 源 JPEG 原生 4224x2376(10.04Mpx),所以往上走是真的多拿信息,不是插值。
+# ⚠️ 宽高比:npz/原图都是 16:9。896x512=1.75(K 补偿了那 8 行),1792x1024 同为 1.75
+# 且每边正好 2x —— 单变量。若换成 4:3 会纵向拉伸 28%,那是另一个变量,别混进来。
+import os as _os
+_proc = _os.environ.get("PW_PROC", "896x512").lower().split("x")
+PROC_W, PROC_H = int(_proc[0]), int(_proc[1])
+assert PROC_W % 32 == 0 and PROC_H % 32 == 0, f"{PROC_W}x{PROC_H} 不是 32 的倍数"
+NPZ_H, NPZ_W = 504, 896
 
 _man = None; _wdef = None; _anch = None
 def _load_meta():
@@ -47,6 +55,14 @@ def _decode_image(manifest_idx: int) -> np.ndarray:
     p = CAP / man[manifest_idx]["jpegPath"]
     bgr = cv2.imread(str(p))
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    # PW_CROP_W:在 **896x512 基准口径**下要保留的宽度(像素)。用于把 16:9 的原图
+    # 中心裁成目标宽高比后再等比缩放 —— 内容零拉伸,代价是损失水平视野。
+    # 不设则行为与历史逐字相同(整幅直接 resize)。
+    _cw = int(_os.environ.get("PW_CROP_W", "0"))
+    if _cw and _cw < 896:
+        fx0, fx1 = (896 - _cw) / 2.0 / 896.0, (896 + _cw) / 2.0 / 896.0
+        W0 = rgb.shape[1]
+        rgb = rgb[:, int(round(fx0 * W0)):int(round(fx1 * W0))]
     rgb = cv2.resize(rgb, (PROC_W, PROC_H), interpolation=cv2.INTER_AREA)
     return (rgb.astype(np.float32) / 255.0)
 
@@ -58,8 +74,12 @@ def load_image(manifest_idx: int) -> np.ndarray:
 
 
 def scaled_K(K_npz: np.ndarray) -> np.ndarray:
+    """npz 的 K 是 896x504 口径。**两个轴都要缩**。
+    原来只缩 Y 行是因为当时 PROC_W 恰好 == NPZ_W == 896(X 系数正好是 1.0),
+    一改宽度就会漏掉 X 标定 —— FULLRES 报告 A2 第 5 条点名过这个坑。"""
     K = K_npz.astype(np.float32).copy()
-    K[1, :] *= PROC_H / NPZ_H        # npz K is for 504-tall; we render 512-tall
+    K[0, :] *= PROC_W / NPZ_W
+    K[1, :] *= PROC_H / NPZ_H
     return K
 
 

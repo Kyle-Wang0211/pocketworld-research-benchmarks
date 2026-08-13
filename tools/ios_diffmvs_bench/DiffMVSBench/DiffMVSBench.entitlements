@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- [2026-07-31] 对齐生产 app 的 jetsam 预算(4.1GB)。没有这条,bench 跑在默认
+	     预算下,测出来的"分辨率上限"是 bench 自己的墙,不是产品的墙。
+
+	     ⚠️ 生产 app 还有 com.apple.developer.kernel.extended-virtual-addressing,
+	     这里没有 —— 因为本 target 借的是 com.kyle.vggtbench 这个 App ID,门户里
+	     只给它注册了 increased-memory-limit。生产那个 App ID(com.kyle.PocketWorld)
+	     两条都有,但用它签名会顶掉手机上装着的真 app 和它的数据,不能碰。
+	     缺这条不影响判据可读性:jetsam 是进程直接消失(只剩 STARTED 记录),
+	     VA 不足是分配失败抛错(记成 ok=false + 错误信息),两种死法分得开。 -->
+	<key>com.apple.developer.kernel.increased-memory-limit</key>
+	<true/>
+</dict>
+</plist>
