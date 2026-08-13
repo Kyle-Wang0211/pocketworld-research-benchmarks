@@ -11,6 +11,7 @@ import os, sys, time
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
+import os as _os
 import torch
 
 DIFFMVS_DIR = Path(__file__).resolve().parent / "diffmvs"
@@ -43,7 +44,13 @@ def _args_diffmvs() -> SimpleNamespace:
 def _args_casdiffmvs() -> SimpleNamespace:
     return SimpleNamespace(
         method="casdiffmvs", numdepth_initial=48, numdepth=384,
-        scale=[0.0, 0.5, 0.1], sampling_timesteps=[0, 1, 1], ddim_eta=[0, 1, 1],
+        # [2026-07-31] scale = 扩散 refinement 注入的噪声幅度。官方按数据集分档:
+        #   DTU(实验室转台小物件): 0.0 0.5 0.1   <- 我们一直用的是这档
+        #   ETH3D / T&T / README demo(真实场景): 0.0 0.125 0.025  (噪声小 4 倍)
+        # 我们扫的是真实房间,却一直跑 DTU 档。PW_SCALE=real 切官方真实场景档。
+        scale=([0.0, 0.125, 0.025] if _os.environ.get("PW_SCALE") == "real"
+               else [0.0, 0.5, 0.1]),
+        sampling_timesteps=[0, 1, 1], ddim_eta=[0, 1, 1],
         timesteps=[1000, 1000, 1000],
         stage_iters=[1, 3, 3], cost_dim_stage=[4, 4, 4], CostNum=[0, 4, 4],
         hidden_dim=[0, 32, 20], context_dim=[32, 32, 16], unet_dim=[0, 16, 8],
@@ -58,7 +65,12 @@ def build_model(method: str, device: torch.device):
     # official repo ships {method}_blend.ckpt for exactly this. AETHER_CKPT=blend
     # flips the domain without touching the DTU path used by every existing caller.
     dom = os.environ.get("AETHER_CKPT", "dtu").strip().lower()
-    assert dom in ("dtu", "blend"), f"AETHER_CKPT must be dtu|blend, got {dom!r}"
+    # [2026-07-31] 增 blendmvg:官方 2025-09-11 发布的新权重,改用 BlendedMVG(BlendedMVS
+    # 的超集)微调,官方称"benchmarks 一致提升且不改任何超参"
+    # (T&T Intermediate 66.14 / Advanced 42.00 / ETH3D Train 77.79 / Test 85.99)。
+    # 键集合与 blend 完全相同,可直接替换。
+    assert dom in ("dtu", "blend", "blendmvg"), \
+        f"AETHER_CKPT must be dtu|blend|blendmvg, got {dom!r}"
     ckpt = CKPT_DIR / (f"{method}_{dom}.ckpt")
     assert ckpt.exists(), f"checkpoint missing: {ckpt}"
     print(f"[build_model] method={method} ckpt={ckpt.name}", flush=True)

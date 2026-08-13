@@ -1,0 +1,108 @@
+<meta charset="utf-8">
+<title>TSDF 网格对照 — o vs 官方分辨率+dtu (同 120 帧)</title>
+<style>
+  body{margin:0;background:#111;color:#ddd;font:13px -apple-system,system-ui,sans-serif;overflow:hidden}
+  #top{position:fixed;top:0;left:0;right:0;text-align:center;padding:8px;z-index:10;
+       background:linear-gradient(#111e,#1110);pointer-events:none}
+  #top b{color:#7f7;font-size:15px}
+  #btns{margin-top:8px;pointer-events:auto}
+  button{background:#222;color:#ddd;border:2px solid #444;border-radius:8px;
+         padding:8px 14px;margin:0 4px;font-size:13px;cursor:pointer}
+  button.on{border-color:#7f7;color:#7f7}
+  #hud{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:10px;z-index:10;
+       background:linear-gradient(#1110,#111e)}
+  #note{color:#888;font-size:12px;margin-top:6px}
+</style>
+<div id="top"><b id="title">加载中…</b><div id="btns"></div></div>
+<div id="hud">
+  <span id="modebtns"></span>
+  <div id="note">数字键 1/2 切网格 · G 切真彩/灰模 · 拖拽旋转 · 滚轮缩放 · 右键平移<br>
+    切换只改可见性,相机与几何**从不重置** —— 两版位置/朝向/大小逐点相同</div>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {PLYLoader} from 'three/addons/loaders/PLYLoader.js';
+
+// 两版都是:同一 lapa 稀疏 / 同一批 120 参考帧 / 同 6mm 体素 / 同 ARKit 米制对齐。
+// 唯一差异 = 深度来源(896x512 dtu + o门) vs (1792x1024 dtu + 官方门)。
+const MESHES = [
+  {key:'1', file:'mesh120_o.ply',
+   label:"1  o 现状 · 896×512 · geo3+法向+边缘门 · 776,842 顶点 / 1,396,760 面"},
+  {key:'2', file:'mesh120_res2dtu.ply',
+   label:"2  ★官方分辨率+dtu · 1792×1024 · geo2 无额外门 · 1,412,166 顶点 / 2,408,661 面"},
+];
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.02, 500);
+const controls = new OrbitControls(camera, renderer.domElement);
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+// 灰模用的方向光跟着相机走 —— 判几何时要的是稳定的明暗梯度,不是场景里的固定光源
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+const fill = new THREE.DirectionalLight(0xffffff, 0.7);
+scene.add(key, fill, new THREE.AmbientLight(0xffffff, 0.35));
+
+const objs = [];
+let cur = 0, gray = false, camReady = false;
+function median(a){ const b=Float64Array.from(a); b.sort(); return b[b.length>>1]; }
+
+// 真彩:MeshBasic(不受光,忠实还原顶点色) / 灰模:MeshStandard(受光,凸显几何起伏)
+function makeMat(){
+  return gray ? new THREE.MeshStandardMaterial({color:0xbbbbbb, roughness:0.95, metalness:0,
+                                                side:THREE.DoubleSide, flatShading:false})
+              : new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.DoubleSide});
+}
+function applyMats(){ objs.forEach(o=>{ if(o){ o.material.dispose(); o.material = makeMat(); } }); }
+
+function setActive(i){
+  cur=i; objs.forEach((o,k)=>{ if(o) o.visible=(k===i); });
+  document.querySelectorAll('#btns button').forEach((b,k)=>b.classList.toggle('on',k===i));
+  document.getElementById('title').textContent = MESHES[i].label;
+}
+MESHES.forEach((m,i)=>{
+  const b=document.createElement('button'); b.textContent=m.label.split('·')[0].trim();
+  b.onclick=()=>setActive(i); document.getElementById('btns').appendChild(b); objs.push(null);
+});
+const gb=document.createElement('button');
+gb.textContent='G  真彩 / 灰模(看几何)';
+gb.onclick=()=>{ gray=!gray; gb.classList.toggle('on',gray); applyMats(); };
+document.getElementById('modebtns').appendChild(gb);
+
+const loader=new PLYLoader(); let loaded=0;
+MESHES.forEach((m,i)=>{
+  loader.load(m.file, geo=>{
+    geo.computeVertexNormals();          // TSDF 的法向可能缺/不一致,统一重算保证灰模可比
+    geo.computeBoundingBox();
+    const mesh=new THREE.Mesh(geo, makeMat()); mesh.visible=false;
+    scene.add(mesh); objs[i]=mesh;
+    if(!camReady){
+      const p=geo.attributes.position.array, n=p.length/3;
+      const step=Math.max(1,Math.floor(n/20000)); const xs=[],ys=[],zs=[];
+      for(let k=0;k<n;k+=step){ xs.push(p[3*k]); ys.push(p[3*k+1]); zs.push(p[3*k+2]); }
+      const cx=median(xs), cy=median(ys), cz=median(zs);
+      controls.target.set(cx,cy,cz);
+      const d=geo.boundingBox.getSize(new THREE.Vector3()).length()*0.4;
+      camera.position.set(cx+d, cy+d*0.4, cz+d); controls.update(); camReady=true;
+    }
+    if(++loaded===MESHES.length) setActive(0);
+    else document.getElementById('title').textContent=`加载中… ${loaded}/${MESHES.length}`;
+  }, undefined, e=>{ document.getElementById('title').textContent=`加载失败: ${m.file}`;
+                     console.error(m.file,e); });
+});
+addEventListener('keydown', e=>{
+  if(e.key==='g'||e.key==='G'){ gb.onclick(); return; }
+  const i=MESHES.findIndex(m=>m.key===e.key); if(i>=0&&objs[i]) setActive(i);
+});
+(function loop(){ requestAnimationFrame(loop);
+  key.position.copy(camera.position); fill.position.copy(camera.position).negate();
+  controls.update(); renderer.render(scene,camera); })();
+</script>

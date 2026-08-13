@@ -40,7 +40,7 @@ OUT = R.OUT
 # Base viewer filenames at the DEFAULT 6mm voxel. Non-6mm voxels get a suffix
 # (e.g. mesh_o_tsdf.ply @6mm vs mesh_o_tsdf4.ply @4mm) so finer-voxel runs never
 # clobber the certified 6mm meshes. See viewer_ply_name().
-VIEWER_PLY = {"res2dtu": "mesh_res2dtu_tsdf.ply",
+VIEWER_PLY = {"res2dtu": "mesh_res2dtu_tsdf.ply", "res2ogate": "mesh_res2ogate_tsdf.ply",
               "ofull": "mesh_o_tsdf.ply", "ofsxq": "mesh_ofsxq_tsdf.ply",
               "7full": "mesh_7full_tsdf.ply", "blend": "mesh_blend_tsdf.ply",
               "ofsonly": "mesh_ofsonly_tsdf.ply"}
@@ -52,13 +52,17 @@ CACHE_FILE = {"ofull": "p1cache_trio_7full.npz", "ofsxq": "p1cache_trio_7full.np
               "7full": "p1cache_trio_7full.npz", "blend": "p1cache_trio_blend.npz",
               "ofsonly": "p1cache_trio_7full.npz",
               # [2026-07-31] 官方分辨率 + dtu 权重。子集(120 refs)缓存,独立文件名。
-              "res2dtu": "p1cache_trio_res2dtu_1792x1024_120.npz"}
+              "res2dtu": "p1cache_trio_res2dtu_1792x1024_120.npz",
+              # 同一份 1792+dtu 推理缓存,只是 pass2 用 o 原门 —— 纯分辨率对照
+              "res2ogate": "p1cache_trio_res2dtu_1792x1024_120.npz"}
 # 每个 tag 的推理分辨率。TSDF 原来写死 896x512(所有 o 家族都是),但 res2dtu 是
 # 1792x1024 —— K 必须跟着重缩放,否则反投影全错(点云会整体缩放/错位)。
-TAG_RES = {"res2dtu": (1792, 1024)}
+TAG_RES = {"res2dtu": (1792, 1024), "res2ogate": (1792, 1024)}
 # res2dtu 的 pass2 门 = 官方档:geo2,且关掉我们自己加的法向门/边缘门。
 RES2DTU_CFG = {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 2,
                "NORMAL_COS": -1.0, "BOUND_REL": 1e9}
+# 官方分辨率 + **o 原门**:与 ofull 只差分辨率,与 res2dtu 只差门。
+RES2OGATE_CFG = {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3}
 # Calibrated blend fusion gate (src=lapa, blend ckpt @896x512). PHOTO is set to the
 # blend-scale value chosen from the conf-distribution probe (matched to o coverage).
 BLEND_CFG = {"src": "lapa", "PHOTO": 0.20, "GEO_MASK": 3}
@@ -190,9 +194,10 @@ def main():
     tag = sys.argv[1]
     voxel_mm = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
     ref_limit = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-    assert tag in ("ofull","ofsxq","7full","blend","ofsonly","res2dtu"), \
+    assert tag in ("ofull","ofsxq","7full","blend","ofsonly","res2dtu","res2ogate"), \
         "tag must be ofull/ofsxq/7full/blend/res2dtu"
-    cfg = (RES2DTU_CFG if tag == "res2dtu"
+    cfg = (RES2OGATE_CFG if tag == "res2ogate"
+           else RES2DTU_CFG if tag == "res2dtu"
            else BLEND_CFG if tag == "blend" else T.STRICT[tag])
     # 分辨率必须在 load_model 之前设好:K 的重缩放依赖它。
     if tag in TAG_RES:

@@ -1,0 +1,128 @@
+<meta charset="utf-8">
+<title>CasDiffMVS 配方四臂 — 同 120 帧 / 同稀疏 / 同分辨率 896x512</title>
+<style>
+  body{margin:0;background:#111;color:#ddd;font:13px -apple-system,system-ui,sans-serif;overflow:hidden}
+  #top{position:fixed;top:0;left:0;right:0;text-align:center;padding:8px;z-index:10;
+       background:linear-gradient(#111e,#1110);pointer-events:none}
+  #top b{color:#7f7;font-size:15px}
+  #btns{margin-top:8px;pointer-events:auto}
+  button{background:#222;color:#ddd;border:2px solid #444;border-radius:8px;
+         padding:8px 14px;margin:0 5px;font-size:13px;cursor:pointer}
+  button.on{border-color:#7f7;color:#7f7}
+  #hud{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:10px;z-index:10;
+       background:linear-gradient(#1110,#111e)}
+  #note{color:#888;font-size:12px;margin-top:6px}
+  input[type=range]{vertical-align:middle;width:150px}
+</style>
+<div id="top">
+  <b id="title">加载中…</b>
+  <div id="btns"></div>
+</div>
+<div id="hud">
+  点大小 <input id="ps" type="range" min="1" max="8" step="0.5" value="2"><span id="psv">2</span>
+  &nbsp;&nbsp;亮度 <input id="ex" type="range" min="0.5" max="3" step="0.1" value="1.4"><span id="exv">1.4</span>
+  <div id="note">数字键切换 · 拖拽旋转 · 滚轮缩放 · 右键平移<br>
+    切换只改可见性,相机与几何**从不重置** —— 位置/朝向/大小逐点相同</div>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {PLYLoader} from 'three/addons/loaders/PLYLoader.js';
+
+// 同一批 120 参考帧、同一 lapa 稀疏源、同一 ARKit 米制坐标系 —— 所以三份点云
+// 本来就在同一个世界坐标里。这里**绝不**做任何居中/归一化/Sim3,否则切换时会
+// "看起来对齐了"但其实是各自被搬过 —— 那样的并排对比毫无意义。
+const CLOUDS = [
+  {key:'1', file:'cloud4_ofull.ply',
+   label:"1  o 基线 · dtu · DTU超参(scale .5/.1, nv5) · 1,655,575 点 · 平面RMS 10.067mm"},
+  {key:'2', file:'cloud4_realcfg.ply',
+   label:"2  官方真实场景配方 · dtu · scale .125/.025, nv7 · 1,792,752 点 · RMS 10.260mm"},
+  {key:'3', file:'cloud4_realcfgblend.ply',
+   label:"3  同上 + blend 权重 · 1,791,695 点 · RMS 10.207mm"},
+  {key:'4', file:'cloud4_realcfgmvg.ply',
+   label:"4  同上 + blendMVG 新权重(2025-09-11) · 1,832,387 点 · RMS 10.231mm"},
+];
+
+const renderer = new THREE.WebGLRenderer({antialias:false});
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.02, 500);
+const controls = new OrbitControls(camera, renderer.domElement);
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const mat = () => new THREE.PointsMaterial({size:2, sizeAttenuation:false, vertexColors:true});
+const objs = [];
+let cur = 0, camReady = false;
+
+function median(arr){ const a = Float64Array.from(arr); a.sort(); return a[a.length>>1]; }
+
+function setActive(i){
+  cur = i;
+  objs.forEach((o,k)=>{ if(o) o.visible = (k===i); });
+  document.querySelectorAll('#btns button').forEach((b,k)=>
+    b.classList.toggle('on', k===i));
+  document.getElementById('title').textContent = CLOUDS[i].label;
+}
+
+CLOUDS.forEach((c,i)=>{
+  const b = document.createElement('button');
+  b.textContent = c.label.split('·')[0].trim();
+  b.onclick = ()=>setActive(i);
+  document.getElementById('btns').appendChild(b);
+  objs.push(null);
+});
+
+const loader = new PLYLoader();
+let loaded = 0;
+CLOUDS.forEach((c,i)=>{
+  loader.load(c.file, geo=>{
+    geo.computeBoundingBox();
+    const pts = new THREE.Points(geo, mat());
+    pts.visible = false;
+    scene.add(pts); objs[i] = pts;
+
+    if(!camReady){
+      // 相机目标 = **第一份点云的中位数中心**(不是包围盒中心,离群点会把它拽偏),
+      // 只算一次,之后切换点云不再动 —— 保证两份看到的是同一个视角。
+      const p = geo.attributes.position.array, n = p.length/3;
+      const step = Math.max(1, Math.floor(n/20000));
+      const xs=[],ys=[],zs=[];
+      for(let k=0;k<n;k+=step){ xs.push(p[3*k]); ys.push(p[3*k+1]); zs.push(p[3*k+2]); }
+      const cx=median(xs), cy=median(ys), cz=median(zs);
+      controls.target.set(cx,cy,cz);
+      const d = geo.boundingBox.getSize(new THREE.Vector3()).length()*0.4;
+      camera.position.set(cx+d, cy+d*0.4, cz+d);
+      controls.update();
+      camReady = true;
+    }
+    if(++loaded === CLOUDS.length) setActive(0);
+    else document.getElementById('title').textContent = `加载中… ${loaded}/${CLOUDS.length}`;
+  }, undefined, err=>{
+    document.getElementById('title').textContent = `加载失败: ${c.file}`;
+    console.error(c.file, err);
+  });
+});
+
+addEventListener('keydown', e=>{
+  const i = CLOUDS.findIndex(c=>c.key===e.key);
+  if(i>=0 && objs[i]) setActive(i);
+});
+const ps = document.getElementById('ps'), ex = document.getElementById('ex');
+ps.oninput = ()=>{ document.getElementById('psv').textContent = ps.value;
+  objs.forEach(o=>{ if(o) o.material.size = +ps.value; }); };
+ex.oninput = ()=>{ document.getElementById('exv').textContent = ex.value;
+  renderer.toneMappingExposure = +ex.value; };
+renderer.toneMapping = THREE.LinearToneMapping;
+renderer.toneMappingExposure = 1.4;
+
+(function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
+</script>

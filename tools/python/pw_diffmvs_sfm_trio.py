@@ -97,6 +97,12 @@ MODELS = {
     "official1792": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "res2dtu": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     "res2ogate": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "realcfg": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "realcfgblend": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "realcfgmvg": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "nbgp05": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "nbgp025": Path("/private/tmp/knifeLAPcert/LAPa/0"),
+    "nbgp0125": Path("/private/tmp/knifeLAPcert/LAPa/0"),
     # ---- REF_STRIDE=1 全量覆盖版(每帧算深度图,像 RealityScan)[2026-07-06]----
     # 唯一变量 = trio_refs.json refs 从 stride4(104)改 stride1(413);其余全同 STRICT o/gold。
     # 效率:7full 建 lapa stride1 cache,ofull 复用同一 cache 只换 PHOTO 融合(零重推理)。
@@ -157,6 +163,24 @@ BREAK = {
     # 缺失的第四臂:官方分辨率 + **dtu** 权重。前三臂里"分辨率"和"权重"始终绑在
     # 一起,分不开。这一臂与 official1792 只差 ckpt,与 ofull 只差分辨率 —— 两个方向
     # 都成单变量,才能回答"官方那个分辨率本身值不值"。
+    # [2026-07-31] 官方**真实场景**配方(ETH3D/T&T/README demo 那一档),不是 DTU 档。
+    # 我们一直跑的是 DTU 档:scale 0.0/0.5/0.1 + num_view 5 + dtu ckpt。
+    # 官方真实场景:scale 0.0/0.125/0.025(噪声小 4 倍) + num_view 7-10 + blend ckpt。
+    # 分辨率保持 896x512 不动 —— 分辨率今天已单独测过(不兑现),这里只动配方。
+    "realcfg":      {"src": "lapa", "W": 896, "H": 512, "CKPT": "dtu",
+                     "PHOTO": 0.5, "GEO_MASK": 3, "SCALE": "real", "NVIEW": 7},
+    # 同上但用 blend —— 今天判 blend"崩溃"时用的是 DTU 超参,官方从没让人那么配。
+    "realcfgblend": {"src": "lapa", "W": 896, "H": 512, "CKPT": "blend",
+                     "PHOTO": 0.5, "GEO_MASK": 3, "SCALE": "real", "NVIEW": 7},
+    # ★★ [2026-07-31 用户签决] **新基线** ★★
+    # 896x512 + blendMVG(官方 2025-09-11 新权重) + 官方真实场景超参(scale 0.125/0.025,
+    # num_view 7) + o 原融合门(geo3+法向+边缘)。
+    # 依据:同 120 帧四臂实测,它点数最多(1,832,387,比旧 o 基线 +10.7%)且平面 RMS
+    # 与旧基线持平(10.231 vs 10.067mm,四臂全在 2% 内)。旧 o 基线跑的是 DTU 档超参,
+    # 而 DTU 是转台小物件数据集 —— 我们扫的是房间。
+    # ⚠️ 不改全局默认值:改了会静默改变所有历史 tag 的含义,冻结缓存与今日全部对照失效。
+    "realcfgmvg":   {"src": "lapa", "W": 896, "H": 512, "CKPT": "blendmvg",
+                     "PHOTO": 0.5, "GEO_MASK": 3, "SCALE": "real", "NVIEW": 7},
     "res2dtu":    {"src": "lapa", "W": 1792, "H": 1024, "CKPT": "dtu",
                    "PHOTO": 0.5, "GEO_MASK": 2,
                    "NORMAL_COS": -1.0, "BOUND_REL": 1e9},
@@ -200,6 +224,11 @@ STRICT = {
     # 与 ofull 只差分辨率 —— 把"分辨率的功劳"和"松门的功劳"彻底分开的那一臂。
     # 复用 res2dtu 的冻结推理缓存(同 1792+dtu,深度图逐字相同),零 MPS 重推理。
     "res2ogate": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3},
+    # [2026-07-31] 新基线上的 geo_pixel_thres 扫描(复用冻结缓存,零重推理)。
+    # 新基线本身 = GEO_PIX 1.0;官方真实场景 = 0.125。
+    "nbgp05": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "GEO_PIX": 0.5},
+    "nbgp025": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "GEO_PIX": 0.25},
+    "nbgp0125": {"src": "lapa", "PHOTO": 0.5, "GEO_MASK": 3, "GEO_PIX": 0.125},
     "ofull15":  {"src": "lapa", "PHOTO": 0.15, "GEO_MASK": 3},
     "ofull85":  {"src": "lapa", "PHOTO": 0.85, "GEO_MASK": 3},
     "r2bp08":   {"src": "lapa", "PHOTO": 0.08, "GEO_MASK": 3},
@@ -255,6 +284,9 @@ CACHE_SRC = {
     "r15bp15":  ("res15blend", 1344, 768),  "r15bp20": ("res15blend", 1344, 768),
     "r2bp15":   ("res2blend", 1792, 1024),  "r2bp20":  ("res2blend", 1792, 1024),
     "r2bp04":   ("res2blend", 1792, 1024),  "r2bp08":  ("res2blend", 1792, 1024),
+    "nbgp05": ("realcfgmvg", 896, 512),
+    "nbgp025": ("realcfgmvg", 896, 512),
+    "nbgp0125": ("realcfgmvg", 896, 512),
     "ofull15":  ("7full", 896, 512),        "ofull85": ("7full", 896, 512),
     "res2ogate": ("res2dtu", 1792, 1024),
     # ofull 复用 7full 的 stride1 冻结 cache(896x512,冠军 lapa 深度图),只换 PHOTO0.5
@@ -296,7 +328,7 @@ VIEWER_PLY = {"base": "mvs_base.ply", "p4354": "mvs_4354.ply", "ftol": "mvs_ftol
               "r15bp15": "mvs_r15bp15.ply", "r15bp20": "mvs_r15bp20.ply",
               "r2bp15": "mvs_r2bp15.ply", "r2bp20": "mvs_r2bp20.ply",
               "ofull15": "mvs_ofull15.ply", "ofull85": "mvs_ofull85.ply",
-              "official": "mvs_official.ply", "official1792": "mvs_official1792.ply", "res2dtu": "mvs_res2dtu.ply", "res2ogate": "mvs_res2ogate.ply",
+              "official": "mvs_official.ply", "official1792": "mvs_official1792.ply", "res2dtu": "mvs_res2dtu.ply", "res2ogate": "mvs_res2ogate.ply", "realcfg": "mvs_realcfg.ply", "realcfgblend": "mvs_realcfgblend.ply", "realcfgmvg": "mvs_realcfgmvg.ply", "nbgp05": "mvs_nbgp05.ply", "nbgp025": "mvs_nbgp025.ply", "nbgp0125": "mvs_nbgp0125.ply",
               "1full": "mvs_1full.ply", "7full": "mvs_7full.ply",
               "ofull": "mvs_ofull.ply",
               "ob02": "mvs_ob02.ply", "ob015": "mvs_ob015.ply", "ob01": "mvs_ob01.ply",
@@ -613,6 +645,9 @@ def main():
         PHOTO = STRICT[tag]["PHOTO"]
         GEO_MASK = STRICT[tag]["GEO_MASK"]
         # 可选清理键:缺省则保持模块默认(BOUND_REL=0.03, NORMAL_COS=0.5)
+        # geo_pixel_thres:官方真实场景配方是 0.125,我们一直用 1.0(松 8 倍)。
+        # 这是唯一直接作用于**准确度**(按重投影误差删点)而非数量的旋钮。
+        if "GEO_PIX" in STRICT[tag]: globals()["GEO_PIX"] = STRICT[tag]["GEO_PIX"]
         BOUND_REL = STRICT[tag].get("BOUND_REL", BOUND_REL)
         NORMAL_COS = STRICT[tag].get("NORMAL_COS", NORMAL_COS)
         photo_color = STRICT[tag].get("PHOTO_COLOR", None)
@@ -644,6 +679,7 @@ def main():
         PHOTO = break_cfg["PHOTO"]
         GEO_MASK = break_cfg["GEO_MASK"]
         # 官方复刻需要**关掉**我们自己加的 pass2 门,所以 BREAK 也要能覆写它们
+        if "GEO_PIX" in break_cfg: globals()["GEO_PIX"] = break_cfg["GEO_PIX"]
         if "NORMAL_COS" in break_cfg: NORMAL_COS = break_cfg["NORMAL_COS"]
         if "BOUND_REL" in break_cfg: BOUND_REL = break_cfg["BOUND_REL"]
         W, H = break_cfg["W"], break_cfg["H"]
@@ -657,6 +693,9 @@ def main():
         os.environ["PW_CROP_W"] = str(_CROP_W)
         # checkpoint 域(dtu/blend)通过 env 传给 C.build_model
         os.environ["AETHER_CKPT"] = break_cfg["CKPT"]
+        if "SCALE" in break_cfg: os.environ["PW_SCALE"] = break_cfg["SCALE"]
+        if "NVIEW" in break_cfg:                    # 源视图数 = 官方真实场景档 7-10
+            globals()["NVIEW"] = break_cfg["NVIEW"]
         print(f"[{tag}] BREAK: src={break_cfg['src']} res={W}x{H} "
               f"ckpt={break_cfg['CKPT']} method={METHOD} PHOTO={PHOTO} "
               f"GEO_MASK={GEO_MASK} (FRESH MPS inference, own p1cache)", flush=True)
