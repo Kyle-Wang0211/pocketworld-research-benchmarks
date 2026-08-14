@@ -20,13 +20,23 @@
 
 @group(0) @binding(0) var<uniform>                  P                 : Params;
 @group(0) @binding(1) var<storage, read>            cams              : array<Camera, 32>;
-@group(0) @binding(2) var<storage, read>            packed_maps       : array<u32>;
+// ⚠️ read_write 而非 read:C1 把 4 张 uchar 图打进一个 buffer 后,
+//    ConfidenceCompute/DepthToWeak 等要写 confidence/weak_info 位段,
+//    而 NCC 要读 sa_mask 位段 —— 同一个 buffer 既读又写。
+//    ⚠️ 连带风险:不同位段的读写必须落在不同 dispatch,否则同一 dispatch 内
+//       没有顺序保证。产品化时要在 pass 划分上把这条写进契约。
+@group(0) @binding(2) var<storage, read_write>      packed_maps       : array<u32>;
 @group(0) @binding(3) var<storage, read_write>      plane_hypotheses  : array<vec4<f32>>;
 @group(0) @binding(4) var<storage, read_write>      costs             : array<f32>;
 @group(0) @binding(5) var<storage, read_write>      selected_views    : array<u32>;
 @group(0) @binding(6) var<storage, read_write>      rand_states       : array<u32>;
 @group(0) @binding(7) var<storage, read>            anchors           : array<vec2<i32>>;
 @group(0) @binding(8) var<storage, read>            anchors_map       : array<i32>;
+// view_weight_cuda[center*MAX_IMAGES + i],原版是 uchar ⇒ 4 个打进 1 个 u32,
+// 每像素 8 个 u32 = 32 B/px,与原版内存占用一致。
+@group(0) @binding(9) var<storage, read_write>      view_weights_buf  : array<u32>;
+// weak_nearest_strong:原版 short2,这里用 u32 打包(高 16 位 y,低 16 位 x)
+@group(0) @binding(10) var<storage, read_write>     weak_nearest_buf  : array<u32>;
 
 // C5:刻意用分离的 texture + sampler,不用 combined image sampler ——
 //     combined 在 MSL 里必须拆成两个 binding,分离就没有 remap 歧义。
@@ -38,3 +48,9 @@
 @group(1) @binding(3) var depth_tex    : texture_2d_array<f32>;
 // ⚠️ 深度图必须最近邻取样(原版 (int)x+0.5f),双线性会在深度不连续处造假值
 @group(1) @binding(4) var samp_nearest : sampler;
+
+// view_weights 打包:4 个 uchar 一个 u32
+fn vw_get(center : u32, i : u32) -> f32 {
+  let w = view_weights_buf[center * 8u + (i >> 2u)];
+  return f32((w >> ((i & 3u) * 8u)) & 0xFFu);
+}

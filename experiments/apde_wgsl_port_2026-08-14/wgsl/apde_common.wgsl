@@ -79,8 +79,19 @@ struct Params {
   //    这里改成由 host 传入的固定种子 + 像素索引哈希 ⇒ 默认逐字节可复现。
   //    这是移植期主动做的一处偏离,已记录,不是照抄失误。
   rand_seed : u32,
-  _pad_p0   : u32,
+  // 精修与代价聚合用(对应 CUDA PatchMatchParams 同名字段)
+  depth_min        : f32,
+  depth_max        : f32,
+  geom_factor      : f32,
+  geom_consistency : u32,   // 0/1,WGSL 无 bool in uniform
+  use_impetus      : u32,   // 0/1
+  state            : u32,   // 对应 CUDA params->state;REFINE_INIT 见常量
+  _pad_p0          : u32,
 };
+
+// 对应 CUDA 的 state 枚举(main.h)。只用到 REFINE_INIT 这一档的分支。
+const STATE_REFINE_INIT : u32 = 1u;
+
 
 // ─── 叶子数学:与 CUDA 版逐行对应 ───────────────────────────────
 
