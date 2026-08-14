@@ -43,6 +43,11 @@ for K in $ENTRIES; do
   xcrun -sdk macosx metal -c "$OUT/k_$K.metal" -o "$OUT/k_$K.air"
 done
 xcrun -sdk macosx metallib "$OUT"/k_*.air -o "$OUT/apde.metallib"
+
+# 🔴 per-kernel binding remap 表 —— 不是可选项。
+#    naga/spirv-cross 会剥掉 kernel 未使用的 binding 并紧凑重编号,
+#    host 若按固定 index 绑就会读错 buffer(不报错,只是结果错)。
+python3 "$HERE/tools/gen_binding_map.py" "$OUT/apde.wgsl" "$OUT/bindings.json"
 clang++ -std=c++17 -fobjc-arc -O2 "$HERE"/host/ncc_bench.mm \
         -framework Metal -framework Foundation -o "$OUT/ncc_bench"
 clang++ -std=c++17 -fobjc-arc -O2 "$HERE"/host/occupancy_probe.mm \

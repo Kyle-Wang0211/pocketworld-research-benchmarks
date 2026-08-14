@@ -115,7 +115,7 @@ fn ncc_bench(@builtin(global_invocation_id) gid : vec3<u32>) {
   let p = vec2<i32>(i32(gid.x), i32(gid.y));
   var acc = 0.0;
   for (var r : u32 = 0u; r < max(P.iter, 1u); r = r + 1u) {
-    acc = acc + compute_bilateral_ncc(p, cams[0], cams[1 + (r % 4u)],
+    acc = acc + compute_bilateral_ncc(p, cams[0], cams[1 + (r % 4u)], i32(1u + (r % 4u)),
                                       vec4<f32>(0.0, 0.0, -1.0, 2.0 + f32(r) * 0.01));
   }
   costs[gid.y * P.width + gid.x] = acc / f32(max(P.iter, 1u));
@@ -243,4 +243,24 @@ fn depth_to_weak_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
   let c = g.y * P.width + g.x;
   let r = depth_to_weak(vec2<i32>(i32(g.x), i32(g.y)));
   packed_maps[c] = (packed_maps[c] & 0xFFFFFF00u) | r;
+}
+
+// ─── 调试探针(非算法的一部分)──────────────────────────────────
+// 读 plane_hypotheses[c] 里 host 预置的平面,算 NCC 代价写进 costs[c]。
+// 用途:与 numpy 金标准逐点对拍,隔离"公式对但 WGSL 实现错"的情况。
+@compute @workgroup_size(16, 16)
+fn ncc_probe(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let p = vec2<i32>(i32(g.x), i32(g.y));
+  let c = g.y * P.width + g.x;
+  costs[c] = compute_bilateral_ncc(p, cams[0], cams[1], 1, plane_hypotheses[c]);
+}
+
+// 探针:只算 depth_from_plane,写进 costs,用来与 numpy 逐点对拍
+@compute @workgroup_size(16, 16)
+fn depth_probe(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let p = vec2<i32>(i32(g.x), i32(g.y));
+  let c = g.y * P.width + g.x;
+  costs[c] = depth_from_plane(cams[0], plane_hypotheses[c], p);
 }

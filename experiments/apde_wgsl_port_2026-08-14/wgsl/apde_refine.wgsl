@@ -13,7 +13,7 @@ fn compute_multiview_cost_vector(p : vec2<i32>, plane : vec4<f32>) -> array<f32,
   for (var i = 1; i < 32; i = i + 1) { cv[i] = 0.0; }
 
   for (var i : u32 = 1u; i < P.num_images; i = i + 1u) {
-    cv[i - 1u] = compute_bilateral_ncc(p, cams[0], cams[i], plane);
+    cv[i - 1u] = compute_bilateral_ncc(p, cams[0], cams[i], i32(i), plane);
   }
   return cv;
 }

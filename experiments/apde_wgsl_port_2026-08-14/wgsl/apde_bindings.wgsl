@@ -64,7 +64,10 @@
 // C5:刻意用分离的 texture + sampler,不用 combined image sampler ——
 //     combined 在 MSL 里必须拆成两个 binding,分离就没有 remap 歧义。
 @group(1) @binding(0) var ref_tex : texture_2d<f32>;
-@group(1) @binding(1) var src_tex : texture_2d<f32>;
+// ⚠️ 必须是纹理数组:原版是 texture_objects_cuda[0].images[src_idx],
+//    按源视图索引。初版我写成单张 texture_2d,导致 4 个源视图用的相机是对的、
+//    图却全是同一张 —— 单帧闭环第一次跑就把它抓出来了(深度 max 81222 越界)。
+@group(1) @binding(1) var src_tex : texture_2d_array<f32>;
 @group(1) @binding(2) var samp    : sampler;
 // 深度图:原版是 texture_depths_cuda[0].images[src_idx],即一组深度纹理。
 // WGSL 用 texture_2d_array 表达同一件事(数组层 = src_idx)。

@@ -28,6 +28,11 @@ fn sample_gray(t : texture_2d<f32>, s : sampler, x : f32, y : f32, w : f32, h : 
   return textureSampleLevel(t, s, vec2<f32>((x + 0.5) / w, (y + 0.5) / h), 0.0).r;
 }
 
+// 源图版:按 src_idx 取纹理数组的对应层(对应原版 images[src_idx])
+fn sample_gray_src(s : sampler, layer : i32, x : f32, y : f32, w : f32, h : f32) -> f32 {
+  return textureSampleLevel(src_tex, s, vec2<f32>((x + 0.5) / w, (y + 0.5) / h), layer, 0.0).r;
+}
+
 // ⚠️ 移植期自查:我最初把这段抽成共享函数,但原版是两条分支各自
 //    复制粘贴的。抽取虽然行为等价,却违反"逐行照抄"原则 ——
 //    将来 parity 对不上时无法排除是这里引入的。
@@ -54,7 +59,7 @@ fn ncc_finalize(sum_ref : f32, sum_ref_ref : f32, sum_src : f32,
 
 fn compute_bilateral_ncc(
   p : vec2<i32>,
-  ref_cam : Camera, src_cam : Camera,
+  ref_cam : Camera, src_cam : Camera, src_idx : i32,
   plane : vec4<f32>
 ) -> f32 {
   // ⚠️ ref_tex/src_tex/samp/packed_maps/P 全部直接引用模块级 binding ——
@@ -91,7 +96,7 @@ fn compute_bilateral_ncc(
         let rpt = vec2<i32>(p.x + i, p.y + j);
         let ref_pix = sample_gray(ref_tex, samp, f32(rpt.x), f32(rpt.y), rw, rh);
         let spt = compute_corresponding_point(H, rpt);
-        let src_pix = sample_gray(src_tex, samp, spt.x, spt.y, sw, sh);
+        let src_pix = sample_gray_src(samp, src_idx, spt.x, spt.y, sw, sh);
         // weight 恒为 1.0(照抄原版)
         sum_ref     = sum_ref     + ref_pix;
         sum_ref_ref = sum_ref_ref + ref_pix * ref_pix;
@@ -118,7 +123,7 @@ fn compute_bilateral_ncc(
         if (unpack_sa_mask(packed_maps[ridx]) != center_sa_id) { break; }
         let ref_pix = sample_gray(ref_tex, samp, f32(rpt.x), f32(rpt.y), rw, rh);
         let spt = compute_corresponding_point(H, rpt);
-        let src_pix = sample_gray(src_tex, samp, spt.x, spt.y, sw, sh);
+        let src_pix = sample_gray_src(samp, src_idx, spt.x, spt.y, sw, sh);
         sum_ref     = sum_ref     + ref_pix;
         sum_ref_ref = sum_ref_ref + ref_pix * ref_pix;
         sum_src     = sum_src     + src_pix;

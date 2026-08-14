@@ -79,7 +79,7 @@ fn compute_initial_cost_and_views(p : vec2<i32>) -> f32 {
   var cost_count = 0;
   var num_valid_views = 0;
   for (var i : u32 = 1u; i < P.num_images; i = i + 1u) {
-    let c = compute_bilateral_ncc(p, cams[0], cams[i], ph);
+    let c = compute_bilateral_ncc(p, cams[0], cams[i], i32(i), ph);
     cv[i - 1u] = c;
     cv_copy[i - 1u] = c;
     cost_count = cost_count + 1;
@@ -176,7 +176,7 @@ fn local_refine(p : vec2<i32>) {
     if (!is_set(sel, vi)) { continue; }
     var tp = origin_ph;
     tp.w = get_distance_to_origin(cams[0], p, origin_depth, tp);
-    var tc = compute_bilateral_ncc(p, cams[0], cams[si], tp);
+    var tc = compute_bilateral_ncc(p, cams[0], cams[si], si, tp);
     if (P.geom_consistency == 1u) {
       tc = tc + P.geom_factor * compute_geom_consistency_cost(p, si, tp);
     }
@@ -207,7 +207,7 @@ fn local_refine(p : vec2<i32>) {
       let vi = u32(si - 1);
       if (!is_set(sel, vi)) { continue; }
       let w = vw_get(center, vi);
-      tc = tc + compute_bilateral_ncc(p, cams[0], cams[si], tp) * w;
+      tc = tc + compute_bilateral_ncc(p, cams[0], cams[si], si, tp) * w;
       if (P.geom_consistency == 1u) {
         tc = tc + P.geom_factor * compute_geom_consistency_cost(p, si, tp) * w;
       }

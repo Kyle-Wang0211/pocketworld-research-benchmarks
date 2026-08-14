@@ -145,7 +145,7 @@ fn compute_bilateral_ncc_new(p : vec2<i32>, src_idx : i32,
         }
         let ref_pix = sample_gray(ref_tex, samp, f32(ref_pt.x), f32(ref_pt.y), rw, rh);
         let src_pt  = compute_corresponding_point(H, ref_pt);
-        let src_pix = sample_gray(src_tex, samp, src_pt.x, src_pt.y, sw, sh);
+        let src_pix = sample_gray_src(samp, src_idx, src_pt.x, src_pt.y, sw, sh);
         // weight 恒为 1.0(照抄原版 APD.cu:534 —— 见文件头勘误)
         sum_ref     = sum_ref     + ref_pix;
         sum_ref_ref = sum_ref_ref + ref_pix * ref_pix;

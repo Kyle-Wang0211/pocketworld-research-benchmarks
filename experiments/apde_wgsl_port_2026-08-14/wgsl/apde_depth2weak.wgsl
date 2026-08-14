@@ -69,7 +69,7 @@ fn depth_to_weak(p : vec2<i32>) -> u32 {
     for (var si = 1; si < num_images; si = si + 1) {
       let vi = u32(si - 1);
       if (!is_set(sel, vi)) { continue; }
-      var tc = compute_bilateral_ncc(p, cams[0], cams[si], tp);
+      var tc = compute_bilateral_ncc(p, cams[0], cams[si], si, tp);
       if (P.geom_consistency == 1u) {
         tc = tc + P.geom_factor * compute_geom_consistency_cost(p, si, tp);
       }
