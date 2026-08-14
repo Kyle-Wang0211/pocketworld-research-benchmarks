@@ -89,7 +89,9 @@ struct Params {
   // GenAnchors 用(对应 CUDA PatchMatchParams 同名字段)
   rotate_time      : u32,   // 原版取值 [1,2,4]
   ransac_threshold : f32,
-  _pad_p0          : u32,
+  top_k            : u32,   // ComputeMultiViewInitialCostandSelectedViews 用
+  use_apd          : u32,   // 0/1,决定初始代价走 NCCNew 还是 NCCOld
+  weak_peak_radius : u32,   // DepthToWeak 用
   _pad_p1          : u32,
 };
 

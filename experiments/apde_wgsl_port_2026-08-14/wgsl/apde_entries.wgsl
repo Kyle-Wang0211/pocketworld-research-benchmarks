@@ -95,3 +95,116 @@ fn gen_anchors_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
   // weak_reliable 写进 packed_maps 的第 24..31 位
   packed_maps[c] = (packed_maps[c] & 0x00FFFFFFu) | ((reliable & 0xFFu) << 24u);
 }
+
+// ─── RandomInitialization ─────────────────────────────────────
+// ⚠️ InitRandomStates 在原版是独立 kernel(curand_init(clock64(),...))。
+//    我们改成确定性播种(seed_state),不需要单独的初始化 pass ——
+//    每个 kernel 用到时按 (rand_seed, 像素索引) 现场推导,省一个 dispatch
+//    和 24 B/px 的常驻状态。这是移植期的合法简化,已登记。
+const STATE_FIRST_INIT : u32 = 0u;
+
+@compute @workgroup_size(16, 16)
+fn random_init_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let p = vec2<i32>(i32(g.x), i32(g.y));
+  let c = g.y * P.width + g.x;
+  var st = seed_state(P.rand_seed, c);
+  if (P.state == STATE_FIRST_INIT) {
+    plane_hypotheses[c] = generate_random_plane_hypothesis(
+        cams[0], p, &st, P.depth_min, P.depth_max);
+  } else {
+    var ph = transform_normal_to_ref_cam(cams[0], plane_hypotheses[c]);
+    let depth = ph.w;
+    ph.w = get_distance_to_origin(cams[0], p, depth, ph);
+    plane_hypotheses[c] = ph;
+  }
+  costs[c] = compute_initial_cost_and_views(p);
+}
+
+// ─── GetDepthandNormal ────────────────────────────────────────
+// 把 plane.w 从「到原点距离 d」改写成「深度」,并把法向转到世界系。
+// ⚠️ 这一步之后 .w 的语义变了 —— ConfidenceCompute/GenAnchors 读的就是深度。
+@compute @workgroup_size(16, 16)
+fn depth_and_normal_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let p = vec2<i32>(i32(g.x), i32(g.y));
+  let c = g.y * P.width + g.x;
+  var ph = plane_hypotheses[c];
+  ph.w = depth_from_plane(cams[0], ph, p);
+  plane_hypotheses[c] = transform_normal(cams[0], ph);
+}
+
+// ─── NeigbourUpdate ───────────────────────────────────────────
+// WEAK 且 weak_reliable != 1 的降级成 UNKNOWN
+@compute @workgroup_size(16, 16)
+fn neighbour_update_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let c = g.y * P.width + g.x;
+  let m = packed_maps[c];
+  if (unpack_weak_info(m) != WEAK) { return; }
+  if (unpack_weak_reliable(m) != 1u) {
+    packed_maps[c] = (m & 0xFFFFFF00u) | UNKNOWN;
+  }
+}
+
+// ─── WeakFilter ───────────────────────────────────────────────
+// STRONG 像素若 ±2 邻域内没有其他 STRONG,降级成 UNKNOWN。
+// ⚠️ 原版写进 weak_info_copy(另一份缓冲)而不是原地 —— 因为原地会让
+//    后来的线程看到已改的值。这里写进 packed_maps 的 weak_reliable 位段
+//    当临时通道,由 host 在下一个 pass 里合并。
+@compute @workgroup_size(16, 16)
+fn weak_filter_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let width = i32(P.width); let height = i32(P.height);
+  let p = vec2<i32>(i32(g.x), i32(g.y));
+  let c = g.y * P.width + g.x;
+  if (unpack_weak_info(packed_maps[c]) != STRONG) { return; }
+  for (var x = -2; x <= 2; x = x + 1) {
+    for (var y = -2; y <= 2; y = y + 1) {
+      if (x == 0 && y == 0) { continue; }
+      let n = vec2<i32>(p.x + x, p.y + y);
+      if (n.x < 0 || n.x >= width || n.y < 0 || n.y >= height) { continue; }
+      if (unpack_weak_info(packed_maps[u32(n.x + n.y * width)]) == STRONG) { return; }
+    }
+  }
+  // 孤立 STRONG ⇒ 标记待降级(host 在下一 pass 合并成 UNKNOWN)
+  packed_maps[c] = (packed_maps[c] & 0x00FFFFFFu) | (0xFEu << 24u);
+}
+
+// ─── LocalRefine ──────────────────────────────────────────────
+@compute @workgroup_size(16, 16)
+fn local_refine_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  local_refine(vec2<i32>(i32(g.x), i32(g.y)));
+}
+
+// ─── Black/RedPixelFilterStrong ───────────────────────────────
+@compute @workgroup_size(16, 16)
+fn black_pixel_filter_strong(@builtin(global_invocation_id) g : vec3<u32>) {
+  var p = vec2<i32>(i32(g.x), i32(g.y) * 2);
+  if ((g.x % 2u) == 1u) { p.y = p.y + 1; }
+  if (p.x >= i32(P.width) || p.y >= i32(P.height)) { return; }
+  if (unpack_weak_info(packed_maps[u32(p.x + p.y * i32(P.width))]) != WEAK) {
+    checkerboard_filter_strong(p);
+  }
+}
+
+@compute @workgroup_size(16, 16)
+fn red_pixel_filter_strong(@builtin(global_invocation_id) g : vec3<u32>) {
+  var p = vec2<i32>(i32(g.x), i32(g.y) * 2);
+  if ((g.x % 2u) == 0u) { p.y = p.y + 1; }
+  if (p.x >= i32(P.width) || p.y >= i32(P.height)) { return; }
+  if (unpack_weak_info(packed_maps[u32(p.x + p.y * i32(P.width))]) != WEAK) {
+    checkerboard_filter_strong(p);
+  }
+}
+
+// ─── DepthToWeak ──────────────────────────────────────────────
+// 🔴🔴 244 次 NCC/像素,是全流程最重的单趟。见 apde_depth2weak.wgsl。
+@compute @workgroup_size(16, 16)
+fn depth_to_weak_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let c = g.y * P.width + g.x;
+  let r = depth_to_weak(vec2<i32>(i32(g.x), i32(g.y)));
+  packed_maps[c] = (packed_maps[c] & 0xFFFFFF00u) | r;
+}
