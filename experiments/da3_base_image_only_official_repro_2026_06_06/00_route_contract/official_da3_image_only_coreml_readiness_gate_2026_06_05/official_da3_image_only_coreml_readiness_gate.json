@@ -1,0 +1,206 @@
+{
+  "schema_version": "aether_official_da3_image_only_coreml_readiness_gate_v1",
+  "date": "2026-06-05",
+  "purpose": "Verify whether the APP can claim parity with the official DA3-Streaming default image-only input contract.",
+  "inputs": {
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "capture_services_dir": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "xcode_project": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner.xcodeproj/project.pbxproj",
+    "local_runner": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+    "native_adapter": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+    "model_loader_adapter": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/ModelLoaderPlugin.swift",
+    "policy_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart"
+  },
+  "official_baseline_contract": {
+    "mode": "image_only",
+    "target_resource": "DA3BASE_280x504_N35_image_only",
+    "pose_compat_resource": "DA3BASE_476x742_N35_pose",
+    "required_model_inputs": [
+      "image"
+    ],
+    "forbidden_model_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "expected_outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ],
+    "official_streaming_call": "model.inference(images, ref_view_strategy=...)",
+    "arkit_vio_role": "metadata_only_not_da3_input"
+  },
+  "model_signatures": {
+    "models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "model_count": 2,
+    "models": [
+      {
+        "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+        "resource_name": "DA3BASE_280x504_N35_image_only",
+        "available": true,
+        "generated_class_name": "DA3BASE_280x504_N35_image_only",
+        "input_names": [
+          "image"
+        ],
+        "output_names": [
+          "depth",
+          "depth_conf",
+          "pred_extrinsics",
+          "pred_intrinsics"
+        ],
+        "required_inputs": [
+          "image"
+        ],
+        "input_shapes": {
+          "image": "[1, 35, 3, 280, 504]"
+        },
+        "output_shapes": {
+          "depth": "[1, 35, 280, 504]",
+          "depth_conf": "[1, 35, 280, 504]",
+          "pred_extrinsics": "[1, 35, 3, 4]",
+          "pred_intrinsics": "[1, 35, 3, 3]"
+        },
+        "requires_external_camera_inputs": false,
+        "is_official_streaming_image_only_signature": true,
+        "is_pose_conditioned_coreml_signature": false
+      },
+      {
+        "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+        "resource_name": "DA3BASE_476x742_N35_pose",
+        "available": true,
+        "generated_class_name": "DA3BASE_476x742_N35_pose",
+        "input_names": [
+          "image",
+          "extrinsics",
+          "intrinsics"
+        ],
+        "output_names": [
+          "depth",
+          "depth_conf",
+          "pred_extrinsics",
+          "pred_intrinsics"
+        ],
+        "required_inputs": [
+          "image",
+          "extrinsics",
+          "intrinsics"
+        ],
+        "input_shapes": {
+          "image": "[1, 35, 3, 476, 742]",
+          "extrinsics": "[1, 35, 4, 4]",
+          "intrinsics": "[1, 35, 3, 3]"
+        },
+        "output_shapes": {
+          "depth": "[1, 35, 476, 742]",
+          "depth_conf": "[1, 35, 476, 742]",
+          "pred_extrinsics": "[1, 35, 3, 4]",
+          "pred_intrinsics": "[1, 35, 3, 3]"
+        },
+        "requires_external_camera_inputs": true,
+        "is_official_streaming_image_only_signature": false,
+        "is_pose_conditioned_coreml_signature": true
+      }
+    ],
+    "image_only_model_count": 1,
+    "pose_conditioned_model_count": 1,
+    "has_image_only_model": true,
+    "has_pose_conditioned_model": true
+  },
+  "packaging_evidence": {
+    "models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "xcode_project": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner.xcodeproj/project.pbxproj",
+    "xcode_project_exists": true,
+    "target_resource": "DA3BASE_280x504_N35_image_only",
+    "target_mlpackage": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+    "target_mlpackage_exists": true,
+    "target_mlmodelc": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlmodelc",
+    "target_mlmodelc_exists": false,
+    "target_any_coreml_artifact_exists": true,
+    "target_referenced_by_xcode_resources": true,
+    "target_xcode_reference_lines": [
+      "A1B2C3D4E5F60000DEAD00B0 /* DA3BASE_280x504_N35_image_only.mlpackage in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000DEAD00B1 /* DA3BASE_280x504_N35_image_only.mlpackage */; settings = {ASSET_TAGS = (\"tier:high\", ); }; };",
+      "A1B2C3D4E5F60000DEAD00B1 /* DA3BASE_280x504_N35_image_only.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper.mlpackage; name = \"DA3BASE_280x504_N35_image_only.mlpackage\"; path = \"Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage\"; sourceTree = \"<group>\"; };",
+      "A1B2C3D4E5F60000DEAD00B1 /* DA3BASE_280x504_N35_image_only.mlpackage */,",
+      "A1B2C3D4E5F60000DEAD00B0 /* DA3BASE_280x504_N35_image_only.mlpackage in Resources */,"
+    ],
+    "target_has_tier_high_odr_tag": true,
+    "pose_compat_resource": "DA3BASE_476x742_N35_pose",
+    "pose_compat_mlpackage": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+    "pose_compat_mlpackage_exists": true,
+    "pose_compat_mlmodelc": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlmodelc",
+    "pose_compat_mlmodelc_exists": false,
+    "pose_compat_any_coreml_artifact_exists": true,
+    "pose_compat_referenced_by_xcode_resources": false,
+    "pose_compat_xcode_reference_lines": [],
+    "pose_compat_has_tier_high_odr_tag": false,
+    "known_asset_tags_include_tier_high": true,
+    "blocking_packaging_gap": null
+  },
+  "policy_evidence": {
+    "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+    "available": true,
+    "selected_resource_name": "DA3BASE_280x504_N35_image_only",
+    "selected_da3_input_contract": "image_only",
+    "selected_official_streaming_baseline": true,
+    "default_da3_input_contract": "pose_conditioned_coreml_requires_image_extrinsics_intrinsics",
+    "default_official_streaming_baseline_false": true,
+    "ready_image_only_coreml_signature": true,
+    "pose_conditioned_compat_tag_present": true,
+    "camera_fields_marked_compat_only": true,
+    "official_streaming_default_match_false": true
+  },
+  "app_evidence": {
+    "local_runner": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+      "available": true,
+      "official_image_only_gate_present": true,
+      "pose_conditioned_detection_present": true,
+      "image_only_resource_allowlist_present": true,
+      "image_only_resource_allowlist_target_only": true
+    },
+    "native_adapter": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "available": true,
+      "image_only_resource_allowlist_present": true,
+      "image_only_input_contract_hard_reject_present": true,
+      "pose_conditioned_branch_present": true,
+      "image_only_provider_branch_present": true,
+      "input_contract_telemetry_present": true
+    },
+    "model_loader_adapter": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/ModelLoaderPlugin.swift",
+      "available": true,
+      "image_only_resource_mapping_present": true,
+      "compiled_mlmodelc_lookup_present": true,
+      "source_mlpackage_lookup_present": true,
+      "hardcoded_single_resource_ext_removed": true,
+      "odr_bundle_miss_mentions_both_extensions": true
+    }
+  },
+  "decision": {
+    "status": "pass",
+    "official_baseline_ready": true,
+    "has_image_only_coreml_signature": true,
+    "has_target_coreml_artifact": true,
+    "target_referenced_by_xcode_resources": true,
+    "pose_compat_artifact_still_present": true,
+    "pose_compat_referenced_by_xcode_resources": false,
+    "model_dir_is_pose_conditioned_only": false,
+    "current_xcode_bundle_has_pose_conditioned_resource": false,
+    "current_bundle_is_pose_conditioned_only": false,
+    "app_contract_ready_for_future_image_only_model": true,
+    "policy_blocks_current_pose_model_from_official_baseline": true,
+    "selected_policy_resource": "DA3BASE_280x504_N35_image_only",
+    "highest_priority_gap": null,
+    "odr_packaging_warning": null,
+    "do_not_use_arkit_vio_as_da3_input_for_official_baseline": true,
+    "do_not_add_downstream_cleanup_to_hide_this_gap": true
+  },
+  "next_actions": [
+    "Run the APP/native same-capture image-only inference gate with DA3BASE_280x504_N35_image_only.",
+    "Run official core-frame npz downstream on the new image-only outputs before judging thickness.",
+    "Keep pose-conditioned DA3 on disk only as compatibility/research evidence; do not add it back to Xcode resources."
+  ]
+}

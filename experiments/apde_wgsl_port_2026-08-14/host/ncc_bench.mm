@@ -57,6 +57,9 @@ struct Camera {
   float depth_min, depth_max;
   int32_t width, height;
 };
+// ⚠️ Camera 同样是错位重灾区(移植期漏过三次字段:完整 K[9]/R[9] → width/height
+//    → 相机中心 c)。8 个 vec4 + 2 f32 + 2 i32 = 144 B。同样上门。
+static_assert(sizeof(Camera) == 144, "Camera 必须是 144 B,与 apde_common.wgsl 一致");
 
 static void fill_identity_camera(Camera& c, int w, int h, float tx) {
   float fx = 900.0f, fy = 900.0f, cx = w * 0.5f, cy = h * 0.5f;
