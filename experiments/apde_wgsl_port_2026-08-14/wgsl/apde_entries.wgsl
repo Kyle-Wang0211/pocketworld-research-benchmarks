@@ -84,3 +84,14 @@ fn ncc_bench(@builtin(global_invocation_id) gid : vec3<u32>) {
   }
   costs[gid.y * P.width + gid.x] = acc / f32(max(P.iter, 1u));
 }
+
+// ─── GenAnchors ───────────────────────────────────────────────
+// 🔴 私有内存约 1KB+/线程(5 个 32 元素数组)。见 apde_anchors.wgsl 说明。
+@compute @workgroup_size(16, 16)
+fn gen_anchors_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  let c = g.y * P.width + g.x;
+  let reliable = gen_anchors(vec2<i32>(i32(g.x), i32(g.y)));
+  // weak_reliable 写进 packed_maps 的第 24..31 位
+  packed_maps[c] = (packed_maps[c] & 0x00FFFFFFu) | ((reliable & 0xFFu) << 24u);
+}

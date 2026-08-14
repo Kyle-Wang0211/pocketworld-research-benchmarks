@@ -37,6 +37,9 @@
 @group(0) @binding(9) var<storage, read_write>      view_weights_buf  : array<u32>;
 // weak_nearest_strong:原版 short2,这里用 u32 打包(高 16 位 y,低 16 位 x)
 @group(0) @binding(10) var<storage, read_write>     weak_nearest_buf  : array<u32>;
+// anchors:原版 short2[anchors_map[center]*ANCHOR_NUM + i],这里 u32 打包
+// (高 16 位 y,低 16 位 x;(-1,-1) 存为 0xFFFFFFFF)
+@group(0) @binding(11) var<storage, read_write>     anchors_out       : array<u32>;
 
 // C5:刻意用分离的 texture + sampler,不用 combined image sampler ——
 //     combined 在 MSL 里必须拆成两个 binding,分离就没有 remap 歧义。

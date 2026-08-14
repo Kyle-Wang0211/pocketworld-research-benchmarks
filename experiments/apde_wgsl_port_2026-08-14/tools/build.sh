@@ -16,6 +16,7 @@ cat "$HERE"/wgsl/apde_common.wgsl \
     "$HERE"/wgsl/apde_refine.wgsl \
     "$HERE"/wgsl/apde_propagate.wgsl \
     "$HERE"/wgsl/apde_weak.wgsl \
+    "$HERE"/wgsl/apde_anchors.wgsl \
     "$HERE"/wgsl/apde_entries.wgsl > "$OUT/apde.wgsl"
 
 

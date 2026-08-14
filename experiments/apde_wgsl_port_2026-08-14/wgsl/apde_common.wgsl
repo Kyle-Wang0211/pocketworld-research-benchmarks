@@ -86,7 +86,11 @@ struct Params {
   geom_consistency : u32,   // 0/1,WGSL 无 bool in uniform
   use_impetus      : u32,   // 0/1
   state            : u32,   // 对应 CUDA params->state;REFINE_INIT 见常量
+  // GenAnchors 用(对应 CUDA PatchMatchParams 同名字段)
+  rotate_time      : u32,   // 原版取值 [1,2,4]
+  ransac_threshold : f32,
   _pad_p0          : u32,
+  _pad_p1          : u32,
 };
 
 // 对应 CUDA 的 state 枚举(main.h)。只用到 REFINE_INIT 这一档的分支。
