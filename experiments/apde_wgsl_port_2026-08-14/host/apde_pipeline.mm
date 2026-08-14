@@ -282,7 +282,12 @@ int main(int argc, const char** argv) {
                                {"depth_to_weak_kernel",   false},
                                {"local_refine_kernel",    false}};
 
-    printf("═══ 单帧闭环(use_APD=0, geom=0)═══\n");
+    // 轮次开关:0=只跑 round0(FIRST_INIT/无APD),1=再跑 round1(REFINE_INIT/开APD)
+    int rounds = (argc > 6) ? atoi(argv[6]) : 1;
+    // 对照实验开关:round1 里关掉 APD 专属 kernel,只留 REFINE_INIT 的二次精修。
+    // 用来把「APD 的贡献」与「多跑一轮精修的贡献」分开。
+    int apdOn = (argc > 7) ? atoi(argv[7]) : 1;
+    printf("═══ 单帧闭环(rounds=%d)═══\n", rounds);
     double total = 0;
     // 逐 pass dump 平面,供 numpy 算与真值的相关系数
     int dumpIdx = 0;
@@ -303,6 +308,127 @@ int main(int argc, const char** argv) {
                            if (!strcmp(s.name, "depth_and_normal_kernel")) wIsDepth = true;
                            probe(s.name, wIsDepth); dumpPlanes(s.name); }
     printf("  %-28s %8.2f ms\n", "── 合计 ──", total);
+
+    // ══ Round 1:REFINE_INIT + use_APD ═════════════════════════
+    // 照抄 main.cpp:313-320 的轮次配置:
+    //   i==0 → state=FIRST_INIT, use_APD=false
+    //   i>=1 → state=REFINE_INIT, use_APD=true,
+    //          ransac_threshold = 0.01 - i*0.00125, rotate_time = min(2^i, 4)
+    if (rounds >= 2) {
+      printf("\n═══ Round 1(REFINE_INIT + use_APD)═══\n");
+
+      // 🔴 anchors_map 必须 host 算(APD.cpp:627-639):
+      //    对 WEAK 像素给递增序号,非 WEAK 给 -1;anchors 缓冲按 weak_count 分配。
+      //    weak_info 来自上一轮 DepthToWeak 的结果(packed_maps 低 8 位)。
+      int weak_count = 0;
+      {
+        const uint32_t* m = (const uint32_t*)bMaps.contents;
+        int32_t* am = (int32_t*)bAncMap.contents;
+        for (size_t i = 0; i < N; ++i) {
+          if ((m[i] & 0xFFu) == 0u /*WEAK*/) am[i] = weak_count++;
+          else am[i] = -1;
+        }
+        printf("  Weak count: %d / %zu = %.2f%%\n", weak_count, N, 100.0*weak_count/N);
+      }
+      if (weak_count == 0) {
+        printf("  ⚠️ 没有 WEAK 像素,APD 支无事可做(上一轮 DepthToWeak 把全图判成 STRONG)\n");
+      } else {
+        // anchors_out 按 weak_count*ANCHOR_NUM 重新分配(原版 cudaMalloc 同)
+        bAncOut = [dev newBufferWithLength:(size_t)weak_count*9*4
+                                   options:MTLResourceStorageModeShared];
+        memset(bAncOut.contents, 0xFF, (size_t)weak_count*9*4);
+        byName["anchors_out"] = bAncOut;
+
+        P.state = 1u;            // REFINE_INIT
+        P.use_apd = 1u;
+        P.ransac_threshold = 0.01f - 1*0.00125f;
+        P.rotate_time = 2u;      // min(2^1, 4)
+        P.weak_peak_radius = 6u;
+
+        P.use_apd = apdOn ? 1u : 0u;
+        std::vector<Stage> apd_pre;
+        if (apdOn) apd_pre = {{"nearest_strong_kernel", false},
+                              {"gen_anchors_kernel",    false},
+                              {"neighbour_update_kernel", false},
+                              {"random_init_kernel",    false}};
+        else       apd_pre = {{"random_init_kernel",    false}};
+        // 锚点自检:GenAnchors 之后统计 weak_reliable 与真实锚点数
+        auto anchorProbe = [&]() {
+          const uint32_t* m = (const uint32_t*)bMaps.contents;
+          size_t rel = 0, wk = 0;
+          for (size_t i = 0; i < N; ++i) {
+            if ((m[i] & 0xFFu) == 0u) { wk++; if (((m[i]>>24)&0xFFu) == 1u) rel++; }
+          }
+          const uint32_t* a = (const uint32_t*)bAncOut.contents;
+          size_t filled = 0, tot = (size_t)weak_count*9;
+          for (size_t i = 0; i < tot; ++i) if (a[i] != 0xFFFFFFFFu) filled++;
+          printf("      [锚点自检] WEAK %zu, weak_reliable=1 的 %zu (%.1f%%), "
+                 "锚点槽非空 %zu/%zu (%.1f%%)\n",
+                 wk, rel, wk?100.0*rel/wk:0.0, filled, tot, tot?100.0*filled/tot:0.0);
+        };
+
+        std::vector<Stage> apd_loop;
+        if (apdOn) apd_loop = {{"black_pixel_update_strong", true},
+                               {"red_pixel_update_strong",   true},
+                               {"ransac_fit_plane_kernel",   false},
+                               {"black_pixel_update_weak",   true},
+                               {"red_pixel_update_weak",     true}};
+        else       apd_loop = {{"black_pixel_update_strong", true},
+                               {"red_pixel_update_strong",   true}};
+        wIsDepth = false;
+        for (auto& s : apd_pre) { curKernel = s.name;
+          double t = dispatch(mkpso(s.name), s.half, 0); total += t;
+          printf("  %-28s %8.2f ms\n", s.name, t); probe(s.name, wIsDepth); dumpPlanes(s.name);
+          if (!strcmp(s.name, "gen_anchors_kernel")) anchorProbe(); }
+        for (int i = 0; i < ITERS; ++i)
+          for (auto& s : apd_loop) { curKernel = s.name;
+            double t = dispatch(mkpso(s.name), s.half, (uint32_t)i); total += t;
+            printf("  %-24s[%d] %8.2f ms\n", s.name, i, t); probe(s.name, wIsDepth); dumpPlanes(s.name); }
+        for (auto& s : post) { curKernel = s.name;
+          double t = dispatch(mkpso(s.name), s.half, 0); total += t;
+          printf("  %-28s %8.2f ms\n", s.name, t);
+          if (!strcmp(s.name, "depth_and_normal_kernel")) wIsDepth = true;
+          probe(s.name, wIsDepth); dumpPlanes(s.name); }
+        printf("  %-28s %8.2f ms\n", "── 两轮合计 ──", total);
+      }
+    }
+
+    // ══ geom_consistency 轮(main.cpp:333-348 的内层 j 循环)═══════
+    //   state=REFINE_ITER, geom_consistency=true, weak_peak_radius=max(4-2j,2)
+    // 🔴 前置:depth_tex 必须装上**各源视图自己的深度图**。
+    //    单帧闭环里我们只算了参考帧的深度,所以这里退而求其次:
+    //    把参考帧深度投影不到别的视图 —— 真正做法是每帧都跑一遍再互填。
+    //    ⇒ 单帧闭环只能验证 kernel 跑得通、数值不炸,**不能验证几何收益**。
+    //      真正的几何一致性收益要等 414 帧批量那一步。
+    int geomIter = (argc > 8) ? atoi(argv[8]) : 0;
+    if (geomIter > 0) {
+      printf("\n═══ geom_consistency 轮(REFINE_ITER)═══\n");
+      // 把当前参考帧深度写进 depth_tex 的第 0 层(自一致性,弱验证)
+      {
+        const float* pl = (const float*)bPlanes.contents;
+        std::vector<float> dep(N);
+        for (size_t i = 0; i < N; ++i) dep[i] = pl[i*4+3];
+        for (int L = 0; L < NIMG; ++L)
+          [depthArr replaceRegion:MTLRegionMake2D(0,0,W,H) mipmapLevel:0 slice:L
+                        withBytes:dep.data() bytesPerRow:W*4 bytesPerImage:0];
+        printf("  ⚠️ depth_tex 各层暂填同一张参考帧深度(单帧闭环的局限)\n");
+      }
+      P.state = 2u;                 // REFINE_ITER
+      P.geom_consistency = 1u;
+      P.use_impetus = 1u;
+      for (int j = 0; j < geomIter; ++j) {
+        P.weak_peak_radius = (uint32_t)std::max(4 - 2*j, 2);
+        std::vector<Stage> gl = {{"random_init_kernel", false},
+                                 {"black_pixel_update_strong", true},
+                                 {"red_pixel_update_strong",   true}};
+        for (auto& s : gl) { curKernel = s.name;
+          double t = dispatch(mkpso(s.name), s.half, (uint32_t)j); total += t;
+          printf("  %-24s[%d] %8.2f ms\n", s.name, j, t); }
+        for (auto& s : post) { curKernel = s.name;
+          double t = dispatch(mkpso(s.name), s.half, 0); total += t; }
+        probe("geom_iter_done", true);
+      }
+    }
 
     // ── 导出深度图(plane.w 在 GetDepthandNormal 之后就是深度)──
     const float* pl = (const float*)bPlanes.contents;
