@@ -92,7 +92,13 @@ struct Params {
   top_k            : u32,   // ComputeMultiViewInitialCostandSelectedViews 用
   use_apd          : u32,   // 0/1,决定初始代价走 NCCNew 还是 NCCOld
   weak_peak_radius : u32,   // DepthToWeak 用
+  // ComputeBilateralNCCNew 用(main.h:90-91,默认 5 / 5 ⇒ 每锚点只有 3×3=9 次取样)
+  weak_radius      : i32,
+  weak_increment   : i32,
+  // 显式补齐到 24 个 4 字节字段 = 96 B,与 host 侧结构体一一对应。
+  // ⚠️ 不留隐式尾部 padding —— 隐式 padding 正是 host/WGSL 错位的温床。
   _pad_p1          : u32,
+  _pad_p2          : u32,
 };
 
 // 对应 CUDA 的 state 枚举(main.h)。只用到 REFINE_INIT 这一档的分支。

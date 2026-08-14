@@ -12,8 +12,25 @@
 // 拼接顺序必须是:common → bindings → geom → ncc → <entry>
 //
 // C1 复核:storage buffer 计数(iOS 每 stage 上限约 10)
-//   1 cams  2 packed_maps  3 plane_hypotheses  4 costs  5 selected_views
-//   6 rand_states  7 anchors  8 anchors_map          = 8 个 ✅ 在预算内
+//   模块级共声明 12 个(binding 1..12),但 **C1 是逐 kernel 生效的** ——
+//   naga 会把某个 entry point 用不到的 binding 整个剥掉,所以真正要守的是
+//   「单个 kernel 实际用到几个」。
+//
+//   📏 2026-08-14 逐 kernel 实测(数生成的 MSL 里的 buffer(N)):
+//     black/red_pixel_update_weak … 10 槽(buffer(0..9))← **全场最胖**
+//     black/red_pixel_update_strong / ransac / gen_anchors … 7 槽
+//     其余 12 个 kernel … 2–6 槽
+//   最胖那个的 10 槽 = 1 uniform(Params)+ 9 storage:
+//     cams / packed_maps / plane_hypotheses / costs / selected_views /
+//     anchors_map / anchors_out / view_weights_buf / fit_plane_hypos
+//   ✅ C2 的红利在这里兑现了:`grep spvBufferSizeConstants k_*.metal` **零命中**
+//      —— 因为我们从不查数组长度,spirv-cross 就不注入那个额外的 sizes buffer。
+//      要是当初图省事用了 arrayLength(),这里就是 11 槽,直接顶穿预算。
+//   ⚠️ **9 个 storage 已经贴着 iOS 那条 ~10 的线**。下一个想往 weak 传播里
+//      再加 buffer 的人:先跑一遍上面那条 grep 量真实槽位,别拍脑袋。
+//   ⚠️ binding 6 rand_states / binding 7 anchors 目前**零引用**(确定性播种后
+//      不需要常驻随机状态;锚点统一走 anchors_out 的 u32 打包形式)。
+//      留着是为了 binding 号稳定,naga 会自动剥掉,不占实际槽位。
 //   (原版 14 个 —— 靠 packed_maps 把 4 张 uchar 图并成 1 个省下来的)
 //
 // C2 复核:此处不出现任何数组长度查询,长度一律走 Params。
@@ -40,6 +57,9 @@
 // anchors:原版 short2[anchors_map[center]*ANCHOR_NUM + i],这里 u32 打包
 // (高 16 位 y,低 16 位 x;(-1,-1) 存为 0xFFFFFFFF)
 @group(0) @binding(11) var<storage, read_write>     anchors_out       : array<u32>;
+// fit_plane_hypotheses_cuda:RANSACToGetFitPlane 的输出,
+// PlaneHypothesisRefinementWeak 的第一候选。原版是独立的 float4 全图缓冲。
+@group(0) @binding(12) var<storage, read_write>     fit_plane_hypos   : array<vec4<f32>>;
 
 // C5:刻意用分离的 texture + sampler,不用 combined image sampler ——
 //     combined 在 MSL 里必须拆成两个 binding,分离就没有 remap 歧义。

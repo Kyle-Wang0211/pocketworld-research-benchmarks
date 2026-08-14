@@ -25,12 +25,27 @@
 // 与 WGSL 的 Params 逐字段对齐(std140/std430 打包)
 // ⚠️ 必须与 wgsl/apde_common.wgsl 的 Params 逐字段一致。
 //    错位不会报错,会静默读到垃圾数据 —— 改一边必须改另一边。
+//
+// 🔴 2026-08-14 修:这个结构体**曾经与 WGSL 脱节** —— WGSL 侧的 Params 在
+//    搬 refine/init/anchors/depth2weak 时长到了 21 个字段(84 B),host 侧
+//    却还停在 10 个(40 B)。ncc_bench 读到的几个字段偏移恰好没变,所以
+//    "看起来还能跑",但 uniform buffer 只有 40 B、shader 却按 96 B 读 ——
+//    正是交接说明 §10.3 点名的那类静默错位。
+//    现在改成**显式补齐到 24 个 4 字节字段 = 96 B**,两边都不留隐式尾部 padding。
+//    ⚠️ 下次再往 WGSL 的 Params 加字段:先来这里加,再去那边加。
 struct Params {
   uint32_t width, height, ref_index, num_images;
   uint32_t num_anchors, iter;
   int32_t  strong_radius, strong_increment;
-  uint32_t rand_seed, _pad_p0;
+  uint32_t rand_seed;
+  float    depth_min, depth_max, geom_factor;
+  uint32_t geom_consistency, use_impetus, state, rotate_time;
+  float    ransac_threshold;
+  uint32_t top_k, use_apd, weak_peak_radius;
+  int32_t  weak_radius, weak_increment;
+  uint32_t _pad_p1, _pad_p2;
 };
+static_assert(sizeof(Params) == 96, "Params 必须是 96 B,与 apde_common.wgsl 一致");
 
 // ⚠️ 必须与 wgsl/apde_common.wgsl 的 Camera 逐字段一致:
 //    8 个 vec4 + 2 f32 + 2 i32 = 144 字节
@@ -91,8 +106,15 @@ int main(int argc, const char** argv) {
     P.width = W; P.height = H; P.ref_index = 0; P.num_images = 5;
     P.num_anchors = 0;
     P.iter = (argc > 5) ? (uint32_t)atoi(argv[5]) : 1u;   // 每像素重复几次 NCC
-    P.strong_radius = 5; P.strong_increment = 2;   // 源码默认
-    P.rand_seed = 1u; P._pad_p0 = 0u;              // 确定性种子(默认固定)
+    P.strong_radius = 5; P.strong_increment = 2;   // 源码默认(main.h:88-89)
+    P.weak_radius   = 5; P.weak_increment   = 5;   // 源码默认(main.h:90-91)
+    P.rand_seed = 1u;                              // 确定性种子(默认固定)
+    // 其余字段照 main.h 的 PatchMatchParams 默认值填,便于将来复用这个载具
+    // 打点 NCCNew / weak 传播 —— 现在的 ncc_bench 入口只用到上面那几个。
+    P.depth_min = 0.5f; P.depth_max = 10.0f; P.geom_factor = 0.2f;
+    P.geom_consistency = 0u; P.use_impetus = 1u; P.state = 0u;
+    P.rotate_time = 4u; P.ransac_threshold = 0.005f;
+    P.top_k = 4u; P.use_apd = 1u; P.weak_peak_radius = 2u;
     id<MTLBuffer> bufP = [dev newBufferWithBytes:&P length:sizeof(P)
                                          options:MTLResourceStorageModeShared];
 

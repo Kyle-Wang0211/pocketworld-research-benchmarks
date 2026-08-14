@@ -14,10 +14,16 @@ Android+鸿蒙原生 Vulkan」的路线,运行时不带任何第三方图形层�
 **为什么**:跨端要求(iOS/Android/鸿蒙)把原本的 CasDiffMVS 方案逼到了墙角
 (详见第 1 节),而 APDe-MVS 不需要任何 NN 运行时、零强制权重、分还高 3 分。
 
-**进度**:**90%**。2011 行 WGSL,14 个 kernel 全部编译链接通过,
-M3 Pro 上占用率全 1024。**剩 17 个函数 / 690 行,集中在"弱纹理传播"那一支。**
+**进度**:**kernel 侧 100% 搬完**(2026-08-14 晚更新)。2741 行 WGSL / 16 文件,
+**17 个 kernel** 全部编译链接通过,M3 Pro 上占用率**全 1024**。
+弱纹理传播支(`ComputeBilateralNCCNew` / `CheckerboardPropagationWeak` /
+`PlaneHypothesisRefinementWeak` / `RANSACToGetFitPlane` + 两个红黑包装)已全部到位。
 
-**下一步**:搬完弱纹理传播支 → 写输入转换 → 写多 kernel 驱动 →
+> 📌 上一版这里写的是「剩 17 个函数 / 690 行」。逐个 grep 复核调用点后修正:
+> 其中 **8 个是上游死代码**(零调用点),真正要搬的只有 9 个 / 约 590 行。
+> 详见第 3.2 节的表。
+
+**下一步**:**不再有搬运工作**。写输入转换 → 写多 kernel 驱动 →
 用 414 帧素材跑出深度图 → 和 CasDiffMVS 的真彩 PLY 做质量对比。
 
 **🔴 上生产前的硬阻断**:Gipuma(GPL-3.0)血统取证未做。见第 8 节。
@@ -92,7 +98,7 @@ TFLite 的 210 个 builtin **没有 GridSample**,华为 MindSpore Lite 算子表
 
 ```
 ~/Documents/progecttwo/_host_experiments/apde_wgsl_spike/
-├── wgsl/                     ← 13 个 WGSL 文件,2011 行
+├── wgsl/                     ← 16 个 WGSL 文件,2741 行
 ├── host/
 │   ├── ncc_bench.mm          ← Metal 打点载具(含有效性自检)
 │   └── occupancy_probe.mm    ← 占用率探针
@@ -178,7 +184,7 @@ TFLite 的 210 个 builtin **没有 GridSample**,华为 MindSpore Lite 算子表
 
 ## 3. 移植进度:已搬 / 未搬
 
-### 3.1 已搬(2011 行 WGSL,13 个文件)
+### 3.1 已搬(2741 行 WGSL,16 个文件 —— **kernel 侧全部搬完**)
 
 | 文件 | 行 | 内容 |
 |---|---|---|
@@ -194,42 +200,69 @@ TFLite 的 210 个 builtin **没有 GridSample**,华为 MindSpore Lite 算子表
 | `apde_weak.wgsl` | 115 | ConfidenceCompute / FindNearestStrongPoint |
 | `apde_depth2weak.wgsl` | 119 | **DepthToWeak**(STRONG/WEAK/UNKNOWN 判定) |
 | `apde_anchors.wgsl` | 249 | **GenAnchors**(APD 的核心:方向搜索 + RANSAC 平面 + 排序取锚点) |
-| `apde_entries.wgsl` | 210 | 14 个 kernel 入口点 |
+| `apde_ncc_new.wgsl` | 205 | `GetAnchorPoint` / `Softmax` / **ComputeBilateralNCCNew**(可变形 NCC) |
+| `apde_weak_prop.wgsl` | 342 | `ComputeMultiViewCostVectorNew` / `PlaneHypothesisRefinementWeak` / **CheckerboardPropagationWeak** |
+| `apde_ransac.wgsl` | 121 | **RANSACToGetFitPlane** |
+| `apde_entries.wgsl` | 246 | **17 个 kernel 入口点** |
 
 **拼接顺序是契约,不能改**(`build.sh` 里写死):
 `common → bindings → geom → rand → geomcons → ncc → refine → init →
-propagate → weak → depth2weak → anchors → entries`
+propagate → weak → depth2weak → anchors → ncc_new → weak_prop → ransac → entries`
 
-### 3.2 未搬(17 个函数 / 690 行,全在 `upstream/APDe-MVS/APD.cu`)
+新增的三段必须排在 `anchors` 之后:`ncc_new` 用 `ANCHOR_NUM` 与锚点打包约定,
+`weak_prop` 调 `compute_bilateral_ncc_new`,`ransac` 同时用 `point_in_triangle`
+(在 `anchors` 里)与 `get_anchor_point`(在 `ncc_new` 里)。
 
-**核心是"弱纹理传播"这一支** —— APD 相对 ACMMP 的加分项:
+### 3.2 未搬 —— **已清零**
 
-| 行数 | 源码行 | 类型 | 函数 | 说明 |
-|---|---|---|---|---|
-| 174 | L1442 | device | **CheckerboardPropagationWeak** | 弱纹理版传播,主干 |
-| 146 | L448 | device | **ComputeBilateralNCCNew** | **可变形 NCC**,用 GenAnchors 产出的锚点 |
-| 113 | L2486 | global | **RANSACToGetFitPlane** | 独立 kernel |
-| 89 | L1008 | device | PlaneHypothesisRefinementWeak | 弱纹理版精修 |
-| 32 | L776 | device | ComputeMultiViewInitialCost | |
-| 19 | L40 | device | getTopNIndex | |
-| 18 | L315 | device | GeneratePertubedPlaneHypothesis | |
-| 18 | L1617 | global | BlackPixelUpdateWeak | 薄包装,已知长相 |
-| 17 | L1636 | global | RedPixelUpdateWeak | 薄包装,已知长相 |
-| 16 | L431 | device | Softmax | |
-| 11 | L145 | device | TriangleArea | |
-| 10 | L809 | device | ComputeMultiViewCostVectorNew | |
-| 8 | L105 | device | Vec3CrossVec3 | |
-| 5 | L225 | device | SpatialGauss | |
-| 5 | L231 | device | RangeGauss | |
-| 5 | L425 | device | GetAnchorPoint | 读 anchors 缓冲 |
-| 4 | L78 | device | unSetBit | |
+上一版这里列了 17 个函数 / 690 行。逐个 grep 复核调用点后的真相:
+**9 个是活的(已全部搬完),8 个是上游死代码(不搬)。**
 
-**建议顺序**:先搬 10 个小的(叶子,共 ~120 行)→ `ComputeBilateralNCCNew`
-→ `PlaneHypothesisRefinementWeak` → `CheckerboardPropagationWeak`
-→ `RANSACToGetFitPlane` → 两个红黑包装。
+**已搬完的 9 个:**
 
-⚠️ `SpatialGauss`/`RangeGauss` 的存在说明 **NCCNew 里双边权重是真启用的**
-(NCCOld 里 `weight=1.0f` 硬编码,从未启用)。搬 NCCNew 时别照搬 Old 的假设。
+| 行数 | 源码行 | 函数 | 落在 |
+|---|---|---|---|
+| 174 | L1442 | **CheckerboardPropagationWeak** | `apde_weak_prop.wgsl` |
+| 146 | L448 | **ComputeBilateralNCCNew** | `apde_ncc_new.wgsl` |
+| 113 | L2486 | **RANSACToGetFitPlane** | `apde_ransac.wgsl` |
+| 89 | L1008 | PlaneHypothesisRefinementWeak | `apde_weak_prop.wgsl` |
+| 18 | L1617 | BlackPixelUpdateWeak | `apde_entries.wgsl` |
+| 17 | L1636 | RedPixelUpdateWeak | `apde_entries.wgsl` |
+| 16 | L431 | Softmax | `apde_ncc_new.wgsl` |
+| 10 | L809 | ComputeMultiViewCostVectorNew | `apde_weak_prop.wgsl` |
+| 5 | L425 | GetAnchorPoint | `apde_ncc_new.wgsl` |
+
+**不搬的 8 个(上游死代码,逐个复核过调用点):**
+
+| 行数 | 源码行 | 函数 | 调用点 |
+|---|---|---|---|
+| 32 | L776 | ComputeMultiViewInitialCost | 0 |
+| 19 | L40 | getTopNIndex | 0 |
+| 18 | L315 | GeneratePertubedPlaneHypothesis | 0 |
+| 11 | L145 | TriangleArea | 0 |
+| 8 | L105 | Vec3CrossVec3 | 0 |
+| 5 | L225 | SpatialGauss | 0 |
+| 5 | L231 | RangeGauss | 0 |
+| 4 | L78 | unSetBit | 1 处 —— 但唯一调用点(L797)**就在死函数 `ComputeMultiViewInitialCost` 体内** |
+
+复核命令(下一个人想自己验一遍):
+
+```bash
+grep -n "\bSpatialGauss\b" upstream/APDe-MVS/APD.cu | grep -v "__device__"
+```
+
+### 3.2b 🔴 勘误:上一版这里有一条结论是错的
+
+上一版写:「`SpatialGauss`/`RangeGauss` 的存在说明 **NCCNew 里双边权重是真启用的**」。
+
+**这条是错的**,两条反证:
+
+1. `APD.cu:534` 是 `float weight = 1.0f;` —— NCCNew 内循环的权重同样是硬编码 1.0,
+   与 NCCOld 一模一样,内循环里**没有任何 `exp()`**。
+2. `SpatialGauss`/`RangeGauss` **零调用点**,是死代码,证明不了任何事。
+
+⇒ "Bilateral" 这个名字在整份 `APD.cu` 里都是空头衔。对 GPU 反而是好消息
+(内循环只有纹理取样 + 乘加)。**已按 `weight = 1.0` 照抄。**
 
 ### 3.3 未搬(非 kernel)
 
@@ -247,11 +280,33 @@ propagate → weak → depth2weak → anchors → entries`
 | | 约束 | 怎么发现的 | 落地位置 |
 |---|---|---|---|
 | **C1** | iOS 每 stage storage buffer 上限约 10 | **逐 kernel 生效** —— naga 会剥掉未使用的 binding。原版 14 个 buffer 不会同时出现在一个 kernel 里 | 4 张 uchar 图打包进 `packed_maps` |
-| **C2** | Metal 没有 runtime array length | naga 自动注入 `_mslBufferSizes`,**且占一个 buffer 槽** | 所有长度走 `Params` |
+| **C2** | Metal 没有 runtime array length | 查长度会让 spirv-cross 注入一个额外的 sizes buffer,**占一个 buffer 槽** | 所有长度走 `Params` |
 | **C3** | workgroup size 在 Metal 是 host 侧参数 | MSL entry 里**消失**;SPIR-V 里保留 `LocalSize=16x16x1` | `WG_X/WG_Y` 是唯一来源,⚠️ **目前 host 侧还是手写 16×16,产品化必须构建期生成** |
 | **C4** | 纹理用 f16 而非 f32 | `rgba16float` 默认可过滤(硬件双线性免费);`r32float` 是 `unfilterable-float` 需额外 feature | `sample_gray` |
 | **C5** | binding 布局必须转译期冻结 | naga 出 `[[user(fake0)]]` 占位符,**spirv-cross 才给真索引** | 用分离 texture+sampler,不用 combined |
 | **C6** | **storage 指针不能当函数参数** | naga 直接报错 ⇒ **binding 是共享层契约,不是调用方自由** | 独立的 `apde_bindings.wgsl` |
+
+### 4.1 C1 的实测账(2026-08-14 补,数生成的 MSL 里的 `buffer(N)`)
+
+| kernel | buffer 槽位 |
+|---|---|
+| `black/red_pixel_update_weak` | **10**(1 uniform + 9 storage)← 全场最胖,**贴线** |
+| `black/red_pixel_update_strong` / `ransac_fit_plane_kernel` / `gen_anchors_kernel` | 7 |
+| 其余 12 个 | 2–6 |
+
+最胖那个的 9 个 storage:`cams` / `packed_maps` / `plane_hypotheses` / `costs` /
+`selected_views` / `anchors_map` / `anchors_out` / `view_weights_buf` / `fit_plane_hypos`。
+
+✅ **C2 的槽位红利在这里兑现了**:`grep spvBufferSizeConstants /tmp/apde_build/k_*.metal`
+**零命中** —— 因为我们从不查数组长度,spirv-cross 就不注入那个 sizes buffer。
+当初图省事用 `arrayLength()` 的话,这里就是 11 槽,直接顶穿。
+
+⚠️ **9 个 storage 已经贴着那条 ~10 的线。** 下一个想往 weak 传播里再加 buffer 的人:
+先跑上面那条 grep 量真实槽位,别拍脑袋。复核命令:
+
+```bash
+grep -o "buffer(\([0-9]*\))" /tmp/apde_build/k_black_pixel_update_weak.metal | sort -u | wc -l
+```
 
 ---
 
@@ -286,8 +341,44 @@ propagate → weak → depth2weak → anchors → entries`
 | 6 | `ncc_finalize` 抽成共享函数(原版两分支各自复制粘贴) | **我的失误** | 已标注;行为等价但违反逐行照抄 |
 | 7 | 自适应棋盘 8 向做了结构化(原版复制粘贴 8 遍) | 8 份复制在 WGSL 里极易抄错边界 | 行为逐点等价,但 parity 对不上时要多查一层 |
 | 8 | `InitRandomStates` 不再是独立 kernel | 确定性播种后不需要常驻状态 | 省一个 dispatch + 24 B/px |
+| 9 | **`ComputeBilateralNCCNew` 的 `ref_pt` 越界读被钳制** | 原版 `APD.cu:527` 对 `sa_mask[ref_pt...]` **没有任何边界检查**,CUDA 上是越界读相邻显存;WGSL/naga 把 storage 索引钳到界内 | ⚠️ **图像四边一圈的行为与 CUDA 不同**。属于"移植使之更安全",但 parity 对拍要把边界像素排除 |
+| 10 | 8 个上游死函数不搬 | 逐个 grep 复核零调用点(见 3.2) | 不构成偏离,登记以备核查 |
 
 **生成器本身(`xorwow_next` / `rand_uniform`)是逐行照抄 cuRAND 的 XORWOW。**
+
+### 6.1 弱纹理支搬运时逐条核对过的「差点抄串」清单
+
+Weak 支和 Strong 支长得像,但有六处**不能照 Strong 抄**:
+
+| # | Strong | Weak |
+|---|---|---|
+| 1 | 邻居 = 棋盘 8 向(几何位置) | 邻居 = **GenAnchors 的 8 个锚点**,且要求锚点自身是 STRONG |
+| 2 | 代价走 NCCOld | 代价走 **NCCNew(可变形)** |
+| 3 | 精修候选 = 5 组随机 | 第一候选 = **RANSAC 拟合平面**;拟合失败(零向量)⇒ **整个精修 `return`**,连随机那 5 组都不做 |
+| 4 | `geom_consistency && use_impetus` | **只看 `geom_consistency`** |
+| 5 | 代价累加无守卫 | 带 **`if (view_weights[j] > 0)`** 守卫(但"当前假设代价"那一轮又没有) |
+| 6 | 无 | 无效方向的几何代价用**常数 3.0** 顶上,不是跳过 |
+
+另外两条时序/结构陷阱:
+
+- `CheckerboardPropagationWeak` 在精修**之前**写了一次 `costs[center] = cost_now`,
+  末尾 `REFINE_INIT` 的比较基准正是这一次写进去的值 ⇒ **写回时序本身是语义**。
+- 「算代价」那轮要求锚点 STRONG,「算先验」那轮**不要求** ⇒ 两个循环不能合并。
+
+### 6.2 两段 RANSAC 不是同一个
+
+看到「50 次迭代 + PointinTriangle」就复用会错:
+
+| | `GenAnchors` 里的 | `RANSACToGetFitPlane` |
+|---|---|---|
+| 3D 点来源 | `plane_hypotheses[.].w` **当深度直接用** | 先 `ComputeDepthfromPlaneHypothesis` **反解**深度 |
+| 评分 | 内点**计数**(带 `ransac_threshold`),平手比中心距离 | 内点距离**求和**取最小,**不设阈值** |
+| 早退 | 无 | `min_cost == 0` 立即 break |
+| 法向定向 | 不做 | 做:与视线同向则整体取反(**连 `.w` 一起**) |
+| 用途 | 挑锚点 | 出拟合平面 |
+
+`.w` 的语义之所以不同:`RANSACToGetFitPlane` 跑在传播循环**内部**
+(`APD.cu:2704`,夹在 Strong 传播与 Weak 传播之间),此时 `.w` 还是「到原点距离 d」。
 
 ---
 
@@ -359,6 +450,7 @@ ACM 全家(ACMH/ACMM/ACMP/ACMMP)与 APD 系的 README 都写着
 | 🔴 2 | **`FindNearestStrongPoint`** | radius=100 ⇒ 每像素 201×201 = 40,401 次。896×512 下 **185 亿次迭代** | O(radius²) 朴素搜索,可换跳跃搜索 / 距离变换 |
 | 3 | 参考图数量 | 414 帧全做参考 = 12–19 秒(仅 NCC) | 选 1/4 ⇒ ~5 秒。**这是最大的一刀** |
 | 4 | `max_iterations` | 3 | → 2 直接省 33% |
+| 5 | **弱纹理像素的 NCCNew** | 单次 `36 + 8×9 = 108` 次取样 = NCCOld(36)的 **3 倍**;且 Weak 传播每轮要为 8 个锚点各算一遍 | `weak_radius/weak_increment`(5/5)与 `ANCHOR_NUM`(9)都是参数。⚠️ 这是 APD 的**设计成本**不是移植开销,砍它等于砍算法,要先量质量代价 |
 
 ⚠️ 这些都是**"减少工作量"**型优化,符合"提速 ≠ 削峰摊平"的标准。
 
@@ -390,6 +482,47 @@ host/WGSL 结构体错位(占比 100%、耗时假性快 33 倍)。
 ⚠️ **`ncc_bench.mm` 里的 `Params`/`Camera` 结构体必须与
 `apde_common.wgsl` 逐字段一致。错位不报错,会静默读到垃圾数据。改一边必须改另一边。**
 
+🔴 **这条警告在 2026-08-14 当天就应验了。** 复核时发现 host 侧 `Params` 早已脱节:
+WGSL 侧在搬 refine/init/anchors/depth2weak 时长到 21 个字段(84 B),host 侧还停在
+10 个(40 B)。`ncc_bench` 用到的字段偏移恰好没变,所以"看起来还能跑",
+但 uniform buffer 只给了 40 B、shader 却按 96 B 读。
+
+已修:两边**显式补齐到 24 个 4 字节字段 = 96 B**(不留隐式尾部 padding),
+并在 host 侧加了一道编译期门:
+
+```cpp
+static_assert(sizeof(Params) == 96, "Params 必须是 96 B,与 apde_common.wgsl 一致");
+```
+
+这道门当场就拦下了我自己算错的一次(25 个字段 = 100 B)。
+**以后加字段:先改 host(有 static_assert 兜底),再改 WGSL。**
+
+### 10.3b 官方的 pass 顺序(写驱动时照这个发,APD.cu:2685-2729)
+
+```
+InitRandomStates                     ← 我们不需要(确定性播种,见偏离 #8)
+if use_APD:  FindNearestStrongPoint → GenAnchors → NeigbourUpdate
+RandomInitialization
+for i in 0..max_iterations:          ← 默认 3
+    BlackPixelUpdateStrong → RedPixelUpdateStrong
+    if use_APD:  RANSACToGetFitPlane → BlackPixelUpdateWeak → RedPixelUpdateWeak
+GetDepthandNormal
+BlackPixelFilterStrong → RedPixelFilterStrong
+DepthToWeak
+if geom_consistency or use_APD:  ConfidenceCompute
+LocalRefine
+```
+
+⚠️ **红黑那六个 kernel 的 grid 是"半高"的**:原版 block 是 32×16
+(`BLOCK_W=32, BLOCK_H=BLOCK_W/2`),grid 是
+`(ceil(width/32), ceil((height/2)/16))`。我们的 WGSL 统一用 16×16,
+所以要按 `(ceil(width/16), ceil((height/2)/16))` 发 —— **别按全高发**,
+下标里已经有 `p.y = g.y * 2` 了。
+
+⚠️ **`packed_maps` 的位段读写必须分 pass**(工具链限制第 3 条):
+同一 dispatch 内不同位段的读写没有顺序保证。上面这张表天然满足,
+自己加 pass 时要复核。
+
 ### 10.4 搬新 kernel 的流程
 
 1. 从 `upstream/APDe-MVS/APD.cu` 读原函数(用第 3.2 节的行号定位)
@@ -401,7 +534,7 @@ host/WGSL 结构体错位(占比 100%、耗时假性快 33 倍)。
 
 ### 10.5 最终里程碑
 
-搬完 → 输入转换 → 多 kernel 驱动 → 414 帧跑出深度图 →
+~~搬完~~(✅ 已完成)→ 输入转换 → 多 kernel 驱动 → 414 帧跑出深度图 →
 **喂给同一个 `pw_diffmvs_geomcons.py` 融合器** →
 和 `fused_trio_*.ply` 并排做**真彩 PLY** 对比。
 

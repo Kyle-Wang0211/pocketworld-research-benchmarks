@@ -6,7 +6,12 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${1:-/tmp/apde_build}"
 mkdir -p "$OUT"
 
-# ⚠️ 拼接顺序是契约,不能改:common → bindings → geom → rand → geomcons → ncc → entry
+# ⚠️ 拼接顺序是契约,不能改。WGSL 要求被调用者先声明,顺序即依赖图:
+#   common → bindings → geom → rand → geomcons → ncc → refine → init →
+#   propagate → weak → depth2weak → anchors → ncc_new → weak_prop → ransac → entries
+# 其中 ncc_new 必须在 anchors 之后(用 ANCHOR_NUM/打包约定),
+# weak_prop 必须在 ncc_new 之后(调 compute_bilateral_ncc_new),
+# ransac 必须在 anchors 之后(用 point_in_triangle)与 ncc_new 之后(用 get_anchor_point)。
 cat "$HERE"/wgsl/apde_common.wgsl \
     "$HERE"/wgsl/apde_bindings.wgsl \
     "$HERE"/wgsl/apde_geom.wgsl \
@@ -19,6 +24,9 @@ cat "$HERE"/wgsl/apde_common.wgsl \
     "$HERE"/wgsl/apde_weak.wgsl \
     "$HERE"/wgsl/apde_depth2weak.wgsl \
     "$HERE"/wgsl/apde_anchors.wgsl \
+    "$HERE"/wgsl/apde_ncc_new.wgsl \
+    "$HERE"/wgsl/apde_weak_prop.wgsl \
+    "$HERE"/wgsl/apde_ransac.wgsl \
     "$HERE"/wgsl/apde_entries.wgsl > "$OUT/apde.wgsl"
 
 

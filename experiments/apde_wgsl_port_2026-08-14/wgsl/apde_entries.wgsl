@@ -43,6 +43,42 @@ fn red_pixel_update_strong(@builtin(global_invocation_id) g : vec3<u32>) {
   selected_views[c] = r.sel_views;
 }
 
+// ─── BlackPixelUpdateWeak / RedPixelUpdateWeak(APD.cu:1617/1636)──
+// ⚠️ 与 Strong 的两个包装唯一的不同:多一道 `weak_info == WEAK` 的门。
+//    下标推导逐字相同。
+//
+// ⚠️ 原版这两个 kernel 用的 block 是 32×16(BLOCK_W=32, BLOCK_H=16),
+//    不是 16×16;而下标只依赖 `threadIdx.x % 2`,两者都是偶数宽度 ⇒
+//    用 global_invocation_id.x % 2 等价。host 侧 dispatch 要按
+//    (ceil(width/WG_X), ceil((height/2)/WG_Y)) 发,别按全高发。
+@compute @workgroup_size(16, 16)
+fn black_pixel_update_weak(@builtin(global_invocation_id) g : vec3<u32>) {
+  var p = vec2<i32>(i32(g.x), i32(g.y) * 2);
+  if ((g.x % 2u) == 1u) { p.y = p.y + 1; }
+  if (p.x >= i32(P.width) || p.y >= i32(P.height)) { return; }
+  if (unpack_weak_info(packed_maps[u32(p.x + p.y * i32(P.width))]) == WEAK) {
+    checkerboard_propagation_weak(p, i32(P.iter));
+  }
+}
+
+@compute @workgroup_size(16, 16)
+fn red_pixel_update_weak(@builtin(global_invocation_id) g : vec3<u32>) {
+  var p = vec2<i32>(i32(g.x), i32(g.y) * 2);
+  if ((g.x % 2u) == 0u) { p.y = p.y + 1; }
+  if (p.x >= i32(P.width) || p.y >= i32(P.height)) { return; }
+  if (unpack_weak_info(packed_maps[u32(p.x + p.y * i32(P.width))]) == WEAK) {
+    checkerboard_propagation_weak(p, i32(P.iter));
+  }
+}
+
+// ─── RANSACToGetFitPlane(APD.cu:2486)──────────────────────────
+// 跑在传播循环**内部**,每轮 Strong 传播之后、Weak 传播之前。
+@compute @workgroup_size(16, 16)
+fn ransac_fit_plane_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
+  if (g.x >= P.width || g.y >= P.height) { return; }
+  ransac_fit_plane(vec2<i32>(i32(g.x), i32(g.y)));
+}
+
 // ─── ConfidenceCompute ────────────────────────────────────────
 @compute @workgroup_size(16, 16)
 fn confidence_kernel(@builtin(global_invocation_id) g : vec3<u32>) {
