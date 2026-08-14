@@ -6,14 +6,17 @@
 //       pw_diffmvs_geomcons.py —— **与 CasDiffMVS 用同一个融合器**,
 //       所以对比只测深度图质量,不掺融合器差异。
 //
-// ⚠️ conf 的口径:融合器里 `photo_mask = conf > PHOTO`(默认 0.3),conf∈[0,1]。
-//    APDe 的 confidence(0-255)是**一致性计数**不是光度置信度,直接喂会错。
-//    这里用 NCC 代价映射:conf = 1 - cost/2(cost∈[0,2] ⇒ conf∈[0,1])。
-//    这是移植期的口径决定,已登记。
+// ⚠️ conf 的口径(改过一次,记账):
+//    初版我编了 conf = 1 - cost/2。实测发现它**滤掉平滑表面、保留高梯度边缘**,
+//    方向反了 —— 因为 NCC 代价在纹理边缘天然更低,而平滑面上代价略高但深度更可信。
+//    现在用 APDe 自己的 ConfidenceCompute:跨视图一致性计数
+//    (基数1 + 每源{有深度+1, 重投影≤2px+2, 相对深度差≤2%+2}),4 源上限 21。
+//    它需要 geom_consistency=1 且 depth_tex 装**各源视图自己的**深度 ⇒ 必须两遍跑。
 //
-// ⚠️ 只跑 round0(FIRST_INIT / 无 APD / 无 geom)。理由:单帧实测 APD 支
-//    2437ms/帧 ⇒ 414 帧 16.8 分钟,而它在稀疏点上的净收益只有 r+0.0024。
-//    先用最短路径拿到第一个可比的点云,APD/geom 各自单独再跑。
+// 两遍结构:
+//   Pass A  round0(FIRST_INIT / 无 geom)      → 每帧深度
+//   Pass B  REFINE_ITER + geom_consistency=1,depth_tex 装 Pass A 的邻居深度,
+//           末尾 ConfidenceCompute            → 最终深度 + 真置信度
 
 #import <Metal/Metal.h>
 #import <Foundation/Foundation.h>
@@ -181,7 +184,22 @@ int main(int argc, const char** argv) {
       [en endEncoding]; [cb commit]; [cb waitUntilCompleted];
     };
 
+    // ══ 两遍结构 ═══════════════════════════════════════════════
+    //  Pass A: round0(FIRST_INIT / 无 geom),出每帧深度
+    //  Pass B: REFINE_ITER + geom_consistency=1,depth_tex 装**各源视图自己的**
+    //          深度(来自 Pass A),末尾跑 ConfidenceCompute 取真置信度。
+    //
+    // 🔴 为什么必须这样:上一版 conf = 1 - cost/2 是我自己编的映射,实测它
+    //    **滤掉平滑表面、保留高梯度边缘**,方向反了。APDe 自己的置信度是
+    //    ConfidenceCompute 的跨视图一致性计数(基数1 + 每源有深度+1 +
+    //    重投影像素≤2px+2 + 相对深度差≤2%+2),4 源视图上限 21。
+    //    那才是该喂给融合器 photo_mask 的东西。
+    std::vector<float> passA((size_t)NF*N);
+    int PASSES = (argc > 4) ? atoi(argv[4]) : 2;
+
     double t0=CFAbsoluteTimeGetCurrent();
+    for (int pass=0; pass<PASSES; ++pass) {
+    fprintf(stderr, "── Pass %c ──\n", 'A'+pass);
     for (int f=0; f<NF; ++f) {
       int view[NIMG]; view[0]=f;
       for (int i=0;i<NIMG-1;++i) view[i+1]=NB[(size_t)f*4+i];
@@ -206,12 +224,37 @@ int main(int argc, const char** argv) {
                     withBytes:rgba.data() bytesPerRow:W*8 bytesPerImage:0];
       }
 
+      // Pass B:装各源视图自己的深度进 depth_tex(几何一致性的前提)
+      if (pass==1) {
+        std::vector<float> zeroDep(N, 0.0f);
+        for (int i=0;i<NIMG;++i) {
+          // ⚠️ limit 调试模式下邻居索引可能 >= NF(邻居表按完整 413 帧算),
+          //    直接取 passA 会越界读(我加 limit 时就这么段错误过一次)。
+          //    越界的源视图喂 0 深度 ⇒ ComputeGeomConsistencyCost 的
+          //    `src_depth == 0` 分支返回 max_cost,语义上等于"该视图无信息"。
+          const float* srcDep = (view[i] < NF) ? passA.data()+(size_t)view[i]*N
+                                               : zeroDep.data();
+          [depArr replaceRegion:MTLRegionMake2D(0,0,W,H) mipmapLevel:0 slice:i
+                      withBytes:srcDep bytesPerRow:W*4 bytesPerImage:0];
+        }
+      }
+
       // 状态复位:packed_maps 必须初始化成 STRONG|conf=1(APD.cpp:656)
       { uint32_t* m=(uint32_t*)bMaps.contents; const uint32_t init=1u|(1u<<8);
         for(size_t i=0;i<N;++i) m[i]=init; }
-      memset(bPlanes.contents,0,N*16); memset(bCosts.contents,0,N*4);
+      memset(bCosts.contents,0,N*4);
       memset(bSel.contents,0,N*4); memset(bVW.contents,0,N*32);
-      P.state=0u;   // FIRST_INIT
+      if (pass==0) { memset(bPlanes.contents,0,N*16); P.state=0u; /*FIRST_INIT*/
+                     P.geom_consistency=0u; P.use_impetus=0u; }
+      else {
+        // 用 Pass A 的深度当初值(.w=深度,法向已在世界系)⇒ state=REFINE_ITER,
+        // random_init_kernel 会 TransformNormal2RefCam 再换算成 d。
+        float* pl=(float*)bPlanes.contents;
+        const float* pa=passA.data()+(size_t)f*N;
+        for(size_t i=0;i<N;++i) pl[i*4+3]=pa[i];
+        P.state=2u; /*REFINE_ITER*/ P.geom_consistency=1u; P.use_impetus=1u;
+        P.weak_peak_radius=4u;
+      }
 
       run("random_init_kernel",false,0);
       for(int it=0; it<ITERS; ++it){
@@ -222,23 +265,32 @@ int main(int argc, const char** argv) {
       run("black_pixel_filter_strong",true,0);
       run("red_pixel_filter_strong",true,0);
       run("depth_to_weak_kernel",false,0);
+      if (pass==1) run("confidence_kernel",false,0);   // 真置信度
       run("local_refine_kernel",false,0);
 
       const float* pl=(const float*)bPlanes.contents;
-      const float* cs2=(const float*)bCosts.contents;
-      float* dOut=outDepth.data()+(size_t)f*N;
-      float* cOut=outConf.data()+(size_t)f*N;
-      for(size_t i=0;i<N;++i){
-        dOut[i]=pl[i*4+3];
-        // conf = 1 - cost/2,把 NCC 代价映射成融合器口径的 [0,1]
-        float c=cs2[i]; cOut[i]=std::max(0.0f, std::min(1.0f, 1.0f - c*0.5f));
+      if (pass==0) {
+        float* pa=passA.data()+(size_t)f*N;
+        for(size_t i=0;i<N;++i) pa[i]=pl[i*4+3];
+      } else {
+        const uint32_t* mp=(const uint32_t*)bMaps.contents;
+        float* dOut=outDepth.data()+(size_t)f*N;
+        float* cOut=outConf.data()+(size_t)f*N;
+        // ConfidenceCompute 的计数:基数1 + 每源(有深度+1, 像素≤2px+2, 深度≤2%+2)
+        // 4 源上限 = 1 + 4*5 = 21。归一化到 [0,1]。
+        const float CONF_MAX = 21.0f;
+        for(size_t i=0;i<N;++i){
+          dOut[i]=pl[i*4+3];
+          float cc=(float)((mp[i]>>8)&0xFFu);
+          cOut[i]=std::max(0.0f, std::min(1.0f, cc/CONF_MAX));
+        }
       }
-      if (f%25==0 || f==NF-1) {
+      if (f%50==0 || f==NF-1) {
         double el=CFAbsoluteTimeGetCurrent()-t0;
-        fprintf(stderr,"  帧 %d/%d  已用 %.1fs  预计总 %.1fs\n",
-                f+1,NF,el, el/(f+1)*NF);
+        fprintf(stderr,"  [%c] 帧 %d/%d  已用 %.1fs\n",'A'+pass,f+1,NF,el);
       }
     }
+    }  // pass
     double el=CFAbsoluteTimeGetCurrent()-t0;
     printf("全部 %d 帧完成,%.1f s(%.0f ms/帧)\n", NF, el, el/NF*1000);
 
