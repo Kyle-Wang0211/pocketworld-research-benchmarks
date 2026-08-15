@@ -23,7 +23,29 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <sys/stat.h>
 #include <algorithm>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+// 🔴 内存纪律(2026-08-14 真事故):初版把跨段的 plane/depth/输出全放 std::vector,
+//    413 帧 × 896×512 下常驻约 **9.9 GB**,在 18 GB 的机器上打穿 swap
+//    (swap 用到 19.4/20.5 GB,pageout 26 万次),耗时从 946s 飙到 17864s ——
+//    不是在算,是在换页。现在全部改 mmap 落盘,常驻只留每帧工作缓冲(~0.5 GB)。
+struct MapBuf {
+  void* p=nullptr; size_t bytes=0; int fd=-1; std::string path;
+  void open_rw(const std::string& f, size_t n){
+    path=f; bytes=n;
+    fd=::open(f.c_str(), O_RDWR|O_CREAT|O_TRUNC, 0644);
+    if(fd<0){ fprintf(stderr,"mmap open %s\n",f.c_str()); exit(1); }
+    if(ftruncate(fd,(off_t)n)!=0){ fprintf(stderr,"ftruncate %s\n",f.c_str()); exit(1); }
+    p=mmap(nullptr,n,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
+    if(p==MAP_FAILED){ fprintf(stderr,"mmap %s\n",f.c_str()); exit(1); }
+  }
+  void close_(){ if(p){ munmap(p,bytes); p=nullptr; } if(fd>=0){ ::close(fd); fd=-1; } }
+  template<class T> T* as(){ return (T*)p; }
+};
 
 struct Params {
   uint32_t width, height, ref_index, num_images;
@@ -123,14 +145,19 @@ int main(int argc, const char** argv) {
 
     id<MTLCommandQueue> Q=[dev newCommandQueue];
     // 上一段的深度(按上一段的分辨率),用于 geom 与轮间初值
-    std::vector<float> prevDepth; int prevW=0, prevH=0;
+    MapBuf prevDepth, prevPlane2, segDepthM, segPlaneM;
+    int prevW=0, prevH=0;
+    const std::string tmpd = dir + "/_scratch";
+    mkdir(tmpd.c_str(), 0755);
     // 🔴 weak_info 必须跨段传递:原版 round≥1 的 weak_info 来自**上一轮
     //    DepthToWeak 的结果**(APD.cpp:627 从 weak_info_host 建 anchors_map)。
     //    我最初每帧把它重置成 STRONG,导致 weak_count=0、APD 前置整段被
     //    静默跳过(表现:耗时只有单帧实测的 1/5)。
     std::vector<uint8_t> prevWeak;
-    std::vector<float> prevPlane;   // 整个平面(法向+深度)
-    std::vector<float> outDepth((size_t)NF*W0*H0), outConf((size_t)NF*W0*H0);
+
+    MapBuf outDepth, outConf;
+    outDepth.open_rw(dir+"/depth_full.f32", (size_t)NF*W0*H0*4);
+    outConf.open_rw(dir+"/conf_full.f32",  (size_t)NF*W0*H0*4);
     double t0=CFAbsoluteTimeGetCurrent();
 
     for (size_t si=0; si<segs.size(); ++si) {
@@ -203,9 +230,10 @@ int main(int argc, const char** argv) {
         [en endEncoding]; [cb commit]; [cb waitUntilCompleted];
       };
 
-      std::vector<float> segDepth((size_t)NF*N);      // 只存深度,给 depth_tex 用
-      std::vector<float> segPlane((size_t)NF*N*4);    // 存整个平面(法向+深度),给下一段当初值
-      std::vector<uint8_t> segWeak((size_t)NF*N);
+      // 段内产出全部 mmap 落盘,不占常驻
+      segDepthM.open_rw(tmpd+"/segdepth_"+std::to_string(si)+".f32",(size_t)NF*N*4);
+      segPlaneM.open_rw(tmpd+"/segplane_"+std::to_string(si)+".f32",(size_t)NF*N*16);
+      std::vector<uint8_t> segWeak((size_t)NF*N);   // 1 B/px,413 帧 190 MB,可接受
       std::vector<uint16_t> rgba(N*4);
       std::vector<float> gray(N), dtmp(N), zero(N,0.f);
       const uint16_t ONE=0x3C00;
@@ -247,9 +275,9 @@ int main(int argc, const char** argv) {
         }
 
         // depth_tex:上一段各源视图的深度,重采样到本段分辨率
-        if (S.geom && !prevDepth.empty()) {
+        if (S.geom && prevDepth.p) {
           for(int i=0;i<NIMG;++i){
-            const float* pd = (view[i]<NF) ? prevDepth.data()+(size_t)view[i]*prevW*prevH : nullptr;
+            const float* pd = (view[i]<NF && prevDepth.p) ? prevDepth.as<float>()+(size_t)view[i]*prevW*prevH : nullptr;
             if(!pd){ [depArr replaceRegion:MTLRegionMake2D(0,0,W,H) mipmapLevel:0 slice:i
                                  withBytes:zero.data() bytesPerRow:W*4 bytesPerImage:0]; continue; }
             for(int y=0;y<H;++y) for(int x=0;x<W;++x){
@@ -284,7 +312,7 @@ int main(int argc, const char** argv) {
           //    TransformNormal2RefCam/GetDistance2Origin 全退化,
           //    表现是后续段 DepthToWeak 判出 0% WEAK、APD 支再次空转。
           float* pl=(float*)bPl.contents;
-          const float* pp=prevPlane.data()+(size_t)f*prevW*prevH*4;
+          const float* pp=prevPlane2.as<float>()+(size_t)f*prevW*prevH*4;
           for(int y=0;y<H;++y) for(int x=0;x<W;++x){
             int py=y*prevH/H, px=x*prevW/W;
             const float* src=pp+((size_t)py*prevW+px)*4;
@@ -321,16 +349,16 @@ int main(int argc, const char** argv) {
         run("local_refine_kernel",false,0);
 
         const float* pl=(const float*)bPl.contents;
-        float* sd2=segDepth.data()+(size_t)f*N;
+        float* sd2=segDepthM.as<float>()+(size_t)f*N;
         for(size_t i=0;i<N;++i) sd2[i]=pl[i*4+3];
-        memcpy(segPlane.data()+(size_t)f*N*4, pl, N*16);
+        memcpy(segPlaneM.as<float>()+(size_t)f*N*4, pl, N*16);
         { const uint32_t* mp=(const uint32_t*)bMaps.contents;
           uint8_t* sw=segWeak.data()+(size_t)f*N;
           for(size_t i=0;i<N;++i) sw[i]=(uint8_t)(mp[i]&0xFFu); }
 
         if (si==segs.size()-1) {  // 最后一段:出最终深度 + 置信度
           const uint32_t* mp=(const uint32_t*)bMaps.contents;
-          float* dO=outDepth.data()+(size_t)f*N; float* cO=outConf.data()+(size_t)f*N;
+          float* dO=outDepth.as<float>()+(size_t)f*N; float* cO=outConf.as<float>()+(size_t)f*N;
           const float CONF_MAX=21.0f;   // 4 源上限 = 1 + 4*5
           for(size_t i=0;i<N;++i){ dO[i]=pl[i*4+3];
             cO[i]=std::max(0.f,std::min(1.f,(float)((mp[i]>>8)&0xFFu)/CONF_MAX)); }
@@ -343,15 +371,22 @@ int main(int argc, const char** argv) {
         size_t tot=segWeak.size();
         fprintf(stderr,"    → 本段 WEAK %.1f%%  STRONG %.1f%%  UNKNOWN %.1f%%\n",
                 100.0*c0/tot,100.0*c1/tot,100.0*c2/tot); }
-      prevDepth.swap(segDepth); prevPlane.swap(segPlane); prevWeak.swap(segWeak); prevW=W; prevH=H;
+      // 段间交接:关掉上一段的映射并**删文件**(不删的话峰值占盘会翻倍),
+      // 再把本段的接上。18GB/28GB 的机器上这两项都是硬约束。
+      { std::string p1=prevDepth.path, p2=prevPlane2.path;
+        prevDepth.close_(); prevPlane2.close_();
+        if(!p1.empty()) ::unlink(p1.c_str());
+        if(!p2.empty()) ::unlink(p2.c_str()); }
+      prevDepth=segDepthM; prevPlane2=segPlaneM;
+      segDepthM=MapBuf(); segPlaneM=MapBuf();
+      prevWeak.swap(segWeak); prevW=W; prevH=H;
     }
 
     double el=CFAbsoluteTimeGetCurrent()-t0;
     printf("完整流水 %d 帧,%.1f s(%.0f ms/帧)\n",NF,el,el/NF*1000);
-    FILE* fd=fopen((dir+"/depth_full.f32").c_str(),"wb");
-    fwrite(outDepth.data(),4,outDepth.size(),fd); fclose(fd);
-    FILE* fc=fopen((dir+"/conf_full.f32").c_str(),"wb");
-    fwrite(outConf.data(),4,outConf.size(),fc); fclose(fc);
+    // mmap 已经直接落盘,只需 flush + 解映射
+    msync(outDepth.p,outDepth.bytes,MS_SYNC); msync(outConf.p,outConf.bytes,MS_SYNC);
+    outDepth.close_(); prevDepth.close_(); prevPlane2.close_();
     printf("→ %s/depth_full.f32  %s/conf_full.f32\n",dir.c_str(),dir.c_str());
     return 0;
   }
