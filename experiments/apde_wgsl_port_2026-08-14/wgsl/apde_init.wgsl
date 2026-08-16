@@ -2,35 +2,45 @@
 // 源:whoiszzj/APDe-MVS(MIT) APD.cu
 
 // ⚠️ 原版局部变量名 filter 在 WGSL 是保留字,统一改名 filt(仅命名)
-// ─── sort_small(插入排序,原版逐行)────────────────────────────
-fn sort_small21(d : array<f32, 21>, n : i32) -> array<f32, 21> {
-  var a = d;
-  for (var i = 1; i < n; i = i + 1) {
-    let tmp = a[i];
-    var j = i;
-    loop {
-      if (j < 1 || !(tmp < a[j - 1])) { break; }
-      a[j] = a[j - 1];
-      j = j - 1;
+//
+// 🔴 许可洁净化(2026-08-16 血统取证):原版 APD.cu:6-9 的 sort_small 与
+//    Gipuma(**GPL-3.0**)gipuma.cu:684 逐行相同 —— 这是 APDe 全仓唯一
+//    进到 kernel 侧的 GPL 血统片段(其余三处都在 host C++,我们没移植)。
+//    这里改写为**选择排序**:独立实现,与上游无共同表达。
+//    两处调用点都只要求 [0,n) 升序(取 best-k 前缀 / 取中值),
+//    因此对无 NaN 的有限浮点,输出与插入排序**逐位相同** ——
+//    已用 138 帧全量输出字节比对验证,不是论证。
+//    ⚠️ 若将来代价里可能出现 NaN,两种排序会分道扬镳,须重新验。
+fn ascending_prefix21(src : array<f32, 21>, count : i32) -> array<f32, 21> {
+  var buf = src;
+  for (var slot = 0; slot < count - 1; slot = slot + 1) {
+    var pick = slot;
+    for (var scan = slot + 1; scan < count; scan = scan + 1) {
+      if (buf[scan] < buf[pick]) { pick = scan; }
     }
-    a[j] = tmp;
+    if (pick != slot) {
+      let hold = buf[slot];
+      buf[slot] = buf[pick];
+      buf[pick] = hold;
+    }
   }
-  return a;
+  return buf;
 }
 
-fn sort_small32(d : array<f32, 32>, n : i32) -> array<f32, 32> {
-  var a = d;
-  for (var i = 1; i < n; i = i + 1) {
-    let tmp = a[i];
-    var j = i;
-    loop {
-      if (j < 1 || !(tmp < a[j - 1])) { break; }
-      a[j] = a[j - 1];
-      j = j - 1;
+fn ascending_prefix32(src : array<f32, 32>, count : i32) -> array<f32, 32> {
+  var buf = src;
+  for (var slot = 0; slot < count - 1; slot = slot + 1) {
+    var pick = slot;
+    for (var scan = slot + 1; scan < count; scan = scan + 1) {
+      if (buf[scan] < buf[pick]) { pick = scan; }
     }
-    a[j] = tmp;
+    if (pick != slot) {
+      let hold = buf[slot];
+      buf[slot] = buf[pick];
+      buf[pick] = hold;
+    }
   }
-  return a;
+  return buf;
 }
 
 // ─── TransformNormal / TransformNormal2RefCam ─────────────────
@@ -86,7 +96,7 @@ fn compute_initial_cost_and_views(p : vec2<i32>) -> f32 {
     if (c < cost_max) { num_valid_views = num_valid_views + 1; }
   }
 
-  cv = sort_small32(cv, cost_count);
+  cv = ascending_prefix32(cv, cost_count);
   selected_views[center] = 0u;
 
   let top_k = min(num_valid_views, i32(P.top_k));
@@ -146,7 +156,7 @@ fn checkerboard_filter_strong(p : vec2<i32>) {
   if (p.x > 0 && p.y < height - 2 && unpack_weak_info(packed_maps[left + width * 2]) == STRONG) { filt[index] = plane_hypotheses[left + width * 2].w; index = index + 1; }
   if (p.x < width - 1 && p.y < height - 2 && unpack_weak_info(packed_maps[right + width * 2]) == STRONG) { filt[index] = plane_hypotheses[right + width * 2].w; index = index + 1; }
 
-  filt = sort_small21(filt, index);
+  filt = ascending_prefix21(filt, index);
   let mi = index / 2;
   if (index % 2 == 0) {
     plane_hypotheses[center].w = (filt[mi - 1] + filt[mi]) * 0.5;
