@@ -78,7 +78,7 @@ README 第 26 行(2025-09-11):
 | # | 位置 | 官方 | 改成 | 为什么 |
 |---|---|---|---|---|
 | 1 | `--loadckpt` | DTU ckpt | **不传** | `train.py:45` 默认 `None`,`:338` 是 `elif` ⇒ 不传即从头训。**这是整件事的开关** |
-| 2 | `--trainlist` | `lists/blend/train.txt`(**106 场景 = BlendedMVS**) | 自建 MVG 清单 | 🔴 **仓库里没有 BlendedMVG 清单**,见 `tools/make_blendmvg_list.py` |
+| 2 | `--trainlist` | `lists/blend/train.txt`(**106 场景 = BlendedMVS**) | 段①**沿用它**;段②换自建 MVG 清单 | 🔴 **仓库里没有 BlendedMVG 清单**(BlendedMVS 是 MVG 的子集),见 `tools/make_blendmvg_list.py` |
 | 3 | `train.py:358,360` `num_workers=8` | 硬编码 | **提到 16–24** | 9 视图 × JPEG 解码 = 每 batch 36 次解码。**H100 上这是头号瓶颈**,不改等于租了张闲卡 |
 | 4 | `--scale` 起点 | `0 0.25 0.05` | 配置轴(见 §3) | 丢了 DTU 段就丢了 `0 0.5 0.1` 那一档课程 |
 | 5 | `--epochs` | 16 | 配置轴 | 从头训没有 DTU 打底,大概率需要更多轮 |
@@ -108,15 +108,57 @@ README 第 26 行(2025-09-11):
 
 ---
 
+## 3.5 🔴 两段式:别把四个配置直接铺在全量 BlendedMVG 上
+
+粗估四配置全铺在 BlendedMVG 上是**天级不是小时级**(见 §4.5)。改成两段:
+
+| 段 | 数据 | 做什么 | 为什么 |
+|---|---|---|---|
+| **①** | **BlendedMVS**(106 场景,仓库自带清单) | 四配置从头训,选赢家 | **单变量**:只变"有没有 DTU 预训练",数据集与官方 blend 段**完全同一份** ⇒ 数字能直接和官方权重对比 |
+| **②** | **全量 BlendedMVG** | 赢家权重**微调** | 结构与官方新权重平行 |
+
+### 段②是微调不是从头训 —— 这是省时间的关键
+
+```
+官方新权重:  DTU        → 微调 BlendedMVG
+我们:        BlendedMVS → 微调 BlendedMVG    ← 同一结构,DTU 换成 BlendedMVS
+```
+
+两份数据都是 **CC BY 4.0** ⇒ 全程零 DTU,血统干净。
+官方对 BlendedMVG 微调的原话是「without changing other hyper-parameters」,
+所以段②直接用官方 blend 段的末档参数,不另外发明。
+
+⚠️ **别在段①就用全量 MVG** —— 那会同时变"没有 DTU 预训练"和"换了数据集"**两个变量**,
+出了问题分不清是哪个造成的。
+
 ## 4. 上机执行顺序(别一上来就四个齐发)
 
 ```
-① 环境 + 数据                    tools/prep_h100.sh
-② 建 BlendedMVG 清单             tools/make_blendmvg_list.py
-③ 🔴 单进程试跑 1 轮              量 it/s 与显存 —— 决定能并发几个
-④ 按 ③ 的显存数并发铺配置         tools/train_blendmvg_scratch.sh
-⑤ 每个 ckpt 接对比台评测          tools/eval_new_ckpt.sh
+① 环境 + 补丁                     tools/prep_h100.sh
+② 🔴 pilot 单进程跑 1 轮           量 it/s 与显存 —— 决定能并发几个、真实要多久
+③ 段①:BlendedMVS 上并发四配置    TIER=mvs  ./train_blendmvg_scratch.sh A B C D
+④ 四个 ckpt 各接对比台,选赢家     tools/install_new_ckpt.py
+⑤ 建 BlendedMVG 清单              tools/make_blendmvg_list.py
+⑥ 段②:赢家微调全量 MVG          TIER=mvg  ./train_blendmvg_scratch.sh finetune:B
+⑦ 再接一次对比台                  tools/install_new_ckpt.py
 ```
+
+## 4.5 时长:我只能给带推导的区间,真数要 pilot 给
+
+```
+小时数 =(样本数 ÷ batch 4)× 轮数 × 每 iter 秒数 ÷ 3600
+```
+
+三个量里**只有轮数是确切的**(A=16 / B=24 / C=32 / D=24)。
+
+粗估(⚠️ 估算叠估算,误差可能好几倍,**不要按它预付机时**):
+- 配置 A 单跑在**全量 BlendedMVG** 上 ≈ 14–42 小时
+- 四配置全铺在 BlendedMVG 上 ≈ **1.5–4.5 天** ← 这就是为什么要两段式
+- 段①在 BlendedMVS 上约为其 **1/3**
+
+**pilot 跑完这一整节作废**:`time=` 给每 iter 秒数,
+日志开头 `dataset train metas:` 给样本数,代进上面算式即可。
+⇒ **按小时租,pilot 完再决定包多久。**
 
 ### 🔴 第 ③ 步不能跳
 
