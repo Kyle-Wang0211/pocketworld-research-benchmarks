@@ -134,14 +134,38 @@ README 第 26 行(2025-09-11):
 ## 4. 上机执行顺序(别一上来就四个齐发)
 
 ```
-① 环境 + 补丁                     tools/prep_h100.sh
-② 🔴 pilot 单进程跑 1 轮           量 it/s 与显存 —— 决定能并发几个、真实要多久
-③ 段①:BlendedMVS 上并发四配置    TIER=mvs  ./train_blendmvg_scratch.sh A B C D
-④ 四个 ckpt 各接对比台,选赢家     tools/install_new_ckpt.py
-⑤ 建 BlendedMVG 清单              tools/make_blendmvg_list.py
-⑥ 段②:赢家微调全量 MVG          TIER=mvg  ./train_blendmvg_scratch.sh finetune:B
-⑦ 再接一次对比台                  tools/install_new_ckpt.py
+① 环境 + 补丁 + 装 blend_cached   tools/prep_h100.sh
+② 🔴 预解码缓存(一次性)          tools/predecode_blend.py    ← 消除 CPU 瓶颈
+③ 🔴 pilot 单进程跑 1 轮           量 it/s 与显存 —— 决定并发几个、真实要多久
+④ 段①:BlendedMVS 上并发四配置    TIER=mvs  ./train_blendmvg_scratch.sh A B C D
+⑤ 四个 ckpt 各接对比台,选赢家     tools/install_new_ckpt.py
+⑥ 建 BlendedMVG 清单              tools/make_blendmvg_list.py
+⑦ 段②:赢家微调全量 MVG          TIER=mvg  ./train_blendmvg_scratch.sh finetune:B
+⑧ 再接一次对比台                  tools/install_new_ckpt.py
 ```
+
+### 第②步为什么必须有
+
+`datasets/blend.py:107` 每取一个样本要解码 **9 张 JPEG**,batch=4 就是**每批 36 次**,
+纯 CPU 活。租来的机器 vCPU 常只有 24–40,并发多个训练时 **CPU 先饱和,H100 空转**。
+
+⚠️ **不是"没做 CPU/GPU 重叠"** —— DataLoader 多进程预取 + `pin_memory` 异步拷贝
+本来就是重叠的。问题是**产能不匹配**,加重叠没用,必须把 CPU 的活拿走。
+
+`predecode_blend.py` 解码一次落成单个 mmap 文件,之后所有轮次都走 OS 页缓存。
+
+🔴 **为什么是 mmap 不是内存字典**:`num_workers>0` 时每个 worker 是独立进程,
+Python 字典缓存会被**逐个 worker 复制**(20GB × 16 = 当场爆)。mmap 单文件
+则所有 worker 共享同一份页缓存,零复制。
+
+**数值保真已实测**,不是推理:
+
+| 检查 | 结果 |
+|---|---|
+| test / train 两模式逐样本对拍 | ✅ **逐位相同** |
+| `num_workers` = 0 / 2 / 4 | ✅ 全部逐位相同 |
+| 未设 `BLEND_CACHE` 时退回原版 | ✅ 逐位相同 |
+| macOS `spawn` 启动方式(比 Linux `fork` 更严格) | ✅ 通过 ⇒ 延迟开 mmap 的写法可移植 |
 
 ## 4.5 时长:我只能给带推导的区间,真数要 pilot 给
 
@@ -169,14 +193,23 @@ MVS 的显存大头是 **cost volume 不是权重**(模型只有 0.925M 参数),
 
 ---
 
-## 5. 机器规格(GPU 不是最容易翻车的地方)
+## 5. 机器规格 —— ⚠️ 优先级已修正:内存第一,不是 vCPU
 
-| | 要求 | 不满足会怎样 |
-|---|---|---|
-| GPU | **H100 80GB** 或 A100 **80GB** | 40GB 版本并发不了,单卡优势全没 |
-| vCPU | **≥ 64** | 🔴 9 视图 JPEG 解码是纯 CPU 活,**并发 N 个 = N 倍解码压力**,CPU 不够 = H100 空转 |
-| 本地盘 | **NVMe ≥ 500GB** | BlendedMVG 比 BlendedMVS(约 27GB)大得多,**上机第一件事是核实实际体积**;挂网络盘会把 dataloader 拖死 |
-| 内存 | ≥ 128GB | 并发 4 个 × 16–24 workers 的预取队列 |
+**修正原因**:加了预解码缓存(§4 第②步)之后,JPEG 解码从"每轮都做"变成"只做一次",
+之后全走 mmap + OS 页缓存。⇒ **内存够大就等于没有 CPU 瓶颈**,vCPU 从硬门槛降级。
+
+| 优先级 | 指标 | 目标 | 不满足会怎样 |
+|---|---|---|---|
+| **1** | **内存** | **≥ 200GB** | 缓存装不下页缓存 ⇒ 反复回盘,CPU/IO 瓶颈原样回来,这一步白做 |
+| **2** | **显存** | **≥ 80GB** | 决定能并发几个配置;40GB 版本并发不了,单卡方案的优势全没 |
+| **3** | **本地盘** | **NVMe,段① ≥150GB** | 原始数据 + 缓存 + ckpt。⚠️ 段② 的 BlendedMVG 体积**未核实,下完才知道** |
+| 4 | vCPU | ≥ 24 | 有缓存后只影响**预解码那一次**和第一轮,不再是硬门槛 |
+
+⚠️ 看云厂商列表时注意 `28.0/224 CPU` 这种写法:**分母是整机,分子才是分给你的**。
+同理内存 `387/3096 GB`。
+
+⚠️ 盘要看**类型**不只是容量:标着 "Virtual Disk 1063 MB/s" 的比本地 NVMe
+(3000–48000 MB/s)慢 3–45 倍,**预解码那一遍会被它拖死**。
 
 ---
 

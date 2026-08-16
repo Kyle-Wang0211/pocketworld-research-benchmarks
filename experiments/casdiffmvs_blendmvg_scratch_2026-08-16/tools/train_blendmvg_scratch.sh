@@ -58,9 +58,24 @@ esac
 [ -f "$TRAINLIST" ] || { echo "❌ 缺 $TRAINLIST"; exit 1; }
 echo "TIER=$TIER  数据=$DATA_ROOT  清单=$TRAINLIST ($(wc -l < "$TRAINLIST") 场景)"
 
+# ── 数据集实现:设了 BLEND_CACHE 就走 mmap 预解码版 ────────────────────
+#    blend_cached 只把 read_img/read_depth 换成读 mmap,其余逐字继承原版
+#    ⇒ 喂给模型的张量**逐位相同**(已实测:test/train 两模式、num_workers 0/2/4 全等)
+if [ -n "${BLEND_CACHE:-}" ]; then
+  [ -f "$BLEND_CACHE/images.json" ] || {
+    echo "❌ BLEND_CACHE=$BLEND_CACHE 里没有 images.json,先跑 predecode_blend.py"; exit 1; }
+  DATASET=blend_cached
+  echo "数据集: blend_cached(mmap 缓存 $BLEND_CACHE)—— CPU 解码已消除"
+else
+  DATASET=blend
+  echo "⚠️ 未设 BLEND_CACHE,走原版逐样本 JPEG 解码。"
+  echo "   9 视图 × batch4 = 每批 36 次解码,租来的机器 vCPU 通常不够,GPU 会空转。"
+  echo "   强烈建议先跑 predecode_blend.py。"
+fi
+
 # ── 逐字来自官方 train_casdiffmvs.sh 的 BlendedMVS 段,不要改 ──────────
 COMMON=(
-  --mode=train --dataset=blend
+  --mode=train --dataset="$DATASET"
   --trainpath="$DATA_ROOT" --trainlist "$TRAINLIST" --testlist "$VALLIST"
   --batch_size="$BATCH"
   --trainviews=9 --testviews=9
@@ -77,7 +92,8 @@ run_phase() {   # run_phase <logdir> <日志名> <参数...>
   local tag="$1"; shift
   mkdir -p "$logdir"
   echo "── $tag ──"
-  NUM_WORKERS="$NUM_WORKERS" python -u "$DIFFMVS_DIR/train.py" \
+  NUM_WORKERS="$NUM_WORKERS" BLEND_CACHE="${BLEND_CACHE:-}" \
+    python -u "$DIFFMVS_DIR/train.py" \
       "${COMMON[@]}" --logdir "$logdir" "$@" 2>&1 | tee -a "$logdir/$tag.log"
 }
 

@@ -11,19 +11,26 @@ echo "════════ 1. 机器体检 ════════"
 GPU_MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -1)
 GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)
 NCPU=$(nproc)
+RAM=$(free -g | awk '/^Mem:/{print $2}')
 echo "GPU     : $GPU_NAME  ${GPU_MEM} MiB"
+echo "内存    : ${RAM} GB"
 echo "vCPU    : $NCPU"
-echo "内存    : $(free -g | awk '/^Mem:/{print $2}') GB"
-echo "盘      : $(df -h "${MVG_ROOT:-/}" | tail -1 | awk '{print $4}') 可用"
+echo "盘      : $(df -h "${MVG_ROOT:-${MVS_ROOT:-/}}" | tail -1 | awk '{print $4}') 可用"
 
-# 🔴 这两条不是建议,是硬门槛 —— 不满足就是租了张昂贵的闲卡
+# 挑机优先级(⚠️ 已修正:内存排第一,不是 vCPU)
+#   预解码缓存(predecode_blend.py)把 JPEG 解码从每轮都做变成只做一次,
+#   之后全走 mmap + OS 页缓存 ⇒ **内存够大就等于没有 CPU 瓶颈**。
+#   所以 vCPU 从"硬门槛"降级成"第一轮快慢"。
+if [ "$RAM" -lt 200 ]; then
+  echo "🔴 内存只有 ${RAM}GB。预解码缓存要整份驻留在页缓存里才有意义;"
+  echo "   装不下就会反复回盘,CPU/IO 瓶颈原样回来。目标 ≥200GB。"
+fi
 if [ "$GPU_MEM" -lt 70000 ]; then
   echo "🔴 显存 ${GPU_MEM}MiB < 70GB。40GB 卡并发不了多配置,单卡方案的全部优势来自显存。"
-  echo "   要么换 80GB 卡,要么接受串行(时间 ×4)。"
 fi
-if [ "$NCPU" -lt 48 ]; then
-  echo "🔴 vCPU 只有 $NCPU。9 视图 × JPEG 解码是纯 CPU 活,并发 N 个训练 = N 倍解码压力。"
-  echo "   CPU 不够会让 GPU 空转 —— 这是本任务最容易翻车的地方,比 GPU 型号更要紧。"
+if [ "$NCPU" -lt 24 ]; then
+  echo "⚠️ vCPU 只有 $NCPU。有缓存后它只影响**预解码那一次**与第一轮,不是硬门槛,"
+  echo "   但预解码会比较慢。"
 fi
 
 echo
@@ -87,4 +94,24 @@ else
   echo "   才崩是最贵的失败方式。"
 fi
 echo
-echo "✅ prep 完成。顺序:体检清单 → 🔴 pilot 试跑 → 按显存并发铺配置"
+echo "════════ 5. 装 blend_cached 数据集 ════════"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+cp "$HERE/blend_cached.py" "$DIFFMVS_DIR/datasets/"
+python -c "import ast;ast.parse(open('$DIFFMVS_DIR/datasets/blend_cached.py').read())"
+echo "✅ → $DIFFMVS_DIR/datasets/blend_cached.py"
+echo "   训练时传 --dataset=blend_cached(train_blendmvg_scratch.sh 会按 BLEND_CACHE 自动选)"
+
+cat <<'NEXT'
+
+✅ prep 完成。接下来:
+
+  ① 预解码(消除 CPU 瓶颈,一次性)
+     python3 predecode_blend.py $MVS_ROOT $DIFFMVS_DIR/lists/blend/train.txt \
+             $CACHE_DIR --nviews 9 --depth --repo $DIFFMVS_DIR
+     🔴 跑完看它报的合计体积,必须明显小于 free -g 的 available
+
+  ② pilot 试跑(量 it/s 与显存,决定并发几个 + 真实时长)
+     BLEND_CACHE=$CACHE_DIR TIER=mvs MVS_ROOT=... ./train_blendmvg_scratch.sh pilot
+
+  ③ 段① 并发四配置 → ④ 评测选赢家 → ⑤ 建 MVG 清单 → ⑥ 段② 微调
+NEXT
