@@ -31,13 +31,30 @@ source /venv/main/bin/activate 2>/dev/null || true
 # ⚠️ 仓库 requirements 钉 torch==2.0.0,实测不必遵守;新版对 sm_90/sm_120 更好
 python -c "import torch" 2>/dev/null || uv pip install -q torch torchvision
 uv pip install -q timm numpy pillow opencv-python-headless plyfile tensorboardX einops
-python - <<'PY'
-import torch
-print("torch", torch.__version__, "| cuda", torch.version.cuda,
-      "|", torch.cuda.get_device_name(0), "| cap", torch.cuda.get_device_capability(0))
-a=torch.randn(4096,4096,device="cuda"); (a@a).sum().item()
-print("matmul OK")
-PY
+
+# 🔴 驱动/torch 版本必须匹配,而且**自检失败要当场停**。
+#    实测踩过:一台机器驱动只到 CUDA 12.8,装的却是 cu130 的 torch;
+#    因为本脚本只有 `set -uo pipefail` 没有 `set -e`,自检失败后一路跑到
+#    BOOTSTRAPDONE,直到真开训练才报 "NVIDIA driver is too old" ——
+#    白等了整个下载+预解码。下面这段会在版本不匹配时自动换装并重验,仍失败则退出。
+gpu_ok() { python -c "
+import torch,sys
+if not torch.cuda.is_available(): sys.exit(1)
+a=torch.randn(2048,2048,device='cuda'); (a@a).sum().item()
+print('torch', torch.__version__, '| cuda', torch.version.cuda, '|',
+      torch.cuda.get_device_name(0), '| cap', torch.cuda.get_device_capability(0))
+" 2>/dev/null; }
+if ! gpu_ok; then
+  DRV=$(nvidia-smi | grep -o 'CUDA Version: [0-9.]*' | grep -o '[0-9.]*')
+  echo "⚠️ GPU 自检失败,驱动只到 CUDA $DRV —— 换装匹配的 torch"
+  case "$DRV" in
+    12.*) IDX=https://download.pytorch.org/whl/cu128 ;;
+    *)    IDX=https://download.pytorch.org/whl/cu126 ;;
+  esac
+  uv pip install -q --reinstall torch torchvision --index-url "$IDX"
+  gpu_ok || { echo "🔴 换装后仍失败,停。手工处理驱动/torch 匹配。"; exit 1; }
+  echo "⚠️ 本机 torch 版本与其他机器不同 —— **这是第二变量,必须记账**"
+fi
 
 LOGP "2. 仓库 + 补丁"
 cd $W
@@ -80,13 +97,27 @@ fi
 echo "场景数 $(find BlendedMVS -maxdepth 1 -mindepth 1 -type d | wc -l) (应为 113)"
 
 LOGP "4. 预解码缓存"
+# 内存紧的机器传 NO_DEPTH_CACHE=1:只缓存图像(20.9 GiB 而非 48.7)。
+# JPEG 解码才是 CPU 大头,深度 PFM 是 I/O ⇒ 少缓存深度损失小。
+# 判据:缓存必须能整份留在页缓存里,否则反复回盘,等于白做。
 mkdir -p $W/cache
+DEPTH_FLAG="--depth"
+[ "${NO_DEPTH_CACHE:-0}" = "1" ] && DEPTH_FLAG="" && echo "⚠️ 内存受限模式:只缓存图像,不缓存深度"
 if [ ! -f $W/cache/images.json ]; then
   cd $W/diffmvs
   python -u $W/predecode_blend.py $W/data/BlendedMVS \
-      $W/diffmvs/lists/blend/train.txt $W/cache --nviews 9 --depth --repo $W/diffmvs
+      $W/diffmvs/lists/blend/train.txt $W/cache --nviews 9 $DEPTH_FLAG --repo $W/diffmvs
 fi
 du -sh $W/cache
+AVAIL=$(free -g | awk '/^Mem:/{print $7}')
+CSZ=$(du -sB1 $W/cache | cut -f1); CSZ=$((CSZ/1024/1024/1024))
+echo "缓存 ${CSZ} GiB / 可用内存 ${AVAIL} GiB"
+[ "$CSZ" -gt "$((AVAIL*7/10))" ] && echo "🔴 缓存超过可用内存 70%,页缓存可能留不住 —— 考虑 NO_DEPTH_CACHE=1"
+
+if [ "${SKIP_SWEEP:-0}" = "1" ]; then
+  echo; echo "════════ 跳过 batch 扫描(SKIP_SWEEP=1),环境已就绪 ════════"
+  echo "BOOTSTRAPDONE"; exit 0
+fi
 
 LOGP "5. batch 扫描(与 H200 同口径)"
 cd $W/diffmvs
