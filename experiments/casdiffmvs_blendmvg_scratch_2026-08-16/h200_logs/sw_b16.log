@@ -1,0 +1,219 @@
+current time 20260816_122129
+creating new summary file
+argv: ['--mode=train', '--dataset=blend_cached', '--trainpath=/workspace/data/BlendedMVS', '--trainlist', 'lists/blend/train.txt', '--testlist', 'lists/blend/val.txt', '--batch_size=16', '--trainviews=9', '--testviews=9', '--numdepth=384', '--numdepth_initial=48', '--stage_iters', '1', '3', '3', '--cost_dim_stage', '4', '4', '4', '--CostNum', '0', '4', '4', '--min_radius', '0.125', '--max_radius', '8', '--hidden_dim', '0', '32', '20', '--context_dim', '32', '32', '16', '--unet_dim', '0', '16', '8', '--lr_sche', 'onecycle', '--conf_weight', '0.05', '--logdir', '/workspace/runs/sweep_b16', '--epochs=16', '--train_epochs=1', '--lr=0.001', '--scale', '0', '0.25', '0.05']
+################################  args  ################################
+mode      	train                         	<class 'str'>       
+device    	cuda                          	<class 'str'>       
+dataset   	blend_cached                  	<class 'str'>       
+trainpath 	/workspace/data/BlendedMVS    	<class 'str'>       
+testpath  	/workspace/data/BlendedMVS    	<class 'str'>       
+trainlist 	lists/blend/train.txt         	<class 'str'>       
+testlist  	lists/blend/val.txt           	<class 'str'>       
+trainviews	9                             	<class 'int'>       
+testviews 	9                             	<class 'int'>       
+epochs    	16                            	<class 'int'>       
+lr        	0.001                         	<class 'float'>     
+lr_sche   	onecycle                      	<class 'str'>       
+lrepochs  	10,12,14:2                    	<class 'str'>       
+wd        	0.001                         	<class 'float'>     
+train_epochs	1                             	<class 'int'>       
+batch_size	16                            	<class 'int'>       
+seed      	123                           	<class 'int'>       
+loadckpt  	None                          	<class 'NoneType'>  
+logdir    	/workspace/runs/sweep_b16     	<class 'str'>       
+resume    	False                         	<class 'bool'>      
+summary_freq	20                            	<class 'int'>       
+save_freq 	1                             	<class 'int'>       
+eval_freq 	1                             	<class 'int'>       
+numdepth_initial	48                            	<class 'int'>       
+numdepth  	384                           	<class 'int'>       
+ddim_eta  	[0.01, 0.01, 0.01]            	<class 'list'>      
+scale     	[0.0, 0.25, 0.05]             	<class 'list'>      
+timesteps 	[1000, 1000, 1000]            	<class 'list'>      
+sampling_timesteps	[1, 1, 1]                     	<class 'list'>      
+hidden_dim	[0, 32, 20]                   	<class 'list'>      
+context_dim	[32, 32, 16]                  	<class 'list'>      
+stage_iters	[1, 3, 3]                     	<class 'list'>      
+cost_dim_stage	[4, 4, 4]                     	<class 'list'>      
+CostNum   	[0, 4, 4]                     	<class 'list'>      
+unet_dim  	[0, 16, 8]                    	<class 'list'>      
+conf_weight	0.05                          	<class 'float'>     
+min_radius	0.125                         	<class 'float'>     
+max_radius	8.0                           	<class 'float'>     
+########################################################################
+start at epoch 0
+Number of model parameters: 925435
+Let's use 1 GPUs!
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+less ref_view small 8
+dataset train metas: 16873
+[blend_cached] 缓存目录 /workspace/cache
+less ref_view small 8
+dataset test metas: 914
+[blend_cached] 缓存目录 /workspace/cache
+Epoch 0:
+/venv/main/lib/python3.12/site-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:4215.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Epoch 0/16, Iter 0/1054, lr 0.000041, train loss = 3.545, depth loss = 0.217, time = 25.430
+Epoch 0/16, Iter 1/1054, lr 0.000042, train loss = 3.342, depth loss = 0.203, time = 1.695
+Epoch 0/16, Iter 2/1054, lr 0.000043, train loss = 3.187, depth loss = 0.186, time = 1.627
+Epoch 0/16, Iter 3/1054, lr 0.000045, train loss = 3.045, depth loss = 0.187, time = 1.614
+Epoch 0/16, Iter 4/1054, lr 0.000046, train loss = 2.878, depth loss = 0.190, time = 1.545
+Epoch 0/16, Iter 5/1054, lr 0.000047, train loss = 2.761, depth loss = 0.193, time = 1.547
+Epoch 0/16, Iter 6/1054, lr 0.000048, train loss = 2.881, depth loss = 0.193, time = 1.574
+Epoch 0/16, Iter 7/1054, lr 0.000049, train loss = 2.711, depth loss = 0.183, time = 1.538
+Epoch 0/16, Iter 8/1054, lr 0.000050, train loss = 2.624, depth loss = 0.178, time = 1.546
+Epoch 0/16, Iter 9/1054, lr 0.000051, train loss = 2.725, depth loss = 0.178, time = 1.570
+Epoch 0/16, Iter 10/1054, lr 0.000052, train loss = 2.520, depth loss = 0.159, time = 1.670
+Epoch 0/16, Iter 11/1054, lr 0.000054, train loss = 2.427, depth loss = 0.164, time = 1.577
+Epoch 0/16, Iter 12/1054, lr 0.000055, train loss = 2.365, depth loss = 0.165, time = 1.586
+Epoch 0/16, Iter 13/1054, lr 0.000056, train loss = 2.434, depth loss = 0.170, time = 1.587
+Epoch 0/16, Iter 14/1054, lr 0.000057, train loss = 2.292, depth loss = 0.165, time = 1.584
+Epoch 0/16, Iter 15/1054, lr 0.000058, train loss = 2.243, depth loss = 0.167, time = 1.595
+Epoch 0/16, Iter 16/1054, lr 0.000059, train loss = 2.278, depth loss = 0.173, time = 1.559
+Epoch 0/16, Iter 17/1054, lr 0.000060, train loss = 2.250, depth loss = 0.177, time = 1.566
+Epoch 0/16, Iter 18/1054, lr 0.000062, train loss = 2.051, depth loss = 0.150, time = 1.546
+Epoch 0/16, Iter 19/1054, lr 0.000063, train loss = 1.894, depth loss = 0.147, time = 1.576
+Epoch 0/16, Iter 20/1054, lr 0.000064, train loss = 2.071, depth loss = 0.156, time = 1.580
+Epoch 0/16, Iter 21/1054, lr 0.000065, train loss = 1.959, depth loss = 0.156, time = 1.587
+Epoch 0/16, Iter 22/1054, lr 0.000066, train loss = 1.864, depth loss = 0.147, time = 1.534
+Epoch 0/16, Iter 23/1054, lr 0.000067, train loss = 1.926, depth loss = 0.164, time = 1.581
+Epoch 0/16, Iter 24/1054, lr 0.000068, train loss = 2.004, depth loss = 0.168, time = 1.582
+Epoch 0/16, Iter 25/1054, lr 0.000069, train loss = 1.747, depth loss = 0.138, time = 1.566
+Epoch 0/16, Iter 26/1054, lr 0.000071, train loss = 1.709, depth loss = 0.133, time = 1.621
+Epoch 0/16, Iter 27/1054, lr 0.000072, train loss = 1.708, depth loss = 0.150, time = 1.593
+Epoch 0/16, Iter 28/1054, lr 0.000073, train loss = 1.805, depth loss = 0.154, time = 1.625
+Epoch 0/16, Iter 29/1054, lr 0.000074, train loss = 1.782, depth loss = 0.157, time = 1.576
+Epoch 0/16, Iter 30/1054, lr 0.000075, train loss = 1.598, depth loss = 0.146, time = 1.576
+Epoch 0/16, Iter 31/1054, lr 0.000076, train loss = 1.512, depth loss = 0.131, time = 1.542
+Epoch 0/16, Iter 32/1054, lr 0.000077, train loss = 1.528, depth loss = 0.142, time = 1.561
+Epoch 0/16, Iter 33/1054, lr 0.000079, train loss = 1.504, depth loss = 0.141, time = 1.551
+Epoch 0/16, Iter 34/1054, lr 0.000080, train loss = 1.434, depth loss = 0.129, time = 1.535
+Epoch 0/16, Iter 35/1054, lr 0.000081, train loss = 1.347, depth loss = 0.124, time = 1.590
+Epoch 0/16, Iter 36/1054, lr 0.000082, train loss = 1.340, depth loss = 0.118, time = 1.548
+Epoch 0/16, Iter 37/1054, lr 0.000083, train loss = 1.269, depth loss = 0.119, time = 1.620
+Epoch 0/16, Iter 38/1054, lr 0.000084, train loss = 1.201, depth loss = 0.128, time = 1.566
+Epoch 0/16, Iter 39/1054, lr 0.000085, train loss = 1.211, depth loss = 0.101, time = 1.597
+Epoch 0/16, Iter 40/1054, lr 0.000086, train loss = 1.185, depth loss = 0.113, time = 1.605
+Epoch 0/16, Iter 41/1054, lr 0.000088, train loss = 1.244, depth loss = 0.109, time = 1.541
+Epoch 0/16, Iter 42/1054, lr 0.000089, train loss = 1.157, depth loss = 0.114, time = 1.551
+Epoch 0/16, Iter 43/1054, lr 0.000090, train loss = 1.003, depth loss = 0.099, time = 1.563
+Epoch 0/16, Iter 44/1054, lr 0.000091, train loss = 1.040, depth loss = 0.102, time = 1.570
+Epoch 0/16, Iter 45/1054, lr 0.000092, train loss = 1.066, depth loss = 0.104, time = 1.533
+Epoch 0/16, Iter 46/1054, lr 0.000093, train loss = 0.908, depth loss = 0.097, time = 1.573
+Epoch 0/16, Iter 47/1054, lr 0.000094, train loss = 1.069, depth loss = 0.102, time = 1.558
+Epoch 0/16, Iter 48/1054, lr 0.000096, train loss = 1.034, depth loss = 0.099, time = 1.585
+Epoch 0/16, Iter 49/1054, lr 0.000097, train loss = 1.028, depth loss = 0.095, time = 1.562
+Epoch 0/16, Iter 50/1054, lr 0.000098, train loss = 0.969, depth loss = 0.097, time = 1.594
+Epoch 0/16, Iter 51/1054, lr 0.000099, train loss = 1.024, depth loss = 0.098, time = 1.564
+Epoch 0/16, Iter 52/1054, lr 0.000100, train loss = 1.027, depth loss = 0.092, time = 1.555
+Epoch 0/16, Iter 53/1054, lr 0.000101, train loss = 1.014, depth loss = 0.097, time = 1.625
+Epoch 0/16, Iter 54/1054, lr 0.000102, train loss = 0.815, depth loss = 0.080, time = 1.544
+Epoch 0/16, Iter 55/1054, lr 0.000103, train loss = 0.869, depth loss = 0.077, time = 1.564
+Epoch 0/16, Iter 56/1054, lr 0.000105, train loss = 0.813, depth loss = 0.073, time = 1.567
+Epoch 0/16, Iter 57/1054, lr 0.000106, train loss = 0.946, depth loss = 0.080, time = 1.581
+Epoch 0/16, Iter 58/1054, lr 0.000107, train loss = 0.919, depth loss = 0.087, time = 1.572
+Epoch 0/16, Iter 59/1054, lr 0.000108, train loss = 0.934, depth loss = 0.092, time = 1.545
+Epoch 0/16, Iter 60/1054, lr 0.000109, train loss = 0.928, depth loss = 0.082, time = 1.541
+Epoch 0/16, Iter 61/1054, lr 0.000110, train loss = 0.777, depth loss = 0.067, time = 1.527
+Epoch 0/16, Iter 62/1054, lr 0.000111, train loss = 0.782, depth loss = 0.067, time = 1.590
+Epoch 0/16, Iter 63/1054, lr 0.000113, train loss = 0.795, depth loss = 0.070, time = 1.542
+Epoch 0/16, Iter 64/1054, lr 0.000114, train loss = 0.856, depth loss = 0.084, time = 1.528
+Epoch 0/16, Iter 65/1054, lr 0.000115, train loss = 0.781, depth loss = 0.076, time = 1.537
+Epoch 0/16, Iter 66/1054, lr 0.000116, train loss = 0.847, depth loss = 0.087, time = 1.551
+Epoch 0/16, Iter 67/1054, lr 0.000117, train loss = 0.865, depth loss = 0.078, time = 1.551
+Epoch 0/16, Iter 68/1054, lr 0.000118, train loss = 0.716, depth loss = 0.063, time = 1.545
+Epoch 0/16, Iter 69/1054, lr 0.000119, train loss = 0.747, depth loss = 0.073, time = 1.535
+Epoch 0/16, Iter 70/1054, lr 0.000120, train loss = 0.834, depth loss = 0.086, time = 1.592
+Epoch 0/16, Iter 71/1054, lr 0.000122, train loss = 0.778, depth loss = 0.074, time = 1.581
+Epoch 0/16, Iter 72/1054, lr 0.000123, train loss = 0.694, depth loss = 0.061, time = 1.541
+Epoch 0/16, Iter 73/1054, lr 0.000124, train loss = 0.762, depth loss = 0.067, time = 1.578
+Epoch 0/16, Iter 74/1054, lr 0.000125, train loss = 0.653, depth loss = 0.058, time = 1.577
+Epoch 0/16, Iter 75/1054, lr 0.000126, train loss = 0.714, depth loss = 0.060, time = 1.587
+Epoch 0/16, Iter 76/1054, lr 0.000127, train loss = 0.672, depth loss = 0.054, time = 1.587
+Epoch 0/16, Iter 77/1054, lr 0.000128, train loss = 0.577, depth loss = 0.048, time = 1.572
+Epoch 0/16, Iter 78/1054, lr 0.000130, train loss = 0.623, depth loss = 0.053, time = 1.546
+Epoch 0/16, Iter 79/1054, lr 0.000131, train loss = 0.648, depth loss = 0.055, time = 1.521
+Epoch 0/16, Iter 80/1054, lr 0.000132, train loss = 0.630, depth loss = 0.056, time = 1.594
+Epoch 0/16, Iter 81/1054, lr 0.000133, train loss = 0.731, depth loss = 0.066, time = 1.623
+Epoch 0/16, Iter 82/1054, lr 0.000134, train loss = 0.793, depth loss = 0.070, time = 1.795
+Epoch 0/16, Iter 83/1054, lr 0.000135, train loss = 0.607, depth loss = 0.050, time = 1.627
+Epoch 0/16, Iter 84/1054, lr 0.000136, train loss = 0.822, depth loss = 0.090, time = 1.591
+Epoch 0/16, Iter 85/1054, lr 0.000137, train loss = 0.689, depth loss = 0.080, time = 1.541
+Epoch 0/16, Iter 86/1054, lr 0.000139, train loss = 0.760, depth loss = 0.078, time = 1.534
+Epoch 0/16, Iter 87/1054, lr 0.000140, train loss = 0.697, depth loss = 0.073, time = 1.559
+Epoch 0/16, Iter 88/1054, lr 0.000141, train loss = 0.516, depth loss = 0.038, time = 1.595
+Epoch 0/16, Iter 89/1054, lr 0.000142, train loss = 0.648, depth loss = 0.053, time = 1.562
+Epoch 0/16, Iter 90/1054, lr 0.000143, train loss = 0.578, depth loss = 0.051, time = 1.553
+Epoch 0/16, Iter 91/1054, lr 0.000144, train loss = 0.552, depth loss = 0.044, time = 1.539
+Epoch 0/16, Iter 92/1054, lr 0.000145, train loss = 0.598, depth loss = 0.053, time = 1.618
+Epoch 0/16, Iter 93/1054, lr 0.000147, train loss = 0.568, depth loss = 0.046, time = 1.576
+Epoch 0/16, Iter 94/1054, lr 0.000148, train loss = 0.511, depth loss = 0.040, time = 1.548
+Epoch 0/16, Iter 95/1054, lr 0.000149, train loss = 0.553, depth loss = 0.045, time = 1.571
+Epoch 0/16, Iter 96/1054, lr 0.000150, train loss = 0.605, depth loss = 0.058, time = 1.610
+Epoch 0/16, Iter 97/1054, lr 0.000151, train loss = 0.496, depth loss = 0.043, time = 1.548
+Epoch 0/16, Iter 98/1054, lr 0.000152, train loss = 0.448, depth loss = 0.039, time = 1.557
+Epoch 0/16, Iter 99/1054, lr 0.000153, train loss = 0.451, depth loss = 0.042, time = 1.518
+Epoch 0/16, Iter 100/1054, lr 0.000154, train loss = 0.521, depth loss = 0.043, time = 1.576
+Epoch 0/16, Iter 101/1054, lr 0.000156, train loss = 0.552, depth loss = 0.048, time = 1.578
+Epoch 0/16, Iter 102/1054, lr 0.000157, train loss = 0.486, depth loss = 0.038, time = 1.550
+Epoch 0/16, Iter 103/1054, lr 0.000158, train loss = 0.534, depth loss = 0.040, time = 1.537
+Epoch 0/16, Iter 104/1054, lr 0.000159, train loss = 0.464, depth loss = 0.036, time = 1.534
+Epoch 0/16, Iter 105/1054, lr 0.000160, train loss = 0.473, depth loss = 0.041, time = 1.565
+Epoch 0/16, Iter 106/1054, lr 0.000161, train loss = 0.575, depth loss = 0.050, time = 1.599
+Epoch 0/16, Iter 107/1054, lr 0.000162, train loss = 0.507, depth loss = 0.043, time = 1.585
+Epoch 0/16, Iter 108/1054, lr 0.000164, train loss = 0.502, depth loss = 0.043, time = 1.596
+Epoch 0/16, Iter 109/1054, lr 0.000165, train loss = 0.499, depth loss = 0.045, time = 1.616
+Epoch 0/16, Iter 110/1054, lr 0.000166, train loss = 0.508, depth loss = 0.043, time = 1.586
+Epoch 0/16, Iter 111/1054, lr 0.000167, train loss = 0.483, depth loss = 0.038, time = 1.545
+Epoch 0/16, Iter 112/1054, lr 0.000168, train loss = 0.489, depth loss = 0.045, time = 1.526
+Epoch 0/16, Iter 113/1054, lr 0.000169, train loss = 0.484, depth loss = 0.040, time = 1.587
+Epoch 0/16, Iter 114/1054, lr 0.000170, train loss = 0.521, depth loss = 0.044, time = 1.567
+Epoch 0/16, Iter 115/1054, lr 0.000171, train loss = 0.422, depth loss = 0.041, time = 1.545
+Epoch 0/16, Iter 116/1054, lr 0.000173, train loss = 0.540, depth loss = 0.045, time = 1.551
+Epoch 0/16, Iter 117/1054, lr 0.000174, train loss = 0.475, depth loss = 0.041, time = 1.534
+Epoch 0/16, Iter 118/1054, lr 0.000175, train loss = 0.549, depth loss = 0.054, time = 1.567
+Epoch 0/16, Iter 119/1054, lr 0.000176, train loss = 0.484, depth loss = 0.051, time = 1.572
+Epoch 0/16, Iter 120/1054, lr 0.000177, train loss = 0.489, depth loss = 0.041, time = 1.563
+Epoch 0/16, Iter 121/1054, lr 0.000178, train loss = 0.425, depth loss = 0.033, time = 1.547
+Epoch 0/16, Iter 122/1054, lr 0.000179, train loss = 0.519, depth loss = 0.040, time = 1.543
+Epoch 0/16, Iter 123/1054, lr 0.000181, train loss = 0.489, depth loss = 0.037, time = 1.557
+Epoch 0/16, Iter 124/1054, lr 0.000182, train loss = 0.490, depth loss = 0.052, time = 1.570
+Epoch 0/16, Iter 125/1054, lr 0.000183, train loss = 0.491, depth loss = 0.048, time = 1.531
+Epoch 0/16, Iter 126/1054, lr 0.000184, train loss = 0.419, depth loss = 0.037, time = 1.710
+Epoch 0/16, Iter 127/1054, lr 0.000185, train loss = 0.530, depth loss = 0.054, time = 1.558
+Epoch 0/16, Iter 128/1054, lr 0.000186, train loss = 0.498, depth loss = 0.053, time = 1.559
+Epoch 0/16, Iter 129/1054, lr 0.000187, train loss = 0.372, depth loss = 0.041, time = 1.555
+Epoch 0/16, Iter 130/1054, lr 0.000188, train loss = 0.447, depth loss = 0.038, time = 1.531
+Epoch 0/16, Iter 131/1054, lr 0.000190, train loss = 0.404, depth loss = 0.043, time = 1.518
+Epoch 0/16, Iter 132/1054, lr 0.000191, train loss = 0.525, depth loss = 0.071, time = 1.539
+Epoch 0/16, Iter 133/1054, lr 0.000192, train loss = 0.485, depth loss = 0.051, time = 1.581
