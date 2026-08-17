@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>CasDiffMVS 权重对照台</title>
+<style>
+ :root{--bg:#0d0f12;--panel:#171a1f;--fg:#dfe3e8;--dim:#8a929c;--edge:#2a2f37;--hot:#e8a33d}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--fg);
+      font:13px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+ #bar{padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--edge);
+      display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+ button{background:#20252c;color:var(--fg);border:1px solid var(--edge);border-radius:5px;
+        padding:5px 12px;cursor:pointer;font:inherit}
+ button.on{background:var(--hot);color:#14171b;border-color:var(--hot);font-weight:600}
+ button:disabled{opacity:.4;cursor:wait}
+ #wrap{position:relative}
+ canvas{width:100vw;height:calc(100vh - 46px);display:block}
+ #hud{position:absolute;top:10px;left:12px;background:#000a;padding:6px 12px;border-radius:5px;
+      font-variant-numeric:tabular-nums}
+ #prog{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+       background:#0d0f12dd;font-size:15px}
+ .k{color:var(--dim)}
+</style></head><body>
+<div id="bar">
+ <span class="k">权重</span>
+ <span id="btns"></span>
+ <span class="k">|</span>
+ <button id="bg">背景</button>
+ <span class="k">点大小</span><input id="ps" type="range" min="1" max="6" step="0.5" value="1.5">
+ <span class="k">— 全分辨率,零降采样;切换时相机不动,便于翻页比对</span>
+</div>
+<div id="wrap">
+ <canvas id="cv"></canvas>
+ <div id="hud">载入中…</div>
+ <div id="prog">下载中…</div>
+</div>
+<script>
+const cam={rx:-0.6,ry:0.6,dist:2.5};
+let PS=1.5, cur=null, META=null, gl=null, prog=null, loc={}, shared=null;
+const cache={};   // tag -> {pb,cb,n}
+const cv=document.getElementById("cv");
+const hud=document.getElementById("hud"), pbar=document.getElementById("prog");
+
+function initGL(){
+ gl=cv.getContext("webgl",{antialias:false});
+ const vs=`attribute vec3 p;attribute vec3 c;uniform mat4 mvp;uniform float ps;varying vec3 vc;
+  void main(){gl_Position=mvp*vec4(p,1.0);gl_PointSize=ps;vc=c;}`;
+ const fs=`precision mediump float;varying vec3 vc;void main(){gl_FragColor=vec4(vc,1.0);}`;
+ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;};
+ prog=gl.createProgram();
+ gl.attachShader(prog,sh(gl.VERTEX_SHADER,vs));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,fs));
+ gl.linkProgram(prog);gl.useProgram(prog);
+ loc={p:gl.getAttribLocation(prog,"p"),c:gl.getAttribLocation(prog,"c"),
+      mvp:gl.getUniformLocation(prog,"mvp"),ps:gl.getUniformLocation(prog,"ps")};
+}
+
+async function fetchProgress(url,label){
+ const r=await fetch(url);
+ const tot=+r.headers.get("content-length")||0;
+ const rd=r.body.getReader(); const chunks=[]; let got=0;
+ for(;;){const {done,value}=await rd.read(); if(done)break;
+  chunks.push(value); got+=value.length;
+  pbar.textContent=`${label} ${(got/1048576).toFixed(0)} / ${(tot/1048576).toFixed(0)} MB`;}
+ const out=new Uint8Array(got); let o=0;
+ for(const c of chunks){out.set(c,o);o+=c.length;}
+ return out.buffer;
+}
+
+async function load(tag){
+ if(cache[tag]){cur=tag;paint();return;}
+ pbar.style.display="flex";
+ document.querySelectorAll("#btns button").forEach(b=>b.disabled=true);
+ // 位置与颜色分开存 ⇒ 这里零解析,直接当 typed array 上传显卡
+ const pbuf=await fetchProgress(`bin/${tag}.pos`,`${tag} 位置`);
+ const cbuf=await fetchProgress(`bin/${tag}.col`,`${tag} 颜色`);
+ const m=META[tag];
+ if(!shared) shared={center:m.center,scale:2/Math.max(...m.ext,1e-6)};
+ const pos=new Float32Array(pbuf), n=m.n;
+ // 共享中心与尺度 ⇒ 四份坐标系完全一致,切换不跳
+ for(let i=0;i<n*3;i+=3){
+  pos[i]=(pos[i]-shared.center[0])*shared.scale;
+  pos[i+1]=(pos[i+1]-shared.center[1])*shared.scale;
+  pos[i+2]=(pos[i+2]-shared.center[2])*shared.scale;}
+ const pb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,pb);
+ gl.bufferData(gl.ARRAY_BUFFER,pos,gl.STATIC_DRAW);
+ const cb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,cb);
+ gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(cbuf),gl.STATIC_DRAW);
+ cache[tag]={pb,cb,n};
+ cur=tag; pbar.style.display="none";
+ document.querySelectorAll("#btns button").forEach(b=>b.disabled=false);
+ paint();
+}
+function paint(){
+ document.querySelectorAll("#btns button").forEach(b=>b.classList.toggle("on",b.dataset.t===cur));
+ hud.textContent=`${cur} — ${META[cur].n.toLocaleString()} 点(全分辨率)`;
+}
+function draw(){
+ const w=cv.clientWidth,h=cv.clientHeight;
+ if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+ const bgv=window.lightBg?0.82:0.05;
+ gl.viewport(0,0,w,h);gl.clearColor(bgv,bgv,bgv,1);gl.enable(gl.DEPTH_TEST);
+ gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ const v=cache[cur];
+ if(v){
+  const a=w/h,f=1.5,zn=0.01,zf=100;
+  const cr=Math.cos(cam.rx),sr=Math.sin(cam.rx),cy=Math.cos(cam.ry),sy=Math.sin(cam.ry);
+  const R=[cy,sy*sr,sy*cr,0, 0,cr,-sr,0, -sy,cy*sr,cy*cr,0, 0,0,0,1];
+  const T=[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,-cam.dist,1];
+  const P=[f/a,0,0,0, 0,f,0,0, 0,0,(zf+zn)/(zn-zf),-1, 0,0,2*zf*zn/(zn-zf),0];
+  const mul=(A,B)=>{const O=new Array(16).fill(0);
+   for(let r=0;r<4;r++)for(let c=0;c<4;c++)for(let k=0;k<4;k++)O[c*4+r]+=A[k*4+r]*B[c*4+k];return O;};
+  gl.useProgram(prog);
+  gl.uniformMatrix4fv(loc.mvp,false,new Float32Array(mul(P,mul(T,R))));
+  gl.uniform1f(loc.ps,PS);
+  gl.bindBuffer(gl.ARRAY_BUFFER,v.pb);
+  gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);gl.enableVertexAttribArray(loc.p);
+  gl.bindBuffer(gl.ARRAY_BUFFER,v.cb);
+  gl.vertexAttribPointer(loc.c,3,gl.UNSIGNED_BYTE,true,0,0);gl.enableVertexAttribArray(loc.c);
+  gl.drawArrays(gl.POINTS,0,v.n);
+ }
+ requestAnimationFrame(draw);
+}
+let drag=false,px=0,py=0;
+cv.addEventListener("mousedown",e=>{drag=true;px=e.clientX;py=e.clientY;});
+cv.addEventListener("wheel",e=>{e.preventDefault();cam.dist*=Math.exp(e.deltaY*0.001);},{passive:false});
+window.addEventListener("mousemove",e=>{if(!drag)return;
+ const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;
+ cam.ry+=dx*0.01;cam.rx+=dy*0.01;});
+window.addEventListener("mouseup",()=>drag=false);
+document.getElementById("bg").onclick=()=>{window.lightBg=!window.lightBg;};
+document.getElementById("ps").oninput=e=>{PS=parseFloat(e.target.value);};
+// 数字键 1-4 快速翻页
+window.addEventListener("keydown",e=>{
+ const ts=Object.keys(META||{}); const i=+e.key-1;
+ if(i>=0&&i<ts.length) load(ts[i]);});
+(async()=>{
+ META=await (await fetch("bin/meta.json")).json();
+ document.getElementById("btns").innerHTML=Object.keys(META).map((t,i)=>
+   `<button data-t="${t}">${i+1}. ${t}</button>`).join(" ");
+ document.querySelectorAll("#btns button").forEach(b=>b.onclick=()=>load(b.dataset.t));
+ initGL(); draw();
+ await load(Object.keys(META)[0]);
+})();
+</script></body></html>
