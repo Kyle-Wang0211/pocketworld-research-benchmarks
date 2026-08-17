@@ -198,6 +198,10 @@ def main():
             mm = base.copy()
             mm[:, 1, :2, :] = base[:, 1, :2, :] / dv_
             pm[s] = torch.from_numpy(mm[None]).to(dev)
+        # warp 网格缓存:rot_xyz 用张量身份作键,只在一帧内有效 ⇒ 每帧作废
+        import models.module as _M
+        if hasattr(_M, "warp_cache_new_frame"):
+            _M.warp_cache_new_frame()
         if args.seed >= 0:
             # 逐帧重置而非全局设一次:这样每帧的噪声只取决于帧号,
             # 与"前面跑了多少帧""缓存改没改调用次数"都无关 ⇒ 对拍才干净。
