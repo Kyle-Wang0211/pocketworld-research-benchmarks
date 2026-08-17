@@ -128,6 +128,9 @@ def main():
                          "update.py:479 的扩散起始噪声是随机的(官方设计),"
                          "同权重同输入两跑 21.5%% 的像素差 >1%%。"
                          "要做逐比特对拍就必须设种子,否则对拍的是噪声。")
+    ap.add_argument("--net-views", type=int, default=0,
+                    help="网络实际使用的视图数(含参考帧)。默认跟 fixture 的 num_src+1;"
+                         "设小于它 = 网络少算、融合仍可用全部邻居投票")
     ap.add_argument("--cache-feat", action="store_true", help="开特征缓存(逐比特无损)")
     ap.add_argument("--fuse-conv3d", action="store_true",
                     help="把划算的 3D 卷积换成等价单次 2D 卷积(权重重排,不重训)。"
@@ -146,6 +149,13 @@ def main():
     meta = json.load(open(f"{FX}/frames.json"))
     NF, W, H = meta["count"], meta["width"], meta["height"]
     NIMG = meta["num_src"] + 1
+    if args.net_views:
+        # 🔑 网络用的视图数与融合用的邻居数**解耦**:
+        #   代价体是 O(num_view) 的真算力;而融合的几何一致性只是拿已有深度图做
+        #   numpy 重投影,多几个邻居几乎不要钱。若 nv10 的收益主要在融合侧,
+        #   就可以网络跑少、融合投票多 —— 省掉的是最贵的那一半。
+        assert 2 <= args.net_views <= NIMG, f"net-views 必须在 2..{NIMG}"
+        NIMG = args.net_views
     assert W % 32 == 0 and H % 32 == 0, f"{W}×{H} 不是 32 的倍数,四级金字塔会错位"
     print(f"fixture {W}×{H} ×{NF} 帧  宽高比 {W/H:.4f}  num_view={NIMG}")
     IM = np.fromfile(f"{FX}/images.f16", np.float16).reshape(NF, H, W)
