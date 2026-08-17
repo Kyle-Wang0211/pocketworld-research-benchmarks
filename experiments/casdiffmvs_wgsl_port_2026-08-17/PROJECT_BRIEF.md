@@ -118,19 +118,71 @@ WGSL 侧需实现与 PyTorch 逐位相同的 RNG,或**由 host 把噪声张量�
 
 ---
 
-## 5. 分阶段(每阶段有独立可交付物,可随时叫停)
+## 4.5 ✅ P0 已完成(08-17)——**推翻了 §1 的一条前提,路线改为"先 A 后 B"**
+
+### ① TFLite 无 GridSample → **逐字成立**
+
+权威头文件 `tensorflow/lite/builtin_ops.h`:**恰好 210 个 builtin**(0–209),
+只有 `kTfLiteBuiltinResizeBilinear`(23)与 `kTfLiteBuiltinResizeNearestNeighbor`(97),
+**无 GridSample**。连"210"这个数都与 08-14 记载一致。
+
+### ② ONNX Runtime 无移动 GPU EP → 🔴 **已过时**
+
+EP 目录**正好 25 个**(数字对),确实无 Vulkan/OpenCL/Metal —— **但有 `webgpu`**:
+
+| 当初判死其它运行时的算子 | ORT WebGPU EP |
+|---|---|
+| **GridSample** | ✅ `providers/webgpu/tensor/grid_sample.cc` |
+| **Conv3d** | ✅ `providers/webgpu/nn/conv3d_naive.cc` |
+| ConvTranspose / GRU / Softmax / Resize / Upsample | ✅ 全有(`rnn/gru.cc` 等) |
+
+- **Android + iOS 原生构建支持已于 2025-04-09 合入**(PR #24308,`merged=true`,7 文件)
+- 仍在维护:issue #28423「Mobile 支持 WebGPU GPU Tensor」**2026-08-04 关闭**
+- 构建选项 `--use_webgpu` + **`--use_external_dawn`(可链接项目自己那份 Dawn)**
+- 许可 **MIT**
+
+⇒ **"只有 MNN 一条路"不再成立。**
+
+### ③ Dawn-on-iOS 实况
+
+项目自己那份 Dawn 子模块**未 checkout**(`aether_cpp/third_party/dawn` 1.2G 目录在,
+但 `git rev-parse HEAD` 取不到),`AETHER_ENABLE_DAWN` 在 CMake 里也搜不到。
+产品树 `progecttwo/aether_cpp` 连 `shaders/wgsl` 都没有;`Developer` 树里的 37 个 wgsl
+是 Brush 高斯泼溅的,与 MVS 无关。
+⚠️ **若走 ORT-WebGPU,这条阻断可绕开** —— ORT 自带 Dawn 集成。
+
+---
+
+## 5. 路线(用户拍板:**先 A 后 B**)
+
+**路 A:ORT-WebGPU** —— 导出 ONNX + 集成 ORT,**一行 WGSL 都不写**,跨端阻断当场解除。
+  · 风险:算子语义要逐个实测(`conv3d_naive` 性能、GridSample 的 `align_corners`)
+  · **内存不受控** —— 1.72 GB 的中间量物化照旧
+
+**路 B:手写融合 kernel** —— 唯一能把物化降到 0.2 GB 量级,代价约 20 个 kernel。
+
+**先 A 后 B 的理由**:A 先把跨端跑通、**拿到真实端上延迟与峰值内存**;
+B 再只把代价体换成 ORT custom op。这样 B 的经济性判断建立在**真机数字**上 ——
+今天所有 ms 都是 M3/MPS 的 PyTorch 推算,**端上一个真数都没有**。
+
+## 5.1 分阶段(每阶段有独立可交付物,可随时叫停)
 
 | 阶段 | 内容 | 门 |
 |---|---|---|
-| **P0** | 复核 §1 的跨端二手结论(抽查 2 条)+ 确认 Dawn-on-iOS 的真实状态 | 结论成立才继续 |
-| **P1** | **只做融合代价体 kernel**,host 侧用 PyTorch 喂输入、收输出 | 门 1 |
-| **P2** | 量 P1 的 kernel 在 M3 上 vs PyTorch 的耗时与物化量 | 有量级提速才继续 |
-| **P3** | 补齐其余算子,整条推理跑通 | 门 2 |
-| **P4** | 97 帧端到端 + 官方融合 + 肉眼 | 门 3 |
-| **P5** | 真机(A16)打点:延迟 + 峰值内存 vs 1.5GB 预算 | 出货判据 |
+| ~~**P0**~~ | ~~复核跨端二手结论 + Dawn-on-iOS 实况~~ | ✅ **已完成,见 §4.5** |
+| **A1** | **导出 ONNX**(用 3D→2D 融合后的模型;噪声由 host 传入,不用图内 `RandomNormalLike`) | 与 PyTorch 逐 stage 对拍 |
+| **A2** | ORT-CPU 上跑 97 帧,与 `bench_baseline/OFFICIAL/` 逐像素比 | 门 3 的数值部分 |
+| **A3** | ORT-WebGPU(Mac/Dawn)跑通,量耗时与峰值内存 | 与 A2 数值一致 |
+| **A4** | 真机 A16 + Android 打点:延迟 + 峰值内存 vs **1.5 GB** 预算 | **出货判据** |
+| **B1** | 只把代价体换成 ORT custom op(融合 kernel) | 门 1 |
+| **B2** | 量 B1 vs A3 的耗时与物化量 | **有量级提速才继续** |
 
-**P1+P2 是最小可证伪单元** —— 如果融合 kernel 在 M3 上拿不到量级提速,
-整个项目的经济性就不成立,应当场停,而不是把 20 个 kernel 都写完再发现。
+🔑 **A1 的关键设计**:`update.py:479/522` 的扩散噪声**必须做成图的输入**,
+不要让 ONNX 图里出现 `RandomNormalLike`(08-14 已记载导出图里有它)。
+理由有二:① 交付要可复现;② 门 2 的对拍否则测的是噪声。
+
+**B1+B2 是最小可证伪单元** —— 融合 kernel 拿不到量级提速就当场停,
+而不是把 20 个 kernel 都写完再发现。**但 A 已经让项目可出货,B 只是加分。**
 
 ---
 

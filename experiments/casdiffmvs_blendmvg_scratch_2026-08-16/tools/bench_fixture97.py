@@ -131,6 +131,8 @@ def main():
     ap.add_argument("--net-views", type=int, default=0,
                     help="网络实际使用的视图数(含参考帧)。默认跟 fixture 的 num_src+1;"
                          "设小于它 = 网络少算、融合仍可用全部邻居投票")
+    ap.add_argument("--ext-noise", action="store_true",
+                    help="噪声显式生成并外部注入 + 落盘(供 ONNX/ORT 用同一份)")
     ap.add_argument("--cache-feat", action="store_true", help="开特征缓存(逐比特无损)")
     ap.add_argument("--fuse-conv3d", action="store_true",
                     help="把划算的 3D 卷积换成等价单次 2D 卷积(权重重排,不重训)。"
@@ -208,6 +210,18 @@ def main():
             torch.manual_seed(args.seed + f)
             if dev.type == "mps":
                 torch.mps.manual_seed(args.seed + f)
+        ext_noise = None
+        if args.ext_noise:
+            # 🔑 把扩散噪声改成显式生成并外部注入,这样 ONNX/ORT 可以吃同一份噪声。
+            #    推理:设种子后到 stage2 第一次 randn_like 之间,特征/context/depthnet
+            #    在 eval 下都不消耗随机数 ⇒ 显式按同样顺序、同样形状抽两次,
+            #    应与内部 randn_like 逐比特相同。**这条已实测验证,不是假设。**
+            n2 = torch.randn(1, 1, H // 4, W // 4, device=dev)
+            n3 = torch.randn(1, 1, H // 2, W // 2, device=dev)
+            ext_noise = [n2, n3]
+            os.makedirs(f"{od}/noise", exist_ok=True)
+            np.savez(f"{od}/noise/{f:04d}.npz",
+                     n2=n2.cpu().numpy(), n3=n3.cpu().numpy())
         if feat_cache is not None:
             feat_cache.keys = [int(v) for v in view]   # forward 按 imgs 顺序逐个取
         dmin, dmax = float(CM[f, 24]), float(CM[f, 25])
@@ -216,7 +230,7 @@ def main():
 
         sync(); t0 = time.perf_counter()
         with torch.no_grad():
-            o = model(imgs, pm, dvals)
+            o = model(imgs, pm, dvals, ext_noise=ext_noise)
         sync(); dt = time.perf_counter() - t0
         if f > 0:                      # 第 0 帧是编译/预热,不计入
             per_frame.append(dt)

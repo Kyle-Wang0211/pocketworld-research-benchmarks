@@ -1,7 +1,3 @@
-# ⚠️ vendored `diffmvs/models/module.py` 的**副本**(tools/python/diffmvs/ 被 gitignore)。
-# 本轮改动 = warp 网格缓存(见文件内 _WARP_XYZ / _WARP_ROT / warp_cache_new_frame)。
-# 用法:拷回 tools/python/diffmvs/models/module.py;调用方每帧调 warp_cache_new_frame()。
-# 对照开关:PW_WARP_CACHE=0 关闭。
 import os
 import torch
 import torch.nn as nn
@@ -271,8 +267,10 @@ def _invert_affine4x4(P):
     Minv = _inv3x3(M)
     pinv = -torch.matmul(Minv, p)
     top = torch.cat([Minv, pinv], dim=2)                       # [B,3,4]
-    bottom = torch.zeros(P.shape[0], 1, 4, dtype=P.dtype, device=P.device)
-    bottom[:, 0, 3] = 1.0
+    # 🔴 原写法 `bottom[:,0,3] = 1.0` 是原地索引写,ONNX 导出产生 ScatterND
+    #    (数据依赖形状,GPU 后端最怕)。用 cat 直接拼,静态形状、数值相同。
+    bottom = torch.cat([torch.zeros(P.shape[0], 1, 3, dtype=P.dtype, device=P.device),
+                        torch.ones(P.shape[0], 1, 1, dtype=P.dtype, device=P.device)], dim=2)
     return torch.cat([top, bottom], dim=1)
 
 
@@ -348,7 +346,13 @@ def differentiable_warping(src_fea, src_proj, ref_proj, depth_values, cache_key=
         rot_depth_xyz = (_rx * depth_values.view(B, 1, num_depth, -1))
 
         proj_xyz = rot_depth_xyz + trans.view(B, 3, 1, 1)
-        proj_xyz[:, 2:3][proj_xyz[:, 2:3] == 0] += 1e-8
+        # 🔴 原写法 `proj_xyz[:,2:3][proj_xyz[:,2:3]==0] += 1e-8` 是布尔掩码原地加,
+        #    ONNX 导出会产生 **NonZero + ScatterND**(数据依赖形状),GPU 后端最怕这个 ——
+        #    实测每次 warp 产生 1 个 NonZero,整图 63 个 / ScatterND 252 个。
+        #    torch.where 数值完全相同,只产生 Equal + Where(静态形状)。
+        _z = proj_xyz[:, 2:3]
+        proj_xyz = torch.cat([proj_xyz[:, :2],
+                              torch.where(_z == 0, _z + 1e-8, _z)], dim=1)
         proj_xy = proj_xyz[:, :2, :, :] / proj_xyz[:, 2:3, :, :]
         proj_x_normalized = proj_xy[:, 0, :, :] / ((width - 1) / 2) - 1
         proj_y_normalized = proj_xy[:, 1, :, :] / ((height - 1) / 2) - 1
@@ -672,12 +676,14 @@ class InitialCost(nn.Module):
         view_weights = []
         for _sv, (src_fea, src_proj) in enumerate(zip(src_features, src_projs)):
             # warpped features
-            src_proj_new = src_proj[:, 0].clone()
-            src_proj_new[:, :3, :4] = torch.matmul(src_proj[:, 1, :3, :3],
-                                                   src_proj[:, 0, :3, :4])
-            ref_proj_new = ref_proj[:, 0].clone()
-            ref_proj_new[:, :3, :4] = torch.matmul(ref_proj[:, 1, :3, :3],
-                                                   ref_proj[:, 0, :3, :4])
+            # 🔴 原写法 clone + 写 [:, :3, :4] 子块 ⇒ 每处一个 ScatterND(共 126 个)。
+            #    末行本就不变,用 cat 拼回去即可,静态形状、数值相同。
+            src_proj_new = torch.cat(
+                [torch.matmul(src_proj[:, 1, :3, :3], src_proj[:, 0, :3, :4]),
+                 src_proj[:, 0, 3:4, :]], dim=1)
+            ref_proj_new = torch.cat(
+                [torch.matmul(ref_proj[:, 1, :3, :3], ref_proj[:, 0, :3, :4]),
+                 ref_proj[:, 0, 3:4, :]], dim=1)
             warped_src = differentiable_warping(src_fea, src_proj_new,
                                                 ref_proj_new, depth_values,
                                                 cache_key=(_pm_id, _sv))
@@ -728,7 +734,10 @@ class InitialCost(nn.Module):
             prob_volume_sum4 = 4 * F.avg_pool3d(F.pad(
                 prob_volume.unsqueeze(1),
                 pad=(0, 0, 0, 0, 1, 2)
-            ), (4, 1, 1), stride=1, padding=0).squeeze(1)
+            ), (4, 1, 1), stride=1, padding=0)[:, 0]
+            # 🔴 原为 .squeeze(1):tracer 不知道该维静态为 1,ONNX 导出成
+            #    `If(shape[1]==1) then Squeeze else Identity` —— 控制流,GPU 后端未必支持。
+            #    静态索引 [:, 0] 数值相同且无分支。
 
             if EXPORT_MODE:
                 # gather over a long index -> aten::Int; CoreML can't convert it.
@@ -803,12 +812,14 @@ class GetCost(nn.Module):
         cor_feats = 0
         i = 0
         for _sv, (src_fea, src_proj) in enumerate(zip(src_features, src_projs)):
-            src_proj_new = src_proj[:, 0].clone()
-            src_proj_new[:, :3, :4] = torch.matmul(src_proj[:, 1, :3, :3],
-                                                   src_proj[:, 0, :3, :4])
-            ref_proj_new = ref_proj[:, 0].clone()
-            ref_proj_new[:, :3, :4] = torch.matmul(ref_proj[:, 1, :3, :3],
-                                                   ref_proj[:, 0, :3, :4])
+            # 🔴 原写法 clone + 写 [:, :3, :4] 子块 ⇒ 每处一个 ScatterND(共 126 个)。
+            #    末行本就不变,用 cat 拼回去即可,静态形状、数值相同。
+            src_proj_new = torch.cat(
+                [torch.matmul(src_proj[:, 1, :3, :3], src_proj[:, 0, :3, :4]),
+                 src_proj[:, 0, 3:4, :]], dim=1)
+            ref_proj_new = torch.cat(
+                [torch.matmul(ref_proj[:, 1, :3, :3], ref_proj[:, 0, :3, :4]),
+                 ref_proj[:, 0, 3:4, :]], dim=1)
             warped_src = differentiable_warping(src_fea, src_proj_new,
                                                 ref_proj_new, depth_range_samples,
                                                 cache_key=(_pm_id, _sv))
