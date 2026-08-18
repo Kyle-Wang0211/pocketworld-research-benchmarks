@@ -44,7 +44,7 @@ CasDiffMVS 推理不可复现(`update.py:479` 的 `randn_like`,同输入两跑 2
 - **粗糙度**:+1.08% vs +0.93%,`>10mm` 占比 0.18% vs 0.16%。判负。
 - **点数**:−6.25% vs −2.67%,**唯一超出地板的项**。但点数是最末判据,且**覆盖没跟上**
   ⇒ 多出来的点是在已有格子里加密,不是铺到新地方。
-- **肉眼**:见 `compare_mvs_ablation.html`(自包含,双击可开)。
+- **肉眼**:见下面两页。
 
 ### gauge 对齐
 
@@ -91,8 +91,29 @@ P8k .2875 / .2052 / .1808;P16kH .3220 / .1503 / .1333。
 | `tools/fuse_arm.py` | 融合。薄驱动,直接 `import` 官方 `filter_depth`,调用方式抄 `test.py:316` |
 | `tools/apply_gauge.py` | gauge 对齐。Umeyama 逐字取自 `lightglue_spike/export_ply.py:39` |
 | `tools/measure_arms.py` | 覆盖 + 粗糙度。两把尺子都 `import` 现成实现,不重写 |
-| `tools/subsample_for_page.py` | 为上页抽稀。**只影响看,交付用的全量云不动** |
-| `tools/build_page.py` | 并排页。仅加一条 SETS 数据条目 + 两处修复,渲染逻辑未动 |
+| `tools/subsample_for_page.py` | 为自包含页抽稀。**只影响看,交付用的全量云不动** |
+| `tools/build_page.py` | 自包含并排页。仅加一条 SETS 数据条目 + 两处修复,渲染逻辑未动 |
+| `tools/export_bins.py` | 导全分辨率二进制(`.pos` f32 / `.col` u8),格式抄 fixture97 那套 |
+| `tools/build_page_fullres.py` | **全分辨率**三窗并排页(fetch 式加载) |
+
+## 两个肉眼页(**全分辨率那个才是判据**)
+
+| 页 | 点数 | 打开方式 |
+|---|---|---|
+| `compare_mvs_ablation.html` | 三窗各 1/20 抽稀(约 150 万) | **双击可开**,自包含 53.5 MB |
+| `fullres/index.html` | **8918 万,零降采样** | 需 `python3.11 -m http.server`,数据 1.34 GB |
+
+🔴 **2026-08-18 教训:抽稀 1/20 的页面,肉眼看起来跟稀疏云没区别。**
+用户当场指出"这还是稀疏点云呀"——他是对的,虽然那确实是 3000 万点的稠密云,
+但只上了 5%,视觉上完全传达不出稠密。**判据是肉眼,那就必须让肉眼看到真东西。**
+⇒ 全分辨率与「自包含单 HTML 双击可开」二者不可兼得(9000 万点 base64 >1.2 GB,
+浏览器打不开),这里选**全分辨率**,handoff 那条自包含要求是**有意偏离**。
+自包含那份留着当双击兜底。
+
+全分辨率查看器的做法(抄 `_artifacts/casdiffmvs_fixture97_20260817/index.html`,
+那套已实测扛得住 22M/59M 点):位置与颜色分开存裸二进制 → `fetch` 流式读 →
+零解析直接当 typed array 上传显卡。相机/矩阵/交互逐字取自 `build_local_page.py`
+(orbit az/el + `lookAt` + `radius*2.4`,圆点精灵)。
 
 ### 用的是现成的尺子,不是新写的
 
