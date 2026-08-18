@@ -1,0 +1,52 @@
+[expAE 15:33:46] center 1: 2D span 45.7° short 20.7° | collinear span 46.2° short 10.4° (line 40°)
+[expAE 15:33:46] center 2: 2D span 44.2° short 22.0° | collinear span 42.7° short 3.2° (line 100°)
+[expAE 15:33:46] center 3: 2D span 43.8° short 21.7° | collinear span 45.9° short 7.6° (line 0°)
+[expAE 15:33:46] center 4: 2D span 45.8° short 23.3° | collinear span 46.8° short 8.0° (line 85°)
+[expAE 15:33:46] center 5: 2D span 45.8° short 20.5° | collinear span 46.9° short 8.0° (line 70°)
+[expAE 15:33:46] 5 feasible paired centers; waiting for GPU …
+[expAE 15:33:46] expAC done — proceeding
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[97m[INFO ] using MLP layer as FFN[0m
+Loading weights from local directory
+[expAE 15:33:52] model ready
+[97m[INFO ] Processed Images Done taking 0.5208909511566162 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+oracle_mps_chunked_sdpa query_shape=(18, 12, 2305, 64) key_tokens=2305 estimated_score_buffer_gib=4.28 query_chunk=256
+oracle_mps_chunked_sdpa query_shape=(1, 12, 41490, 64) key_tokens=41490 estimated_score_buffer_gib=76.95 query_chunk=256
+[97m[INFO ] Model Forward Pass Done. Time: 44.77738904953003 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.9519028663635254 seconds[0m
+[97m[INFO ] Processed Images Done taking 0.9200141429901123 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 197.3818690776825 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.8449349403381348 seconds[0m
+[expAE 15:37:58] center1: 2D conf 5.25 (span 44.2, short 22.0) | collinear conf 5.18 (span 42.7, short 3.2) | Δ(2D−col) +0.07  [246s]
+[97m[INFO ] Processed Images Done taking 2.820284128189087 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 203.9734969139099 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.8281080722808838 seconds[0m
+[97m[INFO ] Processed Images Done taking 0.9830501079559326 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 213.98497605323792 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.7925992012023926 seconds[0m
+[expAE 15:45:03] center2: 2D conf 9.61 (span 43.8, short 21.7) | collinear conf 7.40 (span 45.9, short 7.6) | Δ(2D−col) +2.22  [425s]
+[97m[INFO ] Processed Images Done taking 0.9370250701904297 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 216.46729803085327 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.8084831237792969 seconds[0m
+[97m[INFO ] Processed Images Done taking 2.0906333923339844 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 203.64131569862366 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.9344730377197266 seconds[0m
+[expAE 15:52:10] center3: 2D conf 5.70 (span 45.8, short 23.3) | collinear conf 6.11 (span 46.8, short 8.0) | Δ(2D−col) -0.41  [428s]
+[97m[INFO ] Processed Images Done taking 3.2399442195892334 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 223.81740522384644 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.7933688163757324 seconds[0m
+[97m[INFO ] Processed Images Done taking 2.0100910663604736 seconds. Shape:  torch.Size([18, 3, 504, 896])[0m
+[97m[INFO ] Using camera conditions provided by the user[0m
+[97m[INFO ] Model Forward Pass Done. Time: 199.98805403709412 seconds[0m
+[97m[INFO ] Conversion to Prediction Done. Time: 0.7902367115020752 seconds[0m
+[expAE 15:59:22] center4: 2D conf 3.53 (span 45.8, short 20.5) | collinear conf 2.28 (span 46.9, short 8.0) | Δ(2D−col) +1.25  [432s]
+[expAE 15:59:22] SUMMARY: n=4 | median Δ(2D−col) +0.66 | mean +0.78 | 2D-wins 2 col-wins 1 ties 1
+[expAE 15:59:22] VERDICT: 排布无关（落在噪声底）→ 我之前的 2D 因果是错的
+[expAE 15:59:22] EXPAE-DONE

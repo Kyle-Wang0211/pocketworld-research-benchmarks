@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "aether_da3_k40_device_benchmark_v1",
+  "date": "2026-06-07",
+  "device": {
+    "name": "Kyle's iPhone",
+    "model": "iPhone 14 Pro",
+    "identifier": "00008120-00146C4A1AEBC01E",
+    "ios": "26.3.1"
+  },
+  "route": {
+    "model": "DA3-BASE",
+    "resourceName": "DA3BASE_280x504_N40_image_only",
+    "windowSize": 40,
+    "overlap": 20,
+    "inputHeight": 280,
+    "inputWidth": 504,
+    "inputContract": "image_only",
+    "coreMLComputeUnits": "cpuOnly",
+    "benchmarkScope": "single window native CoreML load + prediction + output write; zero CHW float32 tensor reused for all 40 views"
+  },
+  "result": {
+    "status": "pass",
+    "loadMs": 9307.614088058472,
+    "inferenceMs": 18452.25501060486,
+    "rssBeforeLoadMB": 415.546875,
+    "rssAfterLoadMB": 94.796875,
+    "rssAfterInputMB": 137.578125,
+    "rssAfterInferMB": 2191.375,
+    "rssPeakApproxMB": 2191.375,
+    "physicalMemoryMB": 5662.0625,
+    "jetsamAvailableMBAfterPrediction": 3692.4337844848633,
+    "thermalState": "nominal",
+    "lowPowerModeEnabled": false,
+    "cpuSampleCount": 370,
+    "meanDeviceNormalizedCpuPercent": 32.677657657657676,
+    "peakDeviceNormalizedCpuPercent": 50.316666666666656
+  },
+  "interpretation": {
+    "oneWindowK40FitsOnPhone": true,
+    "doNotRejectK40_20ForMemoryYet": true,
+    "speedCaveat": "Single-window CPU-only prediction is about 18.45 seconds, before full K40/20 sequence scheduling, preprocessing, alignment, loop, or fusion.",
+    "nextGate": "Run a real preprocessed 40-frame image tensor window on device, then Stage 1 K40/20 over the capture if the real-window memory profile stays below jetsam risk."
+  }
+}

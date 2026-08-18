@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "aether_da3_k50_device_benchmark_v1",
+  "date": "2026-06-07",
+  "device": {
+    "name": "Kyle's iPhone",
+    "model": "iPhone 14 Pro",
+    "identifier": "00008120-00146C4A1AEBC01E",
+    "ios": "26.3.1"
+  },
+  "route": {
+    "model": "DA3-BASE",
+    "resourceName": "DA3BASE_280x504_N50_image_only",
+    "windowSize": 50,
+    "inputHeight": 280,
+    "inputWidth": 504,
+    "inputContract": "image_only",
+    "coreMLComputeUnits": "cpuOnly",
+    "benchmarkScope": "single window native CoreML load + prediction + output write; zero CHW float32 tensor reused for all 50 views"
+  },
+  "result": {
+    "status": "pass",
+    "loadMs": 11163.386106491089,
+    "inferenceMs": 31120.32198905945,
+    "rssBeforeLoadMB": 416.734375,
+    "rssAfterLoadMB": 122.828125,
+    "rssAfterInputMB": 177.078125,
+    "rssAfterInferMB": 637.671875,
+    "rssPeakApproxMB": 637.671875,
+    "physicalMemoryMB": 5662.0625,
+    "jetsamAvailableMBAfterPrediction": 3642.073928833008,
+    "thermalStateBeforePrediction": "nominal",
+    "thermalStateAfterPrediction": "fair",
+    "lowPowerModeEnabled": false,
+    "cpuSampleCount": 619,
+    "meanDeviceNormalizedCpuPercent": 30.79886914378024,
+    "peakDeviceNormalizedCpuPercent": 54.633333333333326
+  },
+  "interpretation": {
+    "oneWindowK50FitsOnPhone": true,
+    "doNotRejectK50ForMemoryYet": true,
+    "speedCaveat": "Single-window CPU-only prediction is about 31.12 seconds, before real-image preprocessing, repeated windows, alignment, loop, or fusion.",
+    "thermalCaveat": "Thermal state rose from nominal to fair during this one-window CPU-only run.",
+    "nextGate": "Do not jump directly to full K50 sequence. First compare real-image Stage 1 windows for K40 vs K50 quality gain and thermal cost."
+  }
+}

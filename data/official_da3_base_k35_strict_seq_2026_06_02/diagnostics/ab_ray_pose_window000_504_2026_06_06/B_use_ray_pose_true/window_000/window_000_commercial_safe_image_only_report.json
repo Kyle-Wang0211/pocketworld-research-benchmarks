@@ -1,0 +1,509 @@
+{
+  "schema_version": "pocketworld_commercial_safe_da3base_image_only_k35_export_v1",
+  "commercial_safety_scope": {
+    "legal_note": "Engineering compliance screen only, not legal advice.",
+    "model": "DA3-BASE",
+    "model_license_source": "Depth-Anything-3 README model table and pyproject show DA3-BASE / project as Apache-2.0.",
+    "excluded_dependencies": [
+      "DA3-Streaming runtime",
+      "VGGT-Long runtime",
+      "SALAD loop retrieval",
+      "external AR/VIO/depth-camera pose input",
+      "manifest camera extrinsics/intrinsics as model input"
+    ],
+    "image_only_contract": "DepthAnything3.inference(image_paths, extrinsics=None, intrinsics=None); DA3 predicts intrinsics/extrinsics from RGB."
+  },
+  "inputs": {
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "windows_json": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_k_windows.json",
+    "manifest": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+    "model_path": "/Users/kaidongwang/.cache/huggingface/hub/models--depth-anything--DA3-BASE/snapshots/f4a6c9b3c95e41c82048423d3493a81ec3fa810e",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src",
+    "window_id": "window_000",
+    "frame_count": 35,
+    "frame_ids": [
+      "cap-1",
+      "cap-3",
+      "cap-5",
+      "cap-7",
+      "cap-21",
+      "cap-23",
+      "cap-29",
+      "cap-31",
+      "cap-33",
+      "cap-35",
+      "cap-37",
+      "cap-39",
+      "cap-42",
+      "cap-44",
+      "cap-48",
+      "cap-50",
+      "cap-52",
+      "cap-54",
+      "cap-56",
+      "cap-74",
+      "cap-78",
+      "cap-80",
+      "cap-96",
+      "cap-103",
+      "cap-105",
+      "cap-107",
+      "cap-109",
+      "cap-114",
+      "cap-116",
+      "cap-118",
+      "cap-122",
+      "cap-124",
+      "cap-126",
+      "cap-128",
+      "cap-131"
+    ],
+    "official_save_local_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "official_save_frame_ids": [
+      "cap-1",
+      "cap-3",
+      "cap-5",
+      "cap-7",
+      "cap-21",
+      "cap-23",
+      "cap-29",
+      "cap-31",
+      "cap-33",
+      "cap-35",
+      "cap-37",
+      "cap-39",
+      "cap-42",
+      "cap-44",
+      "cap-48",
+      "cap-50",
+      "cap-52"
+    ]
+  },
+  "parameters": {
+    "device": "mps",
+    "process_res": 504,
+    "process_res_method": "upper_bound_resize",
+    "use_ray_pose": true,
+    "ref_view_strategy": "saddle_balanced",
+    "glb_conf_thresh": 1.05,
+    "glb_conf_percentile": 40.0,
+    "glb_ensure_percentile": 90.0,
+    "glb_num_max_points": 1000000,
+    "seed": 8120,
+    "mps_chunked_sdpa": "auto",
+    "mps_sdpa_query_chunk": 256,
+    "mps_sdpa_min_gib": 2.0
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "platform": "macOS-26.1-arm64-arm-64bit",
+    "torch": "2.12.0",
+    "load_ms": 1552.9958750048536,
+    "run_ms": 28957.4349589966,
+    "rss_before_mb": 1389.625,
+    "rss_after_mb": 1495.96875,
+    "rss_delta_mb": 106.34375,
+    "elapsed_s": 40.226
+  },
+  "prediction_metrics": {
+    "processed_shape_nhwc": [
+      35,
+      280,
+      504,
+      3
+    ],
+    "depth": {
+      "count": 4939200,
+      "min": 0.3676009178161621,
+      "p01": 0.41920723021030426,
+      "p10": 0.5878403663635254,
+      "mean": 0.9722733548592871,
+      "median": 0.9295296967029572,
+      "p90": 1.4338786602020264,
+      "p99": 1.6763233029842375,
+      "max": 1.9104751348495483
+    },
+    "confidence": {
+      "count": 4939200,
+      "min": 1.0,
+      "p01": 1.0000001192092896,
+      "p10": 1.0000104904174805,
+      "mean": 1.0510067694633716,
+      "median": 1.001503586769104,
+      "p90": 1.1769849896430982,
+      "p99": 1.6052758836746213,
+      "max": 2.7257237434387207
+    },
+    "intrinsics_fx": {
+      "count": 35,
+      "min": 300.7919006347656,
+      "p01": 301.09697509765624,
+      "p10": 303.4554870605469,
+      "mean": 321.1750252859933,
+      "median": 312.7950744628906,
+      "p90": 335.5080139160156,
+      "p99": 347.72983642578123,
+      "max": 348.5408020019531
+    },
+    "intrinsics_fy": {
+      "count": 35,
+      "min": 299.1926574707031,
+      "p01": 299.7008935546875,
+      "p10": 303.6338256835937,
+      "mean": 322.88568638392854,
+      "median": 312.1393127441406,
+      "p90": 347.747607421875,
+      "p99": 349.1706213378906,
+      "max": 349.2776184082031
+    },
+    "pose": {
+      "count": 35,
+      "camera_center_bbox": {
+        "min": [
+          -0.2798365354537964,
+          -0.6618254780769348,
+          -0.13857099413871765
+        ],
+        "max": [
+          0.016755323857069016,
+          -0.0023619101848453283,
+          0.25641244649887085
+        ],
+        "diag": 0.8239361909543409
+      },
+      "step_distance": {
+        "count": 34,
+        "min": 0.005515227755505259,
+        "p01": 0.006241044152620303,
+        "p10": 0.014552695008026332,
+        "mean": 0.05772371725534835,
+        "median": 0.02946483062948385,
+        "p90": 0.0940406345308663,
+        "p99": 0.47799537793026603,
+        "max": 0.6437985999600383
+      }
+    }
+  },
+  "outputs": {
+    "raw_arrays_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000",
+    "results_output_npz": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000/results_output",
+    "combined35": {
+      "outputs": {
+        "ply": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000/window_000_combined35_glb_style_rgb.ply",
+        "views_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000/window_000_combined35_glb_style_views.png"
+      },
+      "frame_ids": [
+        "cap-1",
+        "cap-3",
+        "cap-5",
+        "cap-7",
+        "cap-21",
+        "cap-23",
+        "cap-29",
+        "cap-31",
+        "cap-33",
+        "cap-35",
+        "cap-37",
+        "cap-39",
+        "cap-42",
+        "cap-44",
+        "cap-48",
+        "cap-50",
+        "cap-52",
+        "cap-54",
+        "cap-56",
+        "cap-74",
+        "cap-78",
+        "cap-80",
+        "cap-96",
+        "cap-103",
+        "cap-105",
+        "cap-107",
+        "cap-109",
+        "cap-114",
+        "cap-116",
+        "cap-118",
+        "cap-122",
+        "cap-124",
+        "cap-126",
+        "cap-128",
+        "cap-131"
+      ],
+      "filter": {
+        "style": "copied official Depth-Anything-3 glb.py point-cloud path",
+        "conf_threshold": 1.05,
+        "conf_thresh_base": 1.05,
+        "conf_thresh_percentile": 40.0,
+        "ensure_thresh_percentile": 90.0,
+        "valid_point_count_before_downsample": 864091,
+        "num_max_points": 1000000,
+        "exported_point_count": 864091,
+        "alignment_transform": [
+          [
+            0.9438071846961975,
+            0.038733288645744324,
+            -0.3282189965248108,
+            0.09193214471451938
+          ],
+          [
+            0.05927395075559616,
+            -0.9968439936637878,
+            0.052806634455919266,
+            -0.07550844550132751
+          ],
+          [
+            -0.3251378536224365,
+            -0.06929413229227066,
+            -0.9431244730949402,
+            0.7325286865234375
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "random_downsample_seed": 8120
+      },
+      "point_cloud": {
+        "point_count": 864091,
+        "bbox_min_p01": [
+          -0.569392454624176,
+          -0.3230869650840759,
+          -0.4147172480821609
+        ],
+        "bbox_max_p99": [
+          0.33153457939624786,
+          0.3387368381023407,
+          0.2229154825210571
+        ],
+        "bbox_diag_p01_p99": 1.286956007884297,
+        "centroid": [
+          -0.02502448603693763,
+          0.015666587285048016,
+          -0.022369398450355835
+        ]
+      },
+      "pca": {
+        "eigenvalues": [
+          0.06460902540393149,
+          0.025055662158932263,
+          0.013915647977832329
+        ],
+        "major_extent": 0.25418305491108467,
+        "middle_extent": 0.15828980434295906,
+        "minor_extent": 0.11796460476699072,
+        "minor_over_major": 0.4640931111960068
+      },
+      "depth": {
+        "count": 4939200,
+        "min": 0.3676009178161621,
+        "p01": 0.41920723021030426,
+        "p10": 0.5878403663635254,
+        "mean": 0.9722733548592871,
+        "median": 0.9295296967029572,
+        "p90": 1.4338786602020264,
+        "p99": 1.6763233029842375,
+        "max": 1.9104751348495483
+      },
+      "confidence": {
+        "count": 4939200,
+        "min": 1.0,
+        "p01": 1.0000001192092896,
+        "p10": 1.0000104904174805,
+        "mean": 1.0510067694633716,
+        "median": 1.001503586769104,
+        "p90": 1.1769849896430982,
+        "p99": 1.6052758836746213,
+        "max": 2.7257237434387207
+      },
+      "pose": {
+        "count": 35,
+        "camera_center_bbox": {
+          "min": [
+            -0.2798365354537964,
+            -0.6618254780769348,
+            -0.13857099413871765
+          ],
+          "max": [
+            0.016755323857069016,
+            -0.0023619101848453283,
+            0.25641244649887085
+          ],
+          "diag": 0.8239361909543409
+        },
+        "step_distance": {
+          "count": 34,
+          "min": 0.005515227755505259,
+          "p01": 0.006241044152620303,
+          "p10": 0.014552695008026332,
+          "mean": 0.05772371725534835,
+          "median": 0.02946483062948385,
+          "p90": 0.0940406345308663,
+          "p99": 0.47799537793026603,
+          "max": 0.6437985999600383
+        }
+      }
+    },
+    "official_save_unique": {
+      "outputs": {
+        "ply": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000/window_000_official_save_unique_glb_style_rgb.ply",
+        "views_png": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/ab_ray_pose_window000_504_2026_06_06/B_use_ray_pose_true/window_000/window_000_official_save_unique_glb_style_views.png"
+      },
+      "frame_ids": [
+        "cap-1",
+        "cap-3",
+        "cap-5",
+        "cap-7",
+        "cap-21",
+        "cap-23",
+        "cap-29",
+        "cap-31",
+        "cap-33",
+        "cap-35",
+        "cap-37",
+        "cap-39",
+        "cap-42",
+        "cap-44",
+        "cap-48",
+        "cap-50",
+        "cap-52"
+      ],
+      "filter": {
+        "style": "copied official Depth-Anything-3 glb.py point-cloud path",
+        "conf_threshold": 1.0057548403739929,
+        "conf_thresh_base": 1.05,
+        "conf_thresh_percentile": 40.0,
+        "ensure_thresh_percentile": 90.0,
+        "valid_point_count_before_downsample": 239907,
+        "num_max_points": 1000000,
+        "exported_point_count": 239907,
+        "alignment_transform": [
+          [
+            0.9438071846961975,
+            0.038733288645744324,
+            -0.3282189965248108,
+            0.08239846583455801
+          ],
+          [
+            0.05927395075559616,
+            -0.9968439936637878,
+            0.052806634455919266,
+            -0.3780672028660774
+          ],
+          [
+            -0.3251378536224365,
+            -0.06929413229227066,
+            -0.9431244730949402,
+            0.789493978023529
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "random_downsample_seed": 8121
+      },
+      "point_cloud": {
+        "point_count": 239907,
+        "bbox_min_p01": [
+          -1.0571880149841308,
+          -0.42606284737586975,
+          -0.3663763028383255
+        ],
+        "bbox_max_p99": [
+          0.3029623520374298,
+          0.3632895916700364,
+          0.21755643844604497
+        ],
+        "bbox_diag_p01_p99": 1.6775171356145626,
+        "centroid": [
+          -0.10642736051005422,
+          0.004180307541365256,
+          -0.020631752320976568
+        ]
+      },
+      "pca": {
+        "eigenvalues": [
+          0.1342422525542924,
+          0.03230185031642174,
+          0.008596087759310714
+        ],
+        "major_extent": 0.3663908467119401,
+        "middle_extent": 0.17972715520038074,
+        "minor_extent": 0.09271508916735567,
+        "minor_over_major": 0.2530496872380907
+      },
+      "depth": {
+        "count": 2399040,
+        "min": 0.6381582617759705,
+        "p01": 0.7121362555027008,
+        "p10": 0.7868315815925598,
+        "mean": 1.0691975907973545,
+        "median": 1.0366701483726501,
+        "p90": 1.4046449184417726,
+        "p99": 1.57168005824089,
+        "max": 1.9104751348495483
+      },
+      "confidence": {
+        "count": 2399040,
+        "min": 1.0,
+        "p01": 1.000000238418579,
+        "p10": 1.0000150203704834,
+        "mean": 1.0027168670435902,
+        "median": 1.000306248664856,
+        "p90": 1.0057548403739929,
+        "p99": 1.0391270768642424,
+        "max": 1.301995873451233
+      },
+      "pose": {
+        "count": 17,
+        "camera_center_bbox": {
+          "min": [
+            -0.2798365354537964,
+            -0.6618254780769348,
+            -0.13857099413871765
+          ],
+          "max": [
+            -0.10484413057565689,
+            -0.3313540816307068,
+            0.044154923409223557
+          ],
+          "diag": 0.4162000079023206
+        },
+        "step_distance": {
+          "count": 16,
+          "min": 0.012588959479857335,
+          "p01": 0.013822216962062872,
+          "p10": 0.022026713609608038,
+          "mean": 0.04674448073163563,
+          "median": 0.03433895528044127,
+          "p90": 0.0834349877625121,
+          "p99": 0.12718024224873034,
+          "max": 0.13213033336936683
+        }
+      }
+    }
+  }
+}

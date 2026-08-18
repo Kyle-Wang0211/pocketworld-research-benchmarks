@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "aether_pointcloud_preflight_plan_v1",
+  "sourceManifest": "photo_bundle.json",
+  "sourceViewGraph": "view_graph.json",
+  "frameCount": 50,
+  "viewGraphEdges": 0,
+  "owner": "Flutter/Dart policy + native/C++ numeric kernels",
+  "nativeKernels": [
+    "confidence_filter",
+    "depth_unproject",
+    "voxel_downsample",
+    "statistical_outlier_prune",
+    "normal_estimation"
+  ],
+  "outputs": [
+    "stages/pointcloud/points.ply",
+    "stages/pointcloud/normals.ply",
+    "stages/pointcloud/preflight_report.json"
+  ],
+  "policy": {
+    "minConnectedComponents": 1,
+    "maxPointCountBeforeSap": 2000000,
+    "voxelLeafM": 0.003,
+    "rejectIsolatedViews": true,
+    "consumeDa3WindowGraph": true,
+    "da3WindowGraphPath": "da3_k_windows.json",
+    "visualLoopRetrievalReportPath": "stages/depth/visual_loop_retrieval_report.json",
+    "denseSim3VerificationReportPath": "stages/depth/dense_sim3_verification_report.json",
+    "bridgeAlignmentMethod": "dense_sim3",
+    "acceptLoopEdgesOnlyAfterGeometryVerification": true,
+    "acceptTreeBridgeEdgesOnlyAfterGeometryVerification": true
+  }
+}

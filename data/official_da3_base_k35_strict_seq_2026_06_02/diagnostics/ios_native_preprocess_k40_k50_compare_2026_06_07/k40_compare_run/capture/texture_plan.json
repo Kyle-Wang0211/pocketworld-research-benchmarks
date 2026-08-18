@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "aether_texture_plan_v1",
+  "sourceManifest": "photo_bundle.json",
+  "sourceViewGraph": "view_graph.json",
+  "frameCount": 50,
+  "viewGraphEdges": 0,
+  "atlasSize": 8192,
+  "defaultAtlasSize": 4096,
+  "hqAtlasSize": 8192,
+  "owner": "Flutter/Dart policy + native OSS tools",
+  "tools": [
+    {
+      "name": "xatlas",
+      "license": "MIT",
+      "role": "uv_unwrap"
+    },
+    {
+      "name": "texrecon",
+      "license": "BSD-style/GPL-free build required",
+      "role": "multi_view_bake"
+    },
+    {
+      "name": "gltfpack",
+      "license": "MIT",
+      "role": "glb_pack_meshopt"
+    },
+    {
+      "name": "basis_universal",
+      "license": "Apache-2.0",
+      "role": "ktx2_texture_compress"
+    }
+  ],
+  "cameraWeighting": {
+    "preferHighStillQuality": true,
+    "stillQualityField": "quality.textureBestViewWeight",
+    "preferLowIncidenceAngle": true,
+    "preferConnectedViewGraph": true,
+    "penalizeReflectiveRisk": true
+  },
+  "geometryInput": {
+    "stage": "depth",
+    "depthIndex": "stages/depth/depth_index.json",
+    "depthMeta": "stages/depth/depth_meta.jsonl",
+    "da3WindowGraph": "da3_k_windows.json",
+    "denseSim3Verification": "stages/depth/dense_sim3_verification_report.json",
+    "visualLoopRetrieval": "stages/depth/visual_loop_retrieval_report.json",
+    "modelResourceName": "DA3BASE_280x504_N35_image_only",
+    "role": "DA3-predicted pose/depth geometry used by texture and highlight/specular handling"
+  },
+  "highlightPolicy": {
+    "consumeDa3Geometry": true,
+    "consumeMaterialReflectiveRisk": true,
+    "reflectiveRiskSource": "MaterialClassifier.p_reflective",
+    "geometrySource": "DA3-BASE K35 official-preprocess depth/confidence/predicted pose"
+  }
+}

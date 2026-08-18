@@ -1,0 +1,44 @@
+Weights:
+  DA3: /Users/kaidongwang/.cache/huggingface/hub/models--depth-anything--DA3-BASE/snapshots/f4a6c9b3c95e41c82048423d3493a81ec3fa810e/model.safetensors
+  DA3_CONFIG: /Users/kaidongwang/.cache/huggingface/hub/models--depth-anything--DA3-BASE/snapshots/f4a6c9b3c95e41c82048423d3493a81ec3fa810e/config.json
+  SALAD: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+Model:
+  chunk_size: 35
+  overlap: 18
+  loop_chunk_size: 20
+  loop_enable: true
+  useDBoW: false
+  delete_temp_files: true
+  align_lib: numpy
+  align_method: sim3
+  scale_compute_method: auto
+  align_type: dense
+  ref_view_strategy: saddle_balanced
+  ref_view_strategy_loop: saddle_balanced
+  depth_threshold: 15.0
+  save_depth_conf_result: true
+  save_debug_info: false
+  Sparse_Align:
+    keypoint_select: orb
+    keypoint_num: 5000
+  IRLS:
+    delta: 0.1
+    max_iters: 5
+    tol: 1e-9
+  Pointcloud_Save:
+    sample_ratio: 0.015
+    conf_threshold_coef: 0.75
+Loop:
+  SALAD:
+    image_size:
+    - 336
+    - 336
+    batch_size: 32
+    similarity_threshold: 0.85
+    top_k: 5
+    use_nms: true
+    nms_threshold: 25
+  SIM3_Optimizer:
+    lang_version: cpp
+    max_iterations: 30
+    lambda_init: 1e-6
