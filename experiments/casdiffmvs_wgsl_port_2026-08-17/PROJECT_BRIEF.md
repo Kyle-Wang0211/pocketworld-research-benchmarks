@@ -196,3 +196,62 @@ B 再只把代价体换成 ORT custom op。这样 B 的经济性判断建立在*
 ```
 
 深度图裁判存在 `_host_experiments/phone_cap_20260811/bench_baseline/OFFICIAL/`。
+
+---
+
+## 6. 收口状态(2026-08-18)
+
+### ✅ A0–A3 全部通过 —— 路线 A 的技术可行性已证实
+
+```
+ORT-WebGPU  538 ms/帧 · 相对差 p50 2.5e-7 · >1% 像素 0.0149%   (Mac/Metal)
+ORT-CPU    1107 ms/帧 · 相对差 p50 2.9e-7 · >1% 像素 0.0124%
+官方融合后:三道门存活率完全一致,点数差 88/22,198,278 = 0.0004%
+```
+
+### 🔄 A4 未完成 —— 卡在 iOS 构建,且**一个目标数字都没拿到**
+
+排掉了四个构建阻断,但 A16 的延迟与峰值内存**仍为零**:
+
+| 阻断 | 性质 | 状态 |
+|---|---|---|
+| `--cmake_generator Ninja` | ORT 对 iOS 强制 Xcode(`build.py:935`) | 已知,换 Xcode |
+| Homebrew onnx/protobuf 遮蔽 | 环境 | `brew unlink`(已恢复) |
+| **Dawn `ObjCUtils.mm` × ARC** | **上游缺口** | **已补丁 + 已上报 #32147,补丁经验证有效** |
+| `--apple_deploy_target 16.0` | 我的参数(`to_chars` 需 16.3) | 抬到 16.3 |
+
+**后面还有三道没验过的关**:
+1. ORT 的 iOS 静态库能否链进手搓 `.app`(会拖进 protobuf/abseil/onnx/Dawn 一堆静态库)
+2. Dawn 的 Metal 后端能否在**真机 iOS** 上起来(与 macOS 不是一回事)
+3. iOS 上的 `maxStorageBuffersPerShaderStage` 可能比 Mac 更紧 —— 今天刚为这个限制改过图
+
+🔴 **Android 半边今天做不了**:没有安卓设备连着。5090 能编 Android(Linux+NDK),
+但编出 `.so` 只能证明"编得过",拿不到延迟和内存 —— 而那才是 A4 要的。
+**iOS 则完全不能上 5090**(必须 macOS + Xcode SDK + codesign)。
+
+### 上报给上游的两个 bug
+
+| # | 内容 | 严重性 |
+|---|---|---|
+| [32145](https://github.com/microsoft/onnxruntime/issues/32145) | `ORT_ENABLE_EXTENDED` 下 WebGPU 输出非有限值(**静默**:不报错、速度正常) | 有绕行 `ORT_ENABLE_BASIC` |
+| [32147](https://github.com/microsoft/onnxruntime/issues/32147) | Dawn `ObjCUtils.mm` 与 ORT 强制 ARC 冲突,**iOS 完全编不过** | 硬阻断,需补丁 |
+
+复现材料:`ort_issue/`(自包含 2.3MB)+ [gist](https://gist.github.com/Kyle-Wang0211/b1b2a011d62a8ef262f79aac6dccc56d)。
+本地 cmake 补丁副本:`ort_issue/onnxruntime_external_deps.cmake.patched`。
+
+### 🔴 勘误:我对 PR #24308 的解读
+
+立项书 §4.5 我根据 PR 标题"Support WebGPU build for android and ios"写了
+"Android+iOS 原生构建已合入"。**实测 v1.29.0 的 iOS 这一半编不过**,需本地补丁。
+⇒ **二手信息哪怕是 PR 标题也要实测。**(今天第二次栽在二手结论上,
+第一次是 07-31 报告里的 `geo_pixel_thres=0.125`。)
+
+### 下次接着做 A4 的起点
+
+1. `--apple_deploy_target 16.3` + Xcode 生成器 + 本地 ARC 补丁,**不要 `rm -rf` 重来**
+   (改参数用增量重配;只有换 toolchain 才需要清空 —— 我今天连清四次是操作失误)
+2. 构建通过后:手搓 bench `.app`(复用 `apde_wgsl_port_2026-08-14/tools/build_ios_bench.sh`,
+   ⚠️ 必须打包在 `/private/tmp`,File Provider 卷会自动打 `com.apple.FinderInfo` 致拒签)
+3. 量:`phys_footprint`(jetsam 口径,**不是 resident_size**)20ms 采样取峰 + 稳态延迟 + 与 `EXTNF` 对拍
+4. 判据:**1.5 GB** 预算;对照 07-31 的 A16 CoreML 实测 896×512 = 710ms/485MB
+5. 接上安卓设备后同样一遍
