@@ -657,12 +657,14 @@ class InitialCost(nn.Module):
             depth_values: depth samples
             scale_inv_depth: transform inverse depth to metric depth
         """
-        _pm_id = id(proj_matrices)          # unbind 前抓住稳定身份
-        proj_matrices = torch.unbind(proj_matrices, 1)
+        _pm_id = id(proj_matrices)          # 抓住稳定身份
+        # 🔴 同上:避免 10 路 Split 撞 WebGPU storage buffer 上限
+        _nv = proj_matrices.shape[1]
         num_depth = depth_values.size(1)
 
         ref_feature, src_features = features[0], features[1:]
-        ref_proj, src_projs = proj_matrices[0], proj_matrices[1:]
+        ref_proj = proj_matrices[:, 0]
+        src_projs = [proj_matrices[:, i] for i in range(1, _nv)]
         B,D,H,W = depth_values.shape
         C = ref_feature.shape[1]
 
@@ -782,11 +784,15 @@ class GetCost(nn.Module):
             view_weights: pixel-wise view weight
             confidence: confidence from previous iteration if exists
         """
-        _pm_id = id(proj_matrices)          # unbind 前抓住稳定身份(3 次 GRU 迭代同一对象)
-        proj_matrices = torch.unbind(proj_matrices, 1)
-
+        _pm_id = id(proj_matrices)          # 抓住稳定身份(3 次 GRU 迭代同一对象)
+        # 🔴 原为 torch.unbind(proj_matrices, 1):num_view=10 时 ONNX 导出成一个
+        #    **10 路输出的 Split**,加上输入共 11 个 storage buffer,
+        #    超过 WebGPU 的 maxStorageBuffersPerShaderStage(Metal 上是 10)⇒ 运行时报错。
+        #    改成逐个索引,每次只产生 1 进 1 出的 Gather,数值完全相同。
+        _nv = proj_matrices.shape[1]
         ref_feature, src_features = features[0], features[1:]
-        ref_proj, src_projs = proj_matrices[0], proj_matrices[1:]
+        ref_proj = proj_matrices[:, 0]
+        src_projs = [proj_matrices[:, i] for i in range(1, _nv)]
 
         if CostNum > 1:
             inverse_depth_samples = get_cur_depth_range_samples(

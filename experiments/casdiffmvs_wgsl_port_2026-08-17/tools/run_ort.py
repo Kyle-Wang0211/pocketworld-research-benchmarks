@@ -25,6 +25,9 @@ def main():
     ap.add_argument("--ep", default="CPU", help="CPU / CoreML")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--threads", type=int, default=0)
+    ap.add_argument("--opt", default="ALL", choices=["DISABLE_ALL","BASIC","EXTENDED","ALL"],
+                    help="图优化级别。🔴 WebGPU EP 在 EXTENDED 及以上会产生 NaN "
+                         "(08-18 定位:Conv+BN/Activation 融合),绕行用 BASIC")
     args = ap.parse_args()
     import onnxruntime as ort
 
@@ -37,10 +40,17 @@ def main():
     ND = 384
 
     so = ort.SessionOptions()
+    _LV = {"DISABLE_ALL": ort.GraphOptimizationLevel.ORT_DISABLE_ALL,
+           "BASIC": ort.GraphOptimizationLevel.ORT_ENABLE_BASIC,
+           "EXTENDED": ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED,
+           "ALL": ort.GraphOptimizationLevel.ORT_ENABLE_ALL}
+    so.graph_optimization_level = _LV[args.opt]
     if args.threads:
         so.intra_op_num_threads = args.threads
+    # ⚠️ EP 名字大小写是 "WebGpu" 不是 "WebGPU" —— 按后者匹配会误判成"没有"。
     eps = {"CPU": ["CPUExecutionProvider"],
-           "CoreML": ["CoreMLExecutionProvider", "CPUExecutionProvider"]}[args.ep]
+           "CoreML": ["CoreMLExecutionProvider", "CPUExecutionProvider"],
+           "WebGpu": ["WebGpuExecutionProvider", "CPUExecutionProvider"]}[args.ep]
     t0 = time.time()
     sess = ort.InferenceSession(args.onnx, so, providers=eps)
     print(f"会话建立 {time.time()-t0:.1f}s   EP={sess.get_providers()}")
@@ -111,7 +121,10 @@ def main():
     #    拿 max 当门等于用错尺子。参照:模型自身扩散噪声让同输入两跑 21.5% 像素差 >1%。
     frac1 = S[:, 4].mean()
     ok = frac1 < 1e-4 and np.median(S[:, 3]) < 1e-5
-    print(f"\n  ⇒ {'✅ 数值等价(>1% 像素 %.4f%%,p50 %.2e —— fp32 累加顺序量级)' % (100*frac1, np.median(S[:,3])) if ok else '🔴 有实质差异,需定位'}")
+    # ⚠️ 中文串里带 % 时不要用 %-格式化(会把"%像"当成格式符)——改用 f-string 拼好再判。
+    _msg = (f"✅ 数值等价(>1% 像素 {100*frac1:.4f}%,p50 {np.median(S[:,3]):.2e} —— fp32 舍入量级)"
+            if ok else "🔴 有实质差异,需定位")
+    print(f"\n  ⇒ {_msg}")
 
 
 if __name__ == "__main__":

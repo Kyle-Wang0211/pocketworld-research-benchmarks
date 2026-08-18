@@ -1,6 +1,5 @@
 # ⚠️ vendored diffmvs 的副本(tools/python/diffmvs/ 被 gitignore)。
-# 本轮改动 = 扩散噪声可外部注入(ext_noise),供 ONNX 导出与可复现推理。
-# 传 None 时与官方逐字相同。
+# 改动 = 扩散噪声可外部注入(ext_noise),供 ONNX 导出与可复现推理。
 # Modified from: https://github.com/lucidrains/denoising-diffusion-pytorch/
 
 import torch
