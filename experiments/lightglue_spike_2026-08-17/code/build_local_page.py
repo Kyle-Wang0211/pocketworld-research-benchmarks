@@ -19,7 +19,7 @@ SRC = Path("compare_cuda_5090.html")      # 已在本地、能打开的那份(�
 
 import argparse
 _ap = argparse.ArgumentParser()
-_ap.add_argument("--set", default="coverage", choices=["coverage", "raco", "ship"])
+_ap.add_argument("--set", default="coverage", choices=["coverage", "raco", "ship", "df", "loftr", "four", "ext", "p_ctl", "p_loftr", "p_armA", "p_aliked", "budget", "fp16", "whodunit", "gate", "verdict", "preview", "union", "pose", "grow", "refply", "lever1"])
 _cli = _ap.parse_args()
 
 # 每页最多 4 窗:查看器在 9MB 与 14.4MB 之间有个上限,4 窗量化后约 6.6MB 是安全区
@@ -39,6 +39,118 @@ SETS = {
         ("B2 ALIKED 8192",  "html:B2+剪枝", "换 ALIKED 前端 —— 覆盖 1.51×(反而不如臂A),❌前端 6.38GB"),
         ("RaCo 16384 天花板", "bin:r16kp",  "内存不是问题时的上限 —— 覆盖 2.55×,❌上不了机"),
     ]),
+    # detector-free 重量:07-13 的三条质量论据里,选区可分性因鬼层解决而失效,
+    # 但 track 闭合(架构性)仍然成立。这一组是 08-17 同机同口径重跑。
+    "df": ("compare_detectorfree.html", [
+        ("基线(生产)",   "bin:ctl",    "DSP-SIFT + 暴力匹配 — 覆盖 1.00×,轨迹 4.11,重投影 1.4188"),
+        ("臂A SIFT+LG",  "bin:armA2",  "同样 SIFT 点只换匹配器 — 覆盖 1.68×,轨迹 4.15,✅能上机"),
+        ("ALIKED 16384", "bin:p16k2",  "覆盖 2.03× 但点/格 3.36(往老地方加密),轨迹 5.45 最厚"),
+        ("LoFTR-indoor", "bin:loftr8", "覆盖 2.70× 最高且点/格 2.16(铺新地方),但轨迹中位仅 2"),
+    ]),
+    # LoFTR 四档合并法:天花板卡在轨迹 2.95,换合并算法推不动 ⇒ 架构问题非实现问题
+    "loftr": ("compare_loftr.html", [
+        ("网格 cell=8",  "bin:loftr8", "硬网格合并 — 193,796 点,轨迹 2.95,≥3观测 48.3%"),
+        ("KDTree r=4",   "bin:lk4",    "半径合并(无边界病)— 201,376 点,轨迹 2.95,≥3观测 48.4%"),
+        ("KDTree r=8",   "bin:lk8",    "合并更狠 — 170,354 点,轨迹 2.87(反而更差)"),
+        ("KDTree r=16",  "bin:lk16",   "合并最狠 — 111,564 点,轨迹 2.56,坐标被抹糊后 track 被门杀掉"),
+    ]),
+    # 用户指定顺序:基线 / LoFTR / 臂A / ALIKED@16384
+    "four": ("compare_four.html", [
+        ("基线(生产)",    "bin:ctl",    "DSP-SIFT + 暴力匹配 — 64,256 点,覆盖 1.00×,轨迹中位 3"),
+        ("LoFTR-indoor",  "bin:loftr8", "detector-free — 193,796 点,覆盖 2.70×(最高),轨迹中位 2"),
+        ("臂A SIFT+LG",   "bin:armA2",  "同样 SIFT 点只换匹配器 — 127,511 点,覆盖 1.68×,✅唯一能上机"),
+        ("ALIKED 16384",  "bin:p16k2",  "238,545 点,覆盖 2.03×,轨迹 5.45 最扎实,❌内存+算力两道墙"),
+    ]),
+    # track 延长之后的四臂(Dense-SfM 式重投影认领 + BA,延长只加观测不加点)
+    "ext": ("compare_ext.html", [
+        ("基线+延长",     "bin:ctl_e",   "64,255 点 覆盖1.00× 轨迹中位4 ≥3观测83.9% 重投影1.3487(延长前 3/69.2%/1.4188)"),
+        ("LoFTR+延长",    "bin:loftr_e", "201,371 点 覆盖2.71× 轨迹中位4 ≥3观测84.8% 重投影1.3036(延长前 2/48.4%/1.4247)"),
+        ("臂A+延长",      "bin:armA_e",  "127,511 点 覆盖1.68× 轨迹中位3 ≥3观测71.4% 重投影1.3825"),
+        ("ALIKED16k+延长", "bin:p16k_e", "238,545 点 覆盖2.03× 轨迹中位4 ≥3观测78.8% 重投影1.5146"),
+    ]),
+    # 四组两两对比:同一条臂的「延长前 vs 延长后」,单变量就是 track 延长这一刀。
+    # ⚠️ LoFTR 用的是 KDTree r=4 那条(lk4),不是网格 cell=8 —— 延长跑在 LK4 上,
+    #    拿网格那条当"前"就不是同一条臂了。
+    "p_ctl": ("pair_baseline.html", [
+        ("基线 延长前", "bin:ctl",   "64,256 点 · 观测 264,004 · 轨迹中位 3 · ≥3观测 69.2% · 重投影 1.4188"),
+        ("基线 延长后", "bin:ctl_e", "64,255 点 · 观测 318,205 · 轨迹中位 4 · ≥3观测 83.9% · 重投影 1.3487"),
+    ]),
+    "p_loftr": ("pair_loftr.html", [
+        ("LoFTR 延长前", "bin:lk4b",     "201,376 点 · 观测 594,840 · 轨迹中位 2 · ≥3观测 48.4% · 重投影 1.4247"),
+        ("LoFTR 延长后", "bin:loftr_e", "201,371 点 · 观测 922,944 · 轨迹中位 4 · ≥3观测 84.8% · 重投影 1.3036"),
+    ]),
+    "p_armA": ("pair_armA.html", [
+        ("臂A 延长前", "bin:armA2",  "127,511 点 · 观测 528,936 · 轨迹中位 3 · ≥3观测 59.0% · 重投影 1.4207"),
+        ("臂A 延长后", "bin:armA_e", "127,511 点 · 观测 577,663 · 轨迹中位 3 · ≥3观测 71.4% · 重投影 1.3825"),
+    ]),
+    "p_aliked": ("pair_aliked.html", [
+        ("ALIKED16k 延长前", "bin:p16k2",  "238,545 点 · 观测 1,300,261 · 轨迹中位 3 · ≥3观测 69.4% · 重投影 1.5513"),
+        ("ALIKED16k 延长后", "bin:p16k_e", "238,545 点 · 观测 1,388,332 · 轨迹中位 4 · ≥3观测 78.8% · 重投影 1.5146"),
+    ]),
+    # 关键点预算之争:唯一变量是 max-kpts,其余(1600 分辨率/fp16 提取/自适应剪枝)全同
+    "budget": ("compare_budget.html", [
+        ("ALIKED @8192",  "ply:ply_P8K",  "133,228 点 · 观测 694,042 · 轨迹中位 3 · ≥3观测 69.1% · 重投影 1.5279 · 匹配 25.0 ms/对"),
+        ("ALIKED @16384", "ply:ply_P16K", "238,545 点 · 观测 1,300,261 · 轨迹中位 3 · ≥3观测 69.4% · 重投影 1.5513 · 匹配 50.5 ms/对"),
+    ]),
+    # fp16 匹配器无损验证:唯一变量是匹配器精度(提取端两边都已是 fp16)
+    "fp16": ("compare_fp16.html", [
+        ("fp32 匹配器", "ply:ply_P16K",  "238,545 点 · 观测 1,300,261 · ≥3观测 69.4% · 重投影 1.5513 · 50.5 ms/对"),
+        ("fp16 匹配器", "ply:ply_P16KH", "237,914 点 · 观测 1,297,792 · ≥3观测 69.3% · 重投影 1.5494 · 43.2 ms/对(1.17×)"),
+    ]),
+    # 谁的功劳:同样的 ALIKED@16384 点,唯一变量是匹配器
+    "whodunit": ("compare_whodunit.html", [
+        ("基线",              "html:基线",     "DSP-SIFT + 暴力 ratio0.8 — 64,059 点(现在出货的样子)"),
+        ("ALIKED+暴力",       "ply:ply_BF16K", "同 ALIKED 点,暴力互检 ratio0.8 — 70,999 点 · 覆盖只有 LightGlue 的 0.34× · 2.44 ms/对"),
+        ("ALIKED+LightGlue",  "ply:ply_P16KH", "同 ALIKED 点,LightGlue — 237,914 点 · 43.2 ms/对 ⇒ 惊艳来自匹配器"),
+    ]),
+    # 攻破 LightGlue:同 ALIKED 点,三种匹配器 + 参照
+    "gate": ("compare_gate.html", [
+        ("ALIKED+暴力",       "ply:ply_BF16K", "无先验互检 ratio0.8 — 70,999 点 · 2.44 ms/对 · 覆盖0.34×(塌)"),
+        ("ALIKED+极线门",     "ply:ply_GT16K", "AR位姿门内互检 ratio0.95 — 292,364 点 · 9.16 ms/对 · 覆盖1.34-3.92× ⚠️肉眼判浮点"),
+        ("ALIKED+LightGlue",  "ply:ply_P16KH", "9层transformer — 237,914 点 · 43.2 ms/对 · 参照系"),
+    ]),
+    # 终审:两条官方口径 + 三件套 vs LightGlue
+    "verdict": ("compare_verdict.html", [
+        ("GTO(ORB-SLAM口径)", "ply:ply_GTO",      "1.96px/ratio0.6 — 132,236 点 · ≥3观测70.5% · 重投影1.1563(全场最佳) · 10.2 ms/对"),
+        ("GTC(COLMAP口径)",   "ply:ply_GTC",      "4px/0.8/cos0.765 — 136,143 点 · ≥3观测76.1% · 最保守 · 9.2 ms/对"),
+        ("三件套(宽门+延长+过滤)", "ply:ply_GT16KEf3", "197,487 点 · 覆盖0.88-1.89× · 9.2ms+finalize · 残余散点待判"),
+        ("ALIKED+LightGlue",   "ply:ply_P16KH",    "参照 — 237,914 点 · ≥3观测69.3% · 重投影1.5494 · 43.2 ms/对"),
+    ]),
+    # 用户提议:预览云=抽稀稠密?同点数公平对比"最好的稀疏 vs 抽走99.2%的稠密"
+    "preview": ("compare_preview.html", [
+        ("ALIKED+LightGlue稀疏", "ply:ply_P16KH",    "最好的稀疏 — 237,914 点 · 43.2 ms/对匹配"),
+        ("抽稀稠密·同点数",       "ply:ds_dense_238k", "CasDiffMVS 30.6M 随机抽到 237,914 点(0.78%) — 零匹配算力,搭稠密便车"),
+        ("抽稀稠密·1M",          "ply:ds_dense_1m",   "同稠密抽到 1,000,000 点(3.3%) — 预览上限参考"),
+        ("GTO稀疏(位姿专用)",    "ply:ply_GTO",      "ORB-SLAM口径门控 — 132,236 点 · 位姿全场最准 · 10.2 ms/对"),
+    ]),
+    # 并集提案:稠密主体 + 稀疏补外围,按格帽密度
+    "union": ("compare_union.html", [
+        ("ALIKED+LightGlue稀疏", "ply:ply_P16KH", "237,914 点 — 外围广但内部空(白墙铺不上)"),
+        ("抽稀稠密·同点数",       "ply:ds_dense_238k", "237,914 点 — 内部实心但外围被融合门砍掉"),
+        ("并集(稠密主体+稀疏补丁)", "ply:ds_union", "293,920 点 = 抽稀稠密 + 56,006 稀疏点只填稠密空缺格(帽4点/格保均匀)"),
+    ]),
+    # 终极单变量:唯一差异是位姿引擎(LightGlue vs GTO门控)。噪声同种子/口径全同/同seed抽稀
+    "pose": ("compare_pose.html", [
+        ("稠密 @ LightGlue位姿", "ply:ds_dense_238k",     "现状 — 30,640,053 点抽到 237,914 · 匹配 43.2 ms/对"),
+        ("稠密 @ GTO位姿",       "ply:ds_dense_gto_238k", "改后 — 30,882,294 点(+0.79%,噪声地板内)抽到 237,914 · 匹配 10.2 ms/对"),
+    ]),
+    # 拍摄进度四连拍:实测冻结调度下,用户在 t 步看到的稠密(尾随相机生长)
+    "grow": ("compare_grow.html", [
+        ("拍到 25%(t=33)",  "ply:grow_t33",  "已融 15/132 帧 · 3.1M 点(显示抽稀 18万) — 最早的块 t=22 出现"),
+        ("拍到 50%(t=66)",  "ply:grow_t66",  "已融 54/132 帧 · 12.2M 点 — 稠密尾随扫过的区域长出来"),
+        ("拍到 75%(t=99)",  "ply:grow_t99",  "已融 79/132 帧 · 17.7M 点"),
+        ("拍完+收尾",        "ply:grow_t132", "132/132 · 30.6M 点 — 与官方全量逐字节一致(MD5已证)"),
+    ]),
+    # 参照对拍真彩版:同 1/24 采样率,窗口间密度差=真实密度差
+    "refply": ("compare_refply.html", [
+        ("CasDiffMVS(生产管线)", "ply:ref_cas_r24",  "30.6M 点抽 1/24=1,276,668 — 覆盖满,墙后偏移雾 4.13%"),
+        ("OpenMVS 参照(AGPL仅诊断)", "ply:ref_omvs_r24", "4.0M 点抽 1/24=165,536 — 雾 1.89% 墙更紧,但无纹理段大片空"),
+    ]),
+    # 杠杆①终审:同 1/24 采样率,唯一变量=9 个雾帧的源选择(跨走廊)
+    "lever1": ("compare_lever1.html", [
+        ("现状(官方选源)",   "ply:ref_cas_r24", "30.64M 抽 1/24 — 墙后雾 42,285 点(4.13%)"),
+        ("杠杆①选源改造后", "ply:lever1_r24",  "30.19M 抽 1/24 — 雾 2,167(−94.9%) · 墙面 +7.9% · 只重推 11 帧"),
+    ]),
     "raco": ("compare_raco.html", [
         ("B2+剪枝 8192",   "html:B2+剪枝",   "参照系 — 覆盖 1.00×,轨迹 5.21,重投影 1.5266"),
         ("RaCo 8192",      "html:RaCo",      "bypass 取前 8192 — 覆盖 1.16×,轨迹 4.74"),
@@ -56,6 +168,51 @@ STATS = {
     "臂A SIFT+LG":     dict(pts="126,508", obs="527,495", tl="4.17", rp="1.4206", cov="1.66×"),
     "B2 ALIKED 8192":  dict(pts="133,646", obs="695,664", tl="5.21", rp="1.5266", cov="1.51×"),
     "RaCo 16384 天花板": dict(pts="269,716", obs="1,265,896", tl="4.69", rp="1.5236", cov="2.55×"),
+    "基线(生产)":   dict(pts="64,256",  obs="264,004", tl="4.11", rp="1.4188", cov="1.00×"),
+    "臂A SIFT+LG":  dict(pts="127,511", obs="528,936", tl="4.15", rp="1.4207", cov="1.68×"),
+    "ALIKED 16384": dict(pts="238,545", obs="1,300,261", tl="5.45", rp="1.5513", cov="2.03×"),
+    "LoFTR-indoor": dict(pts="193,796", obs="571,136", tl="2.95", rp="1.4295", cov="2.70×"),
+    "网格 cell=8": dict(pts="193,796", obs="571,136", tl="2.95", rp="1.4295", cov="2.70×"),
+    "KDTree r=4":  dict(pts="201,376", obs="594,840", tl="2.95", rp="1.4247", cov="—"),
+    "KDTree r=8":  dict(pts="170,354", obs="488,198", tl="2.87", rp="1.4325", cov="—"),
+    "KDTree r=16": dict(pts="111,564", obs="286,069", tl="2.56", rp="1.4534", cov="—"),
+    "基线+延长":      dict(pts="64,255",  obs="318,205", tl="4.95", rp="1.3487", cov="1.00×"),
+    "LoFTR+延长":     dict(pts="201,371", obs="922,944", tl="4.58", rp="1.3036", cov="2.71×"),
+    "臂A+延长":       dict(pts="127,511", obs="577,663", tl="4.53", rp="1.3825", cov="1.68×"),
+    "ALIKED16k+延长": dict(pts="238,545", obs="1,388,332", tl="5.82", rp="1.5146", cov="2.03×"),
+    "基线 延长前": dict(pts="64,256",  obs="264,004", tl="4.11", rp="1.4188", cov="1.00×"),
+    "基线 延长后": dict(pts="64,255",  obs="318,205", tl="4.95", rp="1.3487", cov="1.00×"),
+    "LoFTR 延长前": dict(pts="201,376", obs="594,840", tl="2.95", rp="1.4247", cov="2.70×"),
+    "LoFTR 延长后": dict(pts="201,371", obs="922,944", tl="4.58", rp="1.3036", cov="2.71×"),
+    "臂A 延长前": dict(pts="127,511", obs="528,936", tl="4.15", rp="1.4207", cov="1.68×"),
+    "臂A 延长后": dict(pts="127,511", obs="577,663", tl="4.53", rp="1.3825", cov="1.68×"),
+    "ALIKED16k 延长前": dict(pts="238,545", obs="1,300,261", tl="5.45", rp="1.5513", cov="2.03×"),
+    "ALIKED16k 延长后": dict(pts="238,545", obs="1,388,332", tl="5.82", rp="1.5146", cov="2.03×"),
+    "ALIKED @8192":  dict(pts="133,228", obs="694,042",   tl="5.21", rp="1.5279", cov="—"),
+    "ALIKED @16384": dict(pts="238,545", obs="1,300,261", tl="5.45", rp="1.5513", cov="—"),
+    "ALIKED+暴力":      dict(pts="70,999",  obs="306,354",   tl="4.31", rp="1.4258", cov="0.34×"),
+    "ALIKED+LightGlue": dict(pts="237,914", obs="1,297,792", tl="5.45", rp="1.5494", cov="1.00×"),
+    "ALIKED+极线门":    dict(pts="292,364", obs="1,238,478", tl="4.24", rp="1.4450", cov="1.34×"),
+    "GTO(ORB-SLAM口径)": dict(pts="132,236", obs="585,352", tl="4.43", rp="1.1563", cov="0.60-1.24×"),
+    "GTC(COLMAP口径)":   dict(pts="136,143", obs="624,041", tl="4.58", rp="1.4371", cov="0.61-0.77×"),
+    "三件套(宽门+延长+过滤)": dict(pts="197,487", obs="—", tl="—", rp="—", cov="0.88-1.89×"),
+    "ALIKED+LightGlue稀疏": dict(pts="237,914", obs="1,297,792", tl="5.45", rp="1.5494", cov="参照"),
+    "抽稀稠密·同点数": dict(pts="237,914", obs="—", tl="—", rp="—", cov="0.78% 抽样"),
+    "抽稀稠密·1M": dict(pts="1,000,000", obs="—", tl="—", rp="—", cov="3.3% 抽样"),
+    "GTO稀疏(位姿专用)": dict(pts="132,236", obs="585,352", tl="4.43", rp="1.1563", cov="0.60-1.24×"),
+    "并集(稠密主体+稀疏补丁)": dict(pts="293,920", obs="—", tl="—", rp="—", cov="0.05m并集"),
+    "稠密 @ LightGlue位姿": dict(pts="237,914", obs="全量 30.64M", tl="—", rp="—", cov="参照"),
+    "稠密 @ GTO位姿":       dict(pts="237,914", obs="全量 30.88M", tl="—", rp="—", cov="gauge残差2.08mm"),
+    "拍到 25%(t=33)":  dict(pts="3.1M(融15帧)", obs="—", tl="—", rp="—", cov="—"),
+    "拍到 50%(t=66)":  dict(pts="12.2M(融54帧)", obs="—", tl="—", rp="—", cov="—"),
+    "拍到 75%(t=99)":  dict(pts="17.7M(融79帧)", obs="—", tl="—", rp="—", cov="—"),
+    "拍完+收尾":        dict(pts="30.6M(全部)", obs="—", tl="—", rp="—", cov="MD5=官方"),
+    "CasDiffMVS(生产管线)": dict(pts="1,276,668", obs="全量 30.6M", tl="—", rp="墙RMS 8.1mm", cov="雾 4.13%"),
+    "OpenMVS 参照(AGPL仅诊断)": dict(pts="165,536", obs="全量 4.0M", tl="—", rp="墙RMS 6.7mm", cov="雾 1.89%"),
+    "现状(官方选源)":   dict(pts="1,276,668", obs="全量 30.64M", tl="—", rp="雾 4.13%", cov="基准"),
+    "杠杆①选源改造后": dict(pts="1,257,811", obs="全量 30.19M", tl="—", rp="雾 0.21%", cov="覆盖损失全在地板内"),
+    "fp32 匹配器": dict(pts="238,545", obs="1,300,261", tl="5.45", rp="1.5513", cov="1.000×"),
+    "fp16 匹配器": dict(pts="237,914", obs="1,297,792", tl="5.45", rp="1.5494", cov="0.998×"),
     "基线":          dict(pts="64,059",  obs="263,589",   tl="4.11", rp="1.4191", cov="0.66×"),
     "B2+剪枝 8192":  dict(pts="133,646", obs="695,664",   tl="5.21", rp="1.5266", cov="1.00×"),
     "RaCo 8192":     dict(pts="141,642", obs="671,739",   tl="4.74", rp="1.5266", cov="1.16×"),
@@ -89,6 +246,23 @@ def load_new(p: Path):
     return lo + q.astype(np.float64) / 65535.0 * span, rgb
 
 
+def load_ply(p: Path):
+    """直读 export_ply.py 写出的二进制 PLY(xyz f4 + rgb u1)。"""
+    with p.open("rb") as f:
+        hdr = b""
+        while True:
+            l = f.readline(); hdr += l
+            if l.strip() == b"end_header":
+                break
+        n = int([x for x in hdr.split(b"\n") if x.startswith(b"element vertex")][0].split()[-1])
+        dt = np.dtype([("x", "<f4"), ("y", "<f4"), ("z", "<f4"),
+                       ("r", "u1"), ("g", "u1"), ("b", "u1")])
+        d = np.frombuffer(f.read(n * dt.itemsize), dtype=dt, count=n)
+    xyz = np.stack([d["x"], d["y"], d["z"]], 1).astype(np.float64)
+    rgb = np.stack([d["r"], d["g"], d["b"]], 1)
+    return xyz, rgb
+
+
 def main():
     from_html = {c[0]: (c[2], c[3]) for c in clouds_from_html(SRC)}
     keep = []
@@ -98,6 +272,8 @@ def main():
             if key not in from_html:
                 sys.exit(f"源页里没有 “{key}”,现有:{list(from_html)}")
             xyz, rgb = from_html[key]
+        elif kind == "ply":
+            xyz, rgb = load_ply(Path(key + ".ply"))
         else:
             xyz, rgb = load_new(Path(key + ".bin.gz"))
         keep.append((label, xyz, rgb))
