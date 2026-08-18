@@ -84,6 +84,42 @@ def read_features(db, scale_mode, device):
     return feats
 
 
+
+def nms_keep(xy: np.ndarray, scale: np.ndarray, radius: float) -> np.ndarray:
+    """半径内只留尺度最大的那个,返回**保留点在原数组里的下标**。
+
+    依据:2026「Understanding and Optimizing Attention-Based Sparse Matching」——
+    多尺度提取(或没有 NMS)引入的**相邻关键点**会显著劣化基于注意力的匹配,
+    去掉它们能带来可观增益。生产的 DSP-SIFT 正是多尺度,一直原样喂给 LightGlue。
+
+    ⚠️ COLMAP 的 keypoints 表没有 response 列,所以没有现成的打分排序;
+       这里用**尺度降序**当代理(多尺度重复点恰恰是尺度不同)。
+    ⚠️ 只在喂匹配器时过滤,返回的序号再映射回原始索引 ⇒ keypoints 表不动、
+       matches 仍引用原始序号,下游零改动。
+    """
+    order = np.argsort(-scale)
+    cell = max(radius, 1e-6)
+    taken = {}                      # 网格桶 -> 已保留点坐标
+    keep = []
+    for i in order:
+        cx, cy = int(xy[i, 0] // cell), int(xy[i, 1] // cell)
+        hit = False
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for j in taken.get((cx + dx, cy + dy), ()):
+                    if (xy[i, 0] - xy[j, 0]) ** 2 + (xy[i, 1] - xy[j, 1]) ** 2 < radius * radius:
+                        hit = True
+                        break
+                if hit:
+                    break
+            if hit:
+                break
+        if not hit:
+            keep.append(i)
+            taken.setdefault((cx, cy), []).append(i)
+    return np.array(sorted(keep), dtype=np.int64)
+
+
 def pack(feat, n=None):
     """加 batch 维;n 不为空时截断到前 n 个点。"""
     sl = slice(None) if n is None else slice(0, n)
@@ -102,6 +138,8 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--pairs", type=int, default=0, help="0=全部")
     ap.add_argument("--kpts", type=int, default=0, help="0=全部(生产 8192)")
+    ap.add_argument("--nms-radius", type=float, default=0.0,
+                    help="对生产 SIFT 关键点做 NMS 的半径(原图像素,0=关)")
     ap.add_argument("--scale-mode", choices=["rescaled", "raw"], default="rescaled")
     ap.add_argument("--device", default="mps")
     ap.add_argument("--depth-confidence", type=float, default=-1, help="-1=关自适应深度")
@@ -125,6 +163,21 @@ def main():
         # 均匀抽样,避免只取到序号相邻的易配对
         step = max(1, len(pairs) // args.pairs)
         pairs = pairs[::step][:args.pairs]
+    keep_idx = {}
+    if args.nms_radius > 0:
+        import numpy as _np
+        tot0 = tot1 = 0
+        for iid, f in feats.items():
+            xy = f["keypoints"].cpu().numpy()
+            sc = f["scales"].cpu().numpy()
+            k = nms_keep(xy, sc, args.nms_radius)
+            keep_idx[iid] = torch.from_numpy(k).to(dev)
+            tot0 += len(xy); tot1 += len(k)
+            t = torch.from_numpy(k).to(dev)
+            for key in ("keypoints", "scales", "oris", "descriptors"):
+                f[key] = f[key].index_select(0, t)
+        print(f"NMS(半径 {args.nms_radius}px):{tot0/len(feats):.0f} → "
+              f"{tot1/len(feats):.0f} 关键点/帧(留 {tot1/tot0*100:.1f}%)", flush=True)
     print(f"配对 {len(pairs)} 对,关键点上限 {args.kpts or '全部'}", flush=True)
 
     n = args.kpts or None
@@ -142,7 +195,10 @@ def main():
         dt = time.perf_counter() - t0
         t_total += dt
 
-        m = pred["matches"][0].cpu().numpy()  # [K,2] 索引对
+        m = pred["matches"][0].cpu().numpy()  # [K,2] 索引对(NMS 后是子集内序号)
+        if keep_idx:
+            k0 = keep_idx[i1].cpu().numpy(); k1 = keep_idx[i2].cpu().numpy()
+            m = np.stack([k0[m[:, 0]], k1[m[:, 1]]], 1)   # 映射回原始 keypoint 索引
         out_rows.append((pid, m.astype(np.uint32)))
         n_lg += len(m)
         n_base += base.get(pid, 0)

@@ -47,6 +47,9 @@ def main():
                     help="分配矩阵按行分块(0=关)。原版一次造 5 个 M×N 张量,是砍掉注意力后"
                          "剩下的唯一 O(N²);分块后 8192 档活跃峰值 0.761GB→0.105GB,"
                          "且与 fp32 真值逐条相同")
+    ap.add_argument("--covis", default="", help="dump_poses.py 导出的 npz;给了就开共视裁剪")
+    ap.add_argument("--covis-margin", type=float, default=128.0,
+                    help="图边界外扩像素,吸收位姿噪声。端上是 ARKit 位姿,比重建位姿差,余量要留够")
     ap.add_argument("--model", default="aliked-n16",
                     choices=["aliked-t16", "aliked-n16", "aliked-n16rot", "aliked-n32"],
                     help="t16 的 c1..c4=8,16,32,64、dim=64 ⇒ 全分辨率稠密图与主干中间量**全部减半**"
@@ -146,21 +149,47 @@ def main():
     print(f"提取完成:{len(feats)} 帧,平均 {n_kp:.0f} 关键点,{t_ex/len(feats)*1000:.0f} ms/帧", flush=True)
 
     # ---- 匹配 ----
+    masker = None
+    if args.covis:
+        import covis_mask
+        masker = covis_mask.CovisMasker(args.covis)
+        print(f"共视裁剪开启,边界外扩 {args.covis_margin:.0f}px", flush=True)
+
     out_rows, t_m, n_lg, n_base = [], 0.0, 0, 0
-    stops, n_flush = [], 0
+    stops, n_flush, keep_frac = [], 0, []
     for i, pid in enumerate(pairs):
         i1, i2 = pid // MAX_IMAGE_ID, pid % MAX_IMAGE_ID
         if i1 not in feats or i2 not in feats:
             continue
-        d = {"image%d" % j: {k: (v[None].to(dev) if args.cpu_resident else v[None])
-                             for k, v in feats[x].items()}
-             for j, x in ((0, i1), (1, i2))}
+        sel = None
+        if masker is not None:
+            m0 = masker.mask(i1, i2, kp32_store[i1].numpy(), args.covis_margin)
+            m1 = masker.mask(i2, i1, kp32_store[i2].numpy(), args.covis_margin)
+            # 全被裁光时退回不裁,避免制造零关键点的病态对
+            if m0.sum() >= 16 and m1.sum() >= 16:
+                sel = (torch.from_numpy(np.where(m0)[0]).to(dev),
+                       torch.from_numpy(np.where(m1)[0]).to(dev))
+                keep_frac.append((m0.mean() + m1.mean()) / 2)
+            else:
+                keep_frac.append(1.0)
+        d = {}
+        for j, x in ((0, i1), (1, i2)):
+            f = feats[x]
+            if sel is not None:
+                f = {k: (v.index_select(0, sel[j]) if v.dim() > 1 or k == "keypoints"
+                         else v) for k, v in f.items()}
+                f["image_size"] = feats[x]["image_size"]
+            d["image%d" % j] = {k: (v[None].to(dev) if args.cpu_resident else v[None])
+                                for k, v in f.items()}
         t0 = time.perf_counter()
         with torch.no_grad():
             pred = matcher(d)
         devutil.sync(dev)
         t_m += time.perf_counter() - t0
         m = pred["matches"][0].cpu().numpy().astype(np.uint32)
+        if sel is not None:                       # 子集序号 → 原始关键点序号
+            s0 = sel[0].cpu().numpy(); s1 = sel[1].cpu().numpy()
+            m = np.stack([s0[m[:, 0]], s1[m[:, 1]]], 1).astype(np.uint32)
         out_rows.append((pid, m))
         stops.append(int(pred["stop"]))
         n_lg += len(m); n_base += base.get(pid, 0)
@@ -177,6 +206,10 @@ def main():
     print(f"ALIKED+LightGlue 平均 {n_lg/k:8.1f} 匹配/对")
     print(f"基线(DSP-SIFT 暴力+0.8) 平均 {n_base/k:8.1f}")
     print(f"比值 {n_lg/max(n_base,1):.3f}×    匹配 {t_m/k*1000:.1f} ms/对")
+    if keep_frac:
+        kf = np.array(keep_frac)
+        print(f"共视裁剪:平均保留 {kf.mean()*100:.1f}% 关键点(最少 {kf.min()*100:.1f}%)"
+              f" ⇒ 注意力算力约 {1/np.mean(kf**2):.2f}× 省", flush=True)
     print(f"自适应深度:平均在第 {np.mean(stops):.2f}/9 层停(9=跑满),"
           f"分布 {np.bincount(stops, minlength=10)[1:].tolist()}")
 
