@@ -1,0 +1,136 @@
+ Loading Images 1 / 50 Loading Images 2 / 50 Loading Images 3 / 50 Loading Images 4 / 50 Loading Images 5 / 50 Loading Images 6 / 50 Loading Images 7 / 50 Loading Images 8 / 50 Loading Images 9 / 50 Loading Images 10 / 50 Loading Images 11 / 50 Loading Images 12 / 50 Loading Images 13 / 50 Loading Images 14 / 50 Loading Images 15 / 50 Loading Images 16 / 50 Loading Images 17 / 50 Loading Images 18 / 50 Loading Images 19 / 50 Loading Images 20 / 50 Loading Images 21 / 50 Loading Images 22 / 50 Loading Images 23 / 50 Loading Images 24 / 50 Loading Images 25 / 50 Loading Images 26 / 50 Loading Images 27 / 50 Loading Images 28 / 50 Loading Images 29 / 50 Loading Images 30 / 50 Loading Images 31 / 50 Loading Images 32 / 50 Loading Images 33 / 50 Loading Images 34 / 50 Loading Images 35 / 50 Loading Images 36 / 50 Loading Images 37 / 50 Loading Images 38 / 50 Loading Images 39 / 50 Loading Images 40 / 50 Loading Images 41 / 50 Loading Images 42 / 50 Loading Images 43 / 50 Loading Images 44 / 50 Loading Images 45 / 50 Loading Images 46 / 50 Loading Images 47 / 50 Loading Images 48 / 50 Loading Images 49 / 50 Loading Images 50 / 50
+ Loading Image Pair 105 / 105I20260620 21:20:23.455246 0x1f29c2080 colmap_converter.cc:426] Pairs read done. 0 / 105 are invalid
+I20260620 21:20:23.456009 0x1f29c2080 global_mapper.cc:84] Loaded database
+-------------------------------------
+Running preprocessing ...
+-------------------------------------
+I20260620 21:20:23.456034 0x1f29c2080 view_graph_manipulation.cc:255] Decompose relative pose for 0 pairs
+I20260620 21:20:23.456140 0x1f29c2080 view_graph_manipulation.cc:309] Decompose relative pose done. 0 pairs are pure rotation
+I20260620 21:20:23.456238 0x1f29c2080 timer.cc:86] Elapsed time: 0.00022 [seconds]
+-------------------------------------
+Running view graph calibration ...
+-------------------------------------
+I20260620 21:20:23.456257 0x1f29c2080 view_graph_calibration.cc:16] Start ViewGraphCalibrator
+I20260620 21:20:23.459650 0x1f29c2080 view_graph_calibration.cc:147] 0 cameras are rejected in view graph calibration
+I20260620 21:20:23.459709 0x1f29c2080 view_graph_calibration.cc:181] invalid / total number of two view geometry: 10 / 104
+-------------------------------------
+Running relative pose estimation ...
+-------------------------------------
+I20260620 21:20:23.459935 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:23.461402 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:23.461596 0x1f29c2080 relpose_estimation.cc:26] Estimating relative pose for 95 pairs
+ Estimating relative pose: 0% Estimating relative pose: 10% Estimating relative pose: 20% Estimating relative pose: 30% Estimating relative pose: 40% Estimating relative pose: 50% Estimating relative pose: 60% Estimating relative pose: 70% Estimating relative pose: 80% Estimating relative pose: 90% Estimating relative pose: 100%
+I20260620 21:20:26.125678 0x1f29c2080 relpose_estimation.cc:122] Estimating relative pose done
+I20260620 21:20:26.127457 0x1f29c2080 relpose_filter.cc:46] Filtered 10 relative poses with inlier number < 30
+I20260620 21:20:26.127478 0x1f29c2080 relpose_filter.cc:63] Filtered 0 relative poses with inlier ratio < 0.25
+I20260620 21:20:26.127515 0x1f29c2080 timer.cc:86] Elapsed time: 2.66757 [seconds]
+-------------------------------------
+Running rotation averaging ...
+-------------------------------------
+I20260620 21:20:26.127543 0x1f29c2080 rotation_averager.cc:44] Total image pairs: 0, gravity image pairs: 0
+I20260620 21:20:26.128743 0x1f29c2080 relpose_filter.cc:31] Filtered 13 relative rotation with angle > 10 degrees
+I20260620 21:20:26.128776 0x1f29c2080 rotation_averager.cc:44] Total image pairs: 0, gravity image pairs: 0
+I20260620 21:20:26.129665 0x1f29c2080 relpose_filter.cc:31] Filtered 1 relative rotation with angle > 10 degrees
+I20260620 21:20:26.129693 0x1f29c2080 global_mapper.cc:113] 15 / 50 images are within the connected component.
+I20260620 21:20:26.129699 0x1f29c2080 timer.cc:86] Elapsed time: 0.00217 [seconds]
+-------------------------------------
+Running track establishment ...
+-------------------------------------
+ Initializing pairs 105 / 105
+ Establishing pairs 105 / 105
+ Establishing tracks 1000 / 19729 Establishing tracks 2000 / 19729 Establishing tracks 3000 / 19729 Establishing tracks 4000 / 19729 Establishing tracks 5000 / 19729 Establishing tracks 6000 / 19729 Establishing tracks 7000 / 19729 Establishing tracks 8000 / 19729 Establishing tracks 9000 / 19729 Establishing tracks 10000 / 19729 Establishing tracks 11000 / 19729 Establishing tracks 12000 / 19729 Establishing tracks 13000 / 19729 Establishing tracks 14000 / 19729 Establishing tracks 15000 / 19729 Establishing tracks 16000 / 19729 Establishing tracks 17000 / 19729 Establishing tracks 18000 / 19729 Establishing tracks 19000 / 19729 Establishing tracks 19729 / 19729
+I20260620 21:20:26.166184 0x1f29c2080 track_establishment.cc:149] Discarded 57 tracks due to inconsistency
+I20260620 21:20:26.175574 0x1f29c2080 global_mapper.cc:133] Before filtering: 19729, after filtering: 10881
+I20260620 21:20:26.175596 0x1f29c2080 timer.cc:86] Elapsed time: 0.04587 [seconds]
+-------------------------------------
+Running global positioning ...
+-------------------------------------
+I20260620 21:20:26.177311 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:26.177324 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+E20260620 21:20:26.177475 0x1f29c2080 global_positioning.cc:35] Number of camera rigs = 50
+I20260620 21:20:26.178374 0x1f29c2080 global_positioning.cc:52] Setting up the global positioner problem
+W20260620 21:20:26.233023 0x1f29c2080 global_positioning.cc:544] Requested to use GPU for bundle adjustment, but COLMAP was compiled without CUDA support. Falling back to CPU-based solvers.
+I20260620 21:20:26.233078 0x1f29c2080 global_positioning.cc:79] Solving the global positioner problem
+I20260620 21:20:30.908263 0x1f29c2080 global_positioning.cc:88] Ceres Solver Report: Iterations: 60, Initial cost: 3.798131e+05, Final cost: 5.138500e-01, Termination: CONVERGENCE
+I20260620 21:20:30.919319 0x1f29c2080 track_filter.cc:87] Filtered 246 / 10881 tracks by angle error
+I20260620 21:20:30.920556 0x1f29c2080 track_filter.cc:124] Filtered 47 / 10881 tracks by too small triangulation angle
+I20260620 21:20:30.923116 0x1f29c2080 track_filter.cc:49] Filtered 0 / 10881 tracks by reprojection error
+I20260620 21:20:30.923195 0x1f29c2080 timer.cc:86] Elapsed time: 4.74584 [seconds]
+-------------------------------------
+Running bundle adjustment ...
+-------------------------------------
+I20260620 21:20:30.945458 0x1f29c2080 global_mapper.cc:196] Bundle adjustment start
+W20260620 21:20:30.986049 0x1f29c2080 bundle_adjustment.cc:87] Requested to use GPU for bundle adjustment, but COLMAP was compiled without CUDA support. Falling back to CPU-based solvers.
+W20260620 21:20:31.772938 0x1f29c2080 levenberg_marquardt_strategy.cc:123] Linear solver failure. Failed to compute a step: CHOLMOD warning: Matrix not positive definite.
+I20260620 21:20:31.892048 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 31, Initial cost: 6.748378e+05, Final cost: 4.572734e+05, Termination: CONVERGENCE
+I20260620 21:20:31.892114 0x1f29c2080 global_mapper.cc:212] Global bundle adjustment iteration 1 / 3, stage 1 finished (position only)
+I20260620 21:20:31.892119 0x1f29c2080 timer.cc:86] Elapsed time: 0.94662 [seconds]
+I20260620 21:20:34.014248 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 52, Initial cost: 4.572734e+05, Final cost: 4.821469e+04, Termination: CONVERGENCE
+I20260620 21:20:34.014300 0x1f29c2080 global_mapper.cc:224] Global bundle adjustment iteration 1 / 3, stage 2 finished
+I20260620 21:20:34.014307 0x1f29c2080 timer.cc:86] Elapsed time: 3.06874 [seconds]
+I20260620 21:20:34.014549 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:34.016734 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:34.016917 0x1f29c2080 global_mapper.cc:238] Filtering tracks by reprojection ...
+I20260620 21:20:34.019001 0x1f29c2080 track_filter.cc:49] Filtered 25 / 10881 tracks by reprojection error
+I20260620 21:20:34.180768 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 3, Initial cost: 4.796513e+04, Final cost: 4.794956e+04, Termination: CONVERGENCE
+I20260620 21:20:34.180808 0x1f29c2080 global_mapper.cc:212] Global bundle adjustment iteration 2 / 3, stage 1 finished (position only)
+I20260620 21:20:34.180814 0x1f29c2080 timer.cc:86] Elapsed time: 3.23524 [seconds]
+I20260620 21:20:34.371304 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 1, Initial cost: 4.794956e+04, Final cost: 4.794956e+04, Termination: CONVERGENCE
+I20260620 21:20:34.371351 0x1f29c2080 global_mapper.cc:224] Global bundle adjustment iteration 2 / 3, stage 2 finished
+I20260620 21:20:34.371357 0x1f29c2080 timer.cc:86] Elapsed time: 3.42578 [seconds]
+I20260620 21:20:34.371634 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:34.374661 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:34.374809 0x1f29c2080 global_mapper.cc:238] Filtering tracks by reprojection ...
+I20260620 21:20:34.377279 0x1f29c2080 track_filter.cc:49] Filtered 14 / 10881 tracks by reprojection error
+I20260620 21:20:34.799540 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 3, Initial cost: 4.774169e+04, Final cost: 4.773091e+04, Termination: CONVERGENCE
+I20260620 21:20:34.799587 0x1f29c2080 global_mapper.cc:212] Global bundle adjustment iteration 3 / 3, stage 1 finished (position only)
+I20260620 21:20:34.799593 0x1f29c2080 timer.cc:86] Elapsed time: 3.85400 [seconds]
+I20260620 21:20:35.209067 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 1, Initial cost: 4.773091e+04, Final cost: 4.773091e+04, Termination: CONVERGENCE
+I20260620 21:20:35.209121 0x1f29c2080 global_mapper.cc:224] Global bundle adjustment iteration 3 / 3, stage 2 finished
+I20260620 21:20:35.209359 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:35.213033 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:35.213290 0x1f29c2080 global_mapper.cc:238] Filtering tracks by reprojection ...
+I20260620 21:20:35.223434 0x1f29c2080 track_filter.cc:49] Filtered 26 / 10881 tracks by reprojection error
+I20260620 21:20:35.237986 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:35.240881 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:35.241087 0x1f29c2080 global_mapper.cc:264] Filtering tracks by reprojection ...
+I20260620 21:20:35.244431 0x1f29c2080 track_filter.cc:49] Filtered 0 / 10881 tracks by reprojection error
+I20260620 21:20:35.245719 0x1f29c2080 track_filter.cc:124] Filtered 1430 / 10881 tracks by too small triangulation angle
+I20260620 21:20:35.245730 0x1f29c2080 timer.cc:86] Elapsed time: 4.30013 [seconds]
+-------------------------------------
+Running retriangulation ...
+-------------------------------------
+I20260620 21:20:35.245827 0x1f29c2080 database_cache.cc:67] Loading rigs...
+I20260620 21:20:35.245871 0x1f29c2080 database_cache.cc:77]  50 in 0.000s
+I20260620 21:20:35.245879 0x1f29c2080 database_cache.cc:85] Loading cameras...
+I20260620 21:20:35.245930 0x1f29c2080 database_cache.cc:103]  50 in 0.000s
+I20260620 21:20:35.245935 0x1f29c2080 database_cache.cc:111] Loading frames...
+I20260620 21:20:35.245981 0x1f29c2080 database_cache.cc:126]  50 in 0.000s
+I20260620 21:20:35.245985 0x1f29c2080 database_cache.cc:134] Loading matches...
+I20260620 21:20:35.246731 0x1f29c2080 database_cache.cc:139]  105 in 0.001s
+I20260620 21:20:35.246773 0x1f29c2080 database_cache.cc:155] Loading images...
+I20260620 21:20:35.248640 0x1f29c2080 database_cache.cc:239]  50 in 0.002s (connected 15)
+I20260620 21:20:35.248667 0x1f29c2080 database_cache.cc:250] Building correspondence graph...
+I20260620 21:20:35.259434 0x1f29c2080 database_cache.cc:277]  in 0.011s (ignored 0)
+ Triangulating image 1 / 15 Triangulating image 2 / 15 Triangulating image 3 / 15 Triangulating image 4 / 15 Triangulating image 5 / 15 Triangulating image 6 / 15 Triangulating image 7 / 15 Triangulating image 8 / 15 Triangulating image 9 / 15 Triangulating image 10 / 15 Triangulating image 11 / 15 Triangulating image 12 / 15 Triangulating image 13 / 15 Triangulating image 14 / 15 Triangulating image 15 / 15
+ Global bundle adjustment iteration 1 / 5 Global bundle adjustment iteration 2 / 5 Global bundle adjustment iteration 3 / 5 Global bundle adjustment iteration 4 / 5 Global bundle adjustment iteration 5 / 5
+I20260620 21:20:36.560842 0x1f29c2080 timer.cc:86] Elapsed time: 1.31508 [seconds]
+-------------------------------------
+Running bundle adjustment ...
+-------------------------------------
+I20260620 21:20:36.560933 0x1f29c2080 global_mapper.cc:300] Bundle adjustment start
+I20260620 21:20:37.248367 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 10, Initial cost: 3.290217e+04, Final cost: 3.010767e+04, Termination: CONVERGENCE
+I20260620 21:20:37.248528 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:37.250948 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:37.251121 0x1f29c2080 global_mapper.cc:308] Filtering tracks by reprojection ...
+I20260620 21:20:37.253560 0x1f29c2080 track_filter.cc:49] Filtered 0 / 9163 tracks by reprojection error
+I20260620 21:20:37.479776 0x1f29c2080 bundle_adjustment.cc:103] Ceres Solver Report: Iterations: 1, Initial cost: 3.010767e+04, Final cost: 3.010767e+04, Termination: CONVERGENCE
+I20260620 21:20:37.479893 0x1f29c2080 timer.cc:86] Elapsed time: 2.23408 [seconds]
+I20260620 21:20:37.492309 0x1f29c2080 image_undistorter.cc:20] Undistorting images..
+I20260620 21:20:37.494316 0x1f29c2080 image_undistorter.cc:44] Image undistortion done
+I20260620 21:20:37.494506 0x1f29c2080 global_mapper.cc:326] Filtering tracks by reprojection ...
+I20260620 21:20:37.497491 0x1f29c2080 track_filter.cc:49] Filtered 0 / 9163 tracks by reprojection error
+I20260620 21:20:37.498631 0x1f29c2080 track_filter.cc:124] Filtered 0 / 9163 tracks by too small triangulation angle
+I20260620 21:20:37.498645 0x1f29c2080 global_mapper.cc:91] Reconstruction done in 14.0422 seconds
+I20260620 21:20:37.502828 0x1f29c2080 colmap_io.cc:31] Extracting colors ...
+I20260620 21:20:39.521859 0x1f29c2080 global_mapper.cc:102] Export to COLMAP reconstruction done
