@@ -1,0 +1,20 @@
+输入:8 帧 · 10 视图 · 768x576 · 图像库 26 张
+2026-08-19 15:10:28.333 CasDiffBench[47016:5719095] 2026-08-19 15:10:28.333306 [W:onnxruntime:, session_state.cc:1398 VerifyEachNodeIsAssignedToAnEp] Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.
+2026-08-19 15:10:28.333 CasDiffBench[47016:5719095] 2026-08-19 15:10:28.333389 [W:onnxruntime:, session_state.cc:1400 VerifyEachNodeIsAssignedToAnEp] Rerunning with verbose output on a non-minimal build will show node assignments.
+  帧 0   2571.8 ms
+  帧 1   2011.8 ms
+  帧 2   2013.6 ms
+  帧 3   2011.6 ms
+  帧 4   2010.6 ms
+  帧 5   2005.0 ms
+  帧 6   2002.3 ms
+  帧 7   1997.7 ms
+
+══ 结果(EP=WebGPU)══
+  会话建立      732 ms
+  稳态延迟      中位 2010.6 ms  (min 1997.7  max 2013.6,已丢首帧)
+  峰值内存      1313 MB   [phys_footprint (jetsam 口径)]
+  预算 1500 MB  ✅ 在预算内
+
+  与 host 参考对拍:非有限 0  >1% 的像素 0.0032%  最大相对差 3.498%
+  ⇒ ✅ 数值与 host 一致
