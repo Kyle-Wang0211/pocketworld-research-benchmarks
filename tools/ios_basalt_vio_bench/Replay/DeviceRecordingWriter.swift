@@ -42,7 +42,13 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     private var format: DeviceRecordingCameraFormat
     private let recordingID: String
 
-    private let writeQueue = DispatchQueue(label: "com.kyle.viobench.recording.write")
+    /// Serial, and explicitly user-initiated. At 60 fps this queue has 133 ms of
+    /// slack across its eight slots, so letting the system deprioritise it costs
+    /// frames directly.
+    private let writeQueue = DispatchQueue(
+        label: "com.kyle.viobench.recording.write",
+        qos: .userInitiated
+    )
     private let stateLock = NSLock()
 
     private var framesHandleDigest = SHA256()
@@ -252,7 +258,15 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             )
             let writeStart = CACurrentMediaTime()
             do {
-                try luma.write(to: url, options: .atomic)
+                // Not atomic. An atomic write stages a temporary file and
+                // renames it, which doubles the filesystem work for every frame
+                // -- 1800 creates plus 1800 renames across a 30 s capture. A
+                // 29 s run stalled 676 ms on a single frame and lost 199 to
+                // backpressure with the queue pinned at 8 of 8. Integrity here
+                // does not depend on per-file atomicity: the manifest carries a
+                // SHA-256 over the frames in capture order and each frame's own
+                // size, so a torn write is caught on load.
+                try luma.write(to: url)
                 let elapsed = (CACurrentMediaTime() - writeStart) * 1000
                 self.stateLock.lock()
                 self.slowestWriteMilliseconds = max(self.slowestWriteMilliseconds, elapsed)
