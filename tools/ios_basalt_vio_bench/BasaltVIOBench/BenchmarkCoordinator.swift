@@ -68,6 +68,25 @@ final class BenchmarkCoordinator {
     }
     private var liveProgress: LiveRunProgress?
 
+    /// Owned by the coordinator and started before the run clock, because the
+    /// thermal dwell computation needs a sample at or before the measurement
+    /// window start to seed the initial state.
+    ///
+    /// These used to be created inside each run function and started hundreds of
+    /// lines after `liveRunStartNS` was taken, so the first sample was always
+    /// later than the window start, `Statistics.thermalDwell` always returned
+    /// nil, and every live run that reached the computation was invalidated with
+    /// `thermal_telemetry_unavailable`. A full clean 300 s run on 2026-08-30 --
+    /// 8,990 frames in, 8,990 poses out, zero loss -- was discarded that way.
+    ///
+    /// Starting first is also what the contract's `metric_scope` already
+    /// declared: the live clock, CPU accounting and system sampling begin before
+    /// estimator initialisation. The code had it backwards.
+    private let systemSamples = SystemSampleStore()
+    private lazy var sampler = SystemMetricSampler { [systemSamples] sample in
+        systemSamples.append(sample)
+    }
+
     private weak var activeTransport: LiveSensorTransport?
     private var activeSession: ActiveVIOEngineSession?
     private var activeARKitSession: ARKitReferenceSession?
@@ -137,6 +156,9 @@ final class BenchmarkCoordinator {
             try writeStarted(context)
             let initialHeartbeatNS = DispatchTime.now().uptimeNanoseconds
             try writeHeartbeat(context, sequence: 0, monotonicNS: initialHeartbeatNS)
+            // Before the run clock: the first sample must not be later than the
+            // measurement window it seeds.
+            sampler.start()
             let liveRunStartNS = DispatchTime.now().uptimeNanoseconds
             if backend == .arkit {
                 try runARKitReference(
@@ -229,8 +251,7 @@ final class BenchmarkCoordinator {
         guard mode == .liveSoak || mode == .record else {
             throw CoordinatorError.invalidRun("arkit_replay_is_not_supported")
         }
-        let systemSamples = SystemSampleStore()
-        let sampler = SystemMetricSampler { systemSamples.append($0) }
+
         let applicationActivity = ApplicationActivityLatch()
         let initiallyActive = DispatchQueue.main.sync {
             UIApplication.shared.applicationState == .active
@@ -598,8 +619,7 @@ final class BenchmarkCoordinator {
         liveRunStartNS: UInt64,
         runLease: BenchRunLease.Token
     ) throws {
-        let systemSamples = SystemSampleStore()
-        let sampler = SystemMetricSampler { systemSamples.append($0) }
+
         let applicationActivity = ApplicationActivityLatch()
         let initiallyActive = DispatchQueue.main.sync {
             UIApplication.shared.applicationState == .active
@@ -939,8 +959,7 @@ final class BenchmarkCoordinator {
         guard context.inputCameraCount == 1 else {
             throw CoordinatorError.invalidRun("native_manifest_camera_count_mismatch")
         }
-        let systemSamples = SystemSampleStore()
-        let sampler = SystemMetricSampler { systemSamples.append($0) }
+
         var poses: [TimedPose] = []
         var heartbeatSchedule = HeartbeatSchedule(
             intervalNanoseconds: 5_000_000_000,

@@ -6,7 +6,39 @@ import UIKit
 @MainActor
 final class BenchViewModel: ObservableObject {
     @Published var selectedBackend: BenchBackend = .basalt
-    @Published var mode: BenchMode = .liveSoak
+    /// Selecting `record` moves the engine to ARKit rather than leaving an
+    /// unstartable pairing on screen.
+    ///
+    /// On 2026-08-30 a full 300 s capture was made with Basalt live-soak
+    /// selected instead, producing no recording at all. `record` requires the
+    /// ARKit arm because iOS grants the rear camera to one session and the
+    /// recording is of the frames ARKit is tracking on -- so there is exactly
+    /// one valid engine for it, and asking the operator to also pick it is a
+    /// trap, not a choice.
+    @Published var mode: BenchMode = .liveSoak {
+        didSet {
+            if mode == .record { selectedBackend = .arkit }
+            if mode.hasExternalGroundTruth || mode == .replayDeviceRecording,
+               selectedBackend == .arkit {
+                selectedBackend = .basalt
+            }
+        }
+    }
+
+    /// One line stating exactly what pressing Start will do, so a mis-selection
+    /// is visible before five minutes are spent on it.
+    var plannedRunSummary: String {
+        switch mode {
+        case .record:
+            return "将录制一次:ARKit 实时跑 + 存下它看到的帧,300 秒后自动停止"
+        case .liveSoak:
+            return "将用 \(selectedBackend.displayName) 实时采集,300 秒或手动中止"
+        case .replayDeviceRecording:
+            return "将把本机录制回放给 \(selectedBackend.displayName)"
+        case .replayPaced, .replayMax:
+            return "将把 EuRoC 回放给 \(selectedBackend.displayName)"
+        }
+    }
     @Published private(set) var phase: BenchPhase = .idle
     @Published private(set) var snapshot = LiveSnapshot()
     @Published private(set) var blockingMessage: String?

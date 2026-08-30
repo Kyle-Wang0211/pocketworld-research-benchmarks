@@ -32,6 +32,10 @@ struct ContentView: View {
                     }
                     .disabled(model.isRunning)
 
+                    Text(model.plannedRunSummary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+
                     if let conflict = model.modeBackendConflict {
                         Text(conflict)
                             .font(.footnote)
