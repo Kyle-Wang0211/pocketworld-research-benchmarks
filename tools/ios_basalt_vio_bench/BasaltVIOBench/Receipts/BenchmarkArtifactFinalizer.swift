@@ -103,8 +103,12 @@ enum BenchmarkArtifactFinalizer {
 
     private static func requiredArtifacts(for channel: RunReceiptChannel) -> [String] {
         switch channel {
+        case .record:
+            return ["input_manifest.json", "receipt.json", "heartbeat.json", "telemetry.jsonl", "diagnostics.json", "recording_manifest.json", "SHA256SUMS"]
         case .liveSoak:
             return ["input_manifest.json", "receipt.json", "heartbeat.json", "telemetry.jsonl", "diagnostics.json"]
+        case .replayDeviceRecording:
+            return ["input_manifest.json", "poses.tum", "receipt.json", "heartbeat.json", "diagnostics.json"]
         case .replayPaced, .replayMax:
             return ["input_manifest.json", "poses.tum", "receipt.json", "heartbeat.json", "diagnostics.json"]
         }

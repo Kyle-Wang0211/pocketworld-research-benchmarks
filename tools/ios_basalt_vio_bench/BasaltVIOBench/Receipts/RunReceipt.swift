@@ -12,7 +12,9 @@ enum RunReceiptState: String, Codable, CaseIterable {
 }
 
 enum RunReceiptChannel: String, Codable, CaseIterable {
+    case record = "record"
     case liveSoak = "live_soak"
+    case replayDeviceRecording = "replay_device_recording"
     case replayPaced = "replay_paced"
     case replayMax = "replay_max"
 }
@@ -301,10 +303,12 @@ struct RunReceipt: Codable, Equatable {
             throw RunReceiptValidationError.invalid("metrics must be finite")
         }
         switch channel {
-        case .liveSoak:
+        case .record, .liveSoak, .replayDeviceRecording:
             guard inputCameraCount == 1 else {
                 throw RunReceiptValidationError.invalid("live input_camera_count must be 1")
             }
+            // The device recording has no external ground truth, so it may not
+            // claim absolute accuracy no matter how well the arms agree on it.
             guard accuracy == RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none) else {
                 throw RunReceiptValidationError.invalid("live accuracy must be not_evaluable")
             }

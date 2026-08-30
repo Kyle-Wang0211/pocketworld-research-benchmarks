@@ -28,7 +28,7 @@ struct EngineResourcePlan: Equatable {
         }
         if backend == .xrslam {
             switch mode {
-            case .liveSoak:
+            case .record, .liveSoak, .replayDeviceRecording:
             return EngineResourcePlan(
                 config: "xrslam_ios_vio.yaml",
                 calibration: "xrslam_iphone_14_pro.yaml"
@@ -41,7 +41,7 @@ struct EngineResourcePlan: Equatable {
             }
         }
         switch mode {
-        case .liveSoak:
+        case .record, .liveSoak, .replayDeviceRecording:
             return EngineResourcePlan(
                 config: "euroc_config.json",
                 calibration: "iphone_14_pro_640x480_calib.json"
@@ -117,12 +117,15 @@ enum BenchmarkRunPreparation {
         let accuracy: RunAccuracyEvidence
 
         switch mode {
-        case .liveSoak:
+        case .record, .liveSoak, .replayDeviceRecording:
             calibrationData = try Data(contentsOf: calibrationSource)
             var definition: [String: Any] = [
+                // Every arm scores at the production resolution. The candidates
+                // reach it by replaying the luma plane of the same
+                // ARFrame.capturedImage stream the ARKit arm produced.
                 "camera": backend == .arkit
-                    ? "arkit_production_runtime_selected_format"
-                    : "mono_640x480_30hz",
+                    ? "arkit_production_runtime_selected_format_1920x1440"
+                    : "mono_1920x1440_30hz_from_device_recording",
                 "engine": backend.id,
                 "imu": backend == .arkit
                     ? "arkit_internal_sensor_fusion_no_raw_sensor_export"
@@ -148,11 +151,24 @@ enum BenchmarkRunPreparation {
                 definition["external_ground_truth"] = "none"
             }
             inputDefinitionData = try JSONSerialization.data(withJSONObject: definition, options: [.prettyPrinted, .sortedKeys])
+            definition["scoring_resolution"] = [
+                BenchResolution.scoring.width, BenchResolution.scoring.height,
+            ]
+            definition["participates_in_verdict"] =
+                BenchResolution.participatesInVerdict(
+                    width: BenchResolution.scoring.width,
+                    height: BenchResolution.scoring.height
+                )
             inputCameraCount = 1
-            imageWidth = backend == .arkit ? 0 : 640
-            imageHeight = backend == .arkit ? 0 : 480
+            imageWidth = BenchResolution.scoring.width
+            imageHeight = BenchResolution.scoring.height
             replayDataset = nil
-            channel = .liveSoak
+            switch mode {
+            case .record: channel = .record
+            case .replayDeviceRecording: channel = .replayDeviceRecording
+            default: channel = .liveSoak
+            }
+            // No external ground truth on this device, in any of these modes.
             accuracy = RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none)
         case .replayPaced, .replayMax:
             guard let datasetURL else { throw BenchmarkRunPreparationError.replayDatasetRequired }
@@ -189,9 +205,9 @@ enum BenchmarkRunPreparation {
         try inputDefinitionData.write(to: inputDefinitionURL, options: .atomic)
 
         switch mode {
-        case .liveSoak:
+        case .record, .liveSoak:
             try Data().write(to: directory.appendingPathComponent("telemetry.jsonl"), options: .atomic)
-        case .replayPaced, .replayMax:
+        case .replayDeviceRecording, .replayPaced, .replayMax:
             try Data().write(to: directory.appendingPathComponent("poses.tum"), options: .atomic)
         }
 

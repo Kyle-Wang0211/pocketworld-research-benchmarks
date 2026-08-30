@@ -46,6 +46,11 @@ enum ARKitReferenceSessionError: LocalizedError {
 final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Sendable {
     private(set) var accounting: ARKitReferenceAccounting!
     private let session = ARSession()
+
+    /// Read-only handle for the camera preview. The view attaches to this
+    /// session to draw its background; it never runs, pauses or reconfigures it.
+    /// Lifecycle stays with this adapter and the coordinator that drives it.
+    var previewSession: ARSession { session }
     private(set) var configurationReceipt: ARKitReferenceConfigurationReceipt?
     private let startMonotonicSeconds: Double
     private let lifecycleLock = NSLock()

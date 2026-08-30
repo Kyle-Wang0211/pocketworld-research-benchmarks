@@ -6,6 +6,17 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("画面") {
+                    BenchPreview(
+                        source: model.previewSource,
+                        replayedFrame: model.replayedFrame
+                    )
+                    .listRowInsets(EdgeInsets())
+                    Text("显示层不进算法队列,不改像素格式、分辨率、帧率或时间戳")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
                 Section("模式") {
                     Picker("引擎", selection: $model.selectedBackend) {
                         ForEach(BenchBackend.allCases) { backend in
@@ -21,7 +32,7 @@ struct ContentView: View {
                     }
                     .disabled(model.isRunning)
 
-                    if model.mode != .liveSoak && model.selectedBackend != .arkit {
+                    if model.mode.hasExternalGroundTruth && model.selectedBackend != .arkit {
                         Button("选择 EuRoC MH_01_easy 目录") {
                             model.requestDatasetImport()
                         }
@@ -41,9 +52,9 @@ struct ContentView: View {
                         "传感器",
                         model.selectedBackend == .arkit
                             ? "生产同配 ARKit 内部融合"
-                            : (model.mode == .liveSoak
-                                ? "640×480@30Hz · 原始 IMU 100Hz"
-                                : "EuRoC cam0 752×480 · 数据集原始 IMU")
+                            : (model.mode.hasExternalGroundTruth
+                                ? "EuRoC cam0 752×480 · 数据集原始 IMU"
+                                : "1920×1440@30Hz · 原始 IMU 100Hz")
                     )
                     row(
                         "Apple 位姿",

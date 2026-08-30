@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreGraphics
 import Foundation
 import UIKit
 
@@ -11,6 +12,10 @@ final class BenchViewModel: ObservableObject {
     @Published private(set) var blockingMessage: String?
     @Published private(set) var lastReceiptURL: URL?
     @Published var isImportingDataset = false
+
+    /// Display-only. Publishing a preview source never starts or stops capture.
+    @Published private(set) var previewSource: BenchPreviewSource = .none
+    @Published private(set) var replayedFrame: CGImage?
 
     private(set) var datasetURL: URL?
     private var coordinator: BenchmarkCoordinator?
