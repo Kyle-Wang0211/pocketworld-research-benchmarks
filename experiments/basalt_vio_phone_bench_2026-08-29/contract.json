@@ -172,7 +172,11 @@
         "preview_enabled",
         "preview_implementation_mode",
         "preview_lifecycle_anomalies"
-      ]
+      ],
+      "shows": "the luma plane of frames the arm has already accepted, which for Basalt and XRSLAM is exactly the algorithm input. For ARKit it is a subset: ARKit also receives chroma. The preview is therefore faithful for the candidates and understates ARKit.",
+      "rate_hz": 10,
+      "decimation": 4,
+      "bytes_per_preview_frame": 172800
     },
     "resource_measurement": {
       "arkit": "measured live during the recording capture",
@@ -305,7 +309,7 @@
     "timebase_conversion_required": true
   },
   "device_recording": {
-    "purpose": "give every arm byte-identical input from one physical capture, so speed, angle, lighting and time are shared instead of resampled per arm",
+    "purpose": "share one physical capture across every arm so speed, angle, lighting and time are not resampled per arm. Basalt and XRSLAM additionally receive byte-identical input, because both consume only the luma plane that is stored.",
     "captures_required": 1,
     "source": "ARFrame.capturedImage luma plane, 1920x1440, 420f full range",
     "source_rationale": "iOS grants the rear camera to exactly one session, so ARSession and AVCaptureSession cannot coexist. Recording from ARKit's own frames routes around that: the ARKit arm runs live while the identical frames are persisted for the candidates.",
@@ -324,7 +328,9 @@
       "hold stationary on a desk for 10 s at the start and at the end to measure static drift",
       "include a known-length baseline in the scene for a coarse metric scale check"
     ],
-    "crude_metric_status": "sanity_check_only_not_ground_truth"
+    "crude_metric_status": "sanity_check_only_not_ground_truth",
+    "chroma_asymmetry": "ARKit consumes the full 420f biplanar buffer (luma and chroma) live during the capture; the recording stores the luma plane only, because that is the entire frozen input contract for Basalt and XRSLAM. So the three arms share one capture, not one byte stream. 'Byte-identical' is true between the two candidates and must never be claimed for ARKit.",
+    "candidate_input_is_luma_only": true
   },
   "upstream_scale_adaptation": {
     "problem": "Basalt's official euroc_config.json is tuned for 752x480 and XRSLAM's iPhone config for 640x480. Patch size, pyramid depth, detection grid and feature caps are all in pixel units, so feeding 1920x1440 through an unchanged config measures our port, not the algorithm.",
