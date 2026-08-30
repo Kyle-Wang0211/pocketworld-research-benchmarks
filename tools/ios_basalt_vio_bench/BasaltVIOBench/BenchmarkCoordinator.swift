@@ -1,0 +1,1256 @@
+import Foundation
+import UIKit
+
+private final class SystemSampleStore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [SystemMetricSample] = []
+
+    func append(_ sample: SystemMetricSample) { lock.withLock { values.append(sample) } }
+    var count: Int { lock.withLock { values.count } }
+    var last: SystemMetricSample? { lock.withLock { values.last } }
+    func snapshot(droppingFirst count: Int = 0) -> [SystemMetricSample] {
+        lock.withLock { Array(values.dropFirst(count)) }
+    }
+}
+
+final class BenchmarkCoordinator {
+    enum CoordinatorError: LocalizedError {
+        case backendUnavailable(String)
+        case anotherRunActive
+        case aborted
+        case invalidRun(String)
+        case receiptWrite(Error)
+
+        var errorDescription: String? {
+            switch self {
+            case .backendUnavailable(let name):
+                return "\(name) 后端尚未装入此构建，拒绝生成假跑分。"
+            case .anotherRunActive:
+                return "已有另一条 VIO 测试臂占用传感器；三条臂禁止同时运行。"
+            case .aborted: return "测试已由用户中止，终态收据已经保存。"
+            case .invalidRun(let reason): return "实验无效：\(reason)"
+            case .receiptWrite(let error): return "实验收据写入失败：\(error.localizedDescription)"
+            }
+        }
+    }
+
+    private let backend: BenchBackend
+    private let mode: BenchMode
+    private let datasetURL: URL?
+    private let onPhase: (BenchPhase) -> Void
+    private let onSnapshot: (LiveSnapshot) -> Void
+    private let onFinish: (Result<URL, Error>) -> Void
+    private let queue = DispatchQueue(label: "com.kyle.viobench.run", qos: .userInitiated)
+    private let lock = NSLock()
+    private var abortRequested = false
+    private weak var activeTransport: LiveSensorTransport?
+    private var activeSession: ActiveVIOEngineSession?
+    private var activeARKitSession: ARKitReferenceSession?
+
+    init(
+        backend: BenchBackend,
+        mode: BenchMode,
+        datasetURL: URL?,
+        onPhase: @escaping (BenchPhase) -> Void,
+        onSnapshot: @escaping (LiveSnapshot) -> Void,
+        onFinish: @escaping (Result<URL, Error>) -> Void
+    ) {
+        self.backend = backend
+        self.mode = mode
+        self.datasetURL = datasetURL
+        self.onPhase = onPhase
+        self.onSnapshot = onSnapshot
+        self.onFinish = onFinish
+    }
+
+    func start() {
+        queue.async { [weak self] in self?.run() }
+    }
+
+    func abort() {
+        lock.withLock { abortRequested = true }
+        lock.withLock { activeSession }?.requestStop()
+        lock.withLock { activeARKitSession }?.pause()
+    }
+
+    private func run() {
+        guard let runLease = BenchRunLease.acquire(backend: backend) else {
+            onFinish(.failure(CoordinatorError.anotherRunActive))
+            return
+        }
+        defer { runLease.release() }
+        guard backend == .arkit || ActiveVIOEngineSession.backendAvailable(backend) else {
+            onFinish(.failure(CoordinatorError.backendUnavailable(backend.displayName)))
+            return
+        }
+        onPhase(.preparing)
+        var prepared: PreparedBenchmarkRun?
+        var datasetAccessLease: DatasetAccessLease?
+        defer { datasetAccessLease?.close() }
+        do {
+            if let datasetURL {
+                datasetAccessLease = try DatasetAccessLease.acquire(datasetURL: datasetURL)
+            }
+            let context = try BenchmarkRunPreparation.prepare(
+                backend: backend,
+                mode: mode,
+                datasetURL: datasetURL
+            )
+            prepared = context
+            try writeStarted(context)
+            let initialHeartbeatNS = DispatchTime.now().uptimeNanoseconds
+            try writeHeartbeat(context, sequence: 0, monotonicNS: initialHeartbeatNS)
+            let liveRunStartNS = DispatchTime.now().uptimeNanoseconds
+            if backend == .arkit {
+                try runARKitReference(
+                    context,
+                    initialHeartbeatNS: initialHeartbeatNS,
+                    liveRunStartNS: liveRunStartNS,
+                    runLease: runLease
+                )
+                onFinish(.success(context.directoryURL))
+                return
+            }
+            if mode == .liveSoak {
+                try runLive(
+                    context,
+                    initialHeartbeatNS: initialHeartbeatNS,
+                    liveRunStartNS: liveRunStartNS,
+                    runLease: runLease
+                )
+                onFinish(.success(context.directoryURL))
+                return
+            }
+            let session = try ActiveVIOEngineSession(
+                backend: backend,
+                configURL: context.configURL,
+                calibrationURL: context.calibrationURL,
+                imageWidth: context.imageWidth,
+                imageHeight: context.imageHeight
+            )
+            try runLease.recordEngineSessionStarted()
+            lock.withLock { activeSession = session }
+            defer {
+                session.close()
+                lock.withLock { activeSession = nil }
+            }
+            try runReplay(
+                context,
+                session: session,
+                initialHeartbeatNS: initialHeartbeatNS,
+                runLease: runLease
+            )
+            onFinish(.success(context.directoryURL))
+        } catch CoordinatorError.aborted {
+            if let prepared {
+                try? writeTerminal(
+                    prepared,
+                    state: .aborted,
+                    metrics: [:],
+                    reason: "user_abort",
+                    detail: nil
+                )
+                onFinish(.success(prepared.directoryURL))
+            } else {
+                onFinish(.failure(CoordinatorError.aborted))
+            }
+        } catch {
+            if let prepared {
+                try? writeTerminal(
+                    prepared,
+                    state: .invalid,
+                    metrics: [:],
+                    reason: "runtime_error",
+                    detail: error.localizedDescription
+                )
+            }
+            onFinish(.failure(error))
+        }
+    }
+
+    private func runARKitReference(
+        _ context: PreparedBenchmarkRun,
+        initialHeartbeatNS: UInt64,
+        liveRunStartNS: UInt64,
+        runLease: BenchRunLease.Token
+    ) throws {
+        guard mode == .liveSoak else {
+            throw CoordinatorError.invalidRun("arkit_replay_is_not_supported")
+        }
+        let systemSamples = SystemSampleStore()
+        let sampler = SystemMetricSampler { systemSamples.append($0) }
+        let applicationActivity = ApplicationActivityLatch()
+        let initiallyActive = DispatchQueue.main.sync {
+            UIApplication.shared.applicationState == .active
+        }
+        applicationActivity.start(initiallyActive: initiallyActive)
+        defer { applicationActivity.stop() }
+
+        sampler.start()
+        defer { sampler.stop() }
+        let measurementCPUStart = SystemMetricSampler.processCPUSeconds().total
+        let reference = ARKitReferenceSession(
+            startMonotonicSeconds: Double(liveRunStartNS) / 1_000_000_000
+        )
+        lock.withLock { activeARKitSession = reference }
+        defer {
+            reference.pause()
+            lock.withLock { activeARKitSession = nil }
+        }
+
+        let baseline = ARKitReferenceSnapshot()
+        var measurementCPUEnd: Double?
+        var heartbeatSchedule = HeartbeatSchedule(
+            intervalNanoseconds: 5_000_000_000,
+            startingSequence: 1,
+            firstDeadlineNanoseconds: initialHeartbeatNS + 5_000_000_000
+        )
+        let startNS = liveRunStartNS
+        let measurementStartNS = startNS
+        let measurementEndNS = measurementStartNS + LiveBenchmarkDuration.measurementNanoseconds
+        var actualMeasurementEndNS = measurementEndNS
+        var lastUIUpdateNS = startNS
+        var invalidReason: String?
+        var safetyStopReason: String?
+
+        do {
+            onPhase(.measuring)
+            try reference.start()
+            try runLease.recordARSessionStarted()
+            while true {
+                if isAbortRequested { throw CoordinatorError.aborted }
+                let now = DispatchTime.now().uptimeNanoseconds
+                let status = reference.accounting.statusSnapshot()
+                if now >= measurementEndNS {
+                    measurementCPUEnd = SystemMetricSampler.processCPUSeconds().total
+                    break
+                }
+                if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
+                    try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
+                }
+                if status.sessionInterruptions > 0 {
+                    invalidReason = "arkit_session_interruption"
+                    break
+                }
+                if status.sessionFailures > 0 {
+                    invalidReason = "arkit_session_failure"
+                    break
+                }
+                if status.timestampRegressions > 0 {
+                    invalidReason = "arkit_timestamp_regression"
+                    break
+                }
+                if applicationActivity.snapshot().violationCount > 0 {
+                    invalidReason = "app_backgrounded"
+                    break
+                }
+                if ProcessInfo.processInfo.thermalState == .critical {
+                    measurementCPUEnd = SystemMetricSampler.processCPUSeconds().total
+                    actualMeasurementEndNS = now
+                    safetyStopReason = "thermal_state_critical"
+                    break
+                }
+                if let appState = systemSamples.last?.appState, appState != "active" {
+                    invalidReason = "app_backgrounded"
+                    break
+                }
+                if now - lastUIUpdateNS >= 1_000_000_000 {
+                    publishARKitSnapshot(
+                        startNS: startNS,
+                        nowNS: now,
+                        snapshot: reference.accounting.snapshot(),
+                        systemSample: systemSamples.last
+                    )
+                    lastUIUpdateNS = now
+                }
+                Thread.sleep(forTimeInterval: 0.005)
+            }
+        } catch {
+            reference.pause()
+            sampler.stop()
+            throw error
+        }
+
+        onPhase(.draining)
+        reference.pause()
+        let exclusivity = runLease.release()
+        sampler.stop()
+        applicationActivity.stop()
+        let applicationFinal = applicationActivity.snapshot()
+        let final = reference.accounting.snapshot()
+        guard let configuration = reference.configurationReceipt else {
+            throw CoordinatorError.invalidRun("arkit_configuration_receipt_missing")
+        }
+        try RunDiagnosticsWriter.writeARKit(
+            runID: context.runID,
+            snapshot: final,
+            configuration: configuration,
+            lifecycle: reference.lifecycleReceipt(),
+            applicationLifecycleViolations: applicationFinal.violationCount,
+            exclusivity: exclusivity,
+            to: context.directoryURL
+        )
+
+        if isAbortRequested { throw CoordinatorError.aborted }
+        guard invalidReason == nil else {
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: invalidReason ?? "live_run_invalid",
+                detail: nil
+            )
+            return
+        }
+        if let finalInvalidReason = ARKitRunValidity.invalidReason(
+            snapshot: final,
+            applicationLifecycleViolations: applicationFinal.violationCount
+        ) {
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: finalInvalidReason,
+                detail: nil
+            )
+            return
+        }
+
+        let allSystemSamples = systemSamples.snapshot()
+        let measuredSystem = allSystemSamples.filter {
+            let timestampNS = UInt64(max(0, $0.monotonicSeconds * 1_000_000_000))
+            return timestampNS >= measurementStartNS && timestampNS < actualMeasurementEndNS
+        }
+        guard let thermalDwell = Statistics.thermalDwell(
+            samples: allSystemSamples,
+            from: Double(measurementStartNS) / 1_000_000_000,
+            to: Double(actualMeasurementEndNS) / 1_000_000_000
+        ) else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "thermal_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+        guard measuredSystem.first?.batteryLevel != nil,
+              measuredSystem.last?.batteryLevel != nil else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "battery_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+        guard let peakPhysicalFootprintMiB = Statistics.peakPhysicalFootprintMiB(
+            samples: measuredSystem
+        ), let measurementCPUEnd else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "resource_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+
+        let frames = final.framesReceived - baseline.framesReceived
+        let finite = final.finitePoses - baseline.finitePoses
+        let nonfinite = final.nonfinitePoses - baseline.nonfinitePoses
+        let missed = final.estimatedMissedFrames - baseline.estimatedMissedFrames
+        let trackingNormal = final.trackingNormal - baseline.trackingNormal
+        let latencyStart = min(
+            baseline.callbackLatenciesMilliseconds.count,
+            final.callbackLatenciesMilliseconds.count
+        )
+        let measurementLatencies = Array(
+            final.callbackLatenciesMilliseconds.dropFirst(latencyStart)
+        )
+        let translationStart = min(
+            baseline.consecutiveTranslationMeters.count,
+            final.consecutiveTranslationMeters.count
+        )
+        let rotationStart = min(
+            baseline.consecutiveRotationDegrees.count,
+            final.consecutiveRotationDegrees.count
+        )
+        let intervalStart = min(
+            baseline.frameIntervalsMilliseconds.count,
+            final.frameIntervalsMilliseconds.count
+        )
+        let handlerStart = min(
+            baseline.callbackHandlerDurationsMilliseconds.count,
+            final.callbackHandlerDurationsMilliseconds.count
+        )
+        let firstBattery = measuredSystem.first!.batteryLevel!
+        let lastBattery = measuredSystem.last!.batteryLevel!
+        let firstUsablePoseLatencyMS = final.firstNormalDeliveryLatencyMilliseconds
+            ?? (Double(LiveBenchmarkDuration.totalNanoseconds) / 1_000_000 + 1)
+        let metrics: [String: Double] = [
+            "first_usable_pose_latency_ms": firstUsablePoseLatencyMS,
+            "measurement_duration_seconds": max(
+                0.001,
+                Double(actualMeasurementEndNS - measurementStartNS) / 1_000_000_000
+            ),
+            "processed_fps": Double(finite) / max(
+                0.001,
+                Double(actualMeasurementEndNS - measurementStartNS) / 1_000_000_000
+            ),
+            "p95_pipeline_latency_ms": Statistics.nearestRankPercentile(
+                measurementLatencies,
+                percentile: 0.95
+            ) ?? 0,
+            "app_drop_rate": Double(missed) / Double(max(UInt64(1), frames + missed)),
+            "thermal_critical_seconds": safetyStopReason == "thermal_state_critical"
+                ? max(0.001, thermalDwell["critical", default: 0])
+                : thermalDwell["critical", default: 0],
+            "thermal_serious_seconds": thermalDwell["serious", default: 0],
+            "peak_phys_footprint_mb": peakPhysicalFootprintMiB,
+            "finite_pose_ratio": Double(finite) / Double(max(UInt64(1), finite + nonfinite)),
+            "battery_level_delta": Statistics.batteryLevelDelta(
+                start: firstBattery,
+                end: lastBattery
+            ),
+            "cpu_seconds": SystemMetricSampler.cpuSecondsDelta(
+                start: measurementCPUStart,
+                end: measurementCPUEnd
+            ),
+            "tracking_normal_ratio": Double(trackingNormal) / Double(max(UInt64(1), frames)),
+            "estimated_missed_frames": Double(missed),
+            "first_normal_latency_ms": final.firstNormalLatencyMilliseconds ?? -1,
+            "first_mapped_latency_ms": final.firstMappedLatencyMilliseconds ?? -1,
+            "p95_callback_handler_duration_ms": Statistics.nearestRankPercentile(
+                Array(final.callbackHandlerDurationsMilliseconds.dropFirst(handlerStart)),
+                percentile: 0.95
+            ) ?? 0,
+            "p95_frame_interval_ms": Statistics.nearestRankPercentile(
+                Array(final.frameIntervalsMilliseconds.dropFirst(intervalStart)),
+                percentile: 0.95
+            ) ?? 0,
+            "max_frame_interval_ms": Array(
+                final.frameIntervalsMilliseconds.dropFirst(intervalStart)
+            ).max() ?? 0,
+            "stall_events_over_one_second": Double(
+                final.stallEventsOverOneSecond - baseline.stallEventsOverOneSecond
+            ),
+            "stall_duration_ms": final.stallDurationMilliseconds
+                - baseline.stallDurationMilliseconds,
+            "longest_non_normal_seconds": final.longestNonNormalSeconds,
+            "relocalization_attempts": Double(
+                final.relocalizationAttempts - baseline.relocalizationAttempts
+            ),
+            "relocalization_recoveries": Double(
+                final.relocalizationRecoveries - baseline.relocalizationRecoveries
+            ),
+            "p95_consecutive_translation_m": Statistics.nearestRankPercentile(
+                Array(final.consecutiveTranslationMeters.dropFirst(translationStart)),
+                percentile: 0.95
+            ) ?? 0,
+            "p95_consecutive_rotation_deg": Statistics.nearestRankPercentile(
+                Array(final.consecutiveRotationDegrees.dropFirst(rotationStart)),
+                percentile: 0.95
+            ) ?? 0,
+        ]
+        try writePoses(final.poses.map(\.pose), to: context.directoryURL)
+        try writeSystemSamples(measuredSystem, to: context.directoryURL)
+        let verdict = BenchGateEvaluator.live(
+            firstUsablePoseLatencyMilliseconds: firstUsablePoseLatencyMS,
+            processedFPS: metrics["processed_fps"]!,
+            p95LatencyMilliseconds: metrics["p95_pipeline_latency_ms"]!,
+            appDropRate: metrics["app_drop_rate"]!,
+            thermalCriticalSeconds: metrics["thermal_critical_seconds"]!,
+            thermalSeriousSeconds: metrics["thermal_serious_seconds"]!,
+            peakFootprintMB: metrics["peak_phys_footprint_mb"]!,
+            finitePoseRatio: metrics["finite_pose_ratio"]!,
+            processedFPSMinimum: Double(configuration.selectedFramesPerSecond) * 0.9
+        )
+        try writeTerminal(
+            context,
+            state: verdict.passed ? .validPass : .validFail,
+            metrics: metrics,
+            reason: verdict.passed ? "thresholds_met" : "gates_not_met",
+            detail: ([safetyStopReason].compactMap { $0 }
+                + verdict.failedReasons).joined(separator: ",")
+        )
+    }
+
+    private func runLive(
+        _ context: PreparedBenchmarkRun,
+        initialHeartbeatNS: UInt64,
+        liveRunStartNS: UInt64,
+        runLease: BenchRunLease.Token
+    ) throws {
+        let systemSamples = SystemSampleStore()
+        let sampler = SystemMetricSampler { systemSamples.append($0) }
+        let applicationActivity = ApplicationActivityLatch()
+        let initiallyActive = DispatchQueue.main.sync {
+            UIApplication.shared.applicationState == .active
+        }
+        applicationActivity.start(initiallyActive: initiallyActive)
+        defer { applicationActivity.stop() }
+        sampler.start()
+        defer { sampler.stop() }
+        let measurementCPUStart = SystemMetricSampler.processCPUSeconds().total
+        let session = try ActiveVIOEngineSession(
+            backend: backend,
+            configURL: context.configURL,
+            calibrationURL: context.calibrationURL,
+            imageWidth: context.imageWidth,
+            imageHeight: context.imageHeight
+        )
+        try runLease.recordEngineSessionStarted()
+        lock.withLock { activeSession = session }
+        defer {
+            session.close()
+            lock.withLock { activeSession = nil }
+        }
+        let transport = try LiveSensorTransport(
+            imuDeliveryMode: IMUDeliveryMode.forBackend(backend)
+        )
+        lock.withLock { activeTransport = transport }
+
+        var poses: [NativePoseSample] = []
+        var measurementPoseCount = 0
+        var measurementLatenciesMS: [Double] = []
+        let nativeBaseline = try session.snapshot()
+        let transportBaseline = transport.snapshot()
+        var firstUsablePoseLatencyMS: Double?
+        var measurementCPUEnd: Double?
+        var heartbeatSchedule = HeartbeatSchedule(
+            intervalNanoseconds: 5_000_000_000,
+            startingSequence: 1,
+            firstDeadlineNanoseconds: initialHeartbeatNS + 5_000_000_000
+        )
+        let startNS = liveRunStartNS
+        let measurementStartNS = startNS
+        let measurementEndNS = measurementStartNS + LiveBenchmarkDuration.measurementNanoseconds
+        var actualMeasurementEndNS = measurementEndNS
+        let measurementWindow = BenchmarkMeasurementWindow(
+            startNanoseconds: measurementStartNS,
+            endNanoseconds: measurementEndNS
+        )
+        var lastUIUpdateNS = startNS
+        var invalidReason: String?
+        var safetyStopReason: String?
+
+        do {
+            onPhase(.measuring)
+            try transport.start()
+            try runLease.recordAVFoundationTransportStarted()
+            while true {
+                if isAbortRequested { throw CoordinatorError.aborted }
+                let now = DispatchTime.now().uptimeNanoseconds
+                if now >= measurementEndNS {
+                    measurementCPUEnd = SystemMetricSampler.processCPUSeconds().total
+                    break
+                }
+
+                try drainLiveTransport(transport, into: session)
+                for pose in try drainPoses(session) {
+                    poses.append(pose)
+                    if firstUsablePoseLatencyMS == nil {
+                        firstUsablePoseLatencyMS = firstPoseLatencyMilliseconds(
+                            runStartNanoseconds: startNS,
+                            pose: pose
+                        )
+                    }
+                    if measurementWindow.contains(
+                        captureNanoseconds: pose.capturedMonotonicNanoseconds
+                    ) {
+                        measurementPoseCount += 1
+                        measurementLatenciesMS.append(
+                            Double(pose.pipelineLatencyNanoseconds) / 1_000_000
+                        )
+                    }
+                }
+                if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
+                    try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
+                }
+
+                let transportState = transport.snapshot()
+                if transportState.accounting.captureInterruptions > 0 {
+                    invalidReason = "capture_interruption"
+                    break
+                }
+                if transportState.accounting.captureRuntimeErrors > 0 {
+                    invalidReason = "capture_runtime_error"
+                    break
+                }
+                if transportState.accounting.timestampRegressions > 0 {
+                    invalidReason = "timestamp_regression"
+                    break
+                }
+                if applicationActivity.snapshot().violationCount > 0 {
+                    invalidReason = "app_backgrounded"
+                    break
+                }
+                if ProcessInfo.processInfo.thermalState == .critical {
+                    measurementCPUEnd = SystemMetricSampler.processCPUSeconds().total
+                    actualMeasurementEndNS = now
+                    safetyStopReason = "thermal_state_critical"
+                    break
+                }
+                if let appState = systemSamples.last?.appState, appState != "active" {
+                    invalidReason = "app_backgrounded"
+                    break
+                }
+                if now - lastUIUpdateNS >= 250_000_000 {
+                    publishLiveSnapshot(
+                        startNS: startNS,
+                        nowNS: now,
+                        latenciesMS: measurementLatenciesMS,
+                        poses: poses,
+                        transport: transportState,
+                        systemSample: systemSamples.last
+                    )
+                    lastUIUpdateNS = now
+                }
+                Thread.sleep(forTimeInterval: 0.001)
+            }
+        } catch {
+            transport.stop()
+            sampler.stop()
+            throw error
+        }
+
+        onPhase(.draining)
+        transport.stop()
+        while true {
+            let drained = try drainLiveTransport(transport, into: session)
+            if drained { break }
+            Thread.sleep(forTimeInterval: 0.001)
+        }
+        try session.sealDrainStop()
+        for pose in try drainPoses(session) {
+            poses.append(pose)
+            if firstUsablePoseLatencyMS == nil {
+                firstUsablePoseLatencyMS = firstPoseLatencyMilliseconds(
+                    runStartNanoseconds: startNS,
+                    pose: pose
+                )
+            }
+            if pose.capturedMonotonicNanoseconds >= measurementStartNS,
+               pose.capturedMonotonicNanoseconds < actualMeasurementEndNS {
+                measurementPoseCount += 1
+                measurementLatenciesMS.append(
+                    Double(pose.pipelineLatencyNanoseconds) / 1_000_000
+                )
+            }
+        }
+        sampler.stop()
+        applicationActivity.stop()
+        let applicationActivityFinal = applicationActivity.snapshot()
+        lock.withLock { activeTransport = nil }
+
+        if isAbortRequested { throw CoordinatorError.aborted }
+        guard invalidReason == nil else {
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: invalidReason ?? "live_run_invalid",
+                detail: nil
+            )
+            return
+        }
+
+        let nativeFinal = try session.snapshot()
+        let transportFinal = transport.snapshot()
+        session.close()
+        lock.withLock { activeSession = nil }
+        let exclusivity = runLease.release()
+        try RunDiagnosticsWriter.writeFull(
+            backend: backend,
+            runID: context.runID,
+            native: nativeFinal,
+            transport: transportFinal,
+            applicationLifecycleViolations: applicationActivityFinal.violationCount,
+            exclusivity: exclusivity,
+            to: context.directoryURL
+        )
+        if let lossReason = LiveRunValidity.invalidReason(
+            liveLossCounters(
+                native: nativeFinal,
+                transport: transportFinal,
+                applicationLifecycleViolations: applicationActivityFinal.violationCount
+            )
+        ) {
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: lossReason,
+                detail: nil
+            )
+            return
+        }
+        let allSystemSamples = systemSamples.snapshot()
+        let measuredSystem = allSystemSamples.filter {
+            let timestampNS = UInt64(max(0, $0.monotonicSeconds * 1_000_000_000))
+            return timestampNS >= measurementStartNS && timestampNS < actualMeasurementEndNS
+        }
+        guard let thermalDwell = Statistics.thermalDwell(
+            samples: allSystemSamples,
+            from: Double(measurementStartNS) / 1_000_000_000,
+            to: Double(actualMeasurementEndNS) / 1_000_000_000
+        ) else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "thermal_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+        guard measuredSystem.first?.batteryLevel != nil,
+              measuredSystem.last?.batteryLevel != nil else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "battery_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+        guard let peakPhysicalFootprintMiB = Statistics.peakPhysicalFootprintMiB(
+            samples: measuredSystem
+        ) else {
+            try writeSystemSamples(measuredSystem, to: context.directoryURL)
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: [:],
+                reason: "memory_telemetry_unavailable",
+                detail: nil
+            )
+            return
+        }
+        guard let measurementCPUEnd else {
+            throw CoordinatorError.invalidRun("measurement_cpu_endpoint_missing")
+        }
+        let metrics = liveMetrics(
+            firstUsablePoseLatencyMilliseconds: firstUsablePoseLatencyMS
+                ?? (Double(LiveBenchmarkDuration.totalNanoseconds) / 1_000_000 + 1),
+            nativeBaseline: nativeBaseline,
+            nativeFinal: nativeFinal,
+            transportBaseline: transportBaseline,
+            transportFinal: transportFinal,
+            measurementPoseCount: measurementPoseCount,
+            latenciesMS: measurementLatenciesMS,
+            systemSamples: measuredSystem,
+            thermalDwell: thermalDwell,
+            peakPhysicalFootprintMiB: peakPhysicalFootprintMiB,
+            cpuSeconds: SystemMetricSampler.cpuSecondsDelta(
+                start: measurementCPUStart,
+                end: measurementCPUEnd
+            ),
+            measurementDurationSeconds: max(
+                0.001,
+                Double(actualMeasurementEndNS - measurementStartNS) / 1_000_000_000
+            ),
+            thermalCriticalObserved: safetyStopReason == "thermal_state_critical"
+        )
+        try writePoses(poses.map(\.pose), to: context.directoryURL)
+        try writeSystemSamples(measuredSystem, to: context.directoryURL)
+        let verdict = BenchGateEvaluator.live(
+            firstUsablePoseLatencyMilliseconds: metrics["first_usable_pose_latency_ms"]!,
+            processedFPS: metrics["processed_fps"]!,
+            p95LatencyMilliseconds: metrics["p95_pipeline_latency_ms"]!,
+            appDropRate: metrics["app_drop_rate"]!,
+            thermalCriticalSeconds: metrics["thermal_critical_seconds"]!,
+            thermalSeriousSeconds: metrics["thermal_serious_seconds"]!,
+            peakFootprintMB: metrics["peak_phys_footprint_mb"]!,
+            finitePoseRatio: metrics["finite_pose_ratio"]!
+        )
+        try writeTerminal(
+            context,
+            state: verdict.passed ? .validPass : .validFail,
+            metrics: metrics,
+            reason: verdict.passed ? "thresholds_met" : "gates_not_met",
+            detail: ([safetyStopReason].compactMap { $0 }
+                + verdict.failedReasons).joined(separator: ",")
+        )
+    }
+
+    private func runReplay(
+        _ context: PreparedBenchmarkRun,
+        session: ActiveVIOEngineSession,
+        initialHeartbeatNS: UInt64,
+        runLease: BenchRunLease.Token
+    ) throws {
+        guard let dataset = context.replayDataset else {
+            throw CoordinatorError.invalidRun("replay_dataset_missing")
+        }
+        guard dataset.inputCameraCount == context.inputCameraCount,
+              context.inputCameraCount == 1 else {
+            throw CoordinatorError.invalidRun("native_manifest_camera_count_mismatch")
+        }
+        let systemSamples = SystemSampleStore()
+        let sampler = SystemMetricSampler { systemSamples.append($0) }
+        var poses: [TimedPose] = []
+        var heartbeatSchedule = HeartbeatSchedule(
+            intervalNanoseconds: 5_000_000_000,
+            startingSequence: 1,
+            firstDeadlineNanoseconds: initialHeartbeatNS + 5_000_000_000
+        )
+        let startNS = DispatchTime.now().uptimeNanoseconds
+        let cpuStart = SystemMetricSampler.processCPUSeconds().total
+        sampler.start()
+        onPhase(.measuring)
+        let scheduler = ReplayScheduler(
+            mode: mode == .replayPaced ? .paced : .maximumThroughput
+        )
+        do {
+            try scheduler.run(events: dataset.events) { event in
+                if isAbortRequested { throw CoordinatorError.aborted }
+                switch event {
+                case .imu(let sample):
+                    try waitForReplayCapacity(
+                        camera: false,
+                        session: session,
+                        context: context,
+                        heartbeatSchedule: &heartbeatSchedule,
+                        poses: &poses
+                    )
+                    try session.submitIMU(sample)
+                case .camera(let frame):
+                    guard frame.inputCameraCount == context.inputCameraCount,
+                          frame.camera1ImageURL == nil else {
+                        throw CoordinatorError.invalidRun("camera_count_drift")
+                    }
+                    try waitForReplayCapacity(
+                        camera: true,
+                        session: session,
+                        context: context,
+                        heartbeatSchedule: &heartbeatSchedule,
+                        poses: &poses
+                    )
+                    try session.submitReplayCamera(
+                        frame,
+                        acceptedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                    )
+                }
+                poses.append(contentsOf: try drainPoses(session).map(\.pose))
+                let now = DispatchTime.now().uptimeNanoseconds
+                if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
+                    try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
+                }
+            }
+        } catch {
+            sampler.stop()
+            throw error
+        }
+        onPhase(.draining)
+        try session.sealDrainStop()
+        poses.append(contentsOf: try drainPoses(session).map(\.pose))
+        sampler.stop()
+        let endNS = DispatchTime.now().uptimeNanoseconds
+        let cpuEnd = SystemMetricSampler.processCPUSeconds().total
+        if isAbortRequested { throw CoordinatorError.aborted }
+        let snapshot = try session.snapshot()
+        session.close()
+        lock.withLock { activeSession = nil }
+        let exclusivity = runLease.release()
+        let evaluationConfiguration = TrajectoryEvaluationConfiguration()
+        try RunDiagnosticsWriter.writeFull(
+            backend: backend,
+            runID: context.runID,
+            native: snapshot,
+            evaluationConfiguration: evaluationConfiguration,
+            exclusivity: exclusivity,
+            to: context.directoryURL
+        )
+        guard snapshot.counters.cameraDroppedQueueFull == 0,
+              snapshot.counters.imuDroppedQueueFull == 0,
+              snapshot.counters.posesDroppedBridgeQueue == 0,
+              snapshot.counters.nonfinitePoseRejected == 0 else {
+            throw CoordinatorError.invalidRun("native_transport_loss")
+        }
+        let expectedCamera = dataset.events.reduce(into: UInt64(0)) {
+            if case .camera = $1 { $0 += 1 }
+        }
+        let expectedIMU = dataset.events.reduce(into: UInt64(0)) {
+            if case .imu = $1 { $0 += 1 }
+        }
+        guard snapshot.counters.cameraAccepted == expectedCamera,
+              snapshot.counters.imuAccepted == expectedIMU else {
+            throw CoordinatorError.invalidRun("replay_input_count_mismatch")
+        }
+        let accuracy = try TrajectoryEvaluator(
+            configuration: evaluationConfiguration
+        ).evaluate(
+            estimated: poses,
+            groundTruth: dataset.groundTruth
+        )
+        let elapsed = max(1e-9, Double(endNS - startNS) / 1_000_000_000)
+        let samples = systemSamples.snapshot()
+        let metrics: [String: Double] = [
+            "processed_fps": Double(poses.count) / elapsed,
+            "ate_rmse_m": accuracy.ateRMSEMeters,
+            "rpe_translation_rmse_m": accuracy.rpeTranslationRMSEMeters,
+            "rpe_rotation_rmse_deg": accuracy.rpeRotationRMSEDegrees,
+            "ground_truth_coverage": accuracy.groundTruthCoverage,
+            "cpu_seconds": SystemMetricSampler.cpuSecondsDelta(start: cpuStart, end: cpuEnd),
+        ]
+        try writePoses(poses, to: context.directoryURL)
+        try writeSystemSamples(samples, to: context.directoryURL)
+        let verdict = BenchGateEvaluator.replay(accuracy)
+        try writeTerminal(
+            context,
+            state: verdict.passed ? .validPass : .validFail,
+            metrics: metrics,
+            reason: verdict.passed ? "thresholds_met" : "gates_not_met",
+            detail: verdict.failedReasons.joined(separator: ",")
+        )
+    }
+
+    @discardableResult
+    private func drainLiveTransport(
+        _ transport: LiveSensorTransport,
+        into session: ActiveVIOEngineSession
+    ) throws -> Bool {
+        if transport.imuDeliveryMode == .xrslamRawSeparateEvents {
+            let batch = transport.drainXRSLAMSensorEvents(maxCount: 512)
+            for event in batch.items {
+                do {
+                    switch event {
+                    case .camera(let frame):
+                        try session.submitCamera(
+                            frame,
+                            acceptedNanoseconds: frame.timestampNanoseconds
+                        )
+                    case .imu(let sample):
+                        try session.submitIMU(sample)
+                    }
+                } catch ActiveVIOEngineSessionError.queueFull {
+                    continue
+                }
+            }
+            return batch.isSealedAndDrained
+        }
+
+        let pairedIMU = transport.drainIMU(maxCount: 256)
+        for sample in pairedIMU.items {
+            do { try session.submitIMU(sample) }
+            catch ActiveVIOEngineSessionError.queueFull { continue }
+        }
+        let camera = transport.drainCamera(maxCount: 8)
+        for frame in camera.items {
+            do {
+                try session.submitCamera(
+                    frame,
+                    acceptedNanoseconds: frame.timestampNanoseconds
+                )
+            } catch ActiveVIOEngineSessionError.queueFull {
+                continue
+            }
+        }
+        return pairedIMU.isSealedAndDrained && camera.isSealedAndDrained
+    }
+
+    private func drainPoses(_ session: ActiveVIOEngineSession) throws -> [NativePoseSample] {
+        var result: [NativePoseSample] = []
+        while let pose = try session.pollPose() { result.append(pose) }
+        return result
+    }
+
+    private func waitForReplayCapacity(
+        camera: Bool,
+        session: ActiveVIOEngineSession,
+        context: PreparedBenchmarkRun,
+        heartbeatSchedule: inout HeartbeatSchedule,
+        poses: inout [TimedPose]
+    ) throws {
+        while true {
+            if isAbortRequested { throw CoordinatorError.aborted }
+            let snapshot = try session.snapshot()
+            let size = camera
+                ? snapshot.cameraInputQueue.size
+                : snapshot.imuInputQueue.size
+            let capacity = camera
+                ? snapshot.cameraInputQueue.capacity
+                : snapshot.imuInputQueue.capacity
+            if capacity == 0 { return }
+            if size < capacity { return }
+            poses.append(contentsOf: try drainPoses(session).map(\.pose))
+            let now = DispatchTime.now().uptimeNanoseconds
+            if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
+                try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
+            }
+            Thread.sleep(forTimeInterval: 0.0002)
+        }
+    }
+
+    private func liveMetrics(
+        firstUsablePoseLatencyMilliseconds: Double,
+        nativeBaseline: VIOEngineSnapshot,
+        nativeFinal: VIOEngineSnapshot,
+        transportBaseline: LiveSensorTransportSnapshot,
+        transportFinal: LiveSensorTransportSnapshot,
+        measurementPoseCount: Int,
+        latenciesMS: [Double],
+        systemSamples: [SystemMetricSample],
+        thermalDwell: [String: Double],
+        peakPhysicalFootprintMiB: Double,
+        cpuSeconds: Double,
+        measurementDurationSeconds: Double,
+        thermalCriticalObserved: Bool
+    ) -> [String: Double] {
+        let offered = nativeFinal.counters.cameraOffered - nativeBaseline.counters.cameraOffered
+        let nativeDrops = nativeFinal.counters.cameraDroppedQueueFull - nativeBaseline.counters.cameraDroppedQueueFull
+        let handoffDrops = activeCameraHandoffDrops(transportFinal)
+            - activeCameraHandoffDrops(transportBaseline)
+        let platformDrops = transportFinal.accounting.totalCameraDrops
+            - transportBaseline.accounting.totalCameraDrops
+        let denominator = max(UInt64(1), offered + handoffDrops + platformDrops)
+        let firstBattery = systemSamples.first?.batteryLevel
+        let lastBattery = systemSamples.last?.batteryLevel
+        let batteryDelta = Statistics.batteryLevelDelta(
+            start: firstBattery!,
+            end: lastBattery!
+        )
+        return [
+            "first_usable_pose_latency_ms": firstUsablePoseLatencyMilliseconds,
+            "measurement_duration_seconds": measurementDurationSeconds,
+            "processed_fps": Double(measurementPoseCount) / measurementDurationSeconds,
+            "p95_pipeline_latency_ms": Statistics.nearestRankPercentile(latenciesMS, percentile: 0.95) ?? 0,
+            "app_drop_rate": Double(nativeDrops + handoffDrops + platformDrops) / Double(denominator),
+            "thermal_critical_seconds": thermalCriticalObserved
+                ? max(0.001, thermalDwell["critical", default: 0])
+                : thermalDwell["critical", default: 0],
+            "thermal_serious_seconds": thermalDwell["serious", default: 0],
+            "peak_phys_footprint_mb": peakPhysicalFootprintMiB,
+            "finite_pose_ratio": 1.0,
+            "battery_level_delta": batteryDelta,
+            "cpu_seconds": cpuSeconds,
+        ]
+    }
+
+    private func liveLossCounters(
+        native: VIOEngineSnapshot,
+        transport: LiveSensorTransportSnapshot,
+        applicationLifecycleViolations: UInt64
+    ) -> LiveRunLossCounters {
+        let assembly = transport.imuAssembly
+        return LiveRunLossCounters(
+            motionErrors: transport.accounting.motionErrors,
+            platformCameraDrops: transport.accounting.totalCameraDrops,
+            captureInterruptions: transport.accounting.captureInterruptions,
+            captureRuntimeErrors: transport.accounting.captureRuntimeErrors,
+            timestampRegressions: transport.accounting.timestampRegressions,
+            applicationLifecycleViolations: applicationLifecycleViolations,
+            imuAssemblyDrops: assembly.integrityLossCount,
+            cameraHandoffDrops: transport.imuDeliveryMode == .basaltGyroDrivenPaired
+                ? transport.cameraHandoff.totalRejectedOrDropped
+                : 0,
+            combinedSensorHandoffDrops:
+                transport.imuDeliveryMode == .xrslamRawSeparateEvents
+                    ? transport.xrslamSensorHandoff.totalRejectedOrDropped
+                    : 0,
+            imuHandoffDrops: activeIMUHandoffDrops(transport),
+            nativeIMUDrops: native.counters.imuDroppedQueueFull,
+            nativeIMURejections:
+                native.counters.imuRejectedTimestamp
+                + native.counters.imuRejectedSealed,
+            nativeCameraTransportLoss:
+                native.counters.cameraDroppedQueueFull
+                + native.counters.cameraRejectedSealed,
+            nativeCameraTimestampRejections: native.counters.cameraRejectedTimestamp,
+            poseBridgeDrops: native.counters.posesDroppedBridgeQueue,
+            nonfinitePoses: native.counters.nonfinitePoseRejected
+        )
+    }
+
+    private func activeIMUHandoffDrops(_ transport: LiveSensorTransportSnapshot) -> UInt64 {
+        switch transport.imuDeliveryMode {
+        case .basaltGyroDrivenPaired:
+            return transport.imuHandoff.totalRejectedOrDropped
+        case .xrslamRawSeparateEvents:
+            return 0
+        }
+    }
+
+    private func firstPoseLatencyMilliseconds(
+        runStartNanoseconds: UInt64,
+        pose: NativePoseSample
+    ) -> Double? {
+        let (publicationNanoseconds, overflow) = pose.capturedMonotonicNanoseconds
+            .addingReportingOverflow(pose.pipelineLatencyNanoseconds)
+        guard !overflow, publicationNanoseconds >= runStartNanoseconds else {
+            return nil
+        }
+        return Double(publicationNanoseconds - runStartNanoseconds) / 1_000_000
+    }
+
+    private func activeCameraHandoffDrops(
+        _ transport: LiveSensorTransportSnapshot
+    ) -> UInt64 {
+        switch transport.imuDeliveryMode {
+        case .basaltGyroDrivenPaired:
+            return transport.cameraHandoff.totalRejectedOrDropped
+        case .xrslamRawSeparateEvents:
+            return transport.xrslamSensorHandoff.totalRejectedOrDropped
+        }
+    }
+
+    private func publishLiveSnapshot(
+        startNS: UInt64,
+        nowNS: UInt64,
+        latenciesMS: [Double],
+        poses: [NativePoseSample],
+        transport: LiveSensorTransportSnapshot,
+        systemSample: SystemMetricSample?
+    ) {
+        onSnapshot(LiveSnapshot(
+            elapsedSeconds: Double(nowNS - startNS) / 1_000_000_000,
+            firstUsablePoseLatencyMilliseconds: poses.first.flatMap {
+                firstPoseLatencyMilliseconds(runStartNanoseconds: startNS, pose: $0)
+            },
+            processedFPS: Double(poses.count) / max(1, Double(nowNS - startNS) / 1_000_000_000),
+            pipelineP95Milliseconds: Statistics.nearestRankPercentile(latenciesMS, percentile: 0.95) ?? 0,
+            cameraDrops: Int(transport.accounting.totalCameraDrops),
+            appDrops: Int(activeCameraHandoffDrops(transport)),
+            poseCount: poses.count,
+            cpuCoreEquivalent: systemSample?.cpuCoreEquivalent ?? 0,
+            footprintMB: Double(systemSample?.physicalFootprintBytes ?? 0) / 1_048_576,
+            thermalState: systemSample?.thermalState ?? "unknown",
+            batteryLevel: systemSample?.batteryLevel
+        ))
+    }
+
+    private func publishARKitSnapshot(
+        startNS: UInt64,
+        nowNS: UInt64,
+        snapshot: ARKitReferenceSnapshot,
+        systemSample: SystemMetricSample?
+    ) {
+        let elapsed = max(1, Double(nowNS - startNS) / 1_000_000_000)
+        onSnapshot(LiveSnapshot(
+            elapsedSeconds: elapsed,
+            firstUsablePoseLatencyMilliseconds:
+                snapshot.firstNormalDeliveryLatencyMilliseconds,
+            processedFPS: Double(snapshot.finitePoses) / elapsed,
+            pipelineP95Milliseconds: Statistics.nearestRankPercentile(
+                snapshot.callbackLatenciesMilliseconds,
+                percentile: 0.95
+            ) ?? 0,
+            cameraDrops: Int(snapshot.estimatedMissedFrames),
+            appDrops: Int(snapshot.callbacksAfterPause),
+            poseCount: Int(snapshot.finitePoses),
+            cpuCoreEquivalent: systemSample?.cpuCoreEquivalent ?? 0,
+            footprintMB: Double(systemSample?.physicalFootprintBytes ?? 0) / 1_048_576,
+            thermalState: systemSample?.thermalState ?? "unknown",
+            batteryLevel: systemSample?.batteryLevel
+        ))
+    }
+
+    private func writeStarted(_ context: PreparedBenchmarkRun) throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Result<Void, Error>!
+        context.receiptWriter.enqueueStarted(context.startedReceipt) {
+            result = $0
+            semaphore.signal()
+        }
+        semaphore.wait()
+        do { try result.get() } catch { throw CoordinatorError.receiptWrite(error) }
+    }
+
+    private func writeTerminal(
+        _ context: PreparedBenchmarkRun,
+        state: RunReceiptState,
+        metrics: [String: Double],
+        reason: String,
+        detail: String?
+    ) throws {
+        let diagnosticsURL = context.directoryURL.appendingPathComponent("diagnostics.json")
+        if !FileManager.default.fileExists(atPath: diagnosticsURL.path) {
+            guard state != .validPass, state != .validFail else {
+                throw CoordinatorError.invalidRun("full_diagnostics_missing")
+            }
+            try RunDiagnosticsWriter.writeUnavailable(
+                backend: backend,
+                runID: context.runID,
+                reason: reason,
+                to: context.directoryURL
+            )
+        }
+        var terminal = context.startedReceipt
+        terminal.state = state
+        terminal.endedAtUTC = BenchmarkRunPreparation.utcTimestamp()
+        terminal.metrics = metrics
+        terminal.termination = RunTermination(
+            reasonCode: reason,
+            detail: detail,
+            recoveredFromInterruption: false
+        )
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Result<Void, Error>!
+        context.receiptWriter.enqueueTerminal(terminal) {
+            result = $0
+            semaphore.signal()
+        }
+        semaphore.wait()
+        do { try result.get() } catch { throw CoordinatorError.receiptWrite(error) }
+        try BenchmarkArtifactFinalizer.finalize(
+            directoryURL: context.directoryURL,
+            runID: context.runID,
+            channel: context.startedReceipt.channel
+        )
+    }
+
+    private func writeHeartbeat(
+        _ context: PreparedBenchmarkRun,
+        sequence: Int,
+        monotonicNS: UInt64
+    ) throws {
+        let heartbeat = RunHeartbeat(
+            runID: context.runID,
+            sequence: sequence,
+            monotonicNS: monotonicNS,
+            writtenAtUTC: BenchmarkRunPreparation.utcTimestamp(),
+            startedReceiptSHA256: context.startedReceiptSHA256
+        )
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Result<Void, Error>!
+        context.receiptWriter.enqueueHeartbeat(heartbeat) {
+            result = $0
+            semaphore.signal()
+        }
+        semaphore.wait()
+        do { try result.get() } catch { throw CoordinatorError.receiptWrite(error) }
+    }
+
+    private func writePoses(_ poses: [TimedPose], to directory: URL) throws {
+        let rows = poses.map {
+            String(
+                format: "%@ %.9f %.9f %.9f %.12f %.12f %.12f %.12f",
+                TUMTimestampFormatter.string(nanoseconds: $0.timestampNanoseconds),
+                $0.translation.x, $0.translation.y, $0.translation.z,
+                $0.rotation.x, $0.rotation.y, $0.rotation.z, $0.rotation.w
+            )
+        }.joined(separator: "\n") + "\n"
+        try Data(rows.utf8).write(to: directory.appendingPathComponent("poses.tum"), options: .atomic)
+    }
+
+    private func writeSystemSamples(_ samples: [SystemMetricSample], to directory: URL) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let rows = try samples.map { String(decoding: try encoder.encode($0), as: UTF8.self) }
+        try Data((rows.joined(separator: "\n") + (rows.isEmpty ? "" : "\n")).utf8)
+            .write(to: directory.appendingPathComponent("telemetry.jsonl"), options: .atomic)
+    }
+
+    private var isAbortRequested: Bool { lock.withLock { abortRequested } }
+}

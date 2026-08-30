@@ -1,0 +1,292 @@
+import Foundation
+
+struct PreparedBenchmarkRun {
+    let backend: BenchBackend
+    let runID: String
+    let directoryURL: URL
+    let configURL: URL
+    let calibrationURL: URL
+    let inputCameraCount: Int
+    let imageWidth: Int
+    let imageHeight: Int
+    let replayDataset: EuRoCReplayDataset?
+    let startedReceipt: RunReceipt
+    let startedReceiptSHA256: String
+    let receiptWriter: RunReceiptWriter
+}
+
+struct EngineResourcePlan: Equatable {
+    let config: String
+    let calibration: String
+
+    static func forRun(backend: BenchBackend, mode: BenchMode) -> EngineResourcePlan {
+        if backend == .arkit {
+            return EngineResourcePlan(
+                config: "arkit_production_reference.json",
+                calibration: "arkit_runtime_calibration.json"
+            )
+        }
+        if backend == .xrslam {
+            switch mode {
+            case .liveSoak:
+            return EngineResourcePlan(
+                config: "xrslam_ios_vio.yaml",
+                calibration: "xrslam_iphone_14_pro.yaml"
+            )
+            case .replayPaced, .replayMax:
+            return EngineResourcePlan(
+                config: "xrslam_euroc_vio.yaml",
+                calibration: "xrslam_euroc_sensor.yaml"
+            )
+            }
+        }
+        switch mode {
+        case .liveSoak:
+            return EngineResourcePlan(
+                config: "euroc_config.json",
+                calibration: "iphone_14_pro_640x480_calib.json"
+            )
+        case .replayPaced, .replayMax:
+            return EngineResourcePlan(
+                config: "euroc_config.json",
+                calibration: "euroc_eucm_calib.json"
+            )
+        }
+    }
+}
+
+enum BenchmarkRunPreparationError: LocalizedError {
+    case missingResource(String)
+    case replayDatasetRequired
+    case replayMustBeMono(Int)
+    case arkitReplayUnsupported
+    case executableUnavailable
+    case engineArtifactUnavailable(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingResource(let name): return "Bench 构建缺少冻结资源：\(name)"
+        case .replayDatasetRequired: return "必须选择带 input_manifest.json 的 EuRoC 目录。"
+        case .replayMustBeMono(let count): return "正式手机精度通道只接受 cam0 单目，清单声明了 \(count) 个相机。"
+        case .arkitReplayUnsupported: return "ARKit 参考臂不接受 EuRoC 回放；它只运行独立真机参考会话。"
+        case .executableUnavailable: return "无法读取当前 bench 可执行文件身份。"
+        case .engineArtifactUnavailable(let name): return "无法读取所选引擎工件身份：\(name)"
+        }
+    }
+}
+
+enum BenchmarkRunPreparation {
+    static func prepare(
+        backend: BenchBackend,
+        mode: BenchMode,
+        datasetURL: URL?
+    ) throws -> PreparedBenchmarkRun {
+        if backend == .arkit, mode != .liveSoak {
+            throw BenchmarkRunPreparationError.arkitReplayUnsupported
+        }
+        let runID = UUID().uuidString.lowercased()
+        let fileManager = FileManager.default
+        let root = try fileManager.url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appendingPathComponent(backend.runDirectoryName, isDirectory: true)
+        let directory = root.appendingPathComponent("run-\(runID)", isDirectory: true)
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let resourcePlan = EngineResourcePlan.forRun(
+            backend: backend,
+            mode: mode
+        )
+        let configSource = try resourceFile(resourcePlan.config)
+        let calibrationSource = try resourceFile(resourcePlan.calibration)
+        let contractSource = try resource("contract", extension: "json")
+        let metricDefinitionsSource = try resource("metric_definitions.v1", extension: "json")
+        let configData = try Data(contentsOf: configSource)
+        let contractData = try Data(contentsOf: contractSource)
+        let metricData = try Data(contentsOf: metricDefinitionsSource)
+
+        let replayDataset: EuRoCReplayDataset?
+        let calibrationData: Data
+        let inputDefinitionData: Data
+        let inputCameraCount: Int
+        let imageWidth: Int
+        let imageHeight: Int
+        let channel: RunReceiptChannel
+        let accuracy: RunAccuracyEvidence
+
+        switch mode {
+        case .liveSoak:
+            calibrationData = try Data(contentsOf: calibrationSource)
+            var definition: [String: Any] = [
+                "camera": backend == .arkit
+                    ? "arkit_production_runtime_selected_format"
+                    : "mono_640x480_30hz",
+                "engine": backend.id,
+                "imu": backend == .arkit
+                    ? "arkit_internal_sensor_fusion_no_raw_sensor_export"
+                    : IMUDeliveryMode.forBackend(backend).rawValue,
+                "config_sha256": RunReceiptHash.sha256Hex(configData),
+                "calibration_sha256": RunReceiptHash.sha256Hex(calibrationData),
+                "device_model": LiveCalibrationGate.frozenModelIdentifier,
+                "uses_arkit": backend.usesARKit,
+            ]
+            if backend == .basalt {
+                let provenance = try resource(
+                    "iphone_14_pro_640x480_calib.provenance",
+                    extension: "json"
+                )
+                definition["calibration_provenance_sha256"] = RunReceiptHash.sha256Hex(
+                    try Data(contentsOf: provenance)
+                )
+            } else if backend == .xrslam {
+                definition["visual_localization_enabled"] = false
+                definition["camera_imu_time_offset_status"] = "upstream_nominal_unverified"
+            } else {
+                definition["reference_scope"] = "live_performance_tracking_and_world_stability_only"
+                definition["external_ground_truth"] = "none"
+            }
+            inputDefinitionData = try JSONSerialization.data(withJSONObject: definition, options: [.prettyPrinted, .sortedKeys])
+            inputCameraCount = 1
+            imageWidth = backend == .arkit ? 0 : 640
+            imageHeight = backend == .arkit ? 0 : 480
+            replayDataset = nil
+            channel = .liveSoak
+            accuracy = RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none)
+        case .replayPaced, .replayMax:
+            guard let datasetURL else { throw BenchmarkRunPreparationError.replayDatasetRequired }
+            let manifestURL = datasetURL.appendingPathComponent("input_manifest.json")
+            let dataset = try EuRoCReplayLoader().load(manifestURL: manifestURL)
+            try ReplayContractGate.validate(
+                datasetName: dataset.datasetName,
+                inputCameraCount: dataset.inputCameraCount
+            )
+            guard dataset.inputCameraCount == 1 else {
+                throw BenchmarkRunPreparationError.replayMustBeMono(dataset.inputCameraCount)
+            }
+            if backend == .basalt {
+                calibrationData = try CalibrationMaterializer.eurocCam0Only(
+                    from: Data(contentsOf: calibrationSource)
+                )
+            } else {
+                calibrationData = try Data(contentsOf: calibrationSource)
+            }
+            inputDefinitionData = try Data(contentsOf: manifestURL)
+            inputCameraCount = dataset.inputCameraCount
+            imageWidth = 752
+            imageHeight = 480
+            replayDataset = dataset
+            channel = mode == .replayPaced ? .replayPaced : .replayMax
+            accuracy = RunAccuracyEvidence(status: .evaluable, groundTruth: .euroc)
+        }
+
+        let configURL = directory.appendingPathComponent("config.json")
+        let calibrationURL = directory.appendingPathComponent("calibration.json")
+        let inputDefinitionURL = directory.appendingPathComponent("input_manifest.json")
+        try configData.write(to: configURL, options: .atomic)
+        try calibrationData.write(to: calibrationURL, options: .atomic)
+        try inputDefinitionData.write(to: inputDefinitionURL, options: .atomic)
+
+        switch mode {
+        case .liveSoak:
+            try Data().write(to: directory.appendingPathComponent("telemetry.jsonl"), options: .atomic)
+        case .replayPaced, .replayMax:
+            try Data().write(to: directory.appendingPathComponent("poses.tum"), options: .atomic)
+        }
+
+        guard let executableURL = Bundle.main.executableURL else {
+            throw BenchmarkRunPreparationError.executableUnavailable
+        }
+        let binaryData = try Data(contentsOf: executableURL)
+        let engineArtifactData = try selectedEngineArtifactData(backend: backend)
+        let combinedConfigIdentity = configData + calibrationData
+        let receipt = RunReceipt(
+            runID: runID,
+            state: .started,
+            channel: channel,
+            inputCameraCount: inputCameraCount,
+            startedAtUTC: utcTimestamp(),
+            app: RunAppIdentity(
+                bundleID: Bundle.main.bundleIdentifier ?? "",
+                usesARKit: backend.usesARKit,
+                backend: backend == .arkit ? "apple_arkit" : "cpu",
+                algorithmMode: backend.algorithmMode,
+                engineID: backend.id,
+                upstreamRevision: backend.upstreamRevision,
+                openCVVersion: backend.openCVVersion
+            ),
+            device: .current(),
+            identities: RunSHA256Identities(
+                contractSHA256: RunReceiptHash.sha256Hex(contractData),
+                appBinarySHA256: RunReceiptHash.sha256Hex(binaryData),
+                engineArtifactSHA256: RunReceiptHash.sha256Hex(engineArtifactData),
+                configSHA256: RunReceiptHash.sha256Hex(combinedConfigIdentity),
+                inputDefinitionSHA256: RunReceiptHash.sha256Hex(inputDefinitionData),
+                metricDefinitionsSHA256: RunReceiptHash.sha256Hex(metricData)
+            ),
+            power: RunPowerEvidence(),
+            accuracy: accuracy
+        )
+        try receipt.validate()
+        let writer = RunReceiptWriter(
+            directoryURL: directory,
+            callbackQueue: DispatchQueue(label: "\(backend.bundleID).receipt-callback.\(runID)")
+        )
+        let startedReceiptData = try RunReceiptJSON.encoder.encode(receipt)
+        return PreparedBenchmarkRun(
+            backend: backend,
+            runID: runID,
+            directoryURL: directory,
+            configURL: configURL,
+            calibrationURL: calibrationURL,
+            inputCameraCount: inputCameraCount,
+            imageWidth: imageWidth,
+            imageHeight: imageHeight,
+            replayDataset: replayDataset,
+            startedReceipt: receipt,
+            startedReceiptSHA256: RunReceiptHash.sha256Hex(startedReceiptData),
+            receiptWriter: writer
+        )
+    }
+
+    static func utcTimestamp() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: Date())
+    }
+
+    private static func resource(_ name: String, extension fileExtension: String) throws -> URL {
+        if let url = Bundle.main.url(forResource: name, withExtension: fileExtension) {
+            return url
+        }
+        throw BenchmarkRunPreparationError.missingResource("\(name).\(fileExtension)")
+    }
+
+    private static func resourceFile(_ filename: String) throws -> URL {
+        let value = filename as NSString
+        return try resource(value.deletingPathExtension, extension: value.pathExtension)
+    }
+
+    private static func selectedEngineArtifactData(
+        backend: BenchBackend
+    ) throws -> Data {
+        if backend == .arkit {
+            return Data(
+                "system_framework=ARKit|os=\(ProcessInfo.processInfo.operatingSystemVersionString)|sdk_identity=\(backend.upstreamRevision)"
+                    .utf8
+            )
+        }
+        let executableName = backend == .basalt ? "PWBasaltEngine" : "PWXRSLAMEngine"
+        guard let frameworks = Bundle.main.privateFrameworksURL else {
+            throw BenchmarkRunPreparationError.engineArtifactUnavailable(executableName)
+        }
+        let executable = frameworks
+            .appendingPathComponent("\(executableName).framework", isDirectory: true)
+            .appendingPathComponent(executableName)
+        guard FileManager.default.fileExists(atPath: executable.path) else {
+            throw BenchmarkRunPreparationError.engineArtifactUnavailable(executableName)
+        }
+        return try Data(contentsOf: executable)
+    }
+}
