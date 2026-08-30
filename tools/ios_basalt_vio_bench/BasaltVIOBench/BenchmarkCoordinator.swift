@@ -39,6 +39,9 @@ final class BenchmarkCoordinator {
     private let datasetURL: URL?
     private let onPhase: (BenchPhase) -> Void
     private let onSnapshot: (LiveSnapshot) -> Void
+    /// Display only. Publishing a source never starts, stops or reconfigures
+    /// capture; the coordinator stays the sole owner of camera lifecycle.
+    private let onPreview: (BenchPreviewSource) -> Void
     private let onFinish: (Result<URL, Error>) -> Void
     private let queue = DispatchQueue(label: "com.kyle.viobench.run", qos: .userInitiated)
     private let lock = NSLock()
@@ -53,6 +56,7 @@ final class BenchmarkCoordinator {
         datasetURL: URL?,
         onPhase: @escaping (BenchPhase) -> Void,
         onSnapshot: @escaping (LiveSnapshot) -> Void,
+        onPreview: @escaping (BenchPreviewSource) -> Void = { _ in },
         onFinish: @escaping (Result<URL, Error>) -> Void
     ) {
         self.backend = backend
@@ -60,6 +64,7 @@ final class BenchmarkCoordinator {
         self.datasetURL = datasetURL
         self.onPhase = onPhase
         self.onSnapshot = onSnapshot
+        self.onPreview = onPreview
         self.onFinish = onFinish
     }
 
@@ -174,7 +179,9 @@ final class BenchmarkCoordinator {
         liveRunStartNS: UInt64,
         runLease: BenchRunLease.Token
     ) throws {
-        guard mode == .liveSoak else {
+        // ARKit cannot be fed a recording, so it runs live in exactly two modes:
+        // as the reference arm, and as the camera owner during a `record` run.
+        guard mode == .liveSoak || mode == .record else {
             throw CoordinatorError.invalidRun("arkit_replay_is_not_supported")
         }
         let systemSamples = SystemSampleStore()
@@ -193,9 +200,31 @@ final class BenchmarkCoordinator {
             startMonotonicSeconds: Double(liveRunStartNS) / 1_000_000_000
         )
         lock.withLock { activeARKitSession = reference }
+        onPreview(.arSession(reference.previewSession))
         defer {
             reference.pause()
+            onPreview(.none)
             lock.withLock { activeARKitSession = nil }
+        }
+
+        // A `record` run persists the frames ARKit is tracking on, so every
+        // candidate can later replay the identical input. Free space is checked
+        // before the operator starts, not after five minutes of capture.
+        var recorder: DeviceRecordingWriter?
+        if mode == .record {
+            let projected = DeviceRecordingWriter.projectedByteCount(
+                seconds: Double(LiveBenchmarkDuration.measurementNanoseconds) / 1_000_000_000
+            )
+            try DeviceRecordingWriter.checkFreeSpace(
+                at: context.directoryURL,
+                requiredBytes: projected
+            )
+            let writer = try DeviceRecordingWriter(
+                directory: context.directoryURL,
+                recordingID: context.runID
+            )
+            reference.recorder = writer
+            recorder = writer
         }
 
         let baseline = ARKitReferenceSnapshot()
@@ -273,6 +302,17 @@ final class BenchmarkCoordinator {
 
         onPhase(.draining)
         reference.pause()
+        // Seal the recording before the lease is released: a recorder failure or
+        // any loss must invalidate the run, not leave a plausible file behind.
+        if let recorder {
+            if let failure = reference.recordingFailure() { throw failure }
+            let manifest = try recorder.finish()
+            guard manifest.lossCount == 0 else {
+                throw CoordinatorError.invalidRun(
+                    "device_recording_lossy_\(manifest.lossCount)"
+                )
+            }
+        }
         let exclusivity = runLease.release()
         sampler.stop()
         applicationActivity.stop()

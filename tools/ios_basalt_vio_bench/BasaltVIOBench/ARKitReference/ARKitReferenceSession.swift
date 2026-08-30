@@ -57,6 +57,13 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
     private var lifecycleValue = ARKitReferenceLifecycleReceipt()
     private var paused = false
 
+    /// Set only for `record` runs. When present, the frames ARKit is tracking on
+    /// are persisted so every candidate arm can later be fed the identical
+    /// input. iOS grants the rear camera to one session, so recording from
+    /// ARKit's own frames is the only way one capture serves all three arms.
+    var recorder: DeviceRecordingWriter?
+    private var recorderFailure: Error?
+
     init(startMonotonicSeconds: Double = CACurrentMediaTime()) {
         self.startMonotonicSeconds = startMonotonicSeconds
         super.init()
@@ -192,10 +199,57 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
             tracking: Self.trackingEvidence(frame.camera.trackingState),
             mapping: Self.mappingEvidence(frame.worldMappingStatus)
         )
+        // frame.timestamp is in the CACurrentMediaTime domain, which is
+        // mach_absolute_time -- the bench's single canonical domain. No
+        // conversion, and deliberately no std::chrono anywhere near it.
+        if let recorder {
+            do {
+                try recorder.recordIntrinsicsIfNeeded(
+                    CameraIntrinsics(
+                        fx: Double(frame.camera.intrinsics.columns.0.x),
+                        fy: Double(frame.camera.intrinsics.columns.1.y),
+                        cx: Double(frame.camera.intrinsics.columns.2.x),
+                        cy: Double(frame.camera.intrinsics.columns.2.y)
+                    )
+                )
+                recorder.appendFrame(
+                    pixelBuffer: frame.capturedImage,
+                    timestampNanoseconds: timestampNS
+                )
+                recorder.appendARKitPose(
+                    timestampNanoseconds: timestampNS,
+                    tumRow: Self.tumRow(timestampNanoseconds: timestampNS, pose: pose)
+                )
+            } catch {
+                // A failed cross-check must stop the capture immediately rather
+                // than let the operator spend five minutes producing frames no
+                // arm may be scored on.
+                if recorderFailure == nil { recorderFailure = error }
+                self.recorder = nil
+            }
+        }
+        // Recording cost is inside the measured handler duration on purpose: the
+        // ARKit arm really does pay it, and hiding it would flatter ARKit
+        // against candidates that replay from disk.
         accounting?.recordHandlerDuration(
             milliseconds: (CACurrentMediaTime() - handlerStart) * 1_000
         )
     }
+
+    /// TUM: `timestamp tx ty tz qx qy qz qw`.
+    static func tumRow(timestampNanoseconds: Int64, pose: TimedPose) -> String {
+        let seconds = timestampNanoseconds / 1_000_000_000
+        let remainder = timestampNanoseconds % 1_000_000_000
+        return String(
+            format: "%lld.%09lld %.9f %.9f %.9f %.9f %.9f %.9f %.9f",
+            seconds, remainder,
+            pose.translation.x, pose.translation.y, pose.translation.z,
+            pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w
+        )
+    }
+
+    /// Surfaced by the coordinator so a recorder failure invalidates the run.
+    func recordingFailure() -> Error? { recorderFailure }
 
     func session(_ session: ARSession, didFailWithError error: Error) {
         accounting?.recordFailure()

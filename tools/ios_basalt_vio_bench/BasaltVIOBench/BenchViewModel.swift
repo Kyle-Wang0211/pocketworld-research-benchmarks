@@ -99,6 +99,7 @@ final class BenchViewModel: ObservableObject {
             datasetURL: datasetURL,
             onPhase: { [weak self] phase in Task { @MainActor in self?.phase = phase } },
             onSnapshot: { [weak self] value in Task { @MainActor in self?.snapshot = value } },
+            onPreview: { [weak self] source in Task { @MainActor in self?.previewSource = source } },
             onFinish: { [weak self] result in
                 Task { @MainActor in
                     UIApplication.shared.isIdleTimerDisabled = false

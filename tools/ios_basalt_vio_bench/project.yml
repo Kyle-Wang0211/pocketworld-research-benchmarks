@@ -156,7 +156,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kyle.viobench.tests
         GENERATE_INFOPLIST_FILE: YES
-        CODE_SIGNING_ALLOWED: NO
+        # The test bundle must be signed to run on a device: iOS refuses to
+        # dlopen an unsigned .xctest. The app's unsigned Release check is
+        # unaffected -- that passes CODE_SIGNING_ALLOWED=NO on the command line.
+        DEVELOPMENT_TEAM: 26AH7V448L
+        CODE_SIGN_STYLE: Automatic
 
 schemes:
   VIOReplacementBench:
