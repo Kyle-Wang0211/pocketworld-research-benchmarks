@@ -177,6 +177,10 @@ final class DeviceRecordingWriter: @unchecked Sendable {
                 "fx": expected.fx > 0 ? (reported.fx - expected.fx) / expected.fx : .nan,
                 "fy": expected.fy > 0 ? (reported.fy - expected.fy) / expected.fy : .nan,
             ],
+            // What ARKit actually handed us, so the format is evidence in the
+            // artifact rather than something inferred from cx afterwards.
+            "frame_width_from_principal_point": reported.cx * 2,
+            "frame_height_from_principal_point": reported.cy * 2,
             "agrees": verdict.reason == nil,
             "reason": verdict.reason ?? "agrees",
         ]

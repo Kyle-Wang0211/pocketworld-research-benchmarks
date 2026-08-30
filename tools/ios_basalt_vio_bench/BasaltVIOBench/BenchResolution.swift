@@ -48,11 +48,27 @@ struct CameraIntrinsics: Equatable {
 /// a property of the hardware, and the recorded frames are exactly the frames
 /// those intrinsics describe, so nothing is extrapolated.
 ///
-/// The frozen 640x480 upstream values scaled by 3 are the cross-check. Agreement
-/// confirms both that the two formats differ only by a scale and that the ARKit
-/// reading is sane. Disagreement means the formats differ by a crop or a
-/// different lens, and every downstream number would be wrong -- so it halts the
-/// run rather than picking one source.
+/// The frozen 640x480 values come from xrslam's own iPhone 14 Pro config, so
+/// this compares a candidate engine's shipped calibration against what ARKit
+/// reports for the format production actually runs. Measured on iPhone15,2 /
+/// iOS 26.6, they disagree by 5.15% in fx: ARKit reports 1277.49 for the
+/// production-default 1920x1440 format, against 1346.90 from xrslam's config
+/// scaled by 3. The principal points agree to within half a pixel, so the
+/// formats are the same size and crop -- the calibrations simply differ.
+///
+/// That disagreement used to halt the run, which had the direction backwards.
+/// Every arm replays the same recorded frames, those frames come out of
+/// production's ARKit configuration, and production treats the frame's own
+/// intrinsics as authoritative -- its per-photo sidecar pins
+/// `intrinsics_fxfycxcy` to the frame it came from. So the recording is the
+/// reference and a candidate's config is the thing that has to match it; a
+/// stale xrslam yaml is a reason to fix that yaml, not to throw away a capture
+/// the operator shot by hand.
+///
+/// What still halts a run is an ARKit reading that cannot describe its own
+/// frames: non-finite, non-positive, or a principal point far from the frame
+/// centre. The calibration delta is recorded in intrinsics_observed.json for
+/// whoever updates the candidate configs.
 enum ARKitIntrinsicsCrossCheck {
     /// xrslam 4beb1a9 xrslam-ios/visualizer/configs/iPhone 14 Pro.yaml, cam0.
     static let frozenUpstream640x480 = CameraIntrinsics(

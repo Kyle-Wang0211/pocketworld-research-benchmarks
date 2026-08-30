@@ -100,16 +100,41 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
             guard #available(iOS 16.0, *) else {
                 throw ARKitReferenceSessionError.unsupported
             }
-            guard let highResolution43 = ARWorldTrackingConfiguration.supportedVideoFormats
-                .filter({
-                    Int($0.imageResolution.width) == 1920
-                        && Int($0.imageResolution.height) == 1440
-                        && $0.isRecommendedForHighResolutionFrameCapturing
-                })
-                .max(by: { $0.framesPerSecond < $1.framesPerSecond }) else {
-                throw ARKitReferenceSessionError.unsupported
+            // Verbatim of the production selection in
+            // OfficialAetherARKitPlugin.swift. This arm exists to be the
+            // baseline the candidate engines are measured against, so it has to
+            // be the configuration production actually ships, not one of its
+            // probes. It previously forced the 1920x1440
+            // high-resolution-capable format unconditionally -- production's
+            // "hires43" probe, whose own comment records that on iOS 26 it makes
+            // world tracking never reach .normal. Production reaches that branch
+            // only when videoFormatMode is set to it, and never by default.
+            //
+            // Device-tier gating, production's threshold: 4 GB phones stay on
+            // the system default because 4K pushes them to jetsam; 6 GB+ take
+            // the 4K format.
+            let videoFormatMode = ProcessInfo.processInfo.environment[
+                "OFFICIAL_AETHER_VIDEO_FORMAT_MODE"
+            ] ?? ""
+            let allow4K = physicalMemory >= fourKThreshold
+                && videoFormatMode != "default43"
+                && videoFormatMode != "hires43"
+            if videoFormatMode == "hires43" {
+                guard let hires = ARWorldTrackingConfiguration.supportedVideoFormats
+                    .filter({
+                        Int($0.imageResolution.width) == 1920
+                            && Int($0.imageResolution.height) == 1440
+                            && $0.isRecommendedForHighResolutionFrameCapturing
+                    })
+                    .max(by: { $0.framesPerSecond < $1.framesPerSecond }) else {
+                    throw ARKitReferenceSessionError.unsupported
+                }
+                configuration.videoFormat = hires
             }
-            configuration.videoFormat = highResolution43
+            if allow4K,
+               let fourK = ARWorldTrackingConfiguration.recommendedVideoFormatFor4KResolution {
+                configuration.videoFormat = fourK
+            }
             let thirtyFPSOverride = ProcessInfo.processInfo.environment[
                 "OFFICIAL_AETHER_AR_30FPS"
             ] == "1"
@@ -124,6 +149,15 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
             }
 
             let selected = configuration.videoFormat
+            NSLog("[VIOBench] selected videoFormat: %d x %d @ %d fps hires=%@ mode=%@",
+                  Int(selected.imageResolution.width),
+                  Int(selected.imageResolution.height),
+                  selected.framesPerSecond,
+                  selected.isRecommendedForHighResolutionFrameCapturing ? "YES" : "NO",
+                  videoFormatMode.isEmpty ? "production_default" : videoFormatMode)
+            NSLog("[VIOBench] recommendedVideoFormatFor4KResolution = %@",
+                  ARWorldTrackingConfiguration.recommendedVideoFormatFor4KResolution
+                      .map { "\(Int($0.imageResolution.width))x\(Int($0.imageResolution.height))" } ?? "nil")
             accounting = ARKitReferenceAccounting(
                 startMonotonicSeconds: startMonotonicSeconds,
                 nominalFramesPerSecond: Double(selected.framesPerSecond)
@@ -135,7 +169,7 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                 horizontalPlaneDetectionEnabled: configuration.planeDetection.contains(.horizontal),
                 physicalMemoryBytes: physicalMemory,
                 fourKMemoryThresholdBytes: fourKThreshold,
-                videoFormatMode: "hires43",
+                videoFormatMode: videoFormatMode.isEmpty ? "production_default" : videoFormatMode,
                 selectedWidth: Int(selected.imageResolution.width),
                 selectedHeight: Int(selected.imageResolution.height),
                 selectedFramesPerSecond: selected.framesPerSecond,
