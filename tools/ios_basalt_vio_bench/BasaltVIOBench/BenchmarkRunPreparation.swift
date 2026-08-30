@@ -118,6 +118,13 @@ enum BenchmarkRunPreparation {
 
         switch mode {
         case .record, .liveSoak, .replayDeviceRecording:
+            // Declare what the capture is actually configured to deliver, never
+            // the resolution the contract aspires to. Writing the scoring
+            // constant here produced a receipt claiming 1920x1440 while
+            // SensorTransportConfiguration still opened the camera at 640x480 --
+            // a receipt that disagrees with its own diagnostics is worse than no
+            // receipt, because it is the artifact every later verdict cites.
+            let configured = SensorTransportConfiguration.benchmark
             calibrationData = try Data(contentsOf: calibrationSource)
             var definition: [String: Any] = [
                 // Every arm scores at the production resolution. The candidates
@@ -154,14 +161,17 @@ enum BenchmarkRunPreparation {
             definition["scoring_resolution"] = [
                 BenchResolution.scoring.width, BenchResolution.scoring.height,
             ]
+            definition["configured_resolution"] = [
+                Int(configured.cameraWidth), Int(configured.cameraHeight),
+            ]
             definition["participates_in_verdict"] =
                 BenchResolution.participatesInVerdict(
-                    width: BenchResolution.scoring.width,
-                    height: BenchResolution.scoring.height
+                    width: Int(configured.cameraWidth),
+                    height: Int(configured.cameraHeight)
                 )
             inputCameraCount = 1
-            imageWidth = BenchResolution.scoring.width
-            imageHeight = BenchResolution.scoring.height
+            imageWidth = Int(configured.cameraWidth)
+            imageHeight = Int(configured.cameraHeight)
             replayDataset = nil
             switch mode {
             case .record: channel = .record
