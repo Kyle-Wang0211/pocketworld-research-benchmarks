@@ -26,6 +26,14 @@ final class BenchViewModel: ObservableObject {
         }
     }
 
+    /// Mirrors the coordinator's guard so the UI cannot offer a run that will
+    /// be refused. The coordinator stays authoritative.
+    var modeBackendConflict: String? {
+        mode == .record && selectedBackend != .arkit
+            ? "录制模式由 ARKit 臂持有相机,请把引擎切到 ARKit"
+            : nil
+    }
+
     var isRunning: Bool {
         [.preparing, .warmup, .measuring, .draining].contains(phase)
     }
@@ -33,9 +41,17 @@ final class BenchViewModel: ObservableObject {
     var datasetLabel: String? { datasetURL?.lastPathComponent }
 
     var canStart: Bool {
-        !isRunning &&
-            (mode == .liveSoak || datasetURL != nil) &&
-            !(selectedBackend == .arkit && mode != .liveSoak)
+        guard !isRunning, modeBackendConflict == nil else { return false }
+        switch mode {
+        case .record:
+            // ARKit owns the camera and the recording is of its frames.
+            return selectedBackend == .arkit
+        case .liveSoak:
+            return true
+        case .replayDeviceRecording, .replayPaced, .replayMax:
+            // ARKit cannot be fed a recording, and a replay needs one.
+            return selectedBackend != .arkit && datasetURL != nil
+        }
     }
 
     func requestDatasetImport() { isImportingDataset = true }

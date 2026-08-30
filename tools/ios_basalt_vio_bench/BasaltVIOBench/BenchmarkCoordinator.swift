@@ -105,6 +105,14 @@ final class BenchmarkCoordinator {
                 mode: mode,
                 datasetURL: datasetURL
             )
+            // `record` owns the camera through ARKit, because iOS grants the rear
+            // camera to one session and the recording must be of the frames the
+            // ARKit arm is actually tracking on. Selecting a candidate engine with
+            // `record` used to fall through to the replay path and fail with a
+            // missing-dataset error, which says nothing about the real mistake.
+            if mode == .record, backend != .arkit {
+                throw CoordinatorError.invalidRun("record_requires_arkit_arm")
+            }
             prepared = context
             try writeStarted(context)
             let initialHeartbeatNS = DispatchTime.now().uptimeNanoseconds

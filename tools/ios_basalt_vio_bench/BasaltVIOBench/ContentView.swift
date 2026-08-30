@@ -32,6 +32,12 @@ struct ContentView: View {
                     }
                     .disabled(model.isRunning)
 
+                    if let conflict = model.modeBackendConflict {
+                        Text(conflict)
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
+
                     if model.mode.hasExternalGroundTruth && model.selectedBackend != .arkit {
                         Button("选择 EuRoC MH_01_easy 目录") {
                             model.requestDatasetImport()
