@@ -9,7 +9,7 @@ struct ContentView: View {
                 Section("画面") {
                     BenchPreview(
                         source: model.previewSource,
-                        replayedFrame: model.replayedFrame
+                        frame: model.previewFrame
                     )
                     .listRowInsets(EdgeInsets())
                     Text("显示层不进算法队列,不改像素格式、分辨率、帧率或时间戳")

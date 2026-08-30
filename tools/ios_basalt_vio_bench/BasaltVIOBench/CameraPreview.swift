@@ -1,135 +1,180 @@
-import ARKit
+import CoreGraphics
+import CoreVideo
 import SwiftUI
-import UIKit
 
 /// What the operator is shown while a run is in progress.
 ///
 /// An operator who cannot see the viewfinder cannot execute a real capture
-/// trajectory, which is why `preview_enabled` moved to true. But the preview is
-/// a consumer of frames the run already produced -- never a second camera
-/// session, never an extra per-frame copy on the sensor path, and never an owner
-/// of camera lifecycle. The coordinator's state machine remains the only thing
-/// that starts and stops capture.
+/// trajectory, which is why `preview_enabled` moved to true.
+///
+/// The preview draws the luma plane the run has already accepted -- the same
+/// bytes the engine received. It deliberately does **not** hand the ARSession to
+/// an `ARSCNView`: assigning a session to `ARSCNView` makes that view the
+/// session's delegate, which would displace `ARKitReferenceSession` and silently
+/// stop `didUpdate`. Accounting would stall and a `record` run would persist
+/// nothing, while the screen showed a perfectly healthy camera feed. A preview
+/// that can break the measurement is not worth having, so this one only ever
+/// reads frames the measurement already consumed.
+///
+/// One path serves all three arms, because at that point every arm is just
+/// "here is the frame currently being processed".
 enum BenchPreviewSource: Equatable {
-    /// The ARKit arm and the recording capture both draw the ARSession's own
-    /// camera background. Opening an AVCaptureSession alongside it would be
-    /// rejected by iOS anyway: the rear camera belongs to one session.
-    case arSession(ARSession)
-
-    /// Replay arms show the frame currently being replayed, so what the operator
-    /// sees is literally what the algorithm is consuming.
-    case replayedFrame
-
-    /// Modes with nothing to show yet.
     case none
-
-    static func == (lhs: BenchPreviewSource, rhs: BenchPreviewSource) -> Bool {
-        switch (lhs, rhs) {
-        case (.none, .none), (.replayedFrame, .replayedFrame):
-            return true
-        case (.arSession(let a), .arSession(let b)):
-            return a === b
-        default:
-            return false
-        }
-    }
+    /// A run is active and publishing frames through `PreviewFrameTap`.
+    case liveFrames(label: String)
 
     var receiptMode: String {
         switch self {
-        case .arSession: return "arsession_camera_background"
-        case .replayedFrame: return "replayed_frame_passthrough"
         case .none: return "none"
+        case .liveFrames: return "accepted_frame_passthrough"
         }
     }
 
-    /// True only when this source displays frames the run already produced,
-    /// without opening a capture session of its own. Every case must satisfy
-    /// this; the property exists so a future case cannot quietly fail to.
+    /// True only when the source displays frames the run already produced,
+    /// without opening a capture session or taking a delegate of its own.
     var isDisplayOnly: Bool {
         switch self {
-        case .arSession, .replayedFrame, .none: return true
+        case .none, .liveFrames: return true
         }
     }
 }
 
-/// Renders the live ARSession's camera background.
+/// Turns accepted camera frames into something drawable, cheaply enough that the
+/// arm being measured is not measuring the preview.
 ///
-/// `ARSCNView` is attached to the session the coordinator already owns; it does
-/// not construct or configure one, and it never calls `run` or `pause`.
-struct ARSessionPreview: UIViewRepresentable {
-    let session: ARSession
+/// Two costs are controlled deliberately:
+///
+/// * **Rate.** Capped at `intervalNanoseconds`, not every frame. The operator
+///   needs to see framing and motion, not 30 Hz fidelity.
+/// * **Size.** Decimated by row and column skipping -- nearest neighbour, no
+///   interpolation, no colour conversion. At 1920x1440 decimated by 4 the copy
+///   is 173 KB against the 2.76 MB frame it came from.
+///
+/// The tap runs after the engine has accepted the frame, so it cannot delay
+/// admission or change what the algorithm sees.
+final class PreviewFrameTap: @unchecked Sendable {
+    static let decimation = 4
+    static let intervalNanoseconds: UInt64 = 100_000_000  // 10 Hz
 
-    func makeUIView(context: Context) -> ARSCNView {
-        let view = ARSCNView(frame: .zero)
-        view.session = session
-        // Display only: no scene content, no plane visualisation, no extra
-        // per-frame work beyond drawing the background ARKit already decoded.
-        view.automaticallyUpdatesLighting = false
-        view.rendersContinuously = false
-        view.scene = SCNScene()
-        return view
+    private let publish: (CGImage) -> Void
+    private let renderQueue = DispatchQueue(
+        label: "com.kyle.viobench.preview",
+        qos: .utility
+    )
+    private let lock = NSLock()
+    private var lastEmitNanoseconds: UInt64 = 0
+    private var busy = false
+
+    init(publish: @escaping (CGImage) -> Void) {
+        self.publish = publish
     }
 
-    func updateUIView(_ view: ARSCNView, context: Context) {
-        if view.session !== session { view.session = session }
+    /// Accepts a frame's luma plane. Returns immediately; never blocks the
+    /// caller, and drops rather than queueing when rendering is still busy.
+    func offer(pixelBuffer: CVPixelBuffer, monotonicNanoseconds: UInt64) {
+        lock.lock()
+        let due = monotonicNanoseconds &- lastEmitNanoseconds >= Self.intervalNanoseconds
+        guard due, !busy else { lock.unlock(); return }
+        lastEmitNanoseconds = monotonicNanoseconds
+        busy = true
+        lock.unlock()
+
+        // Decimate inside the callback because the pixel buffer is only valid
+        // here; everything after this point works on our own small copy.
+        guard let small = Self.decimatedLuma(pixelBuffer) else {
+            lock.lock(); busy = false; lock.unlock()
+            return
+        }
+        renderQueue.async { [weak self] in
+            guard let self else { return }
+            if let image = Self.makeImage(small) { self.publish(image) }
+            self.lock.lock(); self.busy = false; self.lock.unlock()
+        }
     }
 
-    static func dismantleUIView(_ view: ARSCNView, coordinator: ()) {
-        // Detach without pausing: the run, not the view, owns the session.
-        view.session = ARSession()
+    struct DecimatedLuma {
+        let width: Int
+        let height: Int
+        let pixels: [UInt8]
+    }
+
+    static func decimatedLuma(_ pixelBuffer: CVPixelBuffer) -> DecimatedLuma? {
+        let sourceWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 0)
+        let sourceHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 0)
+        let width = sourceWidth / decimation
+        let height = sourceHeight / decimation
+        guard width > 0, height > 0 else { return nil }
+
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0) else {
+            return nil
+        }
+        let stride = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0)
+        let source = base.assumingMemoryBound(to: UInt8.self)
+
+        var pixels = [UInt8](repeating: 0, count: width * height)
+        for y in 0..<height {
+            let row = source.advanced(by: y * decimation * stride)
+            for x in 0..<width {
+                pixels[y * width + x] = row[x * decimation]
+            }
+        }
+        return DecimatedLuma(width: width, height: height, pixels: pixels)
+    }
+
+    static func makeImage(_ luma: DecimatedLuma) -> CGImage? {
+        guard let provider = CGDataProvider(data: Data(luma.pixels) as CFData) else {
+            return nil
+        }
+        return CGImage(
+            width: luma.width,
+            height: luma.height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 8,
+            bytesPerRow: luma.width,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        )
     }
 }
 
-/// Renders the frame a replay run is currently feeding the engine.
-///
-/// The image is handed over after the engine has accepted the frame, so drawing
-/// it cannot delay admission or change what the algorithm sees.
-struct ReplayFramePreview: View {
-    let image: CGImage?
+/// The preview area, framed at the scoring aspect ratio so the operator composes
+/// the capture the way the algorithm receives it.
+struct BenchPreview: View {
+    let source: BenchPreviewSource
+    let frame: CGImage?
 
     var body: some View {
         ZStack {
             Color.black
-            if let image {
-                Image(decorative: image, scale: 1, orientation: .up)
+            if let frame {
+                // The camera sensor is landscape; the phone is held upright.
+                Image(decorative: frame, scale: 1, orientation: .right)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             } else {
-                Text("等待回放帧")
+                Text(placeholder)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
-    }
-}
-
-/// The preview area, sized to the scoring aspect ratio so the operator frames
-/// the capture the way the algorithm will see it.
-struct BenchPreview: View {
-    let source: BenchPreviewSource
-    let replayedFrame: CGImage?
-
-    var body: some View {
-        Group {
-            switch source {
-            case .arSession(let session):
-                ARSessionPreview(session: session)
-            case .replayedFrame:
-                ReplayFramePreview(image: replayedFrame)
-            case .none:
-                ZStack {
-                    Color.black
-                    Text("未运行")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
         .aspectRatio(
-            CGFloat(BenchResolution.scoring.width)
-                / CGFloat(BenchResolution.scoring.height),
+            CGFloat(BenchResolution.scoring.height)
+                / CGFloat(BenchResolution.scoring.width),
             contentMode: .fit
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var placeholder: String {
+        switch source {
+        case .none: return "未运行"
+        case .liveFrames(let label): return "等待首帧 · \(label)"
+        }
     }
 }

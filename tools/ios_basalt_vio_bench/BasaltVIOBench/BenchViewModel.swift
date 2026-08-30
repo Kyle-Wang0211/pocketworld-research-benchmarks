@@ -15,7 +15,7 @@ final class BenchViewModel: ObservableObject {
 
     /// Display-only. Publishing a preview source never starts or stops capture.
     @Published private(set) var previewSource: BenchPreviewSource = .none
-    @Published private(set) var replayedFrame: CGImage?
+    @Published private(set) var previewFrame: CGImage?
 
     private(set) var datasetURL: URL?
     private var coordinator: BenchmarkCoordinator?
@@ -99,7 +99,15 @@ final class BenchViewModel: ObservableObject {
             datasetURL: datasetURL,
             onPhase: { [weak self] phase in Task { @MainActor in self?.phase = phase } },
             onSnapshot: { [weak self] value in Task { @MainActor in self?.snapshot = value } },
-            onPreview: { [weak self] source in Task { @MainActor in self?.previewSource = source } },
+            onPreview: { [weak self] source in
+                Task { @MainActor in
+                    self?.previewSource = source
+                    if case .none = source { self?.previewFrame = nil }
+                }
+            },
+            onPreviewFrame: { [weak self] image in
+                Task { @MainActor in self?.previewFrame = image }
+            },
             onFinish: { [weak self] result in
                 Task { @MainActor in
                     UIApplication.shared.isIdleTimerDisabled = false

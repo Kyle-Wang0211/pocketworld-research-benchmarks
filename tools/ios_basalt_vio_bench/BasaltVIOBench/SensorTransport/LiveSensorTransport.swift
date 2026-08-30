@@ -111,6 +111,9 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         )
     }
 
+    /// Display-only tap on frames already handed to the engine.
+    var previewTap: PreviewFrameTap?
+
     public var state: SensorTransportLifecycle.State {
         lifecycleLock.withLock { lifecycle.state }
     }
@@ -585,6 +588,9 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
         } else {
             cameraHandoff.offer(frame)
         }
+        // Strictly after handoff: the preview can never delay admission or change
+        // what the engine receives.
+        previewTap?.offer(pixelBuffer: pixelBuffer, monotonicNanoseconds: timestamp)
     }
 
     public func captureOutput(

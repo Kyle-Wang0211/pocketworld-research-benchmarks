@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import UIKit
 
@@ -42,6 +43,7 @@ final class BenchmarkCoordinator {
     /// Display only. Publishing a source never starts, stops or reconfigures
     /// capture; the coordinator stays the sole owner of camera lifecycle.
     private let onPreview: (BenchPreviewSource) -> Void
+    private let onPreviewFrame: (CGImage) -> Void
     private let onFinish: (Result<URL, Error>) -> Void
     private let queue = DispatchQueue(label: "com.kyle.viobench.run", qos: .userInitiated)
     private let lock = NSLock()
@@ -57,6 +59,7 @@ final class BenchmarkCoordinator {
         onPhase: @escaping (BenchPhase) -> Void,
         onSnapshot: @escaping (LiveSnapshot) -> Void,
         onPreview: @escaping (BenchPreviewSource) -> Void = { _ in },
+        onPreviewFrame: @escaping (CGImage) -> Void = { _ in },
         onFinish: @escaping (Result<URL, Error>) -> Void
     ) {
         self.backend = backend
@@ -65,6 +68,7 @@ final class BenchmarkCoordinator {
         self.onPhase = onPhase
         self.onSnapshot = onSnapshot
         self.onPreview = onPreview
+        self.onPreviewFrame = onPreviewFrame
         self.onFinish = onFinish
     }
 
@@ -200,7 +204,8 @@ final class BenchmarkCoordinator {
             startMonotonicSeconds: Double(liveRunStartNS) / 1_000_000_000
         )
         lock.withLock { activeARKitSession = reference }
-        onPreview(.arSession(reference.previewSession))
+        reference.previewTap = PreviewFrameTap { [onPreviewFrame] in onPreviewFrame($0) }
+        onPreview(.liveFrames(label: backend.displayName))
         defer {
             reference.pause()
             onPreview(.none)
@@ -561,6 +566,9 @@ final class BenchmarkCoordinator {
             imuDeliveryMode: IMUDeliveryMode.forBackend(backend)
         )
         lock.withLock { activeTransport = transport }
+        transport.previewTap = PreviewFrameTap { [onPreviewFrame] in onPreviewFrame($0) }
+        onPreview(.liveFrames(label: backend.displayName))
+        defer { onPreview(.none) }
 
         var poses: [NativePoseSample] = []
         var measurementPoseCount = 0

@@ -47,10 +47,13 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
     private(set) var accounting: ARKitReferenceAccounting!
     private let session = ARSession()
 
-    /// Read-only handle for the camera preview. The view attaches to this
-    /// session to draw its background; it never runs, pauses or reconfigures it.
-    /// Lifecycle stays with this adapter and the coordinator that drives it.
-    var previewSession: ARSession { session }
+    /// Display-only tap on frames this adapter has already handled.
+    ///
+    /// The session is deliberately never exposed: assigning an ARSession to an
+    /// ARSCNView makes that view the session's delegate, which would displace
+    /// this adapter and silently stop `didUpdate` -- accounting would stall and a
+    /// `record` run would persist nothing while the screen looked healthy.
+    var previewTap: PreviewFrameTap?
     private(set) var configurationReceipt: ARKitReferenceConfigurationReceipt?
     private let startMonotonicSeconds: Double
     private let lifecycleLock = NSLock()
@@ -228,7 +231,12 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                 self.recorder = nil
             }
         }
-        // Recording cost is inside the measured handler duration on purpose: the
+        previewTap?.offer(
+            pixelBuffer: frame.capturedImage,
+            monotonicNanoseconds: UInt64(max(0, timestampNS))
+        )
+        // Recording and preview costs are inside the measured handler duration on
+        // purpose: the
         // ARKit arm really does pay it, and hiding it would flatter ARKit
         // against candidates that replay from disk.
         accounting?.recordHandlerDuration(
