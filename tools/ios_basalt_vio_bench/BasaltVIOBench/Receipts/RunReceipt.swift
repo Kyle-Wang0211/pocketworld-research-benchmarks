@@ -186,6 +186,15 @@ struct RunReceipt: Codable, Equatable {
     var power: RunPowerEvidence
     var accuracy: RunAccuracyEvidence
     var metrics: [String: Double]
+    /// Whether `metrics` may be cited in a verdict.
+    ///
+    /// Invalid and aborted runs keep their metrics: discarding them threw away
+    /// exactly the numbers needed to diagnose why the run failed, which is how
+    /// the cross-clock-domain defect stayed invisible in every artifact and was
+    /// only ever seen on screen. The flag exists so retained numbers can never be
+    /// mistaken for scoreable ones, and `validate()` pins it to the state so it
+    /// cannot drift.
+    var metricsValidForScoring: Bool
     var termination: RunTermination?
 
     private enum CodingKeys: String, CodingKey {
@@ -205,6 +214,7 @@ struct RunReceipt: Codable, Equatable {
         case power
         case accuracy
         case metrics
+        case metricsValidForScoring = "metrics_valid_for_scoring"
         case termination
     }
 
@@ -225,6 +235,7 @@ struct RunReceipt: Codable, Equatable {
         power: RunPowerEvidence,
         accuracy: RunAccuracyEvidence,
         metrics: [String: Double] = [:],
+        metricsValidForScoring: Bool? = nil,
         termination: RunTermination? = nil
     ) {
         self.schemaVersion = schemaVersion
@@ -243,6 +254,10 @@ struct RunReceipt: Codable, Equatable {
         self.power = power
         self.accuracy = accuracy
         self.metrics = metrics
+        // Derived from state by default so a caller cannot accidentally mark
+        // diagnostic numbers as scoreable.
+        self.metricsValidForScoring = metricsValidForScoring
+            ?? (state == .validPass || state == .validFail)
         self.termination = termination
     }
 
@@ -301,6 +316,13 @@ struct RunReceipt: Codable, Equatable {
         }
         guard metrics.values.allSatisfy(\.isFinite) else {
             throw RunReceiptValidationError.invalid("metrics must be finite")
+        }
+        // Only a valid result may claim scoreable metrics. Retained diagnostic
+        // numbers on an invalid or aborted run must say so.
+        guard metricsValidForScoring == (state == .validPass || state == .validFail) else {
+            throw RunReceiptValidationError.invalid(
+                "metrics_valid_for_scoring must match the receipt state"
+            )
         }
         switch channel {
         case .record, .liveSoak, .replayDeviceRecording:

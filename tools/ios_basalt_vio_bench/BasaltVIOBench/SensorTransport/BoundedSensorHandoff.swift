@@ -34,7 +34,7 @@ private final class LegacyAtomicUInt64: @unchecked Sendable {
 /// callback. The consumer may block briefly while draining. Sealing rejects all
 /// new offers but preserves already accepted items; only a consumer drain may
 /// advance `sealed` to `drained`.
-public final class BoundedNonblockingHandoff<Element>: @unchecked Sendable {
+public final class BoundedSensorHandoff<Element>: @unchecked Sendable {
     public enum State: Equatable, Sendable {
         case accepting
         case sealed
@@ -91,11 +91,27 @@ public final class BoundedNonblockingHandoff<Element>: @unchecked Sendable {
     /// Never waits for the queue lock. A contention drop is counted atomically
     /// without acquiring a second lock.
     @discardableResult
+    /// Takes the lock rather than abandoning the sample when it is contended.
+    ///
+    /// This previously used `lock.try()` and dropped on any collision. A 300 s
+    /// device run on 2026-08-30 showed what that costs: 8,984 of 8,985 frames
+    /// accepted, queue peak 1 against capacity 10 -- and one frame discarded to
+    /// contention while the queue was 90 percent empty. Under the zero-loss gate
+    /// that single frame invalidated the whole run, and at roughly 0.011 percent
+    /// the same thing is near-certain in any five-minute capture. Dropping on
+    /// contention and requiring zero loss are incompatible designs.
+    ///
+    /// The critical section is an append or a batch move, microseconds long and
+    /// bounded by `capacity`; it never waits on the consumer to be ready. The
+    /// "do not block the sensor callback" rule exists to prevent unbounded
+    /// stalls, not to trade guaranteed frame loss for a few microseconds of lock
+    /// wait, which is a bad bargain under a lossless delivery requirement.
+    ///
+    /// `droppedContended` is kept in the accounting and must now stay zero. It is
+    /// evidence, not a expected outcome: a nonzero value means someone
+    /// reintroduced a fallible acquire.
     public func offer(_ element: consuming Element) -> OfferResult {
-        guard lock.try() else {
-            contentionDropCount.increment()
-            return .droppedContended
-        }
+        lock.lock()
         defer { lock.unlock() }
 
         guard internalState == .accepting else {

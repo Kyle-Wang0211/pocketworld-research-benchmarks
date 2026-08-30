@@ -367,7 +367,12 @@ final class BenchmarkCoordinator {
             try writeTerminal(
                 context,
                 state: .invalid,
-                metrics: [:],
+                metrics: diagnosticMetrics(
+                    startNS: startNS,
+                    firstPoseLatencyMS: final.firstNormalDeliveryLatencyMilliseconds,
+                    latenciesMS: [],
+                    poseCount: Int(final.framesReceived)
+                ),
                 reason: finalInvalidReason,
                 detail: nil
             )
@@ -716,7 +721,12 @@ final class BenchmarkCoordinator {
             try writeTerminal(
                 context,
                 state: .invalid,
-                metrics: [:],
+                metrics: diagnosticMetrics(
+                    startNS: startNS,
+                    firstPoseLatencyMS: firstUsablePoseLatencyMS,
+                    latenciesMS: measurementLatenciesMS,
+                    poseCount: measurementPoseCount
+                ),
                 reason: invalidReason ?? "live_run_invalid",
                 detail: nil
             )
@@ -752,7 +762,12 @@ final class BenchmarkCoordinator {
             try writeTerminal(
                 context,
                 state: .invalid,
-                metrics: [:],
+                metrics: diagnosticMetrics(
+                    startNS: startNS,
+                    firstPoseLatencyMS: firstUsablePoseLatencyMS,
+                    latenciesMS: measurementLatenciesMS,
+                    poseCount: measurementPoseCount
+                ),
                 reason: lossReason,
                 detail: nil
             )
@@ -1164,6 +1179,39 @@ final class BenchmarkCoordinator {
     /// inside its own elapsed time. See `ClockDomainInvariant`; this is the guard
     /// that turns a cross-domain subtraction into an invalid receipt instead of a
     /// scored result.
+    /// Numbers kept on a run that will not be scored.
+    ///
+    /// Clearing metrics on failure discarded exactly what a diagnostic run
+    /// exists to produce. The cross-clock-domain defect lived only on screen for
+    /// that reason: every artifact from those runs carried an empty metrics
+    /// object. The receipt marks these `metrics_valid_for_scoring: false`.
+    private func diagnosticMetrics(
+        startNS: UInt64,
+        firstPoseLatencyMS: Double?,
+        latenciesMS: [Double],
+        poseCount: Int
+    ) -> [String: Double] {
+        let elapsedSeconds = max(
+            1e-9,
+            Double(DispatchTime.now().uptimeNanoseconds &- startNS) / 1_000_000_000
+        )
+        var metrics: [String: Double] = [
+            "diagnostic_elapsed_seconds": elapsedSeconds,
+            "diagnostic_pose_count": Double(poseCount),
+            "diagnostic_processed_fps": Double(poseCount) / elapsedSeconds,
+        ]
+        if let firstPoseLatencyMS, firstPoseLatencyMS.isFinite {
+            metrics["diagnostic_first_usable_pose_latency_ms"] = firstPoseLatencyMS
+        }
+        if let p95 = Statistics.nearestRankPercentile(latenciesMS, percentile: 0.95) {
+            metrics["diagnostic_p95_pipeline_latency_ms"] = p95
+        }
+        if let worst = latenciesMS.max() {
+            metrics["diagnostic_max_pipeline_latency_ms"] = worst
+        }
+        return metrics
+    }
+
     private func clockDomainViolation(
         runStartNanoseconds: UInt64,
         firstPoseLatencyMS: Double?,

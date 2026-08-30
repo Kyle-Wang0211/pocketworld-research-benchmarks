@@ -38,7 +38,7 @@ public struct SensorTransportAccountingSnapshot: Equatable, Sendable {
 }
 
 /// Exact input and platform-drop counters. Handoff admission counters live on
-/// each `BoundedNonblockingHandoff` so snapshots can distinguish platform loss
+/// each `BoundedSensorHandoff` so snapshots can distinguish platform loss
 /// from application queue pressure.
 public final class SensorTransportAccounting: @unchecked Sendable {
     private struct Counters {

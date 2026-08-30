@@ -24,9 +24,9 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     public let clockMapper: MonotonicClockMapper
     public let imuDeliveryMode: IMUDeliveryMode
     public let accounting = SensorTransportAccounting()
-    public let cameraHandoff: BoundedNonblockingHandoff<MonochromeCameraFrame>
-    public let imuHandoff: BoundedNonblockingHandoff<PairedIMUSample>
-    public let xrslamSensorHandoff: BoundedNonblockingHandoff<XRSLAMLiveSensorEvent>
+    public let cameraHandoff: BoundedSensorHandoff<MonochromeCameraFrame>
+    public let imuHandoff: BoundedSensorHandoff<PairedIMUSample>
+    public let xrslamSensorHandoff: BoundedSensorHandoff<XRSLAMLiveSensorEvent>
 
     private let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -64,13 +64,13 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         self.configuration = configuration
         self.imuDeliveryMode = imuDeliveryMode
         self.clockMapper = clockMapper
-        cameraHandoff = BoundedNonblockingHandoff(
+        cameraHandoff = BoundedSensorHandoff(
             capacity: configuration.cameraQueueCapacity
         )
-        imuHandoff = BoundedNonblockingHandoff(
+        imuHandoff = BoundedSensorHandoff(
             capacity: configuration.imuQueueCapacity
         )
-        xrslamSensorHandoff = BoundedNonblockingHandoff(
+        xrslamSensorHandoff = BoundedSensorHandoff(
             capacity: configuration.cameraQueueCapacity
                 + configuration.imuQueueCapacity * 2
         )
@@ -166,7 +166,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         try? transition(to: .sealed)
     }
 
-    public func drainCamera(maxCount: Int) -> BoundedNonblockingHandoff<MonochromeCameraFrame>.DrainBatch {
+    public func drainCamera(maxCount: Int) -> BoundedSensorHandoff<MonochromeCameraFrame>.DrainBatch {
         let batch = cameraHandoff.drain(maxCount: maxCount)
         updateDrainedStateIfNeeded()
         return batch
@@ -174,7 +174,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
 
     /// This is the only estimator-facing IMU channel. Each item has official
     /// gyro-driven time semantics and an interpolated acceleration value.
-    public func drainIMU(maxCount: Int) -> BoundedNonblockingHandoff<PairedIMUSample>.DrainBatch {
+    public func drainIMU(maxCount: Int) -> BoundedSensorHandoff<PairedIMUSample>.DrainBatch {
         let batch = imuHandoff.drain(maxCount: maxCount)
         updateDrainedStateIfNeeded()
         return batch
@@ -184,7 +184,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     /// one serial producer queue through one bounded handoff.
     public func drainXRSLAMSensorEvents(
         maxCount: Int
-    ) -> BoundedNonblockingHandoff<XRSLAMLiveSensorEvent>.DrainBatch {
+    ) -> BoundedSensorHandoff<XRSLAMLiveSensorEvent>.DrainBatch {
         let batch = xrslamSensorHandoff.drain(maxCount: maxCount)
         updateDrainedStateIfNeeded()
         return batch

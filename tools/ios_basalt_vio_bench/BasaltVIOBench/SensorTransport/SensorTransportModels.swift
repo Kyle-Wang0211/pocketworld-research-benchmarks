@@ -157,9 +157,9 @@ public struct LiveSensorTransportSnapshot: Equatable, Sendable {
     public let accounting: SensorTransportAccountingSnapshot
     public let imuDeliveryMode: IMUDeliveryMode
     public let imuAssembly: IMUAssemblyReceipt
-    public let cameraHandoff: BoundedNonblockingHandoff<MonochromeCameraFrame>.Snapshot
-    public let imuHandoff: BoundedNonblockingHandoff<PairedIMUSample>.Snapshot
-    public let xrslamSensorHandoff: BoundedNonblockingHandoff<XRSLAMLiveSensorEvent>.Snapshot
+    public let cameraHandoff: BoundedSensorHandoff<MonochromeCameraFrame>.Snapshot
+    public let imuHandoff: BoundedSensorHandoff<PairedIMUSample>.Snapshot
+    public let xrslamSensorHandoff: BoundedSensorHandoff<XRSLAMLiveSensorEvent>.Snapshot
     public let captureFormat: LiveCaptureFormatReceipt?
 }
 
