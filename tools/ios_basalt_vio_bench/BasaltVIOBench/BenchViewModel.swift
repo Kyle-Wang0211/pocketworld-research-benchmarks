@@ -17,6 +17,7 @@ final class BenchViewModel: ObservableObject {
     @Published private(set) var previewSource: BenchPreviewSource = .none
     @Published private(set) var previewFrame: CGImage?
 
+    @Published private(set) var recordings: [URL] = []
     private(set) var datasetURL: URL?
     private var coordinator: BenchmarkCoordinator?
 
@@ -55,6 +56,34 @@ final class BenchViewModel: ObservableObject {
     }
 
     func requestDatasetImport() { isImportingDataset = true }
+
+    /// Device recordings live inside this app's own container, so the app lists
+    /// them itself. Relying on the Files app would need UIFileSharingEnabled,
+    /// which Xcode's generated Info.plist silently drops -- a recording could be
+    /// captured and then never be selectable for replay.
+    func refreshRecordings() {
+        let root = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+        let found = (try? FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.contentModificationDateKey]
+        )) ?? []
+        recordings = found
+            .filter {
+                FileManager.default.fileExists(
+                    atPath: $0.appendingPathComponent("recording_manifest.json").path
+                )
+            }
+            .sorted {
+                let l = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]))?
+                    .contentModificationDate ?? .distantPast
+                let r = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]))?
+                    .contentModificationDate ?? .distantPast
+                return l > r
+            }
+        if datasetURL == nil { datasetURL = recordings.first }
+    }
+
+    func selectRecording(_ url: URL) { datasetURL = url }
 
     func acceptDatasetImport(_ result: Result<[URL], Error>) {
         do {

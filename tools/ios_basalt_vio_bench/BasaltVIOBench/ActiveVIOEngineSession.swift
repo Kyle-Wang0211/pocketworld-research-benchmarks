@@ -112,18 +112,46 @@ final class ActiveVIOEngineSession {
         }
     }
 
+    /// Device-recording frames are raw luma planes with a `.y` extension; EuRoC
+    /// frames are encoded images. The file *is* the plane in the first case, so
+    /// there is nothing to decode and the only check that matters is that its
+    /// length is exactly one frame.
+    private static func loadReplayImage(
+        _ url: URL,
+        width: Int,
+        height: Int
+    ) throws -> GrayscaleImage {
+        if url.pathExtension == "y" {
+            return try RawLumaFrameLoader.load(
+                url,
+                format: DeviceRecordingCameraFormat(
+                    width: width,
+                    height: height,
+                    pixelFormat: "luma8_from_420f_full_range",
+                    nominalFPS: 30
+                )
+            )
+        }
+        return try GrayscaleImageLoader.load(
+            url,
+            expectedWidth: width,
+            expectedHeight: height
+        )
+    }
+
     func submitReplayCamera(
         _ frame: EuRoCCameraFrame,
-        acceptedNanoseconds: UInt64
+        acceptedNanoseconds: UInt64,
+        width: Int,
+        height: Int
     ) throws {
+        let isRaw = frame.camera0ImageURL.pathExtension == "y"
         switch implementation {
         case .basalt(let session):
             let image: GrayscaleImage
             do {
-                image = try GrayscaleImageLoader.load(
-                    frame.camera0ImageURL,
-                    expectedWidth: 752,
-                    expectedHeight: 480
+                image = try Self.loadReplayImage(
+                    frame.camera0ImageURL, width: width, height: height
                 )
             } catch {
                 throw ActiveVIOEngineSessionError.operation("decode_replay_camera", error)
@@ -136,12 +164,28 @@ final class ActiveVIOEngineSession {
                 )
             }
         case .xrslam(let session):
-            try performXRSLAM("submit_official_euroc_camera") {
-                try session.submitEuRoCCameraFile(
-                    frame.camera0ImageURL,
-                    timestampNanoseconds: frame.timestampNanoseconds,
-                    acceptedNanoseconds: acceptedNanoseconds
+            // The pinned EuRoC path is kept byte-for-byte for the EuRoC channel;
+            // a recorded raw plane has no file format for it to open, so it goes
+            // through the same in-memory submission Basalt uses.
+            if isRaw {
+                let image = try Self.loadReplayImage(
+                    frame.camera0ImageURL, width: width, height: height
                 )
+                try performXRSLAM("submit_device_recording_camera") {
+                    try session.submitCamera(
+                        images: [image],
+                        timestampNanoseconds: frame.timestampNanoseconds,
+                        acceptedNanoseconds: acceptedNanoseconds
+                    )
+                }
+            } else {
+                try performXRSLAM("submit_official_euroc_camera") {
+                    try session.submitEuRoCCameraFile(
+                        frame.camera0ImageURL,
+                        timestampNanoseconds: frame.timestampNanoseconds,
+                        acceptedNanoseconds: acceptedNanoseconds
+                    )
+                }
             }
         }
     }

@@ -10,6 +10,15 @@ struct PreparedBenchmarkRun {
     let imageWidth: Int
     let imageHeight: Int
     let replayDataset: EuRoCReplayDataset?
+    /// Set only for `replay-device-recording`. Carries the events the candidates
+    /// replay and the ARKit trajectory measured over the identical frames.
+    let deviceRecording: DeviceRecordingDataset?
+
+    /// The events to replay, whichever channel supplied them. One scheduler
+    /// drives both, so pacing and ordering cannot drift between channels.
+    var replayEvents: [ReplayEvent]? {
+        deviceRecording?.events ?? replayDataset?.events
+    }
     let startedReceipt: RunReceipt
     let startedReceiptSHA256: String
     let receiptWriter: RunReceiptWriter
@@ -115,9 +124,60 @@ enum BenchmarkRunPreparation {
         let imageHeight: Int
         let channel: RunReceiptChannel
         let accuracy: RunAccuracyEvidence
+        let deviceRecording: DeviceRecordingDataset?
 
         switch mode {
-        case .record, .liveSoak, .replayDeviceRecording:
+        case .replayDeviceRecording:
+            guard let datasetURL else {
+                throw BenchmarkRunPreparationError.replayDatasetRequired
+            }
+            let recording = try DeviceRecordingLoader().load(
+                manifestURL: datasetURL.appendingPathComponent("recording_manifest.json")
+            )
+            // The calibration comes from the recording's measured intrinsics, not
+            // from the frozen 640x480 file, which is why this channel can score
+            // at 1920x1440 while a live candidate run cannot.
+            calibrationData = try CalibrationMaterializer.deviceRecording(
+                from: try Data(contentsOf: calibrationSource),
+                intrinsics: recording.intrinsics,
+                width: recording.camera.width,
+                height: recording.camera.height
+            )
+            var recordingDefinition: [String: Any] = [
+                "camera": "mono_\(recording.camera.width)x\(recording.camera.height)_from_device_recording",
+                "engine": backend.id,
+                "imu": IMUDeliveryMode.forBackend(backend).rawValue,
+                "config_sha256": RunReceiptHash.sha256Hex(configData),
+                "calibration_sha256": RunReceiptHash.sha256Hex(calibrationData),
+                "device_model": LiveCalibrationGate.frozenModelIdentifier,
+                "uses_arkit": false,
+                "recording_id": recording.recordingID,
+                "intrinsics_source": recording.intrinsics.source,
+                "scoring_resolution": [
+                    BenchResolution.scoring.width, BenchResolution.scoring.height,
+                ],
+                "configured_resolution": [recording.camera.width, recording.camera.height],
+                "participates_in_verdict": BenchResolution.participatesInVerdict(
+                    width: recording.camera.width,
+                    height: recording.camera.height
+                ),
+            ]
+            recordingDefinition["arkit_reference_pose_count"] = recording.arkitReference.count
+            inputDefinitionData = try JSONSerialization.data(
+                withJSONObject: recordingDefinition,
+                options: [.prettyPrinted, .sortedKeys]
+            )
+            inputCameraCount = recording.inputCameraCount
+            imageWidth = recording.camera.width
+            imageHeight = recording.camera.height
+            replayDataset = nil
+            deviceRecording = recording
+            channel = .replayDeviceRecording
+            // Identical input makes the arms mutually comparable; it is not
+            // ground truth, so this channel may never state absolute accuracy.
+            accuracy = RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none)
+
+        case .record, .liveSoak:
             // Declare what the capture is actually configured to deliver, never
             // the resolution the contract aspires to. Writing the scoring
             // constant here produced a receipt claiming 1920x1440 while
@@ -173,11 +233,8 @@ enum BenchmarkRunPreparation {
             imageWidth = Int(configured.cameraWidth)
             imageHeight = Int(configured.cameraHeight)
             replayDataset = nil
-            switch mode {
-            case .record: channel = .record
-            case .replayDeviceRecording: channel = .replayDeviceRecording
-            default: channel = .liveSoak
-            }
+            deviceRecording = nil
+            channel = mode == .record ? .record : .liveSoak
             // No external ground truth on this device, in any of these modes.
             accuracy = RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none)
         case .replayPaced, .replayMax:
@@ -203,6 +260,7 @@ enum BenchmarkRunPreparation {
             imageWidth = 752
             imageHeight = 480
             replayDataset = dataset
+            deviceRecording = nil
             channel = mode == .replayPaced ? .replayPaced : .replayMax
             accuracy = RunAccuracyEvidence(status: .evaluable, groundTruth: .euroc)
         }
@@ -270,6 +328,7 @@ enum BenchmarkRunPreparation {
             imageWidth: imageWidth,
             imageHeight: imageHeight,
             replayDataset: replayDataset,
+            deviceRecording: deviceRecording,
             startedReceipt: receipt,
             startedReceiptSHA256: RunReceiptHash.sha256Hex(startedReceiptData),
             receiptWriter: writer

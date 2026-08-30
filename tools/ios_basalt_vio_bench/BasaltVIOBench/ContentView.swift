@@ -38,6 +38,26 @@ struct ContentView: View {
                             .foregroundStyle(.orange)
                     }
 
+                    if model.mode == .replayDeviceRecording && model.selectedBackend != .arkit {
+                        if model.recordings.isEmpty {
+                            Text("还没有本机录制。先用 ARKit 臂跑一次「录制一次」。")
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Picker("录制", selection: Binding(
+                                get: { model.datasetURL ?? model.recordings[0] },
+                                set: { model.selectRecording($0) }
+                            )) {
+                                ForEach(model.recordings, id: \.self) { url in
+                                    Text(url.lastPathComponent.replacingOccurrences(
+                                        of: "run-", with: ""
+                                    ).prefix(8) + "").tag(url)
+                                }
+                            }
+                            .disabled(model.isRunning)
+                        }
+                    }
+
                     if model.mode.hasExternalGroundTruth && model.selectedBackend != .arkit {
                         Button("选择 EuRoC MH_01_easy 目录") {
                             model.requestDatasetImport()
@@ -107,6 +127,8 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("VIO Replacement Bench")
+            .onAppear { model.refreshRecordings() }
+            .onChange(of: model.phase) { _, _ in model.refreshRecordings() }
         }
         .fileImporter(
             isPresented: $model.isImportingDataset,

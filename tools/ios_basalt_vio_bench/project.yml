@@ -130,6 +130,11 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: "Measures ARKit, Basalt, and XRSLAM from controlled camera runs."
         INFOPLIST_KEY_NSMotionUsageDescription: "Measures Basalt and XRSLAM from controlled inertial runs."
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        # The device recording is written into the app's own container, so the
+        # replay channel cannot reach it unless the container is browsable.
+        # Without these two keys a recording can be captured and never replayed.
+        INFOPLIST_KEY_UIFileSharingEnabled: YES
+        INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_OBJC_BRIDGING_HEADER: BasaltVIOBench/UnifiedVIOBench-Bridging-Header.h
         HEADER_SEARCH_PATHS:

@@ -931,11 +931,12 @@ final class BenchmarkCoordinator {
         initialHeartbeatNS: UInt64,
         runLease: BenchRunLease.Token
     ) throws {
-        guard let dataset = context.replayDataset else {
+        // One scheduler drives both replay channels, so pacing and ordering
+        // cannot drift between EuRoC and the device recording.
+        guard let events = context.replayEvents else {
             throw CoordinatorError.invalidRun("replay_dataset_missing")
         }
-        guard dataset.inputCameraCount == context.inputCameraCount,
-              context.inputCameraCount == 1 else {
+        guard context.inputCameraCount == 1 else {
             throw CoordinatorError.invalidRun("native_manifest_camera_count_mismatch")
         }
         let systemSamples = SystemSampleStore()
@@ -954,7 +955,7 @@ final class BenchmarkCoordinator {
             mode: mode == .replayPaced ? .paced : .maximumThroughput
         )
         do {
-            try scheduler.run(events: dataset.events) { event in
+            try scheduler.run(events: events) { event in
                 if isAbortRequested { throw CoordinatorError.aborted }
                 switch event {
                 case .imu(let sample):
@@ -980,7 +981,9 @@ final class BenchmarkCoordinator {
                     )
                     try session.submitReplayCamera(
                         frame,
-                        acceptedNanoseconds: DispatchTime.now().uptimeNanoseconds
+                        acceptedNanoseconds: DispatchTime.now().uptimeNanoseconds,
+                        width: context.imageWidth,
+                        height: context.imageHeight
                     )
                 }
                 poses.append(contentsOf: try drainPoses(session).map(\.pose))
@@ -1019,24 +1022,52 @@ final class BenchmarkCoordinator {
               snapshot.counters.nonfinitePoseRejected == 0 else {
             throw CoordinatorError.invalidRun("native_transport_loss")
         }
-        let expectedCamera = dataset.events.reduce(into: UInt64(0)) {
+        let expectedCamera = events.reduce(into: UInt64(0)) {
             if case .camera = $1 { $0 += 1 }
         }
-        let expectedIMU = dataset.events.reduce(into: UInt64(0)) {
+        let expectedIMU = events.reduce(into: UInt64(0)) {
             if case .imu = $1 { $0 += 1 }
         }
         guard snapshot.counters.cameraAccepted == expectedCamera,
               snapshot.counters.imuAccepted == expectedIMU else {
             throw CoordinatorError.invalidRun("replay_input_count_mismatch")
         }
+        let elapsed = max(1e-9, Double(endNS - startNS) / 1_000_000_000)
+        let samples = systemSamples.snapshot()
+        try writePoses(poses, to: context.directoryURL)
+        try writeSystemSamples(samples, to: context.directoryURL)
+
+        // Only EuRoC carries external ground truth, so only EuRoC may state an
+        // absolute accuracy number or be scored against the accuracy gates. The
+        // device recording gives every arm identical input, which makes them
+        // mutually comparable -- comparability is not ground truth, and calling
+        // ATE against ARKit's trajectory would be scoring one estimator by
+        // another.
+        guard let dataset = context.replayDataset else {
+            let metrics: [String: Double] = [
+                "processed_fps": Double(poses.count) / elapsed,
+                "pose_count": Double(poses.count),
+                "camera_frames_replayed": Double(expectedCamera),
+                "imu_samples_replayed": Double(expectedIMU),
+                "cpu_seconds": SystemMetricSampler.cpuSecondsDelta(start: cpuStart, end: cpuEnd),
+            ]
+            try writeTerminal(
+                context,
+                state: .invalid,
+                metrics: metrics,
+                reason: "device_recording_replay_complete_no_ground_truth",
+                detail: "poses.tum written; accuracy is compared against the "
+                    + "ARKit trajectory over the identical frames, outside this receipt"
+            )
+            return
+        }
+
         let accuracy = try TrajectoryEvaluator(
             configuration: evaluationConfiguration
         ).evaluate(
             estimated: poses,
             groundTruth: dataset.groundTruth
         )
-        let elapsed = max(1e-9, Double(endNS - startNS) / 1_000_000_000)
-        let samples = systemSamples.snapshot()
         let metrics: [String: Double] = [
             "processed_fps": Double(poses.count) / elapsed,
             "ate_rmse_m": accuracy.ateRMSEMeters,
@@ -1045,8 +1076,6 @@ final class BenchmarkCoordinator {
             "ground_truth_coverage": accuracy.groundTruthCoverage,
             "cpu_seconds": SystemMetricSampler.cpuSecondsDelta(start: cpuStart, end: cpuEnd),
         ]
-        try writePoses(poses, to: context.directoryURL)
-        try writeSystemSamples(samples, to: context.directoryURL)
         let verdict = BenchGateEvaluator.replay(accuracy)
         try writeTerminal(
             context,
