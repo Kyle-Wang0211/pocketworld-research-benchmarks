@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "purpose": "Carry every upstream pixel-unit parameter from the resolution it was tuned at to the 1920x1440 scoring resolution, with a derivation for each value. Tuning a parameter until the run succeeds is forbidden; a value with no derivation is not a value.",
+  "target_resolution": [1920, 1440],
+  "status": "partial_blocking",
+  "blocks": [
+    "any 1920x1440 accuracy verdict",
+    "any 1920x1440 throughput or thermal verdict"
+  ],
+  "scale_reference": {
+    "xrslam": {
+      "tuned_at": [640, 480],
+      "source": "xrslam 4beb1a9 xrslam-ios/visualizer/configs/iPhone 14 Pro.yaml resolution",
+      "linear_factor": 3.0,
+      "area_factor": 9.0,
+      "aspect_preserved": true
+    },
+    "basalt": {
+      "tuned_at": [752, 480],
+      "source": "basalt 0f3b2b52 data/euroc_config.json, tuned on EuRoC cam0",
+      "linear_factor_by_height": 3.0,
+      "linear_factor_by_width": 2.553,
+      "aspect_preserved": false,
+      "aspect_note": "EuRoC is 1.567:1 and the device format is 1.333:1, so no single linear factor is exact. Height is used because the vertical field of view is what the detection grid tiles first, and because it matches the XRSLAM factor, keeping both candidates on the same scaling rule. The width mismatch is declared, not absorbed."
+    }
+  },
+  "resolved": [
+    {
+      "engine": "basalt",
+      "parameter": "config.optical_flow_detection_grid_size",
+      "upstream_file": "data/euroc_config.json",
+      "upstream_commit": "0f3b2b52c807f70ff4e2973ce253c73329eea7bc",
+      "original_value": 50,
+      "new_value": 150,
+      "scale_factor": 3.0,
+      "unit": "pixels_at_pyramid_level_0",
+      "unit_evidence": "src/utils/keypoints.cpp detectKeypoints receives it as PATCH_SIZE and uses it directly as a pixel cell size: cells are sized img_raw.w / PATCH_SIZE by img_raw.h / PATCH_SIZE, and each candidate cell is read as img_raw.SubImage(x, y, PATCH_SIZE, PATCH_SIZE).",
+      "derivation": "Linear pixel length, so it scales with the linear factor. This is the parameter that sets feature count: num_points_cell is 1, so the detector emits at most one keypoint per cell. At 640x480 with grid 50 the image tiles into 12x9 = 108 cells. Left at 50, a 1920x1440 image tiles into 38x28 = 1064 cells and the tracker would carry roughly ten times the features. At 150 the tiling returns to 12x9 = 108 cells, preserving both the feature count and the angular feature density.",
+      "consequence": "Corrects the assumption that 9x the pixels means 9x the tracking cost. Pyramid construction does scale with area; per-feature tracking does not, once this parameter is carried across."
+    },
+    {
+      "engine": "basalt",
+      "parameter": "config.optical_flow_max_recovered_dist2",
+      "upstream_file": "data/euroc_config.json",
+      "upstream_commit": "0f3b2b52c807f70ff4e2973ce253c73329eea7bc",
+      "original_value": 0.04,
+      "new_value": 0.36,
+      "scale_factor": 9.0,
+      "unit": "squared_pixels_at_pyramid_level_0",
+      "unit_evidence": "include/basalt/optical_flow/frame_to_frame_optical_flow.h computes dist2 as the squaredNorm of the difference between transform_1.translation() and the forward-backward recovered translation. trackPoint divides translation by (1 << level) on entering a level and multiplies it back on leaving, so translations are in level-0 pixels and dist2 is in level-0 pixels squared.",
+      "derivation": "A squared length scales with the square of the linear factor. The underlying forward-backward consistency threshold is sqrt(0.04) = 0.2 px, which becomes 0.6 px at 3x, and 0.6^2 = 0.36.",
+      "consequence": "Left at 0.04 the tracker would demand 0.2 px forward-backward agreement on an image with three times the pixel density, silently rejecting correct tracks."
+    },
+    {
+      "engine": "xrslam",
+      "parameter": "feature_tracker.min_keypoint_distance",
+      "upstream_file": "xrslam_ios_vio.yaml",
+      "upstream_commit": "4beb1a942f33da9afbfae2d70e2c641cfc2bb675",
+      "original_value": 25.0,
+      "new_value": 75.0,
+      "scale_factor": 3.0,
+      "unit": "pixels",
+      "unit_evidence": "Minimum separation between detected keypoints, expressed in the same image coordinates as the 640x480 resolution declared alongside it in the frozen iPhone 14 Pro configuration.",
+      "derivation": "Linear pixel length, so it scales with the linear factor. Preserves the angular separation between features.",
+      "consequence": "Left at 25.0 the minimum angular separation between features shrinks threefold, changing the spatial distribution of the tracked set."
+    }
+  ],
+  "unresolved": [
+    {
+      "engine": "basalt",
+      "parameter": "config.optical_flow_levels",
+      "original_value": 3,
+      "unit": "pyramid_level_count",
+      "problem": "The coarsest level downsamples by 1 << levels, so 3 gives 8x. Matching the same physical coarsest scale at 3x the resolution needs 8 * 3 = 24x, and log2(24) = 4.585 is not an integer. 4 levels gives 16x (too fine, may lose large motions); 5 levels gives 32x (coarser than upstream ever ran, and adds a pyramid octave of cost).",
+      "why_not_guessed": "Rounding direction changes which motions the tracker can follow. That is an empirical question about this camera and this motion, not a preference, and picking one silently would be exactly the tuning-until-it-runs this file exists to prevent.",
+      "resolution_path": "Run the device recording through both 4 and 5 with every other parameter fixed, and record both results. Neither is the default."
+    },
+    {
+      "engine": "xrslam",
+      "parameter": "feature_tracker.max_keypoint_detection",
+      "original_value": 300,
+      "unit": "count",
+      "problem": "A count, not a length, so no linear factor applies. Holding it at 300 preserves compute but cuts feature density per unit area by nine. Raising it to 2700 preserves density but multiplies tracking cost by nine.",
+      "why_not_guessed": "The two choices measure different things and there is no upstream statement about which invariant XRSLAM intended. Basalt answers the same question structurally, via grid size, and its answer is to preserve density at constant count; that is a reason to test 300 first, not a reason to declare it correct.",
+      "resolution_path": "Test 300 and 2700 on the device recording with everything else fixed, and record both."
+    },
+    {
+      "engine": "xrslam",
+      "parameter": "feature_tracker.size",
+      "original_value": 5,
+      "unit": "unverified",
+      "problem": "The unit cannot be established from the frozen artifacts: XRSLAM's sources are not vendored, only its prebuilt archive and ABI header.",
+      "why_not_guessed": "A parameter whose unit is unknown cannot be scaled. Assuming pixels and multiplying by 3 would be a fabricated derivation.",
+      "resolution_path": "Read xrslam 4beb1a9 feature tracker sources at the pinned commit and record the evidence, exactly as was done for the two Basalt parameters."
+    }
+  ],
+  "must_not_scale": [
+    {
+      "parameter": "config.vio_max_states",
+      "value": 3,
+      "reason": "sliding window state count, not a length"
+    },
+    {
+      "parameter": "config.vio_max_kfs",
+      "value": 7,
+      "reason": "keyframe count, not a length"
+    },
+    {
+      "parameter": "config.vio_min_frames_after_kf",
+      "value": 5,
+      "reason": "frame count, not a length"
+    },
+    {
+      "parameter": "config.optical_flow_max_iterations",
+      "value": 5,
+      "reason": "solver iteration count"
+    },
+    {
+      "parameter": "config.vio_max_iterations",
+      "value": 7,
+      "reason": "solver iteration count"
+    },
+    {
+      "parameter": "config.vio_min_triangulation_dist",
+      "value": 0.05,
+      "reason": "metric baseline in meters; independent of image sampling"
+    },
+    {
+      "parameter": "config.mapper_*",
+      "reason": "the mapper does not run in vio_only mode, which is the frozen algorithm_mode for this bench"
+    },
+    {
+      "parameter": "imu.*",
+      "reason": "IMU noise densities and random walks are properties of the inertial sensor, not of image sampling"
+    },
+    {
+      "parameter": "cam0.extrinsic.q_bc / p_bc",
+      "reason": "a rigid IMU-to-camera transform is resolution independent"
+    }
+  ]
+}
