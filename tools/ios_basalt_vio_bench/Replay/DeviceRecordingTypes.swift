@@ -21,6 +21,9 @@ enum DeviceRecordingFileRole: String, Codable, CaseIterable, Sendable {
     /// this recorder did, pins a whole capture to whatever focus position the
     /// first frame happened to have.
     case intrinsicsIndex = "intrinsics_index"
+    /// The frame stream and its index, copied from production's archive layout.
+    case framesStream = "frames_stream"
+    case framesIndex = "frames_index"
     case imuIndex = "imu_index"
     case arkitPoses = "arkit_poses"
 }
@@ -139,9 +142,12 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     static let supportedSchemaVersion = 1
     static let framesDirectory = "frames"
 
-    static func frameRelativePath(index: Int) -> String {
-        "\(framesDirectory)/\(String(format: "%08d", index)).y"
-    }
+    /// One append-only stream holding every frame back to back, and the sidecar
+    /// index that says where each one starts. This mirrors production's archive
+    /// -- photos.hevc plus photos.pwvi in pwva.dart -- rather than the file per
+    /// frame this recorder used to write.
+    static let framesStreamPath = "frames.bin"
+    static let framesIndexPath = "frames.pwvi"
 }
 
 /// A recording replayed as the same event stream `ReplayScheduler` already
@@ -183,6 +189,11 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
     case timestampRegression(path: String, previous: Int64, current: Int64)
     case malformedCSV(path: String, line: Int, reason: String)
     case intrinsicsCrossCheckFailed
+    /// The session ended without a single frame, so there are no intrinsics to
+    /// record. Distinct from a failed cross-check, which this used to be
+    /// reported as -- sending an investigation after the camera calibration when
+    /// the camera had simply never delivered.
+    case noFramesCaptured
     case insufficientFreeSpace(requiredBytes: Int64, availableBytes: Int64)
 
     var errorDescription: String? { description }
@@ -206,7 +217,9 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
         case .timestampRegression(let p, let prev, let cur): "timestamp regression in \(p): \(prev) -> \(cur)"
         case .malformedCSV(let p, let l, let r): "malformed CSV \(p):\(l): \(r)"
         case .intrinsicsCrossCheckFailed:
-            "ARKit intrinsics disagree with the frozen upstream values scaled by 3"
+            "ARKit intrinsics cannot describe the frames they arrived with"
+        case .noFramesCaptured:
+            "the session produced no frames, so there are no intrinsics to record"
         case .insufficientFreeSpace(let required, let available):
             String(
                 format: "存储空间不足:本次录制需要 %.1f GiB(含余量),设备可用 %.1f GiB,还差 %.1f GiB。"

@@ -10,9 +10,23 @@ import Foundation
 enum RawLumaFrameLoader {
     static func load(
         _ url: URL,
-        format: DeviceRecordingCameraFormat
+        format: DeviceRecordingCameraFormat,
+        byteRange: Range<Int>? = nil
     ) throws -> GrayscaleImage {
-        let data = try Data(contentsOf: url, options: .mappedIfSafe)
+        let whole = try Data(contentsOf: url, options: .mappedIfSafe)
+        let data: Data
+        if let byteRange {
+            guard byteRange.lowerBound >= 0, byteRange.upperBound <= whole.count else {
+                throw DeviceRecordingError.frameSizeMismatch(
+                    path: url.lastPathComponent,
+                    expected: format.bytesPerFrame,
+                    actual: max(0, whole.count - byteRange.lowerBound)
+                )
+            }
+            data = whole.subdata(in: byteRange)
+        } else {
+            data = whole
+        }
         guard data.count == format.bytesPerFrame else {
             throw DeviceRecordingError.frameSizeMismatch(
                 path: url.lastPathComponent,
@@ -81,10 +95,24 @@ struct DeviceRecordingLoader {
         let imuRecord = try required(.imuIndex, in: manifest.files)
         let poseRecord = try required(.arkitPoses, in: manifest.files)
 
+        let streamRecord = try required(.framesStream, in: manifest.files)
+        try rejectUnsafePath(streamRecord.relativePath)
+        let streamURL = root.appendingPathComponent(streamRecord.relativePath)
+        // The bound has to come from the file on disk, not from the manifest's
+        // claim about it: an interrupted capture leaves a stream shorter than
+        // the manifest says, and trusting the manifest would let that through.
+        let streamAttributes = try? FileManager.default.attributesOfItem(
+            atPath: streamURL.path
+        )
+        guard let streamSize = streamAttributes?[.size] as? Int64 else {
+            throw DeviceRecordingError.missingFrame(streamRecord.relativePath)
+        }
         let frames = try parseCameraIndex(
             record: cameraRecord,
             root: root,
-            format: manifest.camera
+            format: manifest.camera,
+            streamURL: streamURL,
+            streamByteCount: Int(streamSize)
         )
         guard frames.count == manifest.frameCount else {
             throw DeviceRecordingError.frameCountMismatch(
@@ -130,7 +158,13 @@ struct DeviceRecordingLoader {
         _ files: [DeviceRecordingFile],
         root: URL
     ) throws {
-        for record in files {
+        // The frame stream is the bulk payload -- 4.9 GB for a 30 s capture --
+        // and hashing it on every load would make opening a recording cost as
+        // much as replaying it. Its manifest hash is written at close, the way
+        // production writes the stream's SHA-256 into its own manifest, and is
+        // checked here only under the same flag as the frames digest.
+        let payloadRoles: Set<DeviceRecordingFileRole> = [.framesStream]
+        for record in files where !payloadRoles.contains(record.role) {
             try rejectUnsafePath(record.relativePath)
             let url = root.appendingPathComponent(record.relativePath)
             let data = try Data(contentsOf: url)
@@ -150,8 +184,19 @@ struct DeviceRecordingLoader {
         expected: String
     ) throws {
         var digest = SHA256()
+        // The digest covers frame payloads in capture order, which is what the
+        // writer hashed. Reading the stream once and slicing it keeps that true
+        // without reopening it per frame.
+        var streamCache: [URL: Data] = [:]
         for frame in frames {
-            digest.update(data: try Data(contentsOf: frame.camera0ImageURL, options: .mappedIfSafe))
+            let whole: Data
+            if let cached = streamCache[frame.camera0ImageURL] {
+                whole = cached
+            } else {
+                whole = try Data(contentsOf: frame.camera0ImageURL, options: .mappedIfSafe)
+                streamCache[frame.camera0ImageURL] = whole
+            }
+            digest.update(data: frame.camera0ByteRange.map { whole.subdata(in: $0) } ?? whole)
         }
         let actual = DeviceRecordingWriter.hex(digest.finalize())
         guard actual == expected else {
@@ -183,7 +228,9 @@ struct DeviceRecordingLoader {
     private func parseCameraIndex(
         record: DeviceRecordingFile,
         root: URL,
-        format: DeviceRecordingCameraFormat
+        format: DeviceRecordingCameraFormat,
+        streamURL: URL,
+        streamByteCount: Int
     ) throws -> [EuRoCCameraFrame] {
         var frames: [EuRoCCameraFrame] = []
         var previous: Int64?
@@ -199,24 +246,29 @@ struct DeviceRecordingLoader {
                 )
             }
             previous = timestamp
-            try rejectUnsafePath(fields[1])
-            let url = root.appendingPathComponent(fields[1])
-            // Structural check on every frame: present, and exactly one frame
-            // long. Cheap enough to always run, and it is what catches a
-            // truncated capture before it becomes a measurement.
-            let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
-            guard let size = attributes?[.size] as? Int64 else {
-                throw DeviceRecordingError.missingFrame(fields[1])
+            guard let frameIndex = Int(fields[1]), frameIndex >= 0 else {
+                throw DeviceRecordingError.malformedCSV(
+                    path: record.relativePath, line: line, reason: "frame_index"
+                )
             }
-            guard size == Int64(format.bytesPerFrame) else {
+            // Frames live back to back in one stream, so a frame is an offset
+            // and a length. The structural check is the same one the per-file
+            // layout got -- present, and exactly one frame long -- but it is now
+            // a bounds check against the stream, which is what catches a capture
+            // truncated by an interrupt before it becomes a measurement.
+            let offset = frameIndex * format.bytesPerFrame
+            guard offset + format.bytesPerFrame <= streamByteCount else {
                 throw DeviceRecordingError.frameSizeMismatch(
-                    path: fields[1], expected: format.bytesPerFrame, actual: Int(size)
+                    path: DeviceRecordingManifest.framesStreamPath,
+                    expected: format.bytesPerFrame,
+                    actual: max(0, streamByteCount - offset)
                 )
             }
             frames.append(EuRoCCameraFrame(
                 timestampNanoseconds: timestamp,
-                camera0ImageURL: url,
-                camera1ImageURL: nil
+                camera0ImageURL: streamURL,
+                camera1ImageURL: nil,
+                camera0ByteRange: offset ..< (offset + format.bytesPerFrame)
             ))
         }
         return frames

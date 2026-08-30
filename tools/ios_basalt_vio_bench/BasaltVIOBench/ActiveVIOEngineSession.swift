@@ -112,28 +112,31 @@ final class ActiveVIOEngineSession {
         }
     }
 
-    /// Device-recording frames are raw luma planes with a `.y` extension; EuRoC
-    /// frames are encoded images. The file *is* the plane in the first case, so
-    /// there is nothing to decode and the only check that matters is that its
-    /// length is exactly one frame.
+    /// A device recording carries raw luma inside one append-only stream, so a
+    /// frame is a byte range and there is nothing to decode -- the only check
+    /// that matters is that the range is exactly one frame long. EuRoC frames
+    /// are encoded images in files of their own, and are told apart by having no
+    /// range. The discriminator used to be a `.y` file extension, which stopped
+    /// meaning anything once the frames moved into a single stream.
     private static func loadReplayImage(
-        _ url: URL,
+        _ frame: EuRoCCameraFrame,
         width: Int,
         height: Int
     ) throws -> GrayscaleImage {
-        if url.pathExtension == "y" {
+        if frame.camera0ByteRange != nil {
             return try RawLumaFrameLoader.load(
-                url,
+                frame.camera0ImageURL,
                 format: DeviceRecordingCameraFormat(
                     width: width,
                     height: height,
                     pixelFormat: "luma8_from_420f_full_range",
-                    nominalFPS: 30
-                )
+                    nominalFPS: BenchResolution.scoringFramesPerSecond
+                ),
+                byteRange: frame.camera0ByteRange
             )
         }
         return try GrayscaleImageLoader.load(
-            url,
+            frame.camera0ImageURL,
             expectedWidth: width,
             expectedHeight: height
         )
@@ -145,13 +148,13 @@ final class ActiveVIOEngineSession {
         width: Int,
         height: Int
     ) throws {
-        let isRaw = frame.camera0ImageURL.pathExtension == "y"
+        let isRaw = frame.camera0ByteRange != nil
         switch implementation {
         case .basalt(let session):
             let image: GrayscaleImage
             do {
                 image = try Self.loadReplayImage(
-                    frame.camera0ImageURL, width: width, height: height
+                    frame, width: width, height: height
                 )
             } catch {
                 throw ActiveVIOEngineSessionError.operation("decode_replay_camera", error)
@@ -169,7 +172,7 @@ final class ActiveVIOEngineSession {
             // through the same in-memory submission Basalt uses.
             if isRaw {
                 let image = try Self.loadReplayImage(
-                    frame.camera0ImageURL, width: width, height: height
+                    frame, width: width, height: height
                 )
                 try performXRSLAM("submit_device_recording_camera") {
                     try session.submitCamera(

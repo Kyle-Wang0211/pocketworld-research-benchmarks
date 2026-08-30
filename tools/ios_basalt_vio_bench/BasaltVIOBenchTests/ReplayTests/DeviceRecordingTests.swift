@@ -139,7 +139,11 @@ final class DeviceRecordingTests: XCTestCase {
         }
         XCTAssertEqual(cameras.count, 3)
         for (index, frame) in cameras.enumerated() {
-            let image = try RawLumaFrameLoader.load(frame.camera0ImageURL, format: format)
+            let image = try RawLumaFrameLoader.load(
+                frame.camera0ImageURL,
+                format: format,
+                byteRange: frame.camera0ByteRange
+            )
             XCTAssertEqual(image.width, 1920)
             XCTAssertEqual(image.height, 1440)
             XCTAssertEqual(image.pixels.count, format.bytesPerFrame)
@@ -196,17 +200,22 @@ final class DeviceRecordingTests: XCTestCase {
     }
 
     /// Truncation is caught by the always-on structural check, without needing
-    /// the expensive digest pass.
+    /// the expensive digest pass. With frames in one append-only stream this is
+    /// the shape an interrupted capture actually leaves behind: a stream that
+    /// stops short of what the index names.
     func testTruncatedFrameIsRefusedWithoutDigestVerification() throws {
         _ = try makeMinimalRecording()
-        let frame = root.appendingPathComponent(
-            DeviceRecordingManifest.frameRelativePath(index: 0)
+        let stream = root.appendingPathComponent(
+            DeviceRecordingManifest.framesStreamPath
         )
-        try Data(count: 128).write(to: frame)
+        try Data(count: 128).write(to: stream)
         XCTAssertThrowsError(
             try DeviceRecordingLoader(verifyFramesDigest: false)
                 .load(manifestURL: root.appendingPathComponent("recording_manifest.json"))
         ) { error in
+            // The index still names a frame the stream is too short to hold, and
+            // that is caught by bounds alone -- no hashing of a multi-gigabyte
+            // stream required.
             guard case .frameSizeMismatch = error as? DeviceRecordingError else {
                 return XCTFail("expected frameSizeMismatch, got \(error)")
             }
@@ -217,12 +226,12 @@ final class DeviceRecordingTests: XCTestCase {
     /// catches it.
     func testCorruptedFrameIsCaughtByTheDigest() throws {
         _ = try makeMinimalRecording()
-        let frame = root.appendingPathComponent(
-            DeviceRecordingManifest.frameRelativePath(index: 0)
+        let stream = root.appendingPathComponent(
+            DeviceRecordingManifest.framesStreamPath
         )
-        var bytes = try Data(contentsOf: frame)
+        var bytes = try Data(contentsOf: stream)
         bytes[0] = bytes[0] &+ 1
-        try bytes.write(to: frame)
+        try bytes.write(to: stream)
 
         XCTAssertNoThrow(
             try DeviceRecordingLoader(verifyFramesDigest: false)
@@ -360,5 +369,74 @@ extension DeviceRecordingTests {
             manifest.focalLengthMaximum, manifest.focalLengthMinimum,
             "the recorded spread must show the focus moved"
         )
+    }
+}
+
+extension DeviceRecordingTests {
+    /// The archive layout is production's: one append-only stream of frames plus
+    /// a sidecar index naming each frame's offset and length, the way pwva.dart
+    /// writes photos.hevc alongside photos.pwvi. It used to be a file per frame,
+    /// which is what made per-frame atomic writes look necessary and cost a 29 s
+    /// capture 199 frames to backpressure.
+    func testArchiveLayoutMatchesProduction() throws {
+        _ = try makeMinimalRecording()
+        let manifest = try JSONDecoder().decode(
+            DeviceRecordingManifest.self,
+            from: Data(contentsOf: root.appendingPathComponent("recording_manifest.json"))
+        )
+
+        let stream = root.appendingPathComponent(DeviceRecordingManifest.framesStreamPath)
+        let index = root.appendingPathComponent(DeviceRecordingManifest.framesIndexPath)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: stream.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: index.path))
+
+        // Frames sit back to back, so the stream is exactly frame_count frames.
+        let streamBytes = try Data(contentsOf: stream).count
+        XCTAssertEqual(streamBytes, manifest.frameCount * manifest.camera.bytesPerFrame)
+
+        // One index row per frame, each naming where its frame starts.
+        let rows = try String(contentsOf: index).split(separator: "\n")
+        XCTAssertEqual(rows.count, manifest.frameCount)
+        let first = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(rows[0].utf8)) as? [String: Any]
+        )
+        XCTAssertEqual(first["frame"] as? Int, 0)
+        XCTAssertEqual(first["offset"] as? Int, 0)
+        XCTAssertEqual(first["length"] as? Int, manifest.camera.bytesPerFrame)
+
+        XCTAssertTrue(manifest.files.contains { $0.role == .framesStream })
+        XCTAssertTrue(manifest.files.contains { $0.role == .framesIndex })
+    }
+}
+
+extension DeviceRecordingTests {
+    /// The loss breakdown must add up to the total. A run reported one write
+    /// error while losing nothing, which is impossible -- a write failure both
+    /// increments the total and sets the error that makes finish throw -- and it
+    /// happened because the counters were read outside the lock that guards them.
+    func testLossBreakdownSumsToTheTotal() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("loss-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let writer = try DeviceRecordingWriter(
+            directory: directory, recordingID: "loss-sums", format: .scoring
+        )
+        try writer.recordIntrinsics(
+            ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics, timestampSeconds: 0
+        )
+        for i in 0..<3 {
+            writer.appendFrame(
+                pixelBuffer: try filledBuffer(format: .scoring, value: UInt8(i)),
+                timestampNanoseconds: Int64(i + 1) * 1_000_000
+            )
+        }
+        let manifest = try writer.finish()
+
+        XCTAssertEqual(
+            manifest.lossCount,
+            manifest.lossFormatMismatch + manifest.lossWriteQueueFull + manifest.lossWriteError
+        )
+        XCTAssertEqual(manifest.lossCount, 0)
+        XCTAssertEqual(manifest.lossWriteError, 0)
     }
 }

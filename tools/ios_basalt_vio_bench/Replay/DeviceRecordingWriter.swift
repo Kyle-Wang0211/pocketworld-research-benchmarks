@@ -53,6 +53,13 @@ final class DeviceRecordingWriter: @unchecked Sendable {
 
     private var framesHandleDigest = SHA256()
     private var cameraIndexRows: [String] = []
+    /// Both handles stay open for the life of the capture and are flushed after
+    /// every frame, stream before index, exactly as pwva.dart does: an interrupt
+    /// at any moment leaves a prefix that is self-consistent, because the index
+    /// never names bytes the stream has not already committed.
+    private let framesStream: FileHandle
+    private let framesIndex: FileHandle
+    private var streamOffset = 0
     private var intrinsicsRows: [String] = []
     private var focalMinimum = Double.greatestFiniteMagnitude
     private var focalMaximum = 0.0
@@ -88,9 +95,20 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         self.format = format
         self.recordingID = recordingID
         try FileManager.default.createDirectory(
-            at: framesDirectory,
+            at: directory,
             withIntermediateDirectories: true
         )
+        // Create both files, then hold the handles open for the whole capture.
+        let streamURL = directory.appendingPathComponent(
+            DeviceRecordingManifest.framesStreamPath
+        )
+        let indexURL = directory.appendingPathComponent(
+            DeviceRecordingManifest.framesIndexPath
+        )
+        FileManager.default.createFile(atPath: streamURL.path, contents: nil)
+        FileManager.default.createFile(atPath: indexURL.path, contents: nil)
+        self.framesStream = try FileHandle(forWritingTo: streamURL)
+        self.framesIndex = try FileHandle(forWritingTo: indexURL)
     }
 
     // MARK: - Preflight
@@ -248,27 +266,29 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         frameCount += 1
         inFlight += 1
         peakInFlight = max(peakInFlight, inFlight)
-        cameraIndexRows.append("\(timestampNanoseconds),\(DeviceRecordingManifest.frameRelativePath(index: index))")
+        cameraIndexRows.append("\(timestampNanoseconds),\(index)")
         stateLock.unlock()
 
         writeQueue.async { [weak self] in
             guard let self else { return }
-            let url = self.directory.appendingPathComponent(
-                DeviceRecordingManifest.frameRelativePath(index: index)
-            )
             let writeStart = CACurrentMediaTime()
             do {
-                // Not atomic. An atomic write stages a temporary file and
-                // renames it, which doubles the filesystem work for every frame
-                // -- 1800 creates plus 1800 renames across a 30 s capture. A
-                // 29 s run stalled 676 ms on a single frame and lost 199 to
-                // backpressure with the queue pinned at 8 of 8. Integrity here
-                // does not depend on per-file atomicity: the manifest carries a
-                // SHA-256 over the frames in capture order and each frame's own
-                // size, so a torn write is caught on load.
-                try luma.write(to: url)
+                // Stream first, then the index row -- pwva.dart's order, and the
+                // reason an interrupted capture stays readable: the index never
+                // points at bytes the stream has not committed. No temporary
+                // file and no rename; production's archive writer uses neither,
+                // and the per-frame atomic write this replaces cost two
+                // filesystem operations a frame, stalling 676 ms on a single
+                // write and losing 199 frames to backpressure.
+                let offset = self.streamOffset
+                try self.framesStream.write(contentsOf: luma)
+                try self.framesStream.synchronize()
+                let row = "{\"frame\":\(index),\"offset\":\(offset),\"length\":\(luma.count)}\n"
+                try self.framesIndex.write(contentsOf: Data(row.utf8))
+                try self.framesIndex.synchronize()
                 let elapsed = (CACurrentMediaTime() - writeStart) * 1000
                 self.stateLock.lock()
+                self.streamOffset = offset + luma.count
                 self.slowestWriteMilliseconds = max(self.slowestWriteMilliseconds, elapsed)
                 // The digest covers frames in capture order, which the serial
                 // write queue preserves.
@@ -317,7 +337,16 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         let digest = framesHandleDigest.finalize()
         let manifestFrameCount = frameCount
         let totalBytes = framesTotalBytes
+        // Every counter is snapshotted here, under the same lock, for the same
+        // reason the totals are: read outside it they are a race, and a manifest
+        // reported one write error on a run that had none and could not have had
+        // one -- a write failure sets firstError, which makes finish throw.
         let losses = lossCount
+        let lossesFormat = lossFormatMismatch
+        let lossesQueueFull = lossWriteQueueFull
+        let lossesWriteError = lossWriteError
+        let peak = peakInFlight
+        let slowestWrite = slowestWriteMilliseconds
         let cameraCSV = (["timestamp_ns,relative_path"] + cameraIndexRows).joined(separator: "\n") + "\n"
         let imuCSV = (["timestamp_ns,wx,wy,wz,ax,ay,az"] + imuRows).joined(separator: "\n") + "\n"
         let poseTUM = arkitPoseRows.joined(separator: "\n") + "\n"
@@ -328,7 +357,9 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         stateLock.unlock()
 
         guard let capturedIntrinsics else {
-            throw DeviceRecordingError.intrinsicsCrossCheckFailed
+            // No intrinsics means no frame ever arrived. Reporting that as a
+            // failed cross-check named the wrong cause and cost an investigation.
+            throw DeviceRecordingError.noFramesCaptured
         }
 
         var files: [DeviceRecordingFile] = []
@@ -347,6 +378,30 @@ final class DeviceRecordingWriter: @unchecked Sendable {
                 sha256: Self.hex(SHA256.hash(data: data))
             ))
         }
+        try framesStream.close()
+        try framesIndex.close()
+
+        // The stream's hash is the digest already accumulated frame by frame as
+        // they were written -- the same bytes in the same order -- so it is
+        // taken from there rather than by reading the file back. pwva.dart
+        // accumulates its stream hash the same way while writing. Re-reading
+        // instead left a 30 s capture stuck in finalize hashing 4.55 GB.
+        files.append(DeviceRecordingFile(
+            role: .framesStream,
+            relativePath: DeviceRecordingManifest.framesStreamPath,
+            byteCount: Int64(totalBytes),
+            sha256: Self.hex(digest)
+        ))
+        let indexURL = directory.appendingPathComponent(
+            DeviceRecordingManifest.framesIndexPath
+        )
+        let indexData = try Data(contentsOf: indexURL)
+        files.append(DeviceRecordingFile(
+            role: .framesIndex,
+            relativePath: DeviceRecordingManifest.framesIndexPath,
+            byteCount: Int64(indexData.count),
+            sha256: Self.hex(SHA256.hash(data: indexData))
+        ))
         files.sort { $0.relativePath < $1.relativePath }
 
         let manifest = DeviceRecordingManifest(
@@ -359,11 +414,11 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             framesDigestSHA256: Self.hex(digest),
             framesTotalByteCount: totalBytes,
             lossCount: losses,
-            lossFormatMismatch: lossFormatMismatch,
-            lossWriteQueueFull: lossWriteQueueFull,
-            lossWriteError: lossWriteError,
-            peakInFlight: peakInFlight,
-            slowestWriteMilliseconds: slowestWriteMilliseconds,
+            lossFormatMismatch: lossesFormat,
+            lossWriteQueueFull: lossesQueueFull,
+            lossWriteError: lossesWriteError,
+            peakInFlight: peak,
+            slowestWriteMilliseconds: slowestWrite,
             focalLengthMinimum: focalLow,
             focalLengthMaximum: focalHigh,
             files: files
