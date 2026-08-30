@@ -48,6 +48,26 @@ final class BenchmarkCoordinator {
     private let queue = DispatchQueue(label: "com.kyle.viobench.run", qos: .userInitiated)
     private let lock = NSLock()
     private var abortRequested = false
+    /// Continuously refreshed so an aborted run still has evidence.
+    ///
+    /// Aborting used to write `metrics: [:]` and a diagnostics stub with
+    /// `status: "unavailable"`, so a 48 s device run on 2026-08-30 produced no
+    /// measurable artifact at all -- and aborting after ~15 s is exactly the
+    /// diagnostic protocol. The snapshot is kept as plain values rather than
+    /// live objects, because the abort unwinds through defers that tear those
+    /// objects down before the handler runs.
+    private struct LiveRunProgress {
+        var startNS: UInt64
+        var firstPoseLatencyMS: Double?
+        var latenciesMS: [Double] = []
+        var poseCount: Int = 0
+        var native: VIOEngineSnapshot?
+        var transport: LiveSensorTransportSnapshot?
+        var arkit: ARKitReferenceSnapshot?
+        var applicationLifecycleViolations: UInt64 = 0
+    }
+    private var liveProgress: LiveRunProgress?
+
     private weak var activeTransport: LiveSensorTransport?
     private var activeSession: ActiveVIOEngineSession?
     private var activeARKitSession: ARKitReferenceSession?
@@ -160,10 +180,23 @@ final class BenchmarkCoordinator {
             onFinish(.success(context.directoryURL))
         } catch CoordinatorError.aborted {
             if let prepared {
+                // An aborted run is the diagnostic protocol, not a discarded one.
+                // Write whatever the run actually produced before tearing down.
+                let progress = lock.withLock { liveProgress }
+                if let progress {
+                    try? writeAbortDiagnostics(prepared, progress: progress)
+                }
                 try? writeTerminal(
                     prepared,
                     state: .aborted,
-                    metrics: [:],
+                    metrics: progress.map {
+                        diagnosticMetrics(
+                            startNS: $0.startNS,
+                            firstPoseLatencyMS: $0.firstPoseLatencyMS,
+                            latenciesMS: $0.latenciesMS,
+                            poseCount: $0.poseCount
+                        )
+                    } ?? [:],
                     reason: "user_abort",
                     detail: nil
                 )
@@ -297,6 +330,20 @@ final class BenchmarkCoordinator {
                     break
                 }
                 if now - lastUIUpdateNS >= 1_000_000_000 {
+                    lock.withLock {
+                        liveProgress = LiveRunProgress(
+                            startNS: startNS,
+                            firstPoseLatencyMS:
+                                reference.accounting.snapshot().firstNormalDeliveryLatencyMilliseconds,
+                            latenciesMS: [],
+                            poseCount: Int(reference.accounting.snapshot().framesReceived),
+                            native: nil,
+                            transport: nil,
+                            arkit: reference.accounting.snapshot(),
+                            applicationLifecycleViolations:
+                                applicationActivity.snapshot().violationCount
+                        )
+                    }
                     publishARKitSnapshot(
                         startNS: startNS,
                         nowNS: now,
@@ -669,6 +716,19 @@ final class BenchmarkCoordinator {
                     break
                 }
                 if now - lastUIUpdateNS >= 250_000_000 {
+                    lock.withLock {
+                        liveProgress = LiveRunProgress(
+                            startNS: startNS,
+                            firstPoseLatencyMS: firstUsablePoseLatencyMS,
+                            latenciesMS: measurementLatenciesMS,
+                            poseCount: measurementPoseCount,
+                            native: try? session.snapshot(),
+                            transport: transport.snapshot(),
+                            arkit: nil,
+                            applicationLifecycleViolations:
+                                applicationActivity.snapshot().violationCount
+                        )
+                    }
                     publishLiveSnapshot(
                         startNS: startNS,
                         nowNS: now,
@@ -1185,6 +1245,24 @@ final class BenchmarkCoordinator {
     /// exists to produce. The cross-clock-domain defect lived only on screen for
     /// that reason: every artifact from those runs carried an empty metrics
     /// object. The receipt marks these `metrics_valid_for_scoring: false`.
+    /// Overwrites the `status: "unavailable"` stub an abort would otherwise
+    /// leave, using counters captured while the run was alive.
+    private func writeAbortDiagnostics(
+        _ context: PreparedBenchmarkRun,
+        progress: LiveRunProgress
+    ) throws {
+        if let native = progress.native {
+            try RunDiagnosticsWriter.writeFull(
+                backend: backend,
+                runID: context.runID,
+                native: native,
+                transport: progress.transport,
+                applicationLifecycleViolations: progress.applicationLifecycleViolations,
+                to: context.directoryURL
+            )
+        }
+    }
+
     private func diagnosticMetrics(
         startNS: UInt64,
         firstPoseLatencyMS: Double?,
