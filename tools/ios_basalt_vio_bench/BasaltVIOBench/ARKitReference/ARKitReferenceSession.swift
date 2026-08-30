@@ -171,14 +171,14 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
         }
         guard shouldPause else { return }
         onMainSync {
-            // Detach first. ARKit can deliver an in-flight frame between
-            // markPaused() and the delegate being cleared, and every such frame
-            // was counted as a callback-after-pause and invalidated the run --
-            // which killed an otherwise clean recording. Clearing the delegate
-            // before anything else makes further delivery impossible rather than
-            // merely unlikely.
+            // Detaching the delegate does not stop delivery on its own: ARKit
+            // enqueues callbacks on the delegate queue, and any already queued
+            // behind this block still run with the reference they captured at
+            // enqueue time. At 60 Hz there is normally one or two. They are told
+            // apart from a genuine post-stop callback by capture timestamp, not
+            // by arrival, so the stop is stamped in ARKit's own clock domain.
             session.delegate = nil
-            accounting?.markPaused()
+            accounting?.markPaused(timestampSeconds: CACurrentMediaTime())
             session.pause()
             lifecycleLock.withLock {
                 lifecycleValue.pauseReturnNanoseconds = DispatchTime.now().uptimeNanoseconds
@@ -221,6 +221,10 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
         // frame.timestamp is in the CACurrentMediaTime domain, which is
         // mach_absolute_time -- the bench's single canonical domain. No
         // conversion, and deliberately no std::chrono anywhere near it.
+        // A late-delivered frame was captured before the stop and is real data,
+        // so it is written like any other. Dropping it to keep the recorder shut
+        // traded a bookkeeping worry for an actual lost frame -- the recording
+        // came back device_recording_lossy_1.
         if let recorder {
             do {
                 try recorder.recordIntrinsicsIfNeeded(

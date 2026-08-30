@@ -48,12 +48,19 @@ enum BenchmarkArtifactFinalizer {
         channel: RunReceiptChannel,
         fileManager: FileManager = .default
     ) throws {
-        for required in requiredArtifacts(for: channel) where
-            !fileManager.fileExists(atPath: directoryURL.appendingPathComponent(required).path) {
+        // SHA256SUMS and the artifact manifest are written by this function, so
+        // they cannot also be preconditions for running it. Requiring SHA256SUMS
+        // up front made every record-channel run fail unconditionally, and the
+        // failure named finalize's own output as the missing artifact, which hid
+        // whatever had actually gone wrong with the run.
+        let excluded = Set([manifestName, checksumsName])
+        for required in requiredArtifacts(for: channel)
+        where !excluded.contains(required)
+            && !fileManager.fileExists(
+                atPath: directoryURL.appendingPathComponent(required).path
+            ) {
             throw BenchmarkArtifactFinalizerError.missingRequiredArtifact(required)
         }
-
-        let excluded = Set([manifestName, checksumsName])
         let contentNames = try fileManager.contentsOfDirectory(
             at: directoryURL,
             includingPropertiesForKeys: [.isRegularFileKey],

@@ -59,6 +59,12 @@ struct ARKitReferenceSnapshot: Equatable, Sendable {
     var trackingDwellSeconds: [String: Double] = [:]
     var mappingDwellSeconds: [String: Double] = [:]
     var lastCallbackNanoseconds: UInt64?
+    /// Frames captured before the stop but delivered after it. ARKit enqueues
+    /// delegate callbacks on the delegate queue, so at 60 Hz one or two are
+    /// already queued behind the pause block when it runs. They describe the
+    /// world before the stop and are counted separately from a genuine
+    /// post-stop callback, which would mean the session never stopped.
+    var lateFrameDeliveries: UInt64 = 0
     var poses: [NativePoseSample] = []
 }
 
@@ -67,6 +73,7 @@ struct ARKitReferenceStatusSnapshot: Equatable, Sendable {
     let finitePoses: UInt64
     let estimatedMissedFrames: UInt64
     let callbacksAfterPause: UInt64
+    let lateFrameDeliveries: UInt64
     let sessionInterruptions: UInt64
     let sessionFailures: UInt64
     let timestampRegressions: UInt64
@@ -79,6 +86,10 @@ final class ARKitReferenceAccounting: @unchecked Sendable {
     private let startMonotonicSeconds: Double
     private let nominalPeriodSeconds: Double
     private var accepting = true
+    /// Capture timestamp, in the ARKit clock domain, of the moment the run
+    /// stopped accepting frames. A late callback is told apart from a real
+    /// post-stop callback by whether the frame was captured before this.
+    private var pauseTimestampSeconds: Double?
     private var value = ARKitReferenceSnapshot()
     private var lastTimestampSeconds: Double?
     private var lastFinitePose: TimedPose?
@@ -103,7 +114,15 @@ final class ARKitReferenceAccounting: @unchecked Sendable {
     ) {
         lock.withLock {
             guard accepting else {
-                value.callbacksAfterPause += 1
+                // A frame captured at or before the stop is a late delivery of
+                // work ARKit had already done -- normal, and not evidence that
+                // the session kept running. Only a frame captured after the
+                // stop means the session outlived the pause.
+                if let pausedAt = pauseTimestampSeconds, timestampSeconds <= pausedAt {
+                    value.lateFrameDeliveries += 1
+                } else {
+                    value.callbacksAfterPause += 1
+                }
                 return
             }
             value.framesReceived += 1
@@ -203,8 +222,13 @@ final class ARKitReferenceAccounting: @unchecked Sendable {
         lock.withLock { value.callbackHandlerDurationsMilliseconds.append(milliseconds) }
     }
 
-    func markPaused() {
-        lock.withLock { accepting = false }
+    /// [timestampSeconds] is the capture timestamp, in ARKit's clock domain,
+    /// that separates a late delivery from a genuine post-stop callback.
+    func markPaused(timestampSeconds: Double) {
+        lock.withLock {
+            accepting = false
+            pauseTimestampSeconds = timestampSeconds
+        }
     }
 
     func snapshot() -> ARKitReferenceSnapshot {
@@ -227,6 +251,7 @@ final class ARKitReferenceAccounting: @unchecked Sendable {
                 finitePoses: value.finitePoses,
                 estimatedMissedFrames: value.estimatedMissedFrames,
                 callbacksAfterPause: value.callbacksAfterPause,
+                lateFrameDeliveries: value.lateFrameDeliveries,
                 sessionInterruptions: value.sessionInterruptions,
                 sessionFailures: value.sessionFailures,
                 timestampRegressions: value.timestampRegressions
