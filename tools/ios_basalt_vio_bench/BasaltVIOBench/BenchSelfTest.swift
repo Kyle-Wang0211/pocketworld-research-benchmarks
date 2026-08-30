@@ -66,23 +66,52 @@ enum BenchSelfTest {
         )
     }
 
-    /// `-PWPurgeRuns` — deletes every run directory.
+    /// Marker file naming a run as this harness's own throwaway output.
+    static let selfTestMarkerName = ".self_test"
+
+    /// True when this launch was started by the self-test harness, which is what
+    /// makes a run's output disposable.
+    static var isSelfTestLaunch: Bool {
+        ProcessInfo.processInfo.arguments.contains("-PWAutoRun")
+    }
+
+    /// Writes the marker that makes a run eligible for purging. Only self-test
+    /// launches leave it, so an operator's capture is never eligible.
+    static func markSelfTestRunIfNeeded(directoryURL: URL) {
+        guard isSelfTestLaunch else { return }
+        try? Data().write(to: directoryURL.appendingPathComponent(selfTestMarkerName))
+    }
+
+    /// `-PWPurgeRuns` — deletes run directories this harness created itself.
     ///
     /// A 10 s recording at 1920x1440 is 1.5 GB, so a handful of self-test runs
     /// can consume the headroom the real capture needs. Without this the only way
     /// to reclaim it is deleting the app, which would take the diagnostic runs
     /// with it.
+    ///
+    /// It used to delete every run directory, which destroyed an operator's 30 s
+    /// capture -- 1769 frames, recorded by hand, irreplaceable without asking
+    /// them to shoot it again. A run is now purged only if it carries the
+    /// self-test marker, so an unmarked directory survives regardless of how the
+    /// purge is invoked.
     @discardableResult
     static func purgeRunsIfRequested(
         arguments: [String] = ProcessInfo.processInfo.arguments
     ) -> Int {
         guard arguments.contains("-PWPurgeRuns") else { return 0 }
-        let root = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+        return purgeRuns(rootURL: URL.documentsDirectory.appendingPathComponent("VIOBenchRuns"))
+    }
+
+    /// Deletes only the marked run directories under [rootURL].
+    @discardableResult
+    static func purgeRuns(rootURL root: URL) -> Int {
         let entries = (try? FileManager.default.contentsOfDirectory(
             at: root, includingPropertiesForKeys: nil
         )) ?? []
         var removed = 0
         for entry in entries where entry.lastPathComponent.hasPrefix("run-") {
+            let marker = entry.appendingPathComponent(selfTestMarkerName)
+            guard FileManager.default.fileExists(atPath: marker.path) else { continue }
             if (try? FileManager.default.removeItem(at: entry)) != nil { removed += 1 }
         }
         return removed

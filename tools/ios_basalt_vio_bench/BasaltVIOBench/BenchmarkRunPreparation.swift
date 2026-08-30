@@ -105,6 +105,10 @@ enum BenchmarkRunPreparation {
         ).appendingPathComponent(backend.runDirectoryName, isDirectory: true)
         let directory = root.appendingPathComponent("run-\(runID)", isDirectory: true)
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        // Only a self-test launch marks its run disposable. Without the marker
+        // the purge leaves the directory alone, which is what protects a capture
+        // the operator shot by hand.
+        BenchSelfTest.markSelfTestRunIfNeeded(directoryURL: directory)
 
         let resourcePlan = EngineResourcePlan.forRun(
             backend: backend,

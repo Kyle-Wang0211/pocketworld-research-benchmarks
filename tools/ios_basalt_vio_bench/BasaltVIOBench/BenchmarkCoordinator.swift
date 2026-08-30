@@ -401,7 +401,15 @@ final class BenchmarkCoordinator {
             let manifest = try recorder.finish()
             guard manifest.lossCount == 0 else {
                 throw CoordinatorError.invalidRun(
+                    // The breakdown travels with the failure. A bare total sent
+                    // the last investigation guessing between three unrelated
+                    // causes when the manifest already knew which had fired.
                     "device_recording_lossy_\(manifest.lossCount)"
+                        + "_format\(manifest.lossFormatMismatch)"
+                        + "_queue\(manifest.lossWriteQueueFull)"
+                        + "_werr\(manifest.lossWriteError)"
+                        + "_peak\(manifest.peakInFlight)"
+                        + String(format: "_slow%.0fms", manifest.slowestWriteMilliseconds)
                 )
             }
         }

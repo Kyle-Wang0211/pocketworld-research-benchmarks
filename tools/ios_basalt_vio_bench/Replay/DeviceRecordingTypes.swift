@@ -92,6 +92,18 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     /// Any dropped frame, dropped IMU sample or short write. A recording with
     /// losses is not a shorter recording; it is an invalid one.
     var lossCount: Int
+    /// Loss split by cause. A single total said a recording was lossy without
+    /// saying whether the pixel format was wrong, the write queue fell behind,
+    /// or the filesystem returned an error -- three unrelated faults with three
+    /// unrelated fixes, and no way to tell them apart after the fact.
+    var lossFormatMismatch: Int = 0
+    var lossWriteQueueFull: Int = 0
+    var lossWriteError: Int = 0
+    /// High-water mark of frames awaiting write, against a queue depth of 8.
+    /// A run that never approached the cap did not lose frames to disk speed.
+    var peakInFlight: Int = 0
+    /// Slowest single frame write. Names the stall when the queue does fill.
+    var slowestWriteMilliseconds: Double = 0
     var files: [DeviceRecordingFile]
 
     enum CodingKeys: String, CodingKey {
@@ -103,6 +115,11 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
         case framesDigestSHA256 = "frames_digest_sha256"
         case framesTotalByteCount = "frames_total_byte_count"
         case lossCount = "loss_count"
+        case lossFormatMismatch = "loss_format_mismatch"
+        case lossWriteQueueFull = "loss_write_queue_full"
+        case lossWriteError = "loss_write_error"
+        case peakInFlight = "peak_in_flight"
+        case slowestWriteMilliseconds = "slowest_write_ms"
     }
 
     static let supportedSchemaVersion = 1

@@ -108,7 +108,10 @@ final class ARKitReferenceAccountingTests: XCTestCase {
             tracking: .normal,
             mapping: .mapped
         )
-        accounting.markPaused(timestampSeconds: 1_000_000)
+        // The stop lands between the two frames, so the frame that follows was
+        // captured after it and is a genuine post-pause callback rather than a
+        // late delivery.
+        accounting.markPaused(timestampSeconds: 5.010)
         accounting.recordFrame(
             timestampSeconds: 5.033,
             callbackSeconds: 5.040,

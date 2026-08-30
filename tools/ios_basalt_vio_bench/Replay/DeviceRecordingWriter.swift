@@ -1,5 +1,6 @@
 import CoreVideo
 import CryptoKit
+import QuartzCore
 import Foundation
 
 /// Persists one capture so every arm can be fed the identical trajectory.
@@ -52,6 +53,11 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     private var frameCount = 0
     private var framesTotalBytes: Int64 = 0
     private var lossCount = 0
+    private var lossFormatMismatch = 0
+    private var lossWriteQueueFull = 0
+    private var lossWriteError = 0
+    private var peakInFlight = 0
+    private var slowestWriteMilliseconds: Double = 0
     private var inFlight = 0
     private var firstError: Error?
 
@@ -187,7 +193,10 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         timestampNanoseconds: Int64
     ) {
         guard let luma = Self.copyLumaPlane(pixelBuffer, expected: format) else {
-            stateLock.lock(); lossCount += 1; stateLock.unlock()
+            stateLock.lock()
+            lossCount += 1
+            lossFormatMismatch += 1
+            stateLock.unlock()
             return
         }
 
@@ -196,12 +205,14 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             // Backpressure is loss, and loss invalidates. It is never absorbed by
             // growing the queue or by skipping ahead.
             lossCount += 1
+            lossWriteQueueFull += 1
             stateLock.unlock()
             return
         }
         let index = frameCount
         frameCount += 1
         inFlight += 1
+        peakInFlight = max(peakInFlight, inFlight)
         cameraIndexRows.append("\(timestampNanoseconds),\(DeviceRecordingManifest.frameRelativePath(index: index))")
         stateLock.unlock()
 
@@ -210,9 +221,12 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             let url = self.directory.appendingPathComponent(
                 DeviceRecordingManifest.frameRelativePath(index: index)
             )
+            let writeStart = CACurrentMediaTime()
             do {
                 try luma.write(to: url, options: .atomic)
+                let elapsed = (CACurrentMediaTime() - writeStart) * 1000
                 self.stateLock.lock()
+                self.slowestWriteMilliseconds = max(self.slowestWriteMilliseconds, elapsed)
                 // The digest covers frames in capture order, which the serial
                 // write queue preserves.
                 self.framesHandleDigest.update(data: luma)
@@ -222,6 +236,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             } catch {
                 self.stateLock.lock()
                 self.lossCount += 1
+                self.lossWriteError += 1
                 self.inFlight -= 1
                 if self.firstError == nil { self.firstError = error }
                 self.stateLock.unlock()
@@ -297,6 +312,11 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             framesDigestSHA256: Self.hex(digest),
             framesTotalByteCount: totalBytes,
             lossCount: losses,
+            lossFormatMismatch: lossFormatMismatch,
+            lossWriteQueueFull: lossWriteQueueFull,
+            lossWriteError: lossWriteError,
+            peakInFlight: peakInFlight,
+            slowestWriteMilliseconds: slowestWriteMilliseconds,
             files: files
         )
 
