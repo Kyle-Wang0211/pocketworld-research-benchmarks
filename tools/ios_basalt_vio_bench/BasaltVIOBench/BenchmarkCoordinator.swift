@@ -304,7 +304,12 @@ final class BenchmarkCoordinator {
         }
         if let finalInvalidReason = ARKitRunValidity.invalidReason(
             snapshot: final,
-            applicationLifecycleViolations: applicationFinal.violationCount
+            applicationLifecycleViolations: applicationFinal.violationCount,
+            clockDomainViolation: clockDomainViolation(
+                runStartNanoseconds: startNS,
+                firstPoseLatencyMS: final.firstNormalDeliveryLatencyMilliseconds,
+                latenciesMS: []
+            )
         ) {
             try writeTerminal(
                 context,
@@ -681,6 +686,11 @@ final class BenchmarkCoordinator {
                 native: nativeFinal,
                 transport: transportFinal,
                 applicationLifecycleViolations: applicationActivityFinal.violationCount
+            ),
+            clockDomainViolation: clockDomainViolation(
+                runStartNanoseconds: startNS,
+                firstPoseLatencyMS: firstUsablePoseLatencyMS,
+                latenciesMS: measurementLatenciesMS
             )
         ) {
             try writeTerminal(
@@ -1092,6 +1102,44 @@ final class BenchmarkCoordinator {
             return nil
         }
         return Double(publicationNanoseconds - runStartNanoseconds) / 1_000_000
+    }
+
+    /// Rejects any run whose reported latencies could not have been produced
+    /// inside its own elapsed time. See `ClockDomainInvariant`; this is the guard
+    /// that turns a cross-domain subtraction into an invalid receipt instead of a
+    /// scored result.
+    private func clockDomainViolation(
+        runStartNanoseconds: UInt64,
+        firstPoseLatencyMS: Double?,
+        latenciesMS: [Double]
+    ) -> ClockDomainInvariant.Violation? {
+        let elapsedNS = DispatchTime.now().uptimeNanoseconds
+            .subtractingReportingOverflow(runStartNanoseconds)
+        guard !elapsedNS.overflow else {
+            return .latencyExceedsElapsed(
+                label: "run_elapsed",
+                latencyNanoseconds: UInt64.max,
+                elapsedNanoseconds: 0
+            )
+        }
+        if let firstPoseLatencyMS,
+           let violation = ClockDomainInvariant.check(
+               label: "first_pose",
+               latencyMilliseconds: firstPoseLatencyMS,
+               elapsedNanoseconds: elapsedNS.partialValue
+           ) {
+            return violation
+        }
+        // The maximum bounds every percentile, so one check covers P95 too.
+        if let worst = latenciesMS.max(),
+           let violation = ClockDomainInvariant.check(
+               label: "pipeline",
+               latencyMilliseconds: worst,
+               elapsedNanoseconds: elapsedNS.partialValue
+           ) {
+            return violation
+        }
+        return nil
     }
 
     private func activeCameraHandoffDrops(

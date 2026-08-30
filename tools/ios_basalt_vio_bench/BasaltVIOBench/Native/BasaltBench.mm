@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <mach/mach_time.h>
 #include <cmath>
 #include <deque>
 #include <fstream>
@@ -28,13 +29,31 @@
 
 namespace {
 
-using Clock = std::chrono::steady_clock;
-
-[[maybe_unused]] uint64_t monotonic_now_ns() {
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            Clock::now().time_since_epoch())
-            .count());
+// The bench has exactly one monotonic domain: mach_absolute_time nanoseconds.
+//
+// std::chrono::steady_clock must never be used here. On Darwin libc++ maps it to
+// clock_gettime(CLOCK_MONOTONIC), which is mach_continuous_time and *includes*
+// the time the device spent asleep. Both Swift-side clocks the bench feeds us --
+// CMClockGetHostTimeClock() for camera presentation timestamps and
+// DispatchTime.uptimeNanoseconds for run start -- are mach_absolute_time, which
+// *excludes* sleep. Subtracting across the two domains yields the entire sleep
+// accumulation as a constant offset rather than a latency.
+//
+// Measured on Darwin 2026-08-30 (timebase numer=125 denom=3):
+//   std::chrono::steady_clock  43147376131416 ns  (11.985 h)  == mach_continuous_time
+//   mach_absolute_time         42087301077208 ns  (11.691 h)  == CLOCK_UPTIME_RAW
+// The 0.294 h gap is sleep. On a phone left idle overnight the same defect
+// reported an 81,219,463 ms P95 pipeline latency in a 97 s run.
+//
+// mach_absolute_time() returns timebase ticks, not nanoseconds (24 MHz on arm64,
+// numer/denom = 125/3), so the timebase conversion is mandatory.
+uint64_t monotonic_now_ns() {
+    static const mach_timebase_info_data_t timebase = [] {
+        mach_timebase_info_data_t info{};
+        mach_timebase_info(&info);
+        return info;
+    }();
+    return mach_absolute_time() * timebase.numer / timebase.denom;
 }
 
 [[maybe_unused]] uint32_t saturating_queue_size(std::ptrdiff_t value) {

@@ -80,7 +80,14 @@ struct LiveRunLossCounters: Equatable {
 }
 
 enum LiveRunValidity {
-    static func invalidReason(_ counters: LiveRunLossCounters) -> String? {
+    /// `clockDomainViolation` is checked first: a run whose clocks are mixed has
+    /// no valid latency, throughput or window membership, so no other verdict
+    /// about it means anything. See `ClockDomainInvariant`.
+    static func invalidReason(
+        _ counters: LiveRunLossCounters,
+        clockDomainViolation: ClockDomainInvariant.Violation? = nil
+    ) -> String? {
+        if let clockDomainViolation { return clockDomainViolation.reason }
         if counters.motionErrors > 0 { return "motion_transport_error" }
         if counters.platformCameraDrops > 0 { return "platform_camera_loss" }
         if counters.captureInterruptions > 0 { return "capture_interruption" }
@@ -110,8 +117,10 @@ enum LiveRunValidity {
 enum ARKitRunValidity {
     static func invalidReason(
         snapshot: ARKitReferenceSnapshot,
-        applicationLifecycleViolations: UInt64
+        applicationLifecycleViolations: UInt64,
+        clockDomainViolation: ClockDomainInvariant.Violation? = nil
     ) -> String? {
+        if let clockDomainViolation { return clockDomainViolation.reason }
         if applicationLifecycleViolations > 0 { return "app_backgrounded" }
         if snapshot.sessionInterruptions > 0 { return "arkit_session_interruption" }
         if snapshot.sessionFailures > 0 { return "arkit_session_failure" }
