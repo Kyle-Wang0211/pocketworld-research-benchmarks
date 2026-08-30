@@ -27,12 +27,32 @@ final class BenchViewModel: ObservableObject {
 
     /// One line stating exactly what pressing Start will do, so a mis-selection
     /// is visible before five minutes are spent on it.
+    /// Shows the projection before Start, so a refusal is never the first time
+    /// the operator learns how much space the chosen duration needs.
+    var storageNote: String? {
+        guard mode == .record else { return nil }
+        var format = DeviceRecordingCameraFormat.scoring
+        format.nominalFPS = 60
+        let need = DeviceRecordingWriter.projectedByteCount(
+            seconds: Double(measurementSeconds), format: format
+        ) + DeviceRecordingWriter.freeSpaceHeadroomBytes
+        let values = try? URL.documentsDirectory.resourceValues(
+            forKeys: [.volumeAvailableCapacityForImportantUsageKey]
+        )
+        let have = Int64(values?.volumeAvailableCapacityForImportantUsage ?? 0)
+        let g = 1_073_741_824.0
+        let line = String(
+            format: "需要 %.1f GiB · 可用 %.1f GiB", Double(need) / g, Double(have) / g
+        )
+        return have >= need ? line : "⚠ " + line
+    }
+
     var plannedRunSummary: String {
         switch mode {
         case .record:
-            return "将录制一次:ARKit 实时跑 + 存下它看到的帧,300 秒后自动停止"
+            return "将录制一次:ARKit 实时跑 + 存下它看到的帧,\(measurementSeconds) 秒后自动停止"
         case .liveSoak:
-            return "将用 \(selectedBackend.displayName) 实时采集,300 秒或手动中止"
+            return "将用 \(selectedBackend.displayName) 实时采集,\(measurementSeconds) 秒或手动中止"
         case .replayDeviceRecording:
             return "将把本机录制回放给 \(selectedBackend.displayName)"
         case .replayPaced, .replayMax:
@@ -44,6 +64,16 @@ final class BenchViewModel: ObservableObject {
     @Published private(set) var blockingMessage: String?
     @Published private(set) var lastReceiptURL: URL?
     @Published var isImportingDataset = false
+
+    /// Drives both the run length and the space projection. It used to always be
+    /// 300 s, so a 30 s capture was refused for lacking 48.3 GiB it would never
+    /// have used.
+    @Published var measurementSeconds: Int = 300 {
+        didSet {
+            LiveBenchmarkDuration.measurementNanoseconds =
+                UInt64(measurementSeconds) * 1_000_000_000
+        }
+    }
 
     /// Display-only. Publishing a preview source never starts or stops capture.
     @Published private(set) var previewSource: BenchPreviewSource = .none

@@ -19,6 +19,12 @@ enum LiveBenchmarkDuration {
         measurementNanoseconds == contractMeasurementNanoseconds
     }
 
+    /// Durations the operator can pick. Only the contract duration produces a
+    /// result comparable with the frozen gates; the shorter ones exist because a
+    /// device with limited free space still needs to be able to capture, and a
+    /// short real recording is worth more than a long refused one.
+    static let selectableSeconds: [Int] = [30, 60, 120, 300]
+
     static var totalNanoseconds: UInt64 { warmupNanoseconds + measurementNanoseconds }
 }
 

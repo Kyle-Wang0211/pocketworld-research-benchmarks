@@ -25,9 +25,16 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     static let queueDepth = 8
 
     /// Refuse to start unless the device has the full recording plus this much
-    /// headroom. Running out of space mid-capture wastes the operator's time and
-    /// leaves a truncated file.
-    static let freeSpaceHeadroomBytes: Int64 = 2 * 1024 * 1024 * 1024
+    /// headroom.
+    ///
+    /// The guard stays because running out of space mid-write leaves a truncated
+    /// recording, which is strictly worse than a refusal: the operator has spent
+    /// the time and the file cannot be replayed. But it was refusing 30 s
+    /// captures by always projecting 300 s, and 2 GiB of slack on top of that
+    /// made a device with 8.3 GiB free look unusable. The projection now follows
+    /// the selected duration and the slack is the minimum that keeps the
+    /// filesystem out of trouble.
+    static let freeSpaceHeadroomBytes: Int64 = 512 * 1024 * 1024
 
     private let directory: URL
     private let framesDirectory: URL

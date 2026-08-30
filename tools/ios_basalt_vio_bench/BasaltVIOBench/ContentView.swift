@@ -32,6 +32,21 @@ struct ContentView: View {
                     }
                     .disabled(model.isRunning)
 
+                    if !model.mode.isReplay {
+                        Picker("时长", selection: $model.measurementSeconds) {
+                            ForEach(LiveBenchmarkDuration.selectableSeconds, id: \.self) {
+                                Text("\($0) 秒").tag($0)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .disabled(model.isRunning)
+                        if let note = model.storageNote {
+                            Text(note)
+                                .font(.caption2)
+                                .foregroundStyle(note.hasPrefix("⚠") ? .orange : .secondary)
+                        }
+                    }
+
                     Text(model.plannedRunSummary)
                         .font(.footnote)
                         .foregroundStyle(.secondary)

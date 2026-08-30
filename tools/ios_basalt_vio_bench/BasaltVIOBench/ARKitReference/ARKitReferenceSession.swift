@@ -171,9 +171,15 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
         }
         guard shouldPause else { return }
         onMainSync {
-            session.pause()
-            accounting?.markPaused()
+            // Detach first. ARKit can deliver an in-flight frame between
+            // markPaused() and the delegate being cleared, and every such frame
+            // was counted as a callback-after-pause and invalidated the run --
+            // which killed an otherwise clean recording. Clearing the delegate
+            // before anything else makes further delivery impossible rather than
+            // merely unlikely.
             session.delegate = nil
+            accounting?.markPaused()
+            session.pause()
             lifecycleLock.withLock {
                 lifecycleValue.pauseReturnNanoseconds = DispatchTime.now().uptimeNanoseconds
                 lifecycleValue.lastCallbackNanoseconds =
