@@ -1,0 +1,177 @@
+name: VIOReplacementBench
+options:
+  bundleIdPrefix: com.kyle
+  deploymentTarget:
+    iOS: "26.2"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CLANG_CXX_LANGUAGE_STANDARD: "c++17"
+    CLANG_CXX_LIBRARY: "libc++"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.2"
+    CLANG_COVERAGE_MAPPING: NO
+    CLANG_ENABLE_CODE_COVERAGE: NO
+    ENABLE_CODE_COVERAGE: NO
+    GCC_GENERATE_TEST_COVERAGE_FILES: NO
+    GCC_INSTRUMENT_PROGRAM_FLOW_ARCS: NO
+
+targets:
+  BasaltEngine:
+    type: framework
+    platform: iOS
+    sources:
+      - path: BasaltVIOBench/Native/BasaltBench.mm
+      - path: BasaltVIOBench/Native/BasaltBench.h
+        headerVisibility: public
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.viobench.basaltengine
+        PRODUCT_NAME: PWBasaltEngine
+        DEFINES_MODULE: NO
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        EXPORTED_SYMBOLS_FILE: "$(SRCROOT)/BasaltBackend/Exports.txt"
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/BasaltVIOBench/Native"
+        "HEADER_SEARCH_PATHS[sdk=iphoneos*]":
+          - "$(SRCROOT)/BasaltVIOBench/Native"
+          - "$(SRCROOT)/Vendor/basalt/include"
+          - "$(SRCROOT)/Vendor/basalt-headers/include"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/include"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/include/eigen3"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/include/opencv4"
+        "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]":
+          - "$(inherited)"
+          - "PW_BASALT_CORE_LINKED=0"
+        "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]":
+          - "$(inherited)"
+          - "PW_BASALT_CORE_LINKED=1"
+          - "BASALT_INSTANTIATIONS_FLOAT=1"
+          - "EIGEN_DONT_PARALLELIZE=1"
+        "OTHER_LDFLAGS[sdk=iphoneos*]":
+          - "$(inherited)"
+          - "-force_load"
+          - "$(SRCROOT)/Vendor/_build/ios-arm64-release/libbasalt_vio_core.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libtbb.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopencv_calib3d4.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopencv_features2d4.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopencv_imgproc4.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopencv_flann4.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopencv_core4.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libz.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libfmt.a"
+          - "$(SRCROOT)/Vendor/_vcpkg_installed/arm64-ios17-release/lib/libopengv.a"
+
+  XRSLAMEngine:
+    type: framework
+    platform: iOS
+    sources:
+      - path: XRSLAMBackend/Native/XRSLAMBench.cpp
+      - path: XRSLAMBackend/Native/XRSLAMBench.h
+        headerVisibility: public
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.viobench.xrslamengine
+        PRODUCT_NAME: PWXRSLAMEngine
+        DEFINES_MODULE: NO
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        EXPORTED_SYMBOLS_FILE: "$(SRCROOT)/XRSLAMBackend/Exports.txt"
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/XRSLAMBackend/Native"
+        "HEADER_SEARCH_PATHS[sdk=iphoneos*]":
+          - "$(SRCROOT)/XRSLAMBackend/Native"
+          - "$(SRCROOT)/Vendor/xrslam/opencv-4.0.1-headers/include"
+        "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]":
+          - "$(inherited)"
+          - "PW_XRSLAM_CORE_LINKED=0"
+        "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]":
+          - "$(inherited)"
+          - "PW_XRSLAM_CORE_LINKED=1"
+        "OTHER_LDFLAGS[sdk=iphoneos*]":
+          - "$(inherited)"
+          - "-force_load"
+          - "$(SRCROOT)/Vendor/xrslam/lib/libxrslam_generic_4beb1a9.a"
+          - "$(SRCROOT)/Vendor/xrslam/lib/libceres_official_1_14.a"
+          - "$(SRCROOT)/Vendor/xrslam/lib/libopencv_generic_4_0_1.a"
+          - "-lz"
+          - "-framework"
+          - "Accelerate"
+          - "-framework"
+          - "Foundation"
+
+  VIOReplacementBench:
+    type: application
+    platform: iOS
+    sources:
+      - path: BasaltVIOBench
+        excludes:
+          - Native
+          - BasaltVIOBench-Bridging-Header.h
+      - path: XRSLAMBackend/Config
+        buildPhase: resources
+      - path: Replay
+      - path: Evaluation
+      - path: Schemas
+        buildPhase: resources
+      - path: ../../experiments/basalt_vio_phone_bench_2026-08-29/contract.json
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.viobench
+        PRODUCT_NAME: VIOReplacementBench
+        DEVELOPMENT_TEAM: 26AH7V448L
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: "VIO Replacement Bench"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSCameraUsageDescription: "Measures ARKit, Basalt, and XRSLAM from controlled camera runs."
+        INFOPLIST_KEY_NSMotionUsageDescription: "Measures Basalt and XRSLAM from controlled inertial runs."
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_OBJC_BRIDGING_HEADER: BasaltVIOBench/UnifiedVIOBench-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/BasaltVIOBench/Native"
+          - "$(SRCROOT)/XRSLAMBackend/Native"
+    dependencies:
+      - target: BasaltEngine
+        embed: true
+      - target: XRSLAMEngine
+        embed: true
+      - sdk: ARKit.framework
+
+  VIOReplacementBenchTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: BasaltVIOBenchTests
+      - path: XRSLAMVIOBenchTests
+    dependencies:
+      - target: VIOReplacementBench
+      - target: BasaltEngine
+      - target: XRSLAMEngine
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.viobench.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+
+schemes:
+  VIOReplacementBench:
+    build:
+      targets:
+        BasaltEngine: all
+        XRSLAMEngine: all
+        VIOReplacementBench: all
+        VIOReplacementBenchTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - VIOReplacementBenchTests
+    archive:
+      config: Release
