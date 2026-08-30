@@ -79,3 +79,61 @@ ARKit reference arm. Because the live trajectories differ and ARKit cannot
 consume the frozen replay, live accuracy superiority remains blocked until a
 separate external-ground-truth experiment exists; the bench must not infer it
 from candidate-vs-ARKit trajectory disagreement.
+
+## v2 design deltas — 2026-08-30
+
+### One monotonic domain
+
+`mach_absolute_time` nanoseconds, everywhere. `std::chrono::steady_clock` is
+banned in bench native code: on Darwin it is `CLOCK_MONOTONIC` ==
+`mach_continuous_time` and includes device sleep, while `CMClockGetHostTimeClock`
+and `DispatchTime.uptimeNanoseconds` exclude it. Mixing them reported the phone's
+entire sleep accumulation as a latency (97 s run, 81,219,463 ms p95). Native code
+calls `mach_absolute_time()` and applies `mach_timebase_info` — mach ticks are
+24 MHz on arm64, not nanoseconds.
+
+`ClockDomainInvariant` rejects any latency exceeding run elapsed plus 250 ms.
+Invalid, never clamped: clamping would have hidden this defect behind a plausible
+number instead of an absurd one.
+
+### One capture, replayed
+
+`ARFrame.capturedImage` luma at 1920x1440 is the shared input. Recording is
+uncompressed — it is algorithm input, not a preview. ~2.76 MB/frame, ~23.2 GiB
+for 300 s.
+
+Known gap, to be declared and never described as verified: candidates are scored
+on ARKit-conditioned imagery, since ARKit owns autofocus and exposure during the
+capture. A production replacement would drive its own AVCaptureSession. One
+AVFoundation cross-check recording is owed before any production shadow.
+
+No ground truth exists for the recording, so this channel answers cross-arm
+agreement, loop-closure error, static drift and coarse scale — never absolute
+accuracy. EuRoC remains the only absolute accuracy channel.
+
+### Resources by decomposition
+
+ARKit's resource cost is measured live during the capture. Candidate cost is
+measured by replay-paced 300 s with the device stationary, plus a camera term
+measured once by a null run and identical for both candidates. Thermal load comes
+from compute, not from the operator's arm, and replay is repeatable. Reported as
+a decomposition, not as a direct measurement.
+
+### Calibration at 1920x1440
+
+Intrinsics come from `ARFrame.camera.intrinsics` recorded during the capture: a
+hardware property describing exactly the frames being replayed, so nothing is
+extrapolated. The frozen 640x480 upstream intrinsics scaled by 3 must agree
+(fx 1346.903, fy 1347.432, cx 964.038, cy 722.149); disagreement means the two
+formats differ by more than a scale and must halt the run. Extrinsics are a rigid
+IMU-to-camera transform and stay at the upstream XRSLAM value unchanged.
+Distortion stays zero, and that approximation is now worse — the same distortion
+acts over three times the pixel radius.
+
+### Upstream configs must be scaled, not tuned
+
+Basalt's official config is tuned for 752x480 and XRSLAM's for 640x480; patch
+size, pyramid depth, detection grid and feature caps are pixel-unit values.
+Running them unchanged at 1920x1440 measures our port, not the algorithm. Every
+changed parameter records upstream file, commit, original value, new value, scale
+factor and derivation. Tuning until it runs is forbidden.
