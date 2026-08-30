@@ -90,7 +90,9 @@ enum BenchmarkRunPreparation {
         mode: BenchMode,
         datasetURL: URL?
     ) throws -> PreparedBenchmarkRun {
-        if backend == .arkit, mode != .liveSoak {
+        // ARKit cannot be fed any recording, but it does run live for both
+        // `liveSoak` and `record`.
+        if backend == .arkit, mode.isReplay {
             throw BenchmarkRunPreparationError.arkitReplayUnsupported
         }
         let runID = UUID().uuidString.lowercased()

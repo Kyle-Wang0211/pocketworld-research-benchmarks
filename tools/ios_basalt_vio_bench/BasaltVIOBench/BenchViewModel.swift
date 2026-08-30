@@ -129,13 +129,13 @@ final class BenchViewModel: ObservableObject {
 
     func start() {
         guard canStart else { return }
-        if mode == .liveSoak,
+        if !mode.isReplay,
            let reason = LiveCalibrationGate.rejectionReason(for: .current()) {
             blockingMessage = reason
             phase = .failed
             return
         }
-        if mode == .liveSoak {
+        if !mode.isReplay {
             switch AVCaptureDevice.authorizationStatus(for: .video) {
             case .authorized:
                 break

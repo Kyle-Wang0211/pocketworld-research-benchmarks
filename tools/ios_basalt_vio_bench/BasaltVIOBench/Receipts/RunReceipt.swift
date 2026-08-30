@@ -17,6 +17,17 @@ enum RunReceiptChannel: String, Codable, CaseIterable {
     case replayDeviceRecording = "replay_device_recording"
     case replayPaced = "replay_paced"
     case replayMax = "replay_max"
+
+    /// `liveSoak` is not a synonym for "ran a camera". Using it as one is how
+    /// `record` was rejected as a replay, skipped camera permission, and would
+    /// have failed receipt validation -- four separate guards written when
+    /// liveSoak happened to be the only live mode.
+    var isReplay: Bool {
+        switch self {
+        case .replayDeviceRecording, .replayPaced, .replayMax: return true
+        case .record, .liveSoak: return false
+        }
+    }
 }
 
 struct RunAppIdentity: Codable, Equatable {
@@ -294,7 +305,7 @@ struct RunReceipt: Codable, Equatable {
         guard app.usesARKit == expectedBackend.usesARKit else {
             throw RunReceiptValidationError.invalid("ARKit use does not match selected engine")
         }
-        guard expectedBackend != .arkit || channel == .liveSoak else {
+        guard expectedBackend != .arkit || !channel.isReplay else {
             throw RunReceiptValidationError.invalid("ARKit reference cannot use replay channels")
         }
         let expectedComputeBackend = expectedBackend == .arkit ? "apple_arkit" : "cpu"
@@ -368,7 +379,7 @@ struct RunReceipt: Codable, Equatable {
             }
         }
         if state == .validPass || state == .validFail {
-            let required = channel == .liveSoak ? Self.liveResultMetrics : Self.replayResultMetrics
+            let required = channel.isReplay ? Self.replayResultMetrics : Self.liveResultMetrics
             guard required.isSubset(of: Set(metrics.keys)) else {
                 throw RunReceiptValidationError.invalid("valid result is missing required metrics")
             }

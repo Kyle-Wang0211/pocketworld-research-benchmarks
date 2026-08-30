@@ -170,7 +170,7 @@ final class BenchmarkCoordinator {
                 onFinish(.success(context.directoryURL))
                 return
             }
-            if mode == .liveSoak {
+            if !mode.isReplay {
                 try runLive(
                     context,
                     initialHeartbeatNS: initialHeartbeatNS,
@@ -248,7 +248,7 @@ final class BenchmarkCoordinator {
     ) throws {
         // ARKit cannot be fed a recording, so it runs live in exactly two modes:
         // as the reference arm, and as the camera owner during a `record` run.
-        guard mode == .liveSoak || mode == .record else {
+        guard !mode.isReplay else {
             throw CoordinatorError.invalidRun("arkit_replay_is_not_supported")
         }
 
