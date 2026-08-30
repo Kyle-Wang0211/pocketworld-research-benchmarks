@@ -113,9 +113,13 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
             // Device-tier gating, production's threshold: 4 GB phones stay on
             // the system default because 4K pushes them to jetsam; 6 GB+ take
             // the 4K format.
+            // Production's shipped value. capture_format.dart pins pwVideoFormat
+            // to "hires43" and the pose provider passes it on every session, so
+            // that -- not the plugin's pre-assignment "4k" default -- is what the
+            // baseline arm has to run.
             let videoFormatMode = ProcessInfo.processInfo.environment[
                 "OFFICIAL_AETHER_VIDEO_FORMAT_MODE"
-            ] ?? ""
+            ] ?? "hires43"
             let allow4K = physicalMemory >= fourKThreshold
                 && videoFormatMode != "default43"
                 && videoFormatMode != "hires43"

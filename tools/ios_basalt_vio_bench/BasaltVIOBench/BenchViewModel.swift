@@ -32,7 +32,7 @@ final class BenchViewModel: ObservableObject {
     var storageNote: String? {
         guard mode == .record else { return nil }
         var format = DeviceRecordingCameraFormat.scoring
-        format.nominalFPS = 60
+        format.nominalFPS = BenchResolution.scoringFramesPerSecond
         let need = DeviceRecordingWriter.projectedByteCount(
             seconds: Double(measurementSeconds), format: format
         ) + DeviceRecordingWriter.freeSpaceHeadroomBytes

@@ -2,12 +2,30 @@ import Foundation
 
 /// The resolutions the bench runs at, and which of them a verdict may be built on.
 ///
-/// Production runs ARKit at 1920x1440 on this device, so 1920x1440 is the bar
-/// every candidate is scored against. Declaring a 640x480 candidate faster or
-/// cooler than a 1920x1440 ARKit would compare two different problems.
+/// Production runs ARKit at 1920x1440 4:3, so that is the bar every candidate is
+/// scored against. Declaring a 640x480 candidate faster or cooler than a
+/// 1920x1440 ARKit would compare two different problems.
+///
+/// That figure is production's shipped `pwVideoFormat`, which
+/// lib/official_capture/capture_format.dart pins to "hires43" and the Dart pose
+/// provider passes to the plugin on every session. The plugin's own
+/// `videoFormatMode` default of "4k" is only what stands before Dart assigns,
+/// and its 3840x2160 16:9 branch is documented there as the fallback kept for
+/// comparison, not the shipping path.
+///
+/// Briefly changed to 3840x2160 on 2026-08-31 by reading the plugin's branches
+/// and its historical comment about the high-resolution format breaking world
+/// tracking, without checking what the switch is actually set to. That comment
+/// is superseded in the same file the constant lives in: hires43 was promoted on
+/// 2026-07-19 after the device showed tracking normal.
 public enum BenchResolution: Equatable {
     /// The only resolution a verdict may be built on. Every arm scores here.
     public static let scoring = (width: 1920, height: 1440)
+
+    /// Frame rate of production's selected format: the highest the
+    /// high-resolution-capable 1920x1440 entry offers, which is 60 on this
+    /// device.
+    public static let scoringFramesPerSecond: Double = 60
 
     /// Non-scoring. Its single job is failure triage: when a candidate fails at
     /// the scoring resolution, rerunning at the scale its upstream config was
@@ -16,7 +34,8 @@ public enum BenchResolution: Equatable {
     public static let diagnostic = (width: 640, height: 480)
 
     /// `diagnostic` is derived from the recording by deterministic downscale, so
-    /// the two share one physical capture.
+    /// the two share one physical capture. Both are 4:3, so a single factor
+    /// relates them.
     public static let diagnosticDownscaleFactor = 3
 
     public static func participatesInVerdict(width: Int, height: Int) -> Bool {
@@ -136,34 +155,39 @@ enum ARKitIntrinsicsCrossCheck {
         )
     }
 
-    static func check(arkitReported: CameraIntrinsics) -> Verdict {
+    /// Checks that the reported intrinsics can describe the frames they came
+    /// with: finite, a positive focal length, and a principal point near the
+    /// centre of a [frameWidth] x [frameHeight] image.
+    ///
+    /// It used to compare against the frozen 640x480 values scaled by 3 and halt
+    /// the run on a mismatch. Those values are xrslam's own iPhone 14 Pro
+    /// config, so that used a candidate engine's shipped calibration to declare
+    /// production's capture invalid -- backwards, since every arm replays these
+    /// frames and production treats a frame's own intrinsics as authoritative.
+    /// It is also no longer arithmetically meaningful: production runs 3840x2160
+    /// at 16:9 and the frozen values are 4:3, so no single scale relates them.
+    static func check(
+        arkitReported: CameraIntrinsics,
+        frameWidth: Int,
+        frameHeight: Int
+    ) -> Verdict {
         guard arkitReported.isFinite else { return .nonFinite }
-        let expected = expectedScoringIntrinsics
-        for (name, reported, want) in [
-            ("fx", arkitReported.fx, expected.fx),
-            ("fy", arkitReported.fy, expected.fy),
+        guard arkitReported.fx > 0, arkitReported.fy > 0 else {
+            return .disagrees(component: "fx", arkit: arkitReported.fx,
+                              expected: 0, deltaPixels: 0)
+        }
+        // A principal point should sit near the centre of the frame it belongs
+        // to. Far from it means the intrinsics and the pixels are describing
+        // different images, which is the failure worth halting for.
+        for (name, reported, centre) in [
+            ("cx", arkitReported.cx, Double(frameWidth) / 2),
+            ("cy", arkitReported.cy, Double(frameHeight) / 2),
         ] {
-            guard want > 0 else {
+            if abs(reported - centre) > principalPointToleranceP {
                 return .disagrees(component: name, arkit: reported,
-                                  expected: want, deltaPixels: abs(reported - want))
-            }
-            if abs(reported - want) / want > focalRelativeTolerance {
-                return .disagrees(component: name, arkit: reported,
-                                  expected: want, deltaPixels: abs(reported - want))
+                                  expected: centre, deltaPixels: abs(reported - centre))
             }
         }
-        for (name, reported, want) in [
-            ("cx", arkitReported.cx, expected.cx),
-            ("cy", arkitReported.cy, expected.cy),
-        ] {
-            if abs(reported - want) > principalPointToleranceP {
-                return .disagrees(component: name, arkit: reported,
-                                  expected: want, deltaPixels: abs(reported - want))
-            }
-        }
-        // ARKit's per-device factory values win once they agree: they describe
-        // the exact frames being replayed, where the scaled upstream values are
-        // one sample device carried across a resolution.
         return .agrees(scoring: arkitReported)
     }
 }

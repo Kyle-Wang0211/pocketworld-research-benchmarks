@@ -55,7 +55,7 @@ struct DeviceRecordingCameraFormat: Codable, Equatable, Sendable {
         width: BenchResolution.scoring.width,
         height: BenchResolution.scoring.height,
         pixelFormat: "luma8_from_420f_full_range",
-        nominalFPS: 30
+        nominalFPS: BenchResolution.scoringFramesPerSecond
     )
 
     var bytesPerFrame: Int { width * height }

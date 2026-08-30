@@ -159,7 +159,11 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         // leaving only "they disagree" -- which says nothing about whether the
         // scaling premise is wrong, the format is cropped, or the tolerance is
         // simply too tight.
-        let verdict = ARKitIntrinsicsCrossCheck.check(arkitReported: reported)
+        let verdict = ARKitIntrinsicsCrossCheck.check(
+            arkitReported: reported,
+            frameWidth: format.width,
+            frameHeight: format.height
+        )
         let expected = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
         let observed: [String: Any] = [
             "arkit_reported": ["fx": reported.fx, "fy": reported.fy,

@@ -284,7 +284,7 @@ final class BenchmarkCoordinator {
             // value that is not knowable yet; the manifest is corrected to the
             // selected rate once the session reports it.
             var format = DeviceRecordingCameraFormat.scoring
-            format.nominalFPS = 60
+            format.nominalFPS = BenchResolution.scoringFramesPerSecond
             let projected = DeviceRecordingWriter.projectedByteCount(
                 seconds: Double(LiveBenchmarkDuration.measurementNanoseconds) / 1_000_000_000,
                 format: format

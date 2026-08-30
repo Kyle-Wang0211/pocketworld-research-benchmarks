@@ -250,10 +250,15 @@ final class DeviceRecordingTests: XCTestCase {
         )
     }
 
+    /// 1920x1440 luma at production's frame rate for 300 s. The default format
+    /// said 30 fps while every caller overrode it to 60, so this constant
+    /// described a recording the bench never made; both now follow production's
+    /// selected format, which takes the highest frame rate the
+    /// high-resolution-capable 1920x1440 entry offers.
     func testProjectedByteCountMatchesTheContract() {
         XCTAssertEqual(
             DeviceRecordingWriter.projectedByteCount(seconds: 300),
-            24_883_200_000
+            1920 * 1440 * 60 * 300
         )
     }
 
