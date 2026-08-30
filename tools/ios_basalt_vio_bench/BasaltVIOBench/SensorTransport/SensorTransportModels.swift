@@ -11,8 +11,8 @@ public struct SensorTransportConfiguration: Equatable, Sendable {
     public let pendingGyroscopeCapacity: Int
 
     public init(
-        cameraWidth: Int32 = 640,
-        cameraHeight: Int32 = 480,
+        cameraWidth: Int32 = 1920,
+        cameraHeight: Int32 = 1440,
         cameraRateHz: Int32 = 30,
         motionRateHz: Double = 100,
         cameraQueueCapacity: Int = 8,
@@ -178,6 +178,10 @@ public struct LiveCaptureFormatReceipt: Equatable, Sendable {
     public let preferredStabilizationMode: Int
     public let activeStabilizationMode: Int
     public let sessionPreset: String
+    /// How many device formats satisfied the frozen requirements. Recorded
+    /// because selection among several is a weaker identity than a unique match,
+    /// and a reader must be able to tell which one this run had.
+    public let matchingFormatCount: Int
     public let grayscaleConversion: String
     public let xrslamPixelPipelineDivergence: String
 

@@ -237,14 +237,16 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         defer {
             if configurationIsOpen { captureSession.commitConfiguration() }
         }
-        guard captureSession.canSetSessionPreset(.vga640x480) else {
+        // 1920x1440 is 4:3 and no AVCaptureSession.Preset covers it, so the
+        // format is chosen explicitly and the session is told not to override it.
+        guard captureSession.canSetSessionPreset(.inputPriority) else {
             throw TransportError.cameraFormatUnavailable(
                 width: configuration.cameraWidth,
                 height: configuration.cameraHeight,
                 rateHz: configuration.cameraRateHz
             )
         }
-        captureSession.sessionPreset = .vga640x480
+        captureSession.sessionPreset = .inputPriority
 
         guard captureSession.canAddInput(input) else {
             throw TransportError.cannotAddCameraInput
@@ -276,16 +278,50 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             connection.preferredVideoStabilizationMode = .off
         }
 
-        // Match XRSLAM's pinned sample by letting the VGA session preset choose
-        // the active format. `device.formats.first` is deliberately forbidden:
-        // its ordering is not a stable experiment identity.
         captureSession.commitConfiguration()
         configurationIsOpen = false
 
         do {
             try device.lockForConfiguration()
             defer { device.unlockForConfiguration() }
-            let format = device.activeFormat
+
+            // `device.formats.first` stays forbidden: its ordering is not a
+            // stable experiment identity. Formats are instead filtered by the
+            // frozen requirements and ranked by a documented rule, and the number
+            // of candidates is receipted so a reader can see whether the match
+            // was unique.
+            let candidates = device.formats.filter { candidate in
+                let dimensions = CMVideoFormatDescriptionGetDimensions(
+                    candidate.formatDescription
+                )
+                let subtype = CMFormatDescriptionGetMediaSubType(
+                    candidate.formatDescription
+                )
+                return dimensions.width == configuration.cameraWidth
+                    && dimensions.height == configuration.cameraHeight
+                    && subtype == fullRange
+                    && candidate.videoSupportedFrameRateRanges.contains {
+                        $0.minFrameRate <= Double(configuration.cameraRateHz)
+                            && $0.maxFrameRate >= Double(configuration.cameraRateHz)
+                    }
+            }
+            // Prefer an unbinned sensor readout: binning trades resolution for
+            // low light, and this bench is about what the full readout supports.
+            let preferred = candidates.filter { !$0.isVideoBinned }
+            let ranked = (preferred.isEmpty ? candidates : preferred).sorted { lhs, rhs in
+                let l = lhs.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 0
+                let r = rhs.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 0
+                if l != r { return l > r }
+                return Double(lhs.videoFieldOfView) > Double(rhs.videoFieldOfView)
+            }
+            guard let format = ranked.first else {
+                throw TransportError.cameraFormatUnavailable(
+                    width: configuration.cameraWidth,
+                    height: configuration.cameraHeight,
+                    rateHz: configuration.cameraRateHz
+                )
+            }
+            device.activeFormat = format
             let dimensions = CMVideoFormatDescriptionGetDimensions(
                 format.formatDescription
             )
@@ -320,7 +356,8 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 rotationDegrees: connection.videoRotationAngle,
                 preferredStabilizationMode: Int(connection.preferredVideoStabilizationMode.rawValue),
                 activeStabilizationMode: Int(connection.activeVideoStabilizationMode.rawValue),
-                sessionPreset: AVCaptureSession.Preset.vga640x480.rawValue,
+                sessionPreset: AVCaptureSession.Preset.inputPriority.rawValue,
+                matchingFormatCount: candidates.count,
                 grayscaleConversion: "nv12_full_range_luma_plane_direct",
                 xrslamPixelPipelineDivergence: "pinned_xrslam_sample_requests_32bgra_then_opencv_bgra2gray"
             )

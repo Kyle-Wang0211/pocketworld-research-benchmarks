@@ -240,6 +240,7 @@ enum RunDiagnosticsWriter {
                     "preferred_stabilization_mode": String(format.preferredStabilizationMode),
                     "active_stabilization_mode": String(format.activeStabilizationMode),
                     "session_preset": format.sessionPreset,
+                    "matching_format_count": String(format.matchingFormatCount),
                     "grayscale_conversion": format.grayscaleConversion,
                     "xrslam_pixel_pipeline_divergence": format.xrslamPixelPipelineDivergence,
                 ], uniquingKeysWith: { _, new in new })

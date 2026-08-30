@@ -221,13 +221,13 @@ struct RunReceipt: Codable, Equatable {
     init(
         schemaVersion: Int = 1,
         runID: String,
-        experimentID: String = "vio-iphone-three-arm-v1-20260829",
+        experimentID: String = BenchExperimentIdentity.experimentID,
         state: RunReceiptState,
         channel: RunReceiptChannel,
         inputCameraCount: Int,
         startedAtUTC: String,
         endedAtUTC: String? = nil,
-        scope: String = "same_device_same_os_shared_capture_contract_and_identical_replay_manifest",
+        scope: String = BenchExperimentIdentity.scope,
         globalDefaultEligible: Bool = false,
         app: RunAppIdentity,
         device: RunDeviceEvidence,
@@ -266,11 +266,16 @@ struct RunReceipt: Codable, Equatable {
         guard UUID(uuidString: runID)?.uuidString.lowercased() == runID.lowercased() else {
             throw RunReceiptValidationError.invalid("run_id must be a UUID")
         }
-        guard experimentID == "vio-iphone-three-arm-v1-20260829" else {
-            throw RunReceiptValidationError.invalid("experiment_id is not frozen")
+        // Compared against the bundled contract, not a literal, so a contract
+        // bump cannot leave receipts declaring the previous experiment while
+        // hashing the current one.
+        guard experimentID == BenchExperimentIdentity.experimentID,
+              experimentID != BenchExperimentIdentity.unavailable else {
+            throw RunReceiptValidationError.invalid("experiment_id does not match the bundled contract")
         }
-        guard scope == "same_device_same_os_shared_capture_contract_and_identical_replay_manifest" else {
-            throw RunReceiptValidationError.invalid("scope is not device-local")
+        guard scope == BenchExperimentIdentity.scope,
+              scope != BenchExperimentIdentity.unavailable else {
+            throw RunReceiptValidationError.invalid("scope does not match the bundled contract")
         }
         guard !globalDefaultEligible else {
             throw RunReceiptValidationError.invalid("global_default_eligible must be false")
