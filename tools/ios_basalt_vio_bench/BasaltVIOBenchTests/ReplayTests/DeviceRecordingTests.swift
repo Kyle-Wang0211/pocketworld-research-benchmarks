@@ -83,7 +83,7 @@ final class DeviceRecordingTests: XCTestCase {
     /// on: what the candidates replay is byte-identical to what was captured.
     func testRoundTripPreservesFramesAndOrdering() throws {
         let writer = try DeviceRecordingWriter(directory: root, recordingID: "rt-1")
-        try writer.recordIntrinsicsIfNeeded(plausibleIntrinsics)
+        try writer.recordIntrinsics(plausibleIntrinsics, timestampSeconds: 0)
 
         let format = DeviceRecordingCameraFormat.scoring
         var expectedFirstByte: [UInt8] = []
@@ -243,8 +243,9 @@ final class DeviceRecordingTests: XCTestCase {
         let writer = try DeviceRecordingWriter(directory: root, recordingID: "bad")
         XCTAssertThrowsError(
             // The unscaled 640x480 values: the exact mistake the check exists for.
-            try writer.recordIntrinsicsIfNeeded(
-                ARKitIntrinsicsCrossCheck.frozenUpstream640x480
+            try writer.recordIntrinsics(
+                ARKitIntrinsicsCrossCheck.frozenUpstream640x480,
+                timestampSeconds: 0
             )
         )
     }
@@ -284,7 +285,7 @@ final class DeviceRecordingTests: XCTestCase {
     @discardableResult
     private func makeMinimalRecording() throws -> DeviceRecordingDataset {
         let writer = try DeviceRecordingWriter(directory: root, recordingID: "min")
-        try writer.recordIntrinsicsIfNeeded(plausibleIntrinsics)
+        try writer.recordIntrinsics(plausibleIntrinsics, timestampSeconds: 0)
         writer.appendFrame(
             pixelBuffer: try filledBuffer(format: .scoring, value: 7),
             timestampNanoseconds: 0
@@ -316,5 +317,43 @@ final class DeviceRecordingTests: XCTestCase {
         edit(&json)
         try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
             .write(to: url, options: .atomic)
+    }
+}
+
+extension DeviceRecordingTests {
+    /// Production pins `intrinsics_fxfycxcy` to the frame it came from because
+    /// autofocus moves the focal length mid-capture. This recorder kept only the
+    /// first frame's values, which pinned a whole scan to one focus position.
+    func testEveryFrameIntrinsicsAreRecordedNotJustTheFirst() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("intr-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let writer = try DeviceRecordingWriter(
+            directory: directory,
+            recordingID: "intrinsics-series",
+            format: .scoring
+        )
+
+        let base = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
+        try writer.recordIntrinsics(base, timestampSeconds: 1.0)
+        // A later frame with the lens at a different focus position.
+        try writer.recordIntrinsics(
+            CameraIntrinsics(fx: base.fx * 1.02, fy: base.fy * 1.02, cx: base.cx, cy: base.cy),
+            timestampSeconds: 1.5
+        )
+        writer.appendFrame(
+            pixelBuffer: try filledBuffer(format: .scoring, value: 3),
+            timestampNanoseconds: 1_000_000_000
+        )
+        let manifest = try writer.finish()
+
+        let rows = try String(contentsOf: directory.appendingPathComponent("intrinsics.jsonl"))
+            .split(separator: "\n")
+        XCTAssertEqual(rows.count, 2, "both frames' intrinsics must survive")
+        XCTAssertTrue(rows[0].contains("intrinsics_fxfycxcy"), "production's key name")
+        XCTAssertGreaterThan(
+            manifest.focalLengthMaximum, manifest.focalLengthMinimum,
+            "the recorded spread must show the focus moved"
+        )
     }
 }

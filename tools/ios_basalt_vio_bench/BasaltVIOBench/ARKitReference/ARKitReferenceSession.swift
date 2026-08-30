@@ -227,13 +227,16 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
         // came back device_recording_lossy_1.
         if let recorder {
             do {
-                try recorder.recordIntrinsicsIfNeeded(
+                try recorder.recordIntrinsics(
                     CameraIntrinsics(
                         fx: Double(frame.camera.intrinsics.columns.0.x),
                         fy: Double(frame.camera.intrinsics.columns.1.y),
                         cx: Double(frame.camera.intrinsics.columns.2.x),
                         cy: Double(frame.camera.intrinsics.columns.2.y)
-                    )
+                    ),
+                    // Same frame the pose below is taken from, so intrinsics and
+                    // pose stay frame-exact the way production pins them.
+                    timestampSeconds: frame.timestamp
                 )
                 recorder.appendFrame(
                     pixelBuffer: frame.capturedImage,

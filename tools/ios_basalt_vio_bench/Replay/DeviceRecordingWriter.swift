@@ -47,6 +47,9 @@ final class DeviceRecordingWriter: @unchecked Sendable {
 
     private var framesHandleDigest = SHA256()
     private var cameraIndexRows: [String] = []
+    private var intrinsicsRows: [String] = []
+    private var focalMinimum = Double.greatestFiniteMagnitude
+    private var focalMaximum = 0.0
     private var imuRows: [String] = []
     private var arkitPoseRows: [String] = []
 
@@ -128,9 +131,27 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     /// Recorded once, from the first frame that reports them. The cross-check
     /// runs here so a mismatched format halts before the operator spends five
     /// minutes on an unusable capture.
-    func recordIntrinsicsIfNeeded(_ reported: CameraIntrinsics) throws {
+    /// Records this frame's intrinsics, then cross-checks the first frame's.
+    /// Every frame is kept because production keeps every frame's: its per-photo
+    /// sidecar pins `intrinsics_fxfycxcy` to the snapshot the pose came from.
+    func recordIntrinsics(
+        _ reported: CameraIntrinsics,
+        timestampSeconds: Double
+    ) throws {
         stateLock.lock()
         defer { stateLock.unlock() }
+
+        if reported.fx.isFinite, reported.fx > 0 {
+            focalMinimum = min(focalMinimum, reported.fx)
+            focalMaximum = max(focalMaximum, reported.fx)
+        }
+        // Same keys as the production sidecar, so a consumer that reads one
+        // reads the other.
+        intrinsicsRows.append(
+            "{\"t\":\(timestampSeconds),\"intrinsics_fxfycxcy\":"
+                + "[\(reported.fx),\(reported.fy),\(reported.cx),\(reported.cy)]}"
+        )
+
         guard intrinsics == nil else { return }
 
         // Persist what the device actually reported before judging it. The first
@@ -278,6 +299,9 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         let cameraCSV = (["timestamp_ns,relative_path"] + cameraIndexRows).joined(separator: "\n") + "\n"
         let imuCSV = (["timestamp_ns,wx,wy,wz,ax,ay,az"] + imuRows).joined(separator: "\n") + "\n"
         let poseTUM = arkitPoseRows.joined(separator: "\n") + "\n"
+        let intrinsicsJSONL = intrinsicsRows.joined(separator: "\n") + "\n"
+        let focalLow = focalMinimum == .greatestFiniteMagnitude ? 0 : focalMinimum
+        let focalHigh = focalMaximum
         let capturedIntrinsics = intrinsics
         stateLock.unlock()
 
@@ -288,6 +312,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         var files: [DeviceRecordingFile] = []
         for (role, path, contents) in [
             (DeviceRecordingFileRole.cameraIndex, "camera_index.csv", cameraCSV),
+            (DeviceRecordingFileRole.intrinsicsIndex, "intrinsics.jsonl", intrinsicsJSONL),
             (DeviceRecordingFileRole.imuIndex, "imu.csv", imuCSV),
             (DeviceRecordingFileRole.arkitPoses, "arkit_poses.tum", poseTUM),
         ] {
@@ -317,6 +342,8 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             lossWriteError: lossWriteError,
             peakInFlight: peakInFlight,
             slowestWriteMilliseconds: slowestWriteMilliseconds,
+            focalLengthMinimum: focalLow,
+            focalLengthMaximum: focalHigh,
             files: files
         )
 

@@ -13,6 +13,14 @@ import Foundation
 /// GiB; that cost is accepted rather than compressed away.
 enum DeviceRecordingFileRole: String, Codable, CaseIterable, Sendable {
     case cameraIndex = "camera_index"
+    /// Per-frame intrinsics, one JSON row per frame, mirroring the per-photo
+    /// sidecar production already writes: the same `t` and `intrinsics_fxfycxcy`
+    /// keys, pinned to the frame they came from. Production takes that care
+    /// because autofocus moves the focal length during a scan and it carries a
+    /// per-sample focusStable flag alongside. Keeping only frame 0's values, as
+    /// this recorder did, pins a whole capture to whatever focus position the
+    /// first frame happened to have.
+    case intrinsicsIndex = "intrinsics_index"
     case imuIndex = "imu_index"
     case arkitPoses = "arkit_poses"
 }
@@ -104,6 +112,10 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     var peakInFlight: Int = 0
     /// Slowest single frame write. Names the stall when the queue does fill.
     var slowestWriteMilliseconds: Double = 0
+    /// Spread of the focal length across the recording. A wide range means
+    /// autofocus moved while capturing and no single value describes the run.
+    var focalLengthMinimum: Double = 0
+    var focalLengthMaximum: Double = 0
     var files: [DeviceRecordingFile]
 
     enum CodingKeys: String, CodingKey {
@@ -120,6 +132,8 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
         case lossWriteError = "loss_write_error"
         case peakInFlight = "peak_in_flight"
         case slowestWriteMilliseconds = "slowest_write_ms"
+        case focalLengthMinimum = "focal_length_min"
+        case focalLengthMaximum = "focal_length_max"
     }
 
     static let supportedSchemaVersion = 1
