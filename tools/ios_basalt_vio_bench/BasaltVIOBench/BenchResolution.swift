@@ -5,21 +5,21 @@ import Foundation
 /// Production runs ARKit at 1920x1440 on this device, so 1920x1440 is the bar
 /// every candidate is scored against. Declaring a 640x480 candidate faster or
 /// cooler than a 1920x1440 ARKit would compare two different problems.
-enum BenchResolution: Equatable {
+public enum BenchResolution: Equatable {
     /// The only resolution a verdict may be built on. Every arm scores here.
-    static let scoring = (width: 1920, height: 1440)
+    public static let scoring = (width: 1920, height: 1440)
 
     /// Non-scoring. Its single job is failure triage: when a candidate fails at
     /// the scoring resolution, rerunning at the scale its upstream config was
     /// actually tuned for separates "the algorithm cannot carry this many
     /// pixels" from "we carried its pixel-unit parameters across wrong".
-    static let diagnostic = (width: 640, height: 480)
+    public static let diagnostic = (width: 640, height: 480)
 
     /// `diagnostic` is derived from the recording by deterministic downscale, so
     /// the two share one physical capture.
-    static let diagnosticDownscaleFactor = 3
+    public static let diagnosticDownscaleFactor = 3
 
-    static func participatesInVerdict(width: Int, height: Int) -> Bool {
+    public static func participatesInVerdict(width: Int, height: Int) -> Bool {
         width == scoring.width && height == scoring.height
     }
 }

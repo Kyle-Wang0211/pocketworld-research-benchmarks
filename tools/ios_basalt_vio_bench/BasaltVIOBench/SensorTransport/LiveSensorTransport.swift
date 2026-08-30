@@ -237,8 +237,10 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         defer {
             if configurationIsOpen { captureSession.commitConfiguration() }
         }
-        // 1920x1440 is 4:3 and no AVCaptureSession.Preset covers it, so the
-        // format is chosen explicitly and the session is told not to override it.
+        // Explicit format selection is kept even though the diagnostic
+        // resolution has a matching preset: it is the mechanism the replay
+        // resolution will need, and selecting by frozen requirements is a
+        // stronger identity than trusting a preset to pick.
         guard captureSession.canSetSessionPreset(.inputPriority) else {
             throw TransportError.cameraFormatUnavailable(
                 width: configuration.cameraWidth,

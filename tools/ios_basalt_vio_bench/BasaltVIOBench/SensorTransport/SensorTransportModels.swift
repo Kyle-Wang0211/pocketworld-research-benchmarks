@@ -11,8 +11,29 @@ public struct SensorTransportConfiguration: Equatable, Sendable {
     public let pendingGyroscopeCapacity: Int
 
     public init(
-        cameraWidth: Int32 = 1920,
-        cameraHeight: Int32 = 1440,
+        // The candidate arms capture at the diagnostic resolution, not the
+        // scoring one, and that is not a shortfall -- it is the architecture.
+        //
+        // Under contract v2 Basalt and XRSLAM are scored by replaying the ARKit
+        // recording at 1920x1440, where the intrinsics come from
+        // ARFrame.camera.intrinsics: measured for exactly those frames. A live
+        // candidate run has no ARSession, so no measured intrinsics exist for it.
+        //
+        // Raising this to 1920x1440 on 2026-08-30 broke the arm outright: the
+        // frozen calibration still declares [[640, 480]], and Basalt correctly
+        // refused every frame with invalid_argument
+        // (plane.width != resolution.x()). Unblocking it would have meant
+        // inventing intrinsics by scaling the upstream values threefold -- and
+        // that is only valid if both formats share a field of view, which cannot
+        // be shown from the artifacts on hand. Fabricating a calibration to
+        // unblock a run the contract already marks non-scoring is a bad trade.
+        //
+        // So live capture stays at the frozen, upstream-verified 640x480 pairing
+        // and is used for what it can answer: transport, clock domain, loss and
+        // stop semantics. Resolution pressure at 1920x1440 is answered by the
+        // replay channel, on measured intrinsics.
+        cameraWidth: Int32 = Int32(BenchResolution.diagnostic.width),
+        cameraHeight: Int32 = Int32(BenchResolution.diagnostic.height),
         cameraRateHz: Int32 = 30,
         motionRateHz: Double = 100,
         cameraQueueCapacity: Int = 8,
