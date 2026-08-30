@@ -509,9 +509,21 @@ enum RunReceiptStateMachine {
     }
 }
 
-enum RunReceiptValidationError: Error, Equatable {
+/// `LocalizedError`, for the same reason `DeviceRecordingError` needed it: a bare
+/// Swift error surfaces as "RunReceiptValidationError error 0", discarding the
+/// message that says which invariant failed.
+enum RunReceiptValidationError: Error, Equatable, LocalizedError {
     case invalid(String)
     case illegalTransition(from: RunReceiptState?, to: RunReceiptState)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalid(let reason):
+            return "收据不合法:\(reason)"
+        case .illegalTransition(let from, let to):
+            return "收据状态非法迁移:\(from?.rawValue ?? "nil") → \(to.rawValue)"
+        }
+    }
 }
 
 enum RunReceiptJSON {

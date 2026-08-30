@@ -27,10 +27,20 @@ final class SystemMetricSampler {
         self.sink = sink
     }
 
+    /// Takes the first sample synchronously.
+    ///
+    /// Scheduling one with `deadline: .now()` is not enough: the handler runs
+    /// asynchronously, so it can still land after the caller has captured the run
+    /// start timestamp. `Statistics.thermalDwell` then finds no sample at or
+    /// before the window it must seed and returns nil, and the run is discarded
+    /// as `thermal_telemetry_unavailable` -- which is what happened to a clean
+    /// 300 s run and again to the first successful recording. Starting the timer
+    /// earlier only narrowed the race; taking the sample inline removes it.
     func start() {
         UIDevice.current.isBatteryMonitoringEnabled = true
         queue.sync {
             guard timer == nil else { return }
+            sample()
             previousCPU = nil
             let source = DispatchSource.makeTimerSource(queue: queue)
             source.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(50))

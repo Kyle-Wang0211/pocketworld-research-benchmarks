@@ -279,8 +279,15 @@ final class BenchmarkCoordinator {
         // before the operator starts, not after five minutes of capture.
         var recorder: DeviceRecordingWriter?
         if mode == .record {
+            // The configuration receipt only exists after the session starts, so
+            // the space check uses the conservative higher rate rather than a
+            // value that is not knowable yet; the manifest is corrected to the
+            // selected rate once the session reports it.
+            var format = DeviceRecordingCameraFormat.scoring
+            format.nominalFPS = 60
             let projected = DeviceRecordingWriter.projectedByteCount(
-                seconds: Double(LiveBenchmarkDuration.measurementNanoseconds) / 1_000_000_000
+                seconds: Double(LiveBenchmarkDuration.measurementNanoseconds) / 1_000_000_000,
+                format: format
             )
             try DeviceRecordingWriter.checkFreeSpace(
                 at: context.directoryURL,
@@ -288,7 +295,8 @@ final class BenchmarkCoordinator {
             )
             let writer = try DeviceRecordingWriter(
                 directory: context.directoryURL,
-                recordingID: context.runID
+                recordingID: context.runID,
+                format: format
             )
             reference.recorder = writer
             recorder = writer
@@ -312,6 +320,9 @@ final class BenchmarkCoordinator {
         do {
             onPhase(.measuring)
             try reference.start()
+            if let selected = reference.configurationReceipt?.selectedFramesPerSecond {
+                recorder?.setNominalFPS(Double(selected))
+            }
             try runLease.recordARSessionStarted()
             while true {
                 if isAbortRequested { throw CoordinatorError.aborted }
@@ -1468,6 +1479,11 @@ final class BenchmarkCoordinator {
         terminal.state = state
         terminal.endedAtUTC = BenchmarkRunPreparation.utcTimestamp()
         terminal.metrics = metrics
+        // Derived from the terminal state, not inherited from the started
+        // receipt, where it was false because a started receipt has no metrics.
+        // Carrying that stale false into a passing result made the receipt fail
+        // its own validation and discarded a complete, zero-loss recording.
+        terminal.metricsValidForScoring = state == .validPass || state == .validFail
         terminal.termination = RunTermination(
             reasonCode: reason,
             detail: detail,

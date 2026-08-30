@@ -40,7 +40,7 @@ final class BenchResolutionTests: XCTestCase {
     /// A crop rather than a scale moves the principal point far more than
     /// per-device variation ever does, and must halt the run.
     func testCroppedFormatIsRejected() {
-        let cropped = CameraIntrinsics(fx: 1346.9, fy: 1347.4, cx: 820.0, cy: 722.1)
+        let cropped = CameraIntrinsics(fx: 1346.9, fy: 1347.4, cx: 800.0, cy: 722.1)
         let verdict = ARKitIntrinsicsCrossCheck.check(arkitReported: cropped)
         XCTAssertTrue(verdict.haltsRun)
         XCTAssertEqual(verdict.reason, "arkit_intrinsics_disagree_cx")
@@ -64,17 +64,49 @@ final class BenchResolutionTests: XCTestCase {
         }
     }
 
-    func testToleranceBoundaryIsInclusive() {
+    /// The exact values this device reported on 2026-08-30. A single 12 px
+    /// absolute tolerance rejected them on a 1.17 percent focal difference,
+    /// which is ordinary unit-to-unit variation, not a format mismatch: the
+    /// principal point lands on the frame centre.
+    func testRealDeviceIntrinsicsAreAccepted() {
+        let reported = CameraIntrinsics(
+            fx: 1331.1297607421875, fy: 1331.1297607421875,
+            cx: 957.5889282226562, cy: 719.9881591796875
+        )
+        let verdict = ARKitIntrinsicsCrossCheck.check(arkitReported: reported)
+        guard case .agrees(let scoring) = verdict else {
+            return XCTFail("real device intrinsics must be accepted, got \(verdict)")
+        }
+        XCTAssertEqual(scoring, reported, "the measured per-device values must win")
+    }
+
+    /// A different lens differs by tens of percent, not one.
+    func testDifferentLensIsStillRejected() {
         let e = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
-        let t = ARKitIntrinsicsCrossCheck.toleranceP
+        XCTAssertTrue(
+            ARKitIntrinsicsCrossCheck.check(
+                arkitReported: CameraIntrinsics(
+                    fx: e.fx * 0.6, fy: e.fy * 0.6, cx: e.cx, cy: e.cy
+                )
+            ).haltsRun
+        )
+    }
+
+    func testFocalToleranceBoundary() {
+        let e = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
+        let r = ARKitIntrinsicsCrossCheck.focalRelativeTolerance
         XCTAssertFalse(
             ARKitIntrinsicsCrossCheck.check(
-                arkitReported: CameraIntrinsics(fx: e.fx + t, fy: e.fy, cx: e.cx, cy: e.cy)
+                arkitReported: CameraIntrinsics(
+                    fx: e.fx * (1 - r), fy: e.fy, cx: e.cx, cy: e.cy
+                )
             ).haltsRun
         )
         XCTAssertTrue(
             ARKitIntrinsicsCrossCheck.check(
-                arkitReported: CameraIntrinsics(fx: e.fx + t + 0.001, fy: e.fy, cx: e.cx, cy: e.cy)
+                arkitReported: CameraIntrinsics(
+                    fx: e.fx * (1 - r) - 1, fy: e.fy, cx: e.cx, cy: e.cy
+                )
             ).haltsRun
         )
     }

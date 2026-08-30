@@ -129,7 +129,14 @@ struct DeviceRecordingDataset: Sendable {
     var inputCameraCount: Int { 1 }
 }
 
-enum DeviceRecordingError: Error, Equatable, CustomStringConvertible {
+/// `LocalizedError`, not just `CustomStringConvertible`.
+///
+/// Swift bridges a bare `Error` to NSError, and `localizedDescription` then
+/// yields "The operation couldn't be completed. (DeviceRecordingError error 12.)"
+/// -- which is what the operator actually saw when a recording was refused for
+/// lack of disk space. Every diagnosis this type can offer was being discarded
+/// at the last step.
+enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedError {
     case unsupportedSchemaVersion(Int)
     case invalidRecordingID
     case resolutionIsNotScoring(width: Int, height: Int)
@@ -146,6 +153,8 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible {
     case malformedCSV(path: String, line: Int, reason: String)
     case intrinsicsCrossCheckFailed
     case insufficientFreeSpace(requiredBytes: Int64, availableBytes: Int64)
+
+    var errorDescription: String? { description }
 
     var description: String {
         switch self {
@@ -168,7 +177,13 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible {
         case .intrinsicsCrossCheckFailed:
             "ARKit intrinsics disagree with the frozen upstream values scaled by 3"
         case .insufficientFreeSpace(let required, let available):
-            "recording needs \(required) bytes, device has \(available)"
+            String(
+                format: "存储空间不足:本次录制需要 %.1f GiB(含余量),设备可用 %.1f GiB,还差 %.1f GiB。"
+                    + "请清理空间,或改用更短的录制时长。",
+                Double(required) / 1_073_741_824,
+                Double(available) / 1_073_741_824,
+                Double(max(0, required - available)) / 1_073_741_824
+            )
         }
     }
 }

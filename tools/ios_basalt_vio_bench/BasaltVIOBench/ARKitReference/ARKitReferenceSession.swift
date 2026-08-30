@@ -1,5 +1,6 @@
 import ARKit
 import AVFoundation
+import CoreMotion
 import Foundation
 import QuartzCore
 import simd
@@ -66,6 +67,14 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
     /// ARKit's own frames is the only way one capture serves all three arms.
     var recorder: DeviceRecordingWriter?
     private var recorderFailure: Error?
+
+    /// ARKit exposes no raw inertial stream, so a recording that only captured
+    /// ARFrames carried zero IMU samples -- and a visual-inertial candidate
+    /// replaying it would have had no inertial data at all, which is also where
+    /// its metric scale comes from. CoreMotion runs alongside the session,
+    /// independent of the camera, for exactly this.
+    private let motion = CMMotionManager()
+    private let motionQueue = OperationQueue()
 
     init(startMonotonicSeconds: Double = CACurrentMediaTime()) {
         self.startMonotonicSeconds = startMonotonicSeconds
@@ -153,6 +162,7 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
     }
 
     func pause() {
+        stopMotionRecording()
         let shouldPause = lifecycleLock.withLock { () -> Bool in
             guard !paused else { return false }
             paused = true
@@ -231,6 +241,7 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                 self.recorder = nil
             }
         }
+        startMotionRecordingIfNeeded()
         previewTap?.offer(
             pixelBuffer: frame.capturedImage,
             monotonicNanoseconds: UInt64(max(0, timestampNS))
@@ -258,6 +269,48 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
 
     /// Surfaced by the coordinator so a recorder failure invalidates the run.
     func recordingFailure() -> Error? { recorderFailure }
+
+    /// Streams raw gyroscope and accelerometer into the recording.
+    ///
+    /// Gyroscope timestamps drive the pairing, matching the transport's
+    /// `basaltGyroDrivenPaired` mode and Basalt's own rs_t265 device, so a
+    /// replayed recording pairs the way a live run does. Acceleration is
+    /// converted to m/s^2 with the same -9.80665 factor XRSLAM's iOS sample
+    /// applies, so both engines receive the convention their upstream expects.
+    ///
+    /// `deviceMotion` is deliberately not used: it returns a fused, gravity-
+    /// removed estimate, which is another estimator's output rather than the raw
+    /// inertial measurement a VIO front end integrates.
+    private func startMotionRecordingIfNeeded() {
+        guard recorder != nil, !motion.isGyroActive else { return }
+        motionQueue.maxConcurrentOperationCount = 1
+        motion.gyroUpdateInterval = 1.0 / 100.0
+        motion.accelerometerUpdateInterval = 1.0 / 100.0
+        motion.startAccelerometerUpdates()
+        motion.startGyroUpdates(to: motionQueue) { [weak self] data, _ in
+            guard let self, let data, let recorder = self.recorder else { return }
+            guard let accel = self.motion.accelerometerData else { return }
+            // CoreMotion reports seconds on the same mach_absolute_time base the
+            // rest of the bench uses.
+            let timestampNS = Int64((data.timestamp * 1_000_000_000).rounded())
+            recorder.appendIMU(
+                timestampNanoseconds: timestampNS,
+                gyroscope: (
+                    data.rotationRate.x, data.rotationRate.y, data.rotationRate.z
+                ),
+                acceleration: (
+                    accel.acceleration.x * -9.80665,
+                    accel.acceleration.y * -9.80665,
+                    accel.acceleration.z * -9.80665
+                )
+            )
+        }
+    }
+
+    private func stopMotionRecording() {
+        if motion.isGyroActive { motion.stopGyroUpdates() }
+        if motion.isAccelerometerActive { motion.stopAccelerometerUpdates() }
+    }
 
     func session(_ session: ARSession, didFailWithError error: Error) {
         accounting?.recordFailure()

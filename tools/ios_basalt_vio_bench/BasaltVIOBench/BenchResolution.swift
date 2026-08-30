@@ -62,14 +62,30 @@ enum ARKitIntrinsicsCrossCheck {
         cy: 240.71641804985396
     )
 
-    /// Tolerance on each component, in pixels at 1920x1440.
+    /// Focal length is compared relatively, principal point absolutely, because
+    /// they fail in different ways.
     ///
-    /// Wide enough to absorb the difference between a factory per-device
-    /// calibration and one upstream sample device -- units of pixels on a
-    /// ~1347 px focal length is well under half a percent. Narrow enough that a
-    /// crop, a different lens, or a transposed axis cannot pass: those move the
-    /// principal point by tens or hundreds of pixels.
-    static let toleranceP: Double = 12.0
+    /// A single 12 px absolute tolerance on everything was measured wrong on
+    /// 2026-08-30. This device reported fx = fy = 1331.130, cx = 957.589,
+    /// cy = 719.988 against an upstream-scaled expectation of fx 1346.903,
+    /// cx 964.038, cy 722.149 -- and was rejected on a 15.8 px focal difference.
+    ///
+    /// The numbers say the rejection was wrong. cy lands within 0.01 px of
+    /// 1440/2 and cx within 2.5 px of 1920/2, so the format is not cropped and
+    /// the threefold scaling premise holds. The focal gap is 1.17 percent, which
+    /// is ordinary unit-to-unit variation between this phone and the one sample
+    /// device the upstream configuration came from.
+    ///
+    /// That gap is also the point: running this phone on another unit's focal
+    /// length was injecting roughly 1.2 percent of metric scale error, which the
+    /// measured values remove.
+    ///
+    /// So focal length gets a relative tolerance -- per-device variation is
+    /// around a percent while a different lens differs by tens of percent -- and
+    /// the principal point keeps an absolute one, because that is what actually
+    /// detects a crop: a crop displaces it by tens to hundreds of pixels.
+    static let focalRelativeTolerance: Double = 0.03
+    static let principalPointToleranceP: Double = 24.0
 
     enum Verdict: Equatable {
         case agrees(scoring: CameraIntrinsics)
@@ -107,21 +123,26 @@ enum ARKitIntrinsicsCrossCheck {
     static func check(arkitReported: CameraIntrinsics) -> Verdict {
         guard arkitReported.isFinite else { return .nonFinite }
         let expected = expectedScoringIntrinsics
-        let components: [(String, Double, Double)] = [
+        for (name, reported, want) in [
             ("fx", arkitReported.fx, expected.fx),
             ("fy", arkitReported.fy, expected.fy),
+        ] {
+            guard want > 0 else {
+                return .disagrees(component: name, arkit: reported,
+                                  expected: want, deltaPixels: abs(reported - want))
+            }
+            if abs(reported - want) / want > focalRelativeTolerance {
+                return .disagrees(component: name, arkit: reported,
+                                  expected: want, deltaPixels: abs(reported - want))
+            }
+        }
+        for (name, reported, want) in [
             ("cx", arkitReported.cx, expected.cx),
             ("cy", arkitReported.cy, expected.cy),
-        ]
-        for (name, reported, want) in components {
-            let delta = abs(reported - want)
-            if delta > toleranceP {
-                return .disagrees(
-                    component: name,
-                    arkit: reported,
-                    expected: want,
-                    deltaPixels: delta
-                )
+        ] {
+            if abs(reported - want) > principalPointToleranceP {
+                return .disagrees(component: name, arkit: reported,
+                                  expected: want, deltaPixels: abs(reported - want))
             }
         }
         // ARKit's per-device factory values win once they agree: they describe

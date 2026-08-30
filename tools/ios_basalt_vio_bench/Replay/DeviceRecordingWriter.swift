@@ -31,7 +31,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
 
     private let directory: URL
     private let framesDirectory: URL
-    private let format: DeviceRecordingCameraFormat
+    private var format: DeviceRecordingCameraFormat
     private let recordingID: String
 
     private let writeQueue = DispatchQueue(label: "com.kyle.viobench.recording.write")
@@ -55,6 +55,10 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         recordingID: String,
         format: DeviceRecordingCameraFormat = .scoring
     ) throws {
+        // The manifest must state the rate the session actually selected. ARKit's
+        // 1920x1440 format runs at 60 fps on this device, and a manifest that
+        // hardcoded 30 both misdescribed the recording and halved every storage
+        // projection built on it.
         self.directory = directory
         self.framesDirectory = directory.appendingPathComponent(
             DeviceRecordingManifest.framesDirectory
@@ -95,6 +99,17 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         }
     }
 
+    /// The selected frame rate is only knowable once the session has started, so
+    /// the manifest is corrected then rather than shipping a constant. A manifest
+    /// claiming 30 fps for a 60 fps recording misdescribes the input and halves
+    /// every storage projection derived from it.
+    func setNominalFPS(_ fps: Double) {
+        guard fps > 0 else { return }
+        stateLock.lock()
+        format.nominalFPS = fps
+        stateLock.unlock()
+    }
+
     // MARK: - Intrinsics
 
     /// Recorded once, from the first frame that reports them. The cross-check
@@ -104,7 +119,42 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         stateLock.lock()
         defer { stateLock.unlock() }
         guard intrinsics == nil else { return }
+
+        // Persist what the device actually reported before judging it. The first
+        // cross-check failure discarded the very numbers needed to understand it,
+        // leaving only "they disagree" -- which says nothing about whether the
+        // scaling premise is wrong, the format is cropped, or the tolerance is
+        // simply too tight.
         let verdict = ARKitIntrinsicsCrossCheck.check(arkitReported: reported)
+        let expected = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
+        let observed: [String: Any] = [
+            "arkit_reported": ["fx": reported.fx, "fy": reported.fy,
+                               "cx": reported.cx, "cy": reported.cy],
+            "expected_from_upstream_x3": ["fx": expected.fx, "fy": expected.fy,
+                                          "cx": expected.cx, "cy": expected.cy],
+            "delta_pixels": ["fx": reported.fx - expected.fx,
+                             "fy": reported.fy - expected.fy,
+                             "cx": reported.cx - expected.cx,
+                             "cy": reported.cy - expected.cy],
+            "focal_relative_tolerance": ARKitIntrinsicsCrossCheck.focalRelativeTolerance,
+            "principal_point_tolerance_pixels":
+                ARKitIntrinsicsCrossCheck.principalPointToleranceP,
+            "focal_relative_delta": [
+                "fx": expected.fx > 0 ? (reported.fx - expected.fx) / expected.fx : .nan,
+                "fy": expected.fy > 0 ? (reported.fy - expected.fy) / expected.fy : .nan,
+            ],
+            "agrees": verdict.reason == nil,
+            "reason": verdict.reason ?? "agrees",
+        ]
+        if let data = try? JSONSerialization.data(
+            withJSONObject: observed, options: [.prettyPrinted, .sortedKeys]
+        ) {
+            try? data.write(
+                to: directory.appendingPathComponent("intrinsics_observed.json"),
+                options: .atomic
+            )
+        }
+
         guard case .agrees(let scoring) = verdict else {
             throw DeviceRecordingError.intrinsicsCrossCheckFailed
         }
