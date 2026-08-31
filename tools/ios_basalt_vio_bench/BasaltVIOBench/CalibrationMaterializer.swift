@@ -48,6 +48,51 @@ enum CalibrationMaterializer {
         )
     }
 
+    /// The same substitution for xrslam, whose calibration is YAML rather than
+    /// Basalt's JSON. Feeding the YAML to the JSON path threw before the started
+    /// receipt was written, so a replay left a run directory holding nothing but
+    /// its marker and no record of why -- xrslam looked like it was hanging for
+    /// twenty minutes when it had already failed.
+    ///
+    /// Only the two lines that describe the frames are rewritten. The mount
+    /// transform and the IMU noise model are carried through untouched, exactly
+    /// as the JSON path does.
+    static func deviceRecordingYAML(
+        from frozenData: Data,
+        intrinsics: DeviceRecordingIntrinsics,
+        width: Int,
+        height: Int
+    ) throws -> Data {
+        guard let text = String(data: frozenData, encoding: .utf8) else {
+            throw CalibrationMaterializerError.invalidRoot
+        }
+        var sawResolution = false
+        var sawIntrinsics = false
+        let patched = text.split(separator: "\n", omittingEmptySubsequences: false)
+            .map { line -> String in
+                let raw = String(line)
+                let trimmed = raw.trimmingCharacters(in: .whitespaces)
+                let indent = String(raw.prefix(raw.count - trimmed.count))
+                if trimmed.hasPrefix("resolution:") {
+                    sawResolution = true
+                    return "\(indent)resolution: [\(width), \(height)]"
+                }
+                if trimmed.hasPrefix("intrinsics:") {
+                    sawIntrinsics = true
+                    return "\(indent)intrinsics: [\(intrinsics.fx), \(intrinsics.fy), "
+                        + "\(intrinsics.cx), \(intrinsics.cy)]"
+                }
+                return raw
+            }
+            .joined(separator: "\n")
+        guard sawResolution, sawIntrinsics else {
+            throw CalibrationMaterializerError.missingArray(
+                sawResolution ? "intrinsics" : "resolution"
+            )
+        }
+        return Data(patched.utf8)
+    }
+
     static func eurocCam0Only(from stereoData: Data) throws -> Data {
         guard var root = try JSONSerialization.jsonObject(with: stereoData) as? [String: Any],
               var value = root["value0"] as? [String: Any] else {

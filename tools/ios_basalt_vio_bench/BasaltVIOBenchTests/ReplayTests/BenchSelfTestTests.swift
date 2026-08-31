@@ -85,3 +85,52 @@ final class BenchmarkArtifactFinalizerMemoryTests: XCTestCase {
         XCTAssertEqual(entry.sha256, expected)
     }
 }
+
+final class CalibrationMaterializerYAMLTests: XCTestCase {
+    /// xrslam's calibration is YAML. Running it through the JSON substitution
+    /// threw before the started receipt existed, so a replay produced a run
+    /// directory with nothing in it and no stated reason -- for twenty minutes
+    /// that looked like the engine hanging.
+    func testYAMLCalibrationTakesTheRecordingsIntrinsicsAndResolution() throws {
+        let frozen = """
+        cam0:
+          T_BS:
+            data: [1.0, 0.0]
+          resolution: [640, 480]
+          camera_model: pinhole
+          intrinsics: [448.96781816245402, 449.14399528627763, 321.34605334072404, 240.71641804985396]
+          extrinsic:
+            q_bc: [-0.7071068, 0.7071068, 0, 0]
+        """
+        let out = try CalibrationMaterializer.deviceRecordingYAML(
+            from: Data(frozen.utf8),
+            intrinsics: DeviceRecordingIntrinsics(
+                fx: 1341.84, fy: 1341.84, cx: 957.50, cy: 718.91,
+                source: "ARFrame.camera.intrinsics", crossCheckPassed: true
+            ),
+            width: 1920,
+            height: 1440
+        )
+        let text = try XCTUnwrap(String(data: out, encoding: .utf8))
+
+        XCTAssertTrue(text.contains("resolution: [1920, 1440]"))
+        XCTAssertTrue(text.contains("intrinsics: [1341.84, 1341.84, 957.5, 718.91]"))
+        // The mount transform is a rigid property and must survive untouched.
+        XCTAssertTrue(text.contains("q_bc: [-0.7071068, 0.7071068, 0, 0]"))
+        XCTAssertTrue(text.contains("camera_model: pinhole"))
+        XCTAssertFalse(text.contains("640, 480"))
+    }
+
+    func testYAMLWithoutTheExpectedKeysIsRefused() {
+        XCTAssertThrowsError(
+            try CalibrationMaterializer.deviceRecordingYAML(
+                from: Data("cam0:\n  camera_model: pinhole\n".utf8),
+                intrinsics: DeviceRecordingIntrinsics(
+                    fx: 1, fy: 1, cx: 1, cy: 1,
+                    source: "ARFrame.camera.intrinsics", crossCheckPassed: true
+                ),
+                width: 1920, height: 1440
+            )
+        )
+    }
+}

@@ -143,8 +143,18 @@ enum BenchmarkRunPreparation {
             // The calibration comes from the recording's measured intrinsics, not
             // from the frozen 640x480 file, which is why this channel can score
             // at 1920x1440 while a live candidate run cannot.
-            calibrationData = try CalibrationMaterializer.deviceRecording(
-                from: try Data(contentsOf: calibrationSource),
+            // xrslam's calibration is YAML and Basalt's is JSON, so the
+            // substitution has to match the file it is editing.
+            let frozenCalibration = try Data(contentsOf: calibrationSource)
+            calibrationData = calibrationSource.pathExtension == "yaml"
+                ? try CalibrationMaterializer.deviceRecordingYAML(
+                    from: frozenCalibration,
+                    intrinsics: recording.intrinsics,
+                    width: recording.camera.width,
+                    height: recording.camera.height
+                )
+                : try CalibrationMaterializer.deviceRecording(
+                from: frozenCalibration,
                 intrinsics: recording.intrinsics,
                 width: recording.camera.width,
                 height: recording.camera.height
