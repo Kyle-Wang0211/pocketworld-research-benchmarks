@@ -182,6 +182,9 @@ struct EuRoCReplayLoader {
 
     private func parseCameraIndex(record: EuRoCManifestFile, rootURL: URL) throws -> [CameraRow] {
         let rows = try csvRows(record: record, rootURL: rootURL)
+        NSLog("[VIOBench] parseCameraIndex %@ rows=%d first=%@",
+              record.relativePath, rows.count,
+              rows.first.map { $0.fields.joined(separator: "|") } ?? "<none>")
         let cameraDirectory = (record.relativePath as NSString).deletingLastPathComponent
         var result: [CameraRow] = []
         var previous: Int64?
@@ -267,7 +270,18 @@ struct EuRoCReplayLoader {
         guard let text = String(data: try Data(contentsOf: url), encoding: .utf8) else {
             throw EuRoCReplayError.malformedCSV(path: record.relativePath, line: 0, reason: "file is not UTF-8")
         }
-        return text.split(separator: "\n", omittingEmptySubsequences: false).enumerated().compactMap { index, rawLine in
+        // Temporary: a trimmed dataset was rejected as an empty camera index
+        // while the file it names parses by hand, so what actually gets read
+        // has to be visible.
+        NSLog("[VIOBench] csv %@ -> %d bytes, first: %@",
+              record.relativePath, text.utf8.count,
+              String(text.prefix(60)).replacingOccurrences(of: "\n", with: "\\n"))
+        // Split on any newline, not on the character "\n". Swift strings iterate
+        // by grapheme cluster and CRLF is a single cluster, so splitting on "\n"
+        // finds no separator in a CRLF file and hands back the whole file as one
+        // line. EuRoC ships CRLF: its camera index came back as a single
+        // commented-out line and the dataset was refused as empty.
+        return text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated().compactMap { index, rawLine in
             let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
             return CSVRow(line: index + 1, fields: line.split(separator: ",", omittingEmptySubsequences: false).map {

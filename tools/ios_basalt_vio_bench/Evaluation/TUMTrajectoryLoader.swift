@@ -25,7 +25,7 @@ struct TUMTrajectoryLoader {
         }
         var poses: [TimedPose] = []
         var previousTimestamp: Int64?
-        for (offset, rawLine) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+        for (offset, rawLine) in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
             let lineNumber = offset + 1
             let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !line.isEmpty, !line.hasPrefix("#") else { continue }

@@ -134,3 +134,28 @@ final class CalibrationMaterializerYAMLTests: XCTestCase {
         )
     }
 }
+
+final class CRLFParsingTests: XCTestCase {
+    /// EuRoC ships CRLF. Swift iterates strings by grapheme cluster and CRLF is
+    /// one cluster, so splitting on the character "\n" finds no separator at all
+    /// and returns the file as a single line -- which, for a CSV whose first line
+    /// is a comment, parses as zero rows. The EuRoC camera index was refused as
+    /// empty for exactly this reason while the file on disk was intact.
+    func testCRLFAndLFSplitTheSame() {
+        let lf = "#header\n1,a\n2,b\n"
+        let crlf = "#header\r\n1,a\r\n2,b\r\n"
+
+        func rows(_ text: String) -> [[String]] {
+            text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+                .map { $0.split(separator: ",").map(String.init) }
+        }
+        XCTAssertEqual(rows(lf), [["1", "a"], ["2", "b"]])
+        XCTAssertEqual(rows(crlf), rows(lf), "CRLF must parse identically to LF")
+
+        // The old predicate, kept to show what it did rather than described.
+        let oldCRLF = crlf.split(separator: "\n", omittingEmptySubsequences: false)
+        XCTAssertEqual(oldCRLF.count, 1, "splitting CRLF on \"\\n\" yields one line")
+    }
+}

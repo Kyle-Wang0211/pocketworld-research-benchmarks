@@ -333,7 +333,7 @@ struct DeviceRecordingLoader {
     ) throws -> [ArchiveIndexEntry] {
         var entries: [ArchiveIndexEntry] = []
         let text = try String(contentsOf: url, encoding: .utf8)
-        for (line, raw) in text.split(separator: "\n").enumerated() {
+        for (line, raw) in text.split(whereSeparator: \.isNewline).enumerated() {
             guard let object = try JSONSerialization.jsonObject(
                 with: Data(raw.utf8)
             ) as? [String: Any],
@@ -459,7 +459,7 @@ struct DeviceRecordingLoader {
             contentsOf: root.appendingPathComponent(record.relativePath),
             encoding: .utf8
         )
-        for (offset, rawLine) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+        for (offset, rawLine) in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated() {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
             if line.isEmpty || offset == 0 { continue }  // row 0 is the header
             let fields = line.split(separator: ",", omittingEmptySubsequences: false).map(String.init)

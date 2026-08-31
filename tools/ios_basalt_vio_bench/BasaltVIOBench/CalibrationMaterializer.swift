@@ -68,7 +68,7 @@ enum CalibrationMaterializer {
         }
         var sawResolution = false
         var sawIntrinsics = false
-        let patched = text.split(separator: "\n", omittingEmptySubsequences: false)
+        let patched = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             .map { line -> String in
                 let raw = String(line)
                 let trimmed = raw.trimmingCharacters(in: .whitespaces)
