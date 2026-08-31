@@ -142,6 +142,18 @@ final class BenchViewModel: ObservableObject {
                     .contentModificationDate ?? .distantPast
                 return l > r
             }
+        // `-PWDatasetPath <dir>` points a headless run at a dataset directly,
+        // which is how xrslam's own EuRoC data gets through the same wrapper as
+        // a device recording -- the discriminator for whether a failure belongs
+        // to the integration or to what the bench feeds it.
+        if let flag = ProcessInfo.processInfo.arguments.firstIndex(of: "-PWDatasetPath"),
+           flag + 1 < ProcessInfo.processInfo.arguments.count {
+            let given = ProcessInfo.processInfo.arguments[flag + 1]
+            datasetURL = given.hasPrefix("/")
+                ? URL(fileURLWithPath: given)
+                : URL.documentsDirectory.appendingPathComponent(given)
+            return
+        }
         if datasetURL == nil { datasetURL = recordings.first }
     }
 

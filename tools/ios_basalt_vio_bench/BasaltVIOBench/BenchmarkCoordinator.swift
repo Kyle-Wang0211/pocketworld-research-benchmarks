@@ -139,6 +139,12 @@ final class BenchmarkCoordinator {
             if let datasetURL {
                 datasetAccessLease = try DatasetAccessLease.acquire(datasetURL: datasetURL)
             }
+            // Preparation runs before the started receipt exists, so anything it
+            // throws leaves a run directory with nothing in it and no statement
+            // of why. That is what made a failing replay look like a hanging one
+            // for twenty minutes.
+            NSLog("[VIOBench] preparing %@ / %@ dataset=%@",
+                  backend.id, mode.rawValue, datasetURL?.lastPathComponent ?? "none")
             let context = try BenchmarkRunPreparation.prepare(
                 backend: backend,
                 mode: mode,
@@ -227,6 +233,9 @@ final class BenchmarkCoordinator {
                 onFinish(.failure(CoordinatorError.aborted))
             }
         } catch {
+            NSLog("[VIOBench] run failed before/while preparing: %@",
+                  String(describing: error))
+
             if let prepared {
                 try? writeTerminal(
                     prepared,
