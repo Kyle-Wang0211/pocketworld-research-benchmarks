@@ -491,13 +491,20 @@ create_with_api(const xrslam_bench_create_options_t *options,
        macro. This bench links libxrslam_generic, built without it -- its own
        receipt records xrslam_ios: false -- so paths are what it wants. Passing
        contents here made create fail outright. */
+    fprintf(stderr, "[xrslam-trace] create() slam=%s device=%s\n",
+            options->slam_config_path, options->device_config_path);
+    fflush(stderr);
     const int created = bench->api.create(
         options->slam_config_path, options->device_config_path, "",
         "xrslam-vio-bench", &bench->upstream_config);
+    fprintf(stderr, "[xrslam-trace] create() -> %d config=%p\n",
+            created, bench->upstream_config);
+    fflush(stderr);
     if (created != 1 || bench->upstream_config == nullptr) {
       if (created == 1) {
         try {
-          bench->api.destroy();
+          fprintf(stderr, "[xrslam-trace] destroy() called\n"); fflush(stderr);
+        bench->api.destroy();
         } catch (...) {
         }
       }
@@ -734,6 +741,7 @@ extern "C" xrslam_bench_status_t xrslam_bench_stop(xrslam_bench_t *bench) {
     }
     if (!bench->upstream_destroyed) {
       try {
+        fprintf(stderr, "[xrslam-trace] destroy() called\n"); fflush(stderr);
         bench->api.destroy();
         ++bench->counters.upstream_destroy_calls;
       } catch (...) {
