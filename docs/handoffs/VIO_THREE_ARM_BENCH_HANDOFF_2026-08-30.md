@@ -128,6 +128,37 @@ Bench App：
 | **Basalt TUM-VI 档案** | 5.566 m | **3.1%** | **6.24 cm** | **2.79 cm** | 17.1 fps |
 | **XRSLAM 上游配置** | 5.276 m | 4.1% | **2.60 cm** | 2.60 cm | 23.3 fps |
 
+### XRSLAM 配置复刻核对(2026-08-31,逐键)
+
+上游 `yaml_config.cpp` 只解析 39 个键。把每个键的**最终生效值**(显式写的、
+或代码默认值)与上游 `configs/iphone_slam.yaml` 逐项比对:35 项完全一致,
+4 项差异全为形式:
+
+| 键 | 我们 | 上游 | 说明 |
+|---|---|---|---|
+| `output.p_bo` | `[ 0, 0, 0 ]` | `[ 0.0, 0.0, 0.0 ]` | 数值相同 |
+| `output.q_bo` | `[ 0, 0, 0, 1 ]` | `[ 0.0, 0.0, 0.0, 1.0 ]` | 数值相同 |
+| `visual_localization.ip` / `.port` | 有值 | 未设 | `enable: false`,不生效;偏离已在契约声明 |
+
+`imu.*` 六项在设备配置 `xrslam_iphone_14_pro.yaml` 中,与上游 `iPhone 14 Pro.yaml`
+数值一致(只去了注释)。
+
+我们缺的三个 CLAHE 键(`clahe_clip_limit` / `clahe_width` / `clahe_height`)其
+代码默认值恰为 6.0 / 8 / 8,与上游显式设的值相同,省略无影响。
+
+**结论:XRSLAM 的配置现已是完整忠实的复刻。** 修复之前不是。
+
+### `backend:` 段落是死配置,不要再尝试补词典
+
+上游 `iphone_slam.yaml` 里的 `backend:` 七个键(`backend_flag`、`voc_file`、
+`orb_*`)在 4beb1a9 版本**全部不被解析** —— `yaml_config.cpp` 与 `config.cpp`
+中均无对应读取点,全仓 grep `backend_flag|voc_file` 在 `.cpp/.h` 中零命中。
+补 `Vocabulary/ORBvoc.txt` 不会有任何效果。
+
+本次会话第三次遇到「看起来有意义、实际不被解析」的键(前两次是
+`accelerometer_noise_density` 与 `gyroscope_noise_density`)。上游 yaml 带装饰性
+配置,判断某项是否生效必须查解析器,不能看文件。
+
 ### Basalt:配置是忠实的,但选错了档案
 
 `euroc_config.json` 与上游 `data/euroc_config.json` **52 个键逐项一致,零差异**——
