@@ -124,6 +124,29 @@ Bench App：
 - Ceres：1.14
 - `XRSLAM_IOS=false`
 - frozen generic core threading：关闭
+  - **2026-08-31：这一项是 XRSLAM 在真机上崩溃的直接原因。** 关闭线程后
+    `xrslam/src/xrslam/utility/worker.h` 的 `resume()` 会就地执行 `worker_loop()`：
+
+    ```cpp
+    void resume(std::unique_lock<std::mutex> &l) {
+        l.unlock();
+    #if defined(XRSLAM_ENABLE_THREADING)
+        worker_cv.notify_all();   // 唤醒工作线程,立即返回
+    #else
+        worker_loop();            // 在调用者栈上跑完整个 worker
+    #endif
+    }
+    ```
+
+    于是 `XRSLAMPushSensorData(CAMERA)` 一路展开成前端加后端的嵌套执行，栈耗尽，
+    在设备上表现为第一帧 SIGBUS。已排除的其他解释：首帧前无 IMU（补了仍崩）、
+    分辨率（640x480 与 1920x1440 同样崩）、缓冲区越界（补一行冗余无变化）、
+    配置传路径还是内容（由 `XRSLAM_IOS` 决定，本构建传路径是对的）。
+  - 上游为 iOS 构建时**必开**此项：顶层 `CMakeLists.txt` 的 `if(IOS)` 同时置
+    `XRSLAM_IOS ON` 与 `XRSLAM_ENABLE_THREADING ON`。两个都关的组合上游从不发布。
+  - 两个开关性质不同，不可混为一谈：`XRSLAM_IOS` 会切到 iOS 专用路径（静态库、
+    配置改传内容），跨端要求下不能开；`XRSLAM_ENABLE_THREADING` 只改 `Worker`
+    是否起线程，Android 与桌面是同一份代码，开启不引入任何平台分叉，也不改算法。
 - 允许的 lifecycle patch 只补显式 destroy 生命周期，不改算法；补丁：
   `tools/ios_basalt_vio_bench/Vendor/patches/xrslam_destroy_lifecycle.patch`
 - 现有 archive 混有 iOS 26.2 object build version，因此统一 Bench 如实声明 iOS 26.2；不能拿 receipt 中较低版本伪装兼容。
