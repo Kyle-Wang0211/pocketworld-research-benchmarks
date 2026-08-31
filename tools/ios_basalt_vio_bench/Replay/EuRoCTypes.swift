@@ -51,22 +51,24 @@ struct EuRoCCameraFrame: Equatable, Sendable {
     let timestampNanoseconds: Int64
     let camera0ImageURL: URL
     let camera1ImageURL: URL?
-    /// Where this frame sits inside [camera0ImageURL]. A device recording keeps
-    /// every frame in one append-only stream, the way production's archive does,
-    /// so a frame is an offset and a length rather than a file. EuRoC really is
-    /// one file per image, and leaves this nil.
-    var camera0ByteRange: Range<Int>?
+    /// The access units to decode for this frame, in order, ending with its own.
+    /// A device recording archives an HEVC bitstream the way production does, so
+    /// a frame is not a slice that can be read on its own: decoding starts at
+    /// the GOP's keyframe and runs forward, which is exactly what production's
+    /// PwvaReader.readFrameNv12 does. EuRoC is one encoded image per file and
+    /// leaves this nil.
+    var camera0AccessUnits: [Range<Int>]?
 
     init(
         timestampNanoseconds: Int64,
         camera0ImageURL: URL,
         camera1ImageURL: URL?,
-        camera0ByteRange: Range<Int>? = nil
+        camera0AccessUnits: [Range<Int>]? = nil
     ) {
         self.timestampNanoseconds = timestampNanoseconds
         self.camera0ImageURL = camera0ImageURL
         self.camera1ImageURL = camera1ImageURL
-        self.camera0ByteRange = camera0ByteRange
+        self.camera0AccessUnits = camera0AccessUnits
     }
 
     var inputCameraCount: Int { camera1ImageURL == nil ? 1 : 2 }

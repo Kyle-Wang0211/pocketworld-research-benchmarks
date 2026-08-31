@@ -98,8 +98,33 @@ enum BenchSelfTest {
     static func purgeRunsIfRequested(
         arguments: [String] = ProcessInfo.processInfo.arguments
     ) -> Int {
+        purgeSelfTestRunsOnLaunch()
+        // `-PWPurgeRunID <run-...>` removes one named run and nothing else. The
+        // blanket purge deliberately spares unmarked runs, so removing an
+        // operator's capture has to be asked for by name -- never as a side
+        // effect of cleaning up after a self-test.
+        if let flag = arguments.firstIndex(of: "-PWPurgeRunID"),
+           flag + 1 < arguments.count {
+            let name = arguments[flag + 1]
+            guard name.hasPrefix("run-"), !name.contains("/"), !name.contains("..") else {
+                return 0
+            }
+            let target = URL.documentsDirectory
+                .appendingPathComponent("VIOBenchRuns")
+                .appendingPathComponent(name)
+            return (try? FileManager.default.removeItem(at: target)) != nil ? 1 : 0
+        }
         guard arguments.contains("-PWPurgeRuns") else { return 0 }
         return purgeRuns(rootURL: URL.documentsDirectory.appendingPathComponent("VIOBenchRuns"))
+    }
+
+    /// Removes every run this harness produced. Runs on each launch with no
+    /// flag: self-test output is scratch, 4.9 GB per 30 s capture, and leaving
+    /// it around filled the device to "还差 0.0 GiB" and blocked a real capture.
+    /// Only marked runs qualify, so an operator's capture is never touched.
+    @discardableResult
+    static func purgeSelfTestRunsOnLaunch() -> Int {
+        purgeRuns(rootURL: URL.documentsDirectory.appendingPathComponent("VIOBenchRuns"))
     }
 
     /// Deletes only the marked run directories under [rootURL].

@@ -8,25 +8,83 @@ import Foundation
 /// check that matters is that its length is exactly one frame -- a short or long
 /// file means the recording is not what its manifest says.
 enum RawLumaFrameLoader {
-    static func load(
+    /// Decodes one frame out of the archived bitstream. [accessUnits] runs from
+    /// the frame's GOP keyframe to the frame itself, the order production
+    /// decodes in; a decoder is built from the keyframe and fed forward.
+    static func decode(
         _ url: URL,
         format: DeviceRecordingCameraFormat,
-        byteRange: Range<Int>? = nil
+        accessUnits: [Range<Int>]
     ) throws -> GrayscaleImage {
-        let whole = try Data(contentsOf: url, options: .mappedIfSafe)
-        let data: Data
-        if let byteRange {
-            guard byteRange.lowerBound >= 0, byteRange.upperBound <= whole.count else {
+        let stream = try Data(contentsOf: url, options: .mappedIfSafe)
+        guard let first = accessUnits.first,
+              first.lowerBound >= 0, first.upperBound <= stream.count else {
+            throw DeviceRecordingError.missingFrame(url.lastPathComponent)
+        }
+
+        // The device archives raw planes: encoding on the phone did not survive
+        // either placement, so the bytes are the plane and there is nothing to
+        // decode. An entry exactly one frame long is that case; anything shorter
+        // is an encoded access unit, which is what an off-device transcode
+        // produces.
+        if let only = accessUnits.last,
+           accessUnits.count == 1,
+           only.count == format.bytesPerFrame {
+            guard only.upperBound <= stream.count else {
                 throw DeviceRecordingError.frameSizeMismatch(
                     path: url.lastPathComponent,
                     expected: format.bytesPerFrame,
-                    actual: max(0, whole.count - byteRange.lowerBound)
+                    actual: max(0, stream.count - only.lowerBound)
                 )
             }
-            data = whole.subdata(in: byteRange)
-        } else {
-            data = whole
+            return GrayscaleImage(
+                width: format.width, height: format.height,
+                bytesPerRow: format.width, pixels: stream.subdata(in: only)
+            )
         }
+        let keyframe = stream.subdata(in: first)
+        let decoder: OpaquePointer? = keyframe.withUnsafeBytes { key in
+            pw_vt_dec_create(
+                Int32(format.width), Int32(format.height),
+                key.bindMemory(to: UInt8.self).baseAddress, Int64(keyframe.count)
+            )
+        }
+        guard let decoder else { throw DeviceRecordingError.decoderUnavailable }
+        defer { pw_vt_dec_destroy(decoder) }
+
+        var luma = [UInt8](repeating: 0, count: format.bytesPerFrame)
+        var chroma = [UInt8](repeating: 0, count: format.bytesPerFrame / 2)
+        for range in accessUnits {
+            guard range.lowerBound >= 0, range.upperBound <= stream.count else {
+                throw DeviceRecordingError.missingFrame(url.lastPathComponent)
+            }
+            let au = stream.subdata(in: range)
+            let status: Int32 = au.withUnsafeBytes { bytes in
+                luma.withUnsafeMutableBufferPointer { y in
+                    chroma.withUnsafeMutableBufferPointer { uv in
+                        pw_vt_dec_decode(
+                            decoder,
+                            bytes.bindMemory(to: UInt8.self).baseAddress, Int64(au.count),
+                            y.baseAddress, uv.baseAddress
+                        )
+                    }
+                }
+            }
+            guard status == 0 else {
+                throw DeviceRecordingError.decodeFailed(status: Int(status))
+            }
+        }
+        return GrayscaleImage(
+            width: format.width, height: format.height,
+            bytesPerRow: format.width, pixels: Data(luma)
+        )
+    }
+
+    static func load(
+        _ url: URL,
+        format: DeviceRecordingCameraFormat
+    ) throws -> GrayscaleImage {
+        let data = try Data(contentsOf: url, options: .mappedIfSafe)
         guard data.count == format.bytesPerFrame else {
             throw DeviceRecordingError.frameSizeMismatch(
                 path: url.lastPathComponent,
@@ -107,12 +165,18 @@ struct DeviceRecordingLoader {
         guard let streamSize = streamAttributes?[.size] as? Int64 else {
             throw DeviceRecordingError.missingFrame(streamRecord.relativePath)
         }
+        let indexRecord = try required(.framesIndex, in: manifest.files)
+        try rejectUnsafePath(indexRecord.relativePath)
+        let entries = try parseArchiveIndex(
+            url: root.appendingPathComponent(indexRecord.relativePath),
+            streamByteCount: Int(streamSize)
+        )
         let frames = try parseCameraIndex(
             record: cameraRecord,
             root: root,
             format: manifest.camera,
             streamURL: streamURL,
-            streamByteCount: Int(streamSize)
+            entries: entries
         )
         guard frames.count == manifest.frameCount else {
             throw DeviceRecordingError.frameCountMismatch(
@@ -196,7 +260,14 @@ struct DeviceRecordingLoader {
                 whole = try Data(contentsOf: frame.camera0ImageURL, options: .mappedIfSafe)
                 streamCache[frame.camera0ImageURL] = whole
             }
-            digest.update(data: frame.camera0ByteRange.map { whole.subdata(in: $0) } ?? whole)
+            // The writer hashed the stream as it wrote it, so the digest is
+            // over each frame's own access unit in capture order -- the last
+            // range of each frame's decode list.
+            if let last = frame.camera0AccessUnits?.last {
+                digest.update(data: whole.subdata(in: last))
+            } else {
+                digest.update(data: whole)
+            }
         }
         let actual = DeviceRecordingWriter.hex(digest.finalize())
         guard actual == expected else {
@@ -225,12 +296,54 @@ struct DeviceRecordingLoader {
 
     // MARK: - Parsing
 
+    /// One row of production's index schema: frame, offset, len, keyframe, gop.
+    private struct ArchiveIndexEntry {
+        let frame: Int
+        let offset: Int
+        let len: Int
+        let keyframe: Bool
+    }
+
+    private func parseArchiveIndex(
+        url: URL,
+        streamByteCount: Int
+    ) throws -> [ArchiveIndexEntry] {
+        var entries: [ArchiveIndexEntry] = []
+        let text = try String(contentsOf: url, encoding: .utf8)
+        for (line, raw) in text.split(separator: "\n").enumerated() {
+            guard let object = try JSONSerialization.jsonObject(
+                with: Data(raw.utf8)
+            ) as? [String: Any],
+                let frame = object["frame"] as? Int,
+                let offset = object["offset"] as? Int,
+                let len = object["len"] as? Int,
+                let keyframe = object["keyframe"] as? Bool else {
+                throw DeviceRecordingError.malformedCSV(
+                    path: url.lastPathComponent, line: line + 1, reason: "index_row"
+                )
+            }
+            // An interrupted capture leaves the stream short of what a later
+            // index row names; bounds come from the file, never the manifest.
+            guard offset >= 0, len > 0, offset + len <= streamByteCount else {
+                throw DeviceRecordingError.frameSizeMismatch(
+                    path: url.lastPathComponent,
+                    expected: len,
+                    actual: max(0, streamByteCount - offset)
+                )
+            }
+            entries.append(
+                ArchiveIndexEntry(frame: frame, offset: offset, len: len, keyframe: keyframe)
+            )
+        }
+        return entries
+    }
+
     private func parseCameraIndex(
         record: DeviceRecordingFile,
         root: URL,
         format: DeviceRecordingCameraFormat,
         streamURL: URL,
-        streamByteCount: Int
+        entries: [ArchiveIndexEntry]
     ) throws -> [EuRoCCameraFrame] {
         var frames: [EuRoCCameraFrame] = []
         var previous: Int64?
@@ -256,19 +369,23 @@ struct DeviceRecordingLoader {
             // layout got -- present, and exactly one frame long -- but it is now
             // a bounds check against the stream, which is what catches a capture
             // truncated by an interrupt before it becomes a measurement.
-            let offset = frameIndex * format.bytesPerFrame
-            guard offset + format.bytesPerFrame <= streamByteCount else {
-                throw DeviceRecordingError.frameSizeMismatch(
-                    path: DeviceRecordingManifest.framesStreamPath,
-                    expected: format.bytesPerFrame,
-                    actual: max(0, streamByteCount - offset)
+            guard frameIndex < entries.count else {
+                throw DeviceRecordingError.frameCountMismatch(
+                    declared: frameIndex + 1, indexed: entries.count
                 )
+            }
+            // Decoding starts at the GOP keyframe and runs forward to this
+            // frame, which is how production reads its archive back.
+            var start = frameIndex
+            while start > 0 && !entries[start].keyframe { start -= 1 }
+            let units = (start...frameIndex).map {
+                entries[$0].offset ..< (entries[$0].offset + entries[$0].len)
             }
             frames.append(EuRoCCameraFrame(
                 timestampNanoseconds: timestamp,
                 camera0ImageURL: streamURL,
                 camera1ImageURL: nil,
-                camera0ByteRange: offset ..< (offset + format.bytesPerFrame)
+                camera0AccessUnits: units
             ))
         }
         return frames

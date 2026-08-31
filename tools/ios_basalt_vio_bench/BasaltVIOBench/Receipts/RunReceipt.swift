@@ -474,7 +474,13 @@ struct RunHeartbeat: Codable, Equatable {
 
 enum RunReceiptHash {
     static func sha256Hex(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        hex(SHA256.hash(data: data))
+    }
+
+    /// Hex for a digest computed incrementally, so an artifact can be hashed in
+    /// chunks instead of being read whole.
+    static func hex<D: Sequence>(_ digest: D) -> String where D.Element == UInt8 {
+        digest.map { String(format: "%02x", $0) }.joined()
     }
 }
 

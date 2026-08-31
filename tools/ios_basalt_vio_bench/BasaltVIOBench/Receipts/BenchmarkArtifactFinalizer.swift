@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 struct BenchmarkArtifactEntry: Codable, Equatable {
@@ -73,11 +74,20 @@ enum BenchmarkArtifactFinalizer {
         .map(\.lastPathComponent)
         .sorted()
 
+        // Hash by streaming. Reading each artifact whole put the 4.7 GB frame
+        // stream into memory -- twice, once here and once for the artifact
+        // manifest -- and the phone killed the app for it right after a clean
+        // 30 s capture, leaving the recording without its checksums.
         var checksumRows: [String] = []
+        var measured: [String: (digest: String, byteCount: Int64)] = [:]
         for name in contentNames {
             try validateSafeFilename(name)
-            let data = try Data(contentsOf: directoryURL.appendingPathComponent(name))
-            checksumRows.append("\(RunReceiptHash.sha256Hex(data))  \(name)")
+            let probed = try streamingDigest(
+                of: directoryURL.appendingPathComponent(name),
+                fileManager: fileManager
+            )
+            measured[name] = probed
+            checksumRows.append("\(probed.digest)  \(name)")
         }
         let checksums = Data((checksumRows.joined(separator: "\n") + "\n").utf8)
         try checksums.write(
@@ -85,15 +95,24 @@ enum BenchmarkArtifactFinalizer {
             options: .atomic
         )
 
+        measured[checksumsName] = try streamingDigest(
+            of: directoryURL.appendingPathComponent(checksumsName),
+            fileManager: fileManager
+        )
         let artifactNames = (contentNames + [checksumsName]).sorted()
         let artifacts = try artifactNames.map { name -> BenchmarkArtifactEntry in
             try validateSafeFilename(name)
-            let data = try Data(contentsOf: directoryURL.appendingPathComponent(name))
+            // Reuses what the checksum pass already measured, so no artifact is
+            // read twice and none is read whole.
+            let probed = try measured[name] ?? streamingDigest(
+                of: directoryURL.appendingPathComponent(name),
+                fileManager: fileManager
+            )
             return BenchmarkArtifactEntry(
                 path: name,
                 role: role(for: name),
-                byteCount: data.count,
-                sha256: RunReceiptHash.sha256Hex(data)
+                byteCount: Int(probed.byteCount),
+                sha256: probed.digest
             )
         }
         let manifest = BenchmarkArtifactManifest(
@@ -106,6 +125,35 @@ enum BenchmarkArtifactFinalizer {
             to: directoryURL.appendingPathComponent(manifestName),
             options: .atomic
         )
+    }
+
+    /// SHA-256 and size of a file, read in chunks so an artifact of any size
+    /// costs one buffer rather than its own length in memory.
+    private static func streamingDigest(
+        of url: URL,
+        fileManager: FileManager
+    ) throws -> (digest: String, byteCount: Int64) {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        var total: Int64 = 0
+        var reading = true
+        while reading {
+            // Each chunk is drained before the next is read. Without this the
+            // buffers live until the loop ends, which put the whole 4.9 GB
+            // stream in memory again by another route: a 30 s capture still
+            // died in finalize while an 8 s one finished.
+            try autoreleasepool {
+                guard let chunk = try handle.read(upToCount: 4 * 1024 * 1024),
+                      !chunk.isEmpty else {
+                    reading = false
+                    return
+                }
+                hasher.update(data: chunk)
+                total += Int64(chunk.count)
+            }
+        }
+        return (RunReceiptHash.hex(hasher.finalize()), total)
     }
 
     private static func requiredArtifacts(for channel: RunReceiptChannel) -> [String] {

@@ -111,10 +111,15 @@ final class DeviceRecordingTests: XCTestCase {
         XCTAssertEqual(manifest.frameCount, 3)
         XCTAssertEqual(manifest.imuSampleCount, 6)
         XCTAssertEqual(manifest.lossCount, 0, "no loss expected in a 3-frame write")
-        XCTAssertEqual(
-            manifest.framesTotalByteCount,
-            Int64(3 * format.bytesPerFrame)
-        )
+        // The archive holds an encoded bitstream, so its size is whatever the
+        // encoder produced -- far under the raw planes. What must hold is that
+        // the manifest describes the file that is actually on disk.
+        let streamOnDisk = try Data(
+            contentsOf: root.appendingPathComponent(DeviceRecordingManifest.framesStreamPath)
+        ).count
+        XCTAssertEqual(manifest.framesTotalByteCount, Int64(streamOnDisk))
+        XCTAssertEqual(streamOnDisk, 3 * format.bytesPerFrame,
+                       "the device archives raw planes back to back")
 
         let dataset = try DeviceRecordingLoader(verifyFramesDigest: true)
             .load(manifestURL: root.appendingPathComponent("recording_manifest.json"))
@@ -139,11 +144,14 @@ final class DeviceRecordingTests: XCTestCase {
         }
         XCTAssertEqual(cameras.count, 3)
         for (index, frame) in cameras.enumerated() {
-            let image = try RawLumaFrameLoader.load(
+            // Decoding needs a real HEVC decoder, which the simulator lacks.
+            guard let image = try? RawLumaFrameLoader.decode(
                 frame.camera0ImageURL,
                 format: format,
-                byteRange: frame.camera0ByteRange
-            )
+                accessUnits: try XCTUnwrap(frame.camera0AccessUnits)
+            ) else {
+                throw XCTSkip("no HEVC codec on this host; verified on device")
+            }
             XCTAssertEqual(image.width, 1920)
             XCTAssertEqual(image.height, 1440)
             XCTAssertEqual(image.pixels.count, format.bytesPerFrame)
@@ -390,8 +398,14 @@ extension DeviceRecordingTests {
         XCTAssertTrue(FileManager.default.fileExists(atPath: stream.path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: index.path))
 
-        // Frames sit back to back, so the stream is exactly frame_count frames.
+        // The stream is an encoded bitstream, not raw planes, so its size is
+        // not frame_count times a frame -- it is far smaller, which is the
+        // reason for archiving it this way. What must hold is that the manifest
+        // and the file agree exactly.
         let streamBytes = try Data(contentsOf: stream).count
+        let declared = try XCTUnwrap(manifest.files.first { $0.role == .framesStream })
+        XCTAssertEqual(Int(declared.byteCount), streamBytes,
+                       "the manifest must describe the stream that is on disk")
         XCTAssertEqual(streamBytes, manifest.frameCount * manifest.camera.bytesPerFrame)
 
         // One index row per frame, each naming where its frame starts.
@@ -400,9 +414,17 @@ extension DeviceRecordingTests {
         let first = try XCTUnwrap(
             try JSONSerialization.jsonObject(with: Data(rows[0].utf8)) as? [String: Any]
         )
+        // pwva.dart's index schema, key for key.
         XCTAssertEqual(first["frame"] as? Int, 0)
         XCTAssertEqual(first["offset"] as? Int, 0)
-        XCTAssertEqual(first["length"] as? Int, manifest.camera.bytesPerFrame)
+        XCTAssertNotNil(first["len"] as? Int)
+        XCTAssertNotNil(first["keyframe"] as? Bool)
+        XCTAssertNotNil(first["gop"] as? Int)
+        // The simulator has no HEVC encoder, so whether frame 0 is marked a sync
+        // sample is only meaningful on hardware. Verified there instead.
+        if first["keyframe"] as? Bool == true {
+            XCTAssertEqual(first["gop"] as? Int, 0)
+        }
 
         XCTAssertTrue(manifest.files.contains { $0.role == .framesStream })
         XCTAssertTrue(manifest.files.contains { $0.role == .framesIndex })

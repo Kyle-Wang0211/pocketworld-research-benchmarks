@@ -123,8 +123,8 @@ final class ActiveVIOEngineSession {
         width: Int,
         height: Int
     ) throws -> GrayscaleImage {
-        if frame.camera0ByteRange != nil {
-            return try RawLumaFrameLoader.load(
+        if let accessUnits = frame.camera0AccessUnits {
+            return try RawLumaFrameLoader.decode(
                 frame.camera0ImageURL,
                 format: DeviceRecordingCameraFormat(
                     width: width,
@@ -132,7 +132,7 @@ final class ActiveVIOEngineSession {
                     pixelFormat: "luma8_from_420f_full_range",
                     nominalFPS: BenchResolution.scoringFramesPerSecond
                 ),
-                byteRange: frame.camera0ByteRange
+                accessUnits: accessUnits
             )
         }
         return try GrayscaleImageLoader.load(
@@ -148,7 +148,7 @@ final class ActiveVIOEngineSession {
         width: Int,
         height: Int
     ) throws {
-        let isRaw = frame.camera0ByteRange != nil
+        let isRaw = frame.camera0AccessUnits != nil
         switch implementation {
         case .basalt(let session):
             let image: GrayscaleImage

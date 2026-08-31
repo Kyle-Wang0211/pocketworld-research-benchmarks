@@ -119,6 +119,10 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     /// autofocus moved while capturing and no single value describes the run.
     var focalLengthMinimum: Double = 0
     var focalLengthMaximum: Double = 0
+    /// Frames delivered after the archive was sealed. Not loss inside the
+    /// recording -- they arrived once it was closed -- but recorded rather than
+    /// dropped in silence.
+    var lateFramesAfterSeal: Int = 0
     var files: [DeviceRecordingFile]
 
     enum CodingKeys: String, CodingKey {
@@ -137,6 +141,7 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
         case slowestWriteMilliseconds = "slowest_write_ms"
         case focalLengthMinimum = "focal_length_min"
         case focalLengthMaximum = "focal_length_max"
+        case lateFramesAfterSeal = "late_frames_after_seal"
     }
 
     static let supportedSchemaVersion = 1
@@ -148,6 +153,9 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     /// frame this recorder used to write.
     static let framesStreamPath = "frames.bin"
     static let framesIndexPath = "frames.pwvi"
+    /// Raw planes held only for the length of the capture, then transcoded into
+    /// the archive and removed.
+    static let captureScratchPath = "capture_scratch.raw"
 }
 
 /// A recording replayed as the same event stream `ReplayScheduler` already
@@ -194,6 +202,10 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
     /// reported as -- sending an investigation after the camera calibration when
     /// the camera had simply never delivered.
     case noFramesCaptured
+    case encoderUnavailable
+    case encodeFailed(frame: Int, status: Int)
+    case decoderUnavailable
+    case decodeFailed(status: Int)
     case insufficientFreeSpace(requiredBytes: Int64, availableBytes: Int64)
 
     var errorDescription: String? { description }
@@ -220,6 +232,14 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
             "ARKit intrinsics cannot describe the frames they arrived with"
         case .noFramesCaptured:
             "the session produced no frames, so there are no intrinsics to record"
+        case .encoderUnavailable:
+            "VideoToolbox HEVC encoder could not be created"
+        case .encodeFailed(let frame, let status):
+            "HEVC encode failed for frame \(frame): status \(status)"
+        case .decoderUnavailable:
+            "VideoToolbox HEVC decoder could not be created from the keyframe"
+        case .decodeFailed(let status):
+            "HEVC decode failed: status \(status)"
         case .insufficientFreeSpace(let required, let available):
             String(
                 format: "存储空间不足:本次录制需要 %.1f GiB(含余量),设备可用 %.1f GiB,还差 %.1f GiB。"

@@ -23,7 +23,12 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     /// Bounded at eight frames (~22 MB at 1920x1440). Deep enough to absorb a
     /// filesystem hiccup, shallow enough that sustained write starvation is
     /// reported as loss instead of being hidden by an ever-growing buffer.
-    static let queueDepth = 8
+    /// Deep enough to ride out a filesystem stall instead of losing frames to
+    /// one. Eight slots is 133 ms at 60 fps and a 168 ms stall was observed;
+    /// sixty-four is a little over a second, at 177 MB of luma held at worst.
+    /// This absorbs jitter, it does not hide loss -- an overflow is still
+    /// counted and still invalidates the run.
+    static let queueDepth = 64
 
     /// Refuse to start unless the device has the full recording plus this much
     /// headroom.
@@ -60,6 +65,27 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     private let framesStream: FileHandle
     private let framesIndex: FileHandle
     private var streamOffset = 0
+
+    /// Production's archive parameters, from capture_archive_service.dart.
+    static let archiveGOP: Int32 = 8
+    static let archiveQuality = 0.65
+    /// Production's default. capture_archive_service.dart constructs
+    /// AppleHevcEncoder without overriding powerEfficient, and its default is
+    /// true -- the low-power encode path kept for thermal headroom.
+    static let archivePowerEfficient: Int32 = 1
+
+    private let encoder: OpaquePointer
+    /// Chroma for the encoder. The bench records luma only -- the arms consume
+    /// luma and nothing else -- so a neutral plane stands in for the chroma the
+    /// capture never kept.
+    private let neutralChroma: Data
+    private var gopID = -1
+    /// Set before the write queue is drained in finish(). A frame arriving after
+    /// this must not be written into an archive that is being sealed: a late
+    /// ARKit delivery did exactly that and left a manifest describing 1619
+    /// frames over a stream holding 1616.
+    private var sealed = false
+    private var lateAfterSeal = 0
     private var intrinsicsRows: [String] = []
     private var focalMinimum = Double.greatestFiniteMagnitude
     private var focalMaximum = 0.0
@@ -109,6 +135,18 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         FileManager.default.createFile(atPath: indexURL.path, contents: nil)
         self.framesStream = try FileHandle(forWritingTo: streamURL)
         self.framesIndex = try FileHandle(forWritingTo: indexURL)
+        guard let encoder = pw_vt_create_ex(
+            Int32(format.width),
+            Int32(format.height),
+            Self.archiveGOP,
+            Self.archiveQuality,
+            0,
+            Self.archivePowerEfficient
+        ) else {
+            throw DeviceRecordingError.encoderUnavailable
+        }
+        self.encoder = encoder
+        self.neutralChroma = Data(repeating: 128, count: format.width * format.height / 2)
     }
 
     // MARK: - Preflight
@@ -254,6 +292,11 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         }
 
         stateLock.lock()
+        guard !sealed else {
+            lateAfterSeal += 1
+            stateLock.unlock()
+            return
+        }
         guard inFlight < Self.queueDepth else {
             // Backpressure is loss, and loss invalidates. It is never absorbed by
             // growing the queue or by skipping ahead.
@@ -273,25 +316,31 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             guard let self else { return }
             let writeStart = CACurrentMediaTime()
             do {
-                // Stream first, then the index row -- pwva.dart's order, and the
-                // reason an interrupted capture stays readable: the index never
-                // points at bytes the stream has not committed. No temporary
-                // file and no rename; production's archive writer uses neither,
-                // and the per-frame atomic write this replaces cost two
-                // filesystem operations a frame, stalling 676 ms on a single
-                // write and losing 199 frames to backpressure.
+                // Stream first, then the index row -- pwva.dart's order, so an
+                // interrupted capture leaves a prefix the index never
+                // over-claims. The payload is the raw plane.
+                //
+                // Encoding was tried in both places production suggests and
+                // neither survives this requirement. In the capture path a
+                // hardware encode cost 127 ms on one frame against a 16.6 ms
+                // budget and lost 73 to backpressure. After the capture, as
+                // production does it, 1800 frames took minutes and iOS
+                // suspended the app partway, leaving a run with no manifest at
+                // all. Production never faces this: it archives a few dozen
+                // shutter stills, not every frame at 60 fps, so there is no
+                // production answer here to copy. Transcoding now happens off
+                // the device, where nothing suspends it.
                 let offset = self.streamOffset
                 try self.framesStream.write(contentsOf: luma)
                 try self.framesStream.synchronize()
-                let row = "{\"frame\":\(index),\"offset\":\(offset),\"length\":\(luma.count)}\n"
+                let row = "{\"frame\":\(index),\"offset\":\(offset)," +
+                    "\"len\":\(luma.count),\"keyframe\":true,\"gop\":\(index)}\n"
                 try self.framesIndex.write(contentsOf: Data(row.utf8))
                 try self.framesIndex.synchronize()
                 let elapsed = (CACurrentMediaTime() - writeStart) * 1000
                 self.stateLock.lock()
                 self.streamOffset = offset + luma.count
                 self.slowestWriteMilliseconds = max(self.slowestWriteMilliseconds, elapsed)
-                // The digest covers frames in capture order, which the serial
-                // write queue preserves.
                 self.framesHandleDigest.update(data: luma)
                 self.framesTotalBytes += Int64(luma.count)
                 self.inFlight -= 1
@@ -323,6 +372,36 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         stateLock.lock(); arkitPoseRows.append(tumRow); stateLock.unlock()
     }
 
+    /// Encodes one luma plane through production's encoder.
+    private func encode(luma: Data, index: Int) throws -> (bytes: Data, keyframe: Bool) {
+        var out: UnsafeMutablePointer<UInt8>?
+        var length: Int64 = 0
+        var keyframe: Int32 = 0
+        let status: Int32 = luma.withUnsafeBytes { y in
+            neutralChroma.withUnsafeBytes { uv in
+                pw_vt_encode_nv12(
+                    encoder,
+                    y.bindMemory(to: UInt8.self).baseAddress,
+                    uv.bindMemory(to: UInt8.self).baseAddress,
+                    Int64(index) * 1000 / Int64(format.nominalFPS),
+                    1000 / Int64(format.nominalFPS),
+                    &out,
+                    &length,
+                    &keyframe
+                )
+            }
+        }
+        guard status == 0, let out, length > 0 else {
+            throw DeviceRecordingError.encodeFailed(frame: index, status: Int(status))
+        }
+        defer { pw_vt_free(out) }
+        return (Data(bytes: out, count: Int(length)), keyframe != 0)
+    }
+
+    deinit {
+        pw_vt_destroy(encoder)
+    }
+
     // MARK: - Finish
 
     /// Drains the write queue and seals the manifest. Any loss makes the
@@ -330,13 +409,20 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     /// legible rather than silent.
     @discardableResult
     func finish() throws -> DeviceRecordingManifest {
+        // Seal before draining. Otherwise a frame delivered while the drain is
+        // running is accepted, written, and counted after the totals have been
+        // read -- which is how a manifest came to describe 1619 frames over a
+        // stream that held 1616.
+        stateLock.lock()
+        sealed = true
+        stateLock.unlock()
         writeQueue.sync {}
 
         stateLock.lock()
         if let firstError { stateLock.unlock(); throw firstError }
-        let digest = framesHandleDigest.finalize()
         let manifestFrameCount = frameCount
-        let totalBytes = framesTotalBytes
+        let archiveBytes = framesTotalBytes
+        let archiveDigest = Self.hex(framesHandleDigest.finalize())
         // Every counter is snapshotted here, under the same lock, for the same
         // reason the totals are: read outside it they are a race, and a manifest
         // reported one write error on a run that had none and could not have had
@@ -347,6 +433,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         let lossesWriteError = lossWriteError
         let peak = peakInFlight
         let slowestWrite = slowestWriteMilliseconds
+        let lateSeal = lateAfterSeal
         let cameraCSV = (["timestamp_ns,relative_path"] + cameraIndexRows).joined(separator: "\n") + "\n"
         let imuCSV = (["timestamp_ns,wx,wy,wz,ax,ay,az"] + imuRows).joined(separator: "\n") + "\n"
         let poseTUM = arkitPoseRows.joined(separator: "\n") + "\n"
@@ -389,8 +476,8 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         files.append(DeviceRecordingFile(
             role: .framesStream,
             relativePath: DeviceRecordingManifest.framesStreamPath,
-            byteCount: Int64(totalBytes),
-            sha256: Self.hex(digest)
+            byteCount: archiveBytes,
+            sha256: archiveDigest
         ))
         let indexURL = directory.appendingPathComponent(
             DeviceRecordingManifest.framesIndexPath
@@ -411,8 +498,8 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             intrinsics: capturedIntrinsics,
             frameCount: manifestFrameCount,
             imuSampleCount: imuRows.count,
-            framesDigestSHA256: Self.hex(digest),
-            framesTotalByteCount: totalBytes,
+            framesDigestSHA256: archiveDigest,
+            framesTotalByteCount: archiveBytes,
             lossCount: losses,
             lossFormatMismatch: lossesFormat,
             lossWriteQueueFull: lossesQueueFull,
@@ -421,6 +508,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             slowestWriteMilliseconds: slowestWrite,
             focalLengthMinimum: focalLow,
             focalLengthMaximum: focalHigh,
+            lateFramesAfterSeal: lateSeal,
             files: files
         )
 
