@@ -122,6 +122,26 @@ Bench App：
 - 上游 commit：`4beb1a942f33da9afbfae2d70e2c641cfc2bb675`
 - OpenCV：4.0.1
 - Ceres：1.14
+- **2026-08-31:EuRoC 回放通路在本构建下不可用。** `submit_official_euroc_camera`
+  返回 `XRSLAM_BENCH_INVALID_ARGUMENT`,原因在 vendored 的 OpenCV,不在数据集。
+  直接查归档即可确认,无需运行:
+
+  ```
+  grfmt_png.o   336 字节,未定义 png_*  符号 0
+  grfmt_jpeg.o  336 字节,未定义 jpeg_* 符号 0
+  归档内无任何 jpeg 实现符号
+  ```
+
+  15 个 `grfmt_*.o` 全是 336 字节空桩,`libopencv_generic_4_0_1.a` 是关掉全部
+  图像编解码器编的。于是 `cv::imread` 读 PNG 返回空 Mat,而 EuRoC 就是 PNG。
+  这条路径对裁剪数据集和完整数据集一样走不通。
+
+  OpenCV 不带编解码器本身没问题——三条臂吃的是裸平面,不需要解码器。有问题的是
+  一条要读图像文件的回放路径。
+
+  判别实验不需要这条路径:EuRoC 可以在 Mac 上离线解成设备录制同样的裸 luma 归档,
+  走录制用的同一个提交入口。这样只有数据不同、代码相同,比原路径更适合做判别。
+
 - `XRSLAM_IOS=false`
 - frozen generic core threading：关闭
   - **2026-08-31：这一项是 XRSLAM 在真机上崩溃的直接原因。** 关闭线程后
