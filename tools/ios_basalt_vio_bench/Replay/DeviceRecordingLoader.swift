@@ -112,6 +112,7 @@ struct DeviceRecordingLoader {
     /// one frame long -- always run, because they are cheap and catch truncation.
     let verifyFramesDigest: Bool
 
+
     init(verifyFramesDigest: Bool = false) {
         self.verifyFramesDigest = verifyFramesDigest
     }
@@ -205,6 +206,28 @@ struct DeviceRecordingLoader {
             $0.timestampNanoseconds == $1.timestampNanoseconds
                 ? $0.kind.rawValue < $1.kind.rawValue
                 : $0.timestampNanoseconds < $1.timestampNanoseconds
+        }
+
+        // Motion recording starts at the end of the first camera callback, so a
+        // capture opens with camera frames that have no inertial data behind
+        // them -- 77 ms, about five frames, in the recording this was found on.
+        // A visual-inertial system cannot use those frames, and xrslam does not
+        // merely ignore them: it takes a SIGBUS inside push_sensor_data on the
+        // first one. They are dropped here rather than left for each engine to
+        // survive or not.
+        if let firstIMU = imu.first?.timestampNanoseconds {
+            let before = events.count
+            events.removeAll {
+                if case .camera(let frame) = $0 {
+                    return frame.timestampNanoseconds < firstIMU
+                }
+                return false
+            }
+            let dropped = before - events.count
+            if dropped > 0 {
+                NSLog("[VIOBench] dropped %d leading camera frames with no IMU behind them",
+                      dropped)
+            }
         }
 
         return DeviceRecordingDataset(

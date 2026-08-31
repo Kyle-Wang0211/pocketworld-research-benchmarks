@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "XRSLAMBench.h"
 #include "XRSLAMBenchTesting.hpp"
 
@@ -326,19 +327,42 @@ xrslam_bench_status_t run_next_frame_locked(xrslam_bench *bench) {
     image.camera_id = 0;
     image.channel = 1;
     image.ext = nullptr;
+    /* Temporary: a replay died inside the first frame with no way to tell
+       which of push / run / get_result it died in. */
+    const bool trace = bench->counters.frames_run < 3;
+    if (trace) {
+      fprintf(stderr, "[xrslam-trace] imu so far: accel=%llu gyro=%llu\n",
+              (unsigned long long)bench->counters.accel_processed,
+              (unsigned long long)bench->counters.gyro_processed);
+      fflush(stderr);
+    }
+    if (trace) {
+      fprintf(stderr, "[xrslam-trace] frame %llu push_image %ux%u stride=%d\n",
+              (unsigned long long)bench->counters.frames_run,
+              bench->image_width, bench->image_height, image.stride);
+      fflush(stderr);
+    }
     bench->api.push_sensor_data(XRSLAM_SENSOR_CAMERA, &image);
+    if (trace) { fprintf(stderr, "[xrslam-trace] push_image returned\n"); fflush(stderr); }
     const int64_t input_timestamp_ns = bench->pending_image_timestamp_ns;
     bench->has_pending_image = false;
     ++bench->counters.events_processed;
     ++bench->counters.images_processed;
 
+    if (trace) { fprintf(stderr, "[xrslam-trace] run_one_frame enter\n"); fflush(stderr); }
     bench->api.run_one_frame();
+    if (trace) { fprintf(stderr, "[xrslam-trace] run_one_frame returned\n"); fflush(stderr); }
     ++bench->counters.frames_run;
 
     XRSLAMState state = XRSLAM_STATE_INITIALIZING;
     XRSLAMPose pose{};
+    if (trace) { fprintf(stderr, "[xrslam-trace] get_result enter\n"); fflush(stderr); }
     bench->api.get_result(XRSLAM_RESULT_STATE, &state);
     bench->api.get_result(XRSLAM_RESULT_BODY_POSE, &pose);
+    if (trace) {
+      fprintf(stderr, "[xrslam-trace] get_result returned state=%d\n", (int)state);
+      fflush(stderr);
+    }
 
     int64_t pose_timestamp_ns = 0;
     if (state < XRSLAM_STATE_INITIALIZING ||
