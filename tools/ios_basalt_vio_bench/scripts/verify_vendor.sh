@@ -119,7 +119,7 @@ if grep -Eiq 'pangolin|rosbag|realsense|boost|cli11|gtest' \
 fi
 
 require_sha256 "${XR_VENDOR_ROOT}/lib/libxrslam_generic_4beb1a9.a" \
-  8ad848f6616a11c12559fddef2a0d405bfe87912b3672f91286c59e0f0d071ed
+  fdc75c99358014d9485bea36667547825465a85562847548d02a582da38c8011
 require_sha256 "${XR_VENDOR_ROOT}/lib/libceres_official_1_14.a" \
   0e3769d937df9610042636960c56411c3a6aa37c00b42d0eae8aa279503e4bb6
 require_sha256 "${XR_VENDOR_ROOT}/lib/libopencv_generic_4_0_1.a" \
@@ -175,7 +175,7 @@ import sys
 receipt = json.load(open(sys.argv[1], "r", encoding="utf-8"))
 expected = {
     "artifact": "libxrslam_generic_4beb1a9.a",
-    "artifact_sha256": "8ad848f6616a11c12559fddef2a0d405bfe87912b3672f91286c59e0f0d071ed",
+    "artifact_sha256": "fdc75c99358014d9485bea36667547825465a85562847548d02a582da38c8011",
     "base_artifact_sha256": "6b7ee542941aa1a6dc853a042cfcbdaf74b6d115c10dfb383bc832bafdcbd777",
     "upstream_revision": "4beb1a942f33da9afbfae2d70e2c641cfc2bb675",
     "xrslam_ios": False,
