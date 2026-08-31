@@ -21,6 +21,9 @@ enum ActiveVIOEngineSessionError: LocalizedError {
 /// embedded dynamic frameworks so their pinned OpenCV versions never share a
 /// link namespace. A session cannot change engine after creation.
 final class ActiveVIOEngineSession {
+    /// Temporary: counts frames handed to xrslam during a replay.
+    static var xrslamSubmitCount = 0
+
     private enum Implementation {
         case basalt(BasaltNativeSession)
         case xrslam(XRSLAMNativeSession)
@@ -118,6 +121,28 @@ final class ActiveVIOEngineSession {
     /// are encoded images in files of their own, and are told apart by having no
     /// range. The discriminator used to be a `.y` file extension, which stopped
     /// meaning anything once the frames moved into a single stream.
+    /// Deterministic box downscale by [factor]. Used only by the diagnostic
+    /// replay, so a failure at full resolution can be told apart from a failure
+    /// of the algorithm itself.
+    static func downscale(_ image: GrayscaleImage, by factor: Int) -> GrayscaleImage {
+        let w = image.width / factor, h = image.height / factor
+        var out = [UInt8](repeating: 0, count: w * h)
+        image.pixels.withUnsafeBytes { src in
+            let p = src.bindMemory(to: UInt8.self)
+            for y in 0..<h {
+                for x in 0..<w {
+                    var sum = 0
+                    for dy in 0..<factor {
+                        let row = (y * factor + dy) * image.bytesPerRow
+                        for dx in 0..<factor { sum += Int(p[row + x * factor + dx]) }
+                    }
+                    out[y * w + x] = UInt8(sum / (factor * factor))
+                }
+            }
+        }
+        return GrayscaleImage(width: w, height: h, bytesPerRow: w, pixels: Data(out))
+    }
+
     private static func loadReplayImage(
         _ frame: EuRoCCameraFrame,
         width: Int,
@@ -171,15 +196,34 @@ final class ActiveVIOEngineSession {
             // a recorded raw plane has no file format for it to open, so it goes
             // through the same in-memory submission Basalt uses.
             if isRaw {
-                let image = try Self.loadReplayImage(
-                    frame, width: width, height: height
+                // The archive holds frames at the recording's own size, so it
+                // is read at that size and downscaled after. Reading it at the
+                // engine's downscaled size made the raw-frame check fail and
+                // sent full planes into the HEVC decoder.
+                let factor = BenchResolution.diagnosticDownscaleRequested
+                    ? BenchResolution.diagnosticDownscaleFactor : 1
+                var image = try Self.loadReplayImage(
+                    frame, width: width * factor, height: height * factor
                 )
+                if factor > 1 { image = Self.downscale(image, by: factor) }
+                // Temporary instrumentation: a replay produced no poses at all
+                // and no progress, and there was no way to tell whether frames
+                // were reaching the engine or the engine was not returning.
+                let seq = Self.xrslamSubmitCount
+                Self.xrslamSubmitCount += 1
+                if seq < 5 || seq % 100 == 0 {
+                    NSLog("[VIOBench][xrslam] submit #%d %dx%d -> engine",
+                          seq, image.width, image.height)
+                }
                 try performXRSLAM("submit_device_recording_camera") {
                     try session.submitCamera(
                         images: [image],
                         timestampNanoseconds: frame.timestampNanoseconds,
                         acceptedNanoseconds: acceptedNanoseconds
                     )
+                }
+                if seq < 5 || seq % 100 == 0 {
+                    NSLog("[VIOBench][xrslam] submit #%d returned", seq)
                 }
             } else {
                 try performXRSLAM("submit_official_euroc_camera") {

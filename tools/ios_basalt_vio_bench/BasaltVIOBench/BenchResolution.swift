@@ -38,6 +38,15 @@ public enum BenchResolution: Equatable {
     /// relates them.
     public static let diagnosticDownscaleFactor = 3
 
+    /// `-PWDiagnosticDownscale` replays at [diagnostic] instead of [scoring].
+    /// Not scoreable, and never enabled by default: its only job is to separate
+    /// "this engine cannot carry this many pixels" from a parameter carried
+    /// across resolutions wrongly. xrslam died with SIGBUS inside its first
+    /// frame at 1920x1440, and that question is exactly what this answers.
+    public static var diagnosticDownscaleRequested: Bool {
+        ProcessInfo.processInfo.arguments.contains("-PWDiagnosticDownscale")
+    }
+
     public static func participatesInVerdict(width: Int, height: Int) -> Bool {
         width == scoring.width && height == scoring.height
     }

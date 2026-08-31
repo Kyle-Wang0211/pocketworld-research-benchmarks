@@ -145,19 +145,34 @@ enum BenchmarkRunPreparation {
             // at 1920x1440 while a live candidate run cannot.
             // xrslam's calibration is YAML and Basalt's is JSON, so the
             // substitution has to match the file it is editing.
+            // The diagnostic replay feeds downscaled frames, so the calibration
+            // it runs on has to describe those frames, not the recording's.
+            let scale = BenchResolution.diagnosticDownscaleRequested
+                ? BenchResolution.diagnosticDownscaleFactor : 1
+            let calWidth = recording.camera.width / scale
+            let calHeight = recording.camera.height / scale
+            let calIntrinsics = scale == 1 ? recording.intrinsics
+                : DeviceRecordingIntrinsics(
+                    fx: recording.intrinsics.fx / Double(scale),
+                    fy: recording.intrinsics.fy / Double(scale),
+                    cx: recording.intrinsics.cx / Double(scale),
+                    cy: recording.intrinsics.cy / Double(scale),
+                    source: recording.intrinsics.source,
+                    crossCheckPassed: recording.intrinsics.crossCheckPassed
+                )
             let frozenCalibration = try Data(contentsOf: calibrationSource)
             calibrationData = calibrationSource.pathExtension == "yaml"
                 ? try CalibrationMaterializer.deviceRecordingYAML(
                     from: frozenCalibration,
-                    intrinsics: recording.intrinsics,
-                    width: recording.camera.width,
-                    height: recording.camera.height
+                    intrinsics: calIntrinsics,
+                    width: calWidth,
+                    height: calHeight
                 )
                 : try CalibrationMaterializer.deviceRecording(
                 from: frozenCalibration,
-                intrinsics: recording.intrinsics,
-                width: recording.camera.width,
-                height: recording.camera.height
+                intrinsics: calIntrinsics,
+                width: calWidth,
+                height: calHeight
             )
             var recordingDefinition: [String: Any] = [
                 "camera": "mono_\(recording.camera.width)x\(recording.camera.height)_from_device_recording",
@@ -184,8 +199,10 @@ enum BenchmarkRunPreparation {
                 options: [.prettyPrinted, .sortedKeys]
             )
             inputCameraCount = recording.inputCameraCount
-            imageWidth = recording.camera.width
-            imageHeight = recording.camera.height
+            // The engine is created for the frames it will actually receive,
+            // which the diagnostic replay downscales.
+            imageWidth = calWidth
+            imageHeight = calHeight
             replayDataset = nil
             deviceRecording = recording
             channel = .replayDeviceRecording
