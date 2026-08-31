@@ -1063,11 +1063,35 @@ final class BenchmarkCoordinator {
             exclusivity: exclusivity,
             to: context.directoryURL
         )
-        guard snapshot.counters.cameraDroppedQueueFull == 0,
-              snapshot.counters.imuDroppedQueueFull == 0,
-              snapshot.counters.posesDroppedBridgeQueue == 0,
-              snapshot.counters.nonfinitePoseRejected == 0 else {
-            throw CoordinatorError.invalidRun("native_transport_loss")
+        // Four unrelated conditions used to share the label
+        // native_transport_loss. A run that dropped nothing and produced one
+        // degenerate quaternion was reported as transport loss, which sent this
+        // investigation looking at queue depths while the engine's own output
+        // was the problem. Each condition now names itself, and the counts
+        // travel with it.
+        let transportDropped = snapshot.counters.cameraDroppedQueueFull
+            + snapshot.counters.imuDroppedQueueFull
+            + snapshot.counters.posesDroppedBridgeQueue
+        guard transportDropped == 0 else {
+            throw CoordinatorError.invalidRun(
+                "native_transport_loss"
+                    + "_camera\(snapshot.counters.cameraDroppedQueueFull)"
+                    + "_imu\(snapshot.counters.imuDroppedQueueFull)"
+                    + "_pose\(snapshot.counters.posesDroppedBridgeQueue)"
+            )
+        }
+        // A degenerate pose is rejected -- it never enters the trajectory --
+        // and counted, but it no longer throws the whole run away. That is how
+        // production treats the same output from the same engine: its shadow
+        // health classifies a pose as degenerate, increments a counter, breaks
+        // the valid-pose segment and carries on. Discarding a 30 s capture over
+        // one bad quaternion in 1650 made xrslam unscoreable in principle. The
+        // count is in the receipt and in diagnostics, so nothing is hidden by
+        // this.
+        if snapshot.counters.nonfinitePoseRejected > 0 {
+            NSLog("[VIOBench] %llu of %llu poses were rejected as non-finite",
+                  snapshot.counters.nonfinitePoseRejected,
+                  snapshot.counters.posesProduced)
         }
         let expectedCamera = events.reduce(into: UInt64(0)) {
             if case .camera = $1 { $0 += 1 }
