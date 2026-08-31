@@ -1,4 +1,7 @@
 #include <cstdio>
+#include <string>
+#include <sstream>
+#include <fstream>
 #include "XRSLAMBench.h"
 #include "XRSLAMBenchTesting.hpp"
 
@@ -49,6 +52,16 @@ static_assert(sizeof(XRSLAMIntrinsics) == 32);
 static_assert(sizeof(XRSLAMBias) == 24);
 static_assert(sizeof(XRSLAMIMUBias) == 48);
 static_assert(XRSLAM_SENSOR_CAMERA == 0);
+
+/* Reads a whole config file. XRSLAMCreate takes the text, not the path. */
+static std::string read_file(const char *path) {
+  if (path == nullptr || path[0] == '\0') return {};
+  std::ifstream stream(path, std::ios::in | std::ios::binary);
+  if (!stream) return {};
+  std::ostringstream buffer;
+  buffer << stream.rdbuf();
+  return buffer.str();
+}
 static_assert(XRSLAM_SENSOR_ACCELERATION == 2);
 static_assert(XRSLAM_SENSOR_GYROSCOPE == 3);
 static_assert(XRSLAM_RESULT_BODY_POSE == 0);
@@ -466,6 +479,18 @@ create_with_api(const xrslam_bench_create_options_t *options,
       return XRSLAM_BENCH_INVALID_ARGUMENT;
     }
     bench->image_storage.resize(image_size);
+    /* Paths, not contents. Upstream decides this with a build flag:
+
+         #if defined(XRSLAM_IOS)
+             slam_config = YAML::Load(slam_config_filename);      // content
+         #else
+             slam_config = YAML::LoadFile(slam_config_filename);  // path
+         #endif
+
+       The official iOS sample passes contents because it is built with the
+       macro. This bench links libxrslam_generic, built without it -- its own
+       receipt records xrslam_ios: false -- so paths are what it wants. Passing
+       contents here made create fail outright. */
     const int created = bench->api.create(
         options->slam_config_path, options->device_config_path, "",
         "xrslam-vio-bench", &bench->upstream_config);
