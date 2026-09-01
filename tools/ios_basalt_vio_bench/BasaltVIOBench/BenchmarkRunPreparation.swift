@@ -118,7 +118,32 @@ enum BenchmarkRunPreparation {
         let calibrationSource = try resourceFile(resourcePlan.calibration)
         let contractSource = try resource("contract", extension: "json")
         let metricDefinitionsSource = try resource("metric_definitions.v1", extension: "json")
-        let configData = try Data(contentsOf: configSource)
+        // `sliding_window.tracker_frequent` is upstream's own knob for how
+        // often the feature tracker re-detects corners; upstream's default is 1,
+        // meaning every frame. Detection is 20.3 of the 27.9 ms this engine
+        // spends per frame at the production resolution, so the knob is the
+        // largest lever there is -- and it is upstream's, not an invention.
+        // `-PWTrackerFrequent N` sweeps it. The receipt hashes the config that
+        // actually ran, so each point on the curve names its own setting.
+        var configData = try Data(contentsOf: configSource)
+        if configSource.pathExtension == "yaml",
+           let index = ProcessInfo.processInfo.arguments
+               .firstIndex(of: "-PWTrackerFrequent"),
+           index + 1 < ProcessInfo.processInfo.arguments.count,
+           let frequent = Int(ProcessInfo.processInfo.arguments[index + 1]),
+           frequent >= 1,
+           let text = String(data: configData, encoding: .utf8) {
+            var lines = text.split(omittingEmptySubsequences: false,
+                                   whereSeparator: \.isNewline).map(String.init)
+            lines.removeAll { $0.trimmingCharacters(in: .whitespaces)
+                .hasPrefix("tracker_frequent:") }
+            if let anchor = lines.firstIndex(where: {
+                $0.trimmingCharacters(in: .whitespaces).hasPrefix("sliding_window:")
+            }) {
+                lines.insert("  tracker_frequent: \(frequent)", at: anchor + 1)
+                configData = Data(lines.joined(separator: "\n").utf8)
+            }
+        }
         let contractData = try Data(contentsOf: contractSource)
         let metricData = try Data(contentsOf: metricDefinitionsSource)
 
@@ -217,8 +242,43 @@ enum BenchmarkRunPreparation {
             // SensorTransportConfiguration still opened the camera at 640x480 --
             // a receipt that disagrees with its own diagnostics is worse than no
             // receipt, because it is the artifact every later verdict cites.
-            let configured = SensorTransportConfiguration.benchmark
-            calibrationData = try Data(contentsOf: calibrationSource)
+            let configured = SensorTransportConfiguration.live
+            let frozenLiveCalibration = try Data(contentsOf: calibrationSource)
+            if BenchResolution.liveFullResolutionRequested {
+                // The frozen calibration describes 640x480. Both arms need one
+                // that describes the frames they will actually receive, and the
+                // two formats were shown to share a field of view (see
+                // BenchResolution.liveFullResolutionRequested), so the frozen
+                // values are scaled by the exact resolution ratio rather than
+                // invented. The run also receipts the intrinsics the camera
+                // itself reports, so this scaling is checked, not assumed.
+                // The camera reports the intrinsics it measured for the format
+                // it selected, so there is no need to scale the frozen 640x480
+                // values and hope the fields of view match. Measured on device
+                // for this format: fx = fy = 1306.991, cx = 958.158,
+                // cy = 718.993. The principal point agrees with both the frozen
+                // 640x480 calibration scaled threefold and with the ARKit
+                // intrinsics in the device recording to within a pixel, but the
+                // focal length does not -- 1306.99 against 1347.79 -- so the
+                // two formats are not a pure scale of each other and the scaled
+                // values would have been wrong by 3%.
+                let scaled = DeviceRecordingIntrinsics(
+                    fx: 1306.991, fy: 1306.991, cx: 958.158, cy: 718.993,
+                    source: "avcapture_reported_intrinsics_1920x1440",
+                    crossCheckPassed: true
+                )
+                calibrationData = calibrationSource.pathExtension == "yaml"
+                    ? try CalibrationMaterializer.deviceRecordingYAML(
+                        from: frozenLiveCalibration, intrinsics: scaled,
+                        width: BenchResolution.scoring.width,
+                        height: BenchResolution.scoring.height)
+                    : try CalibrationMaterializer.deviceRecording(
+                        from: frozenLiveCalibration, intrinsics: scaled,
+                        width: BenchResolution.scoring.width,
+                        height: BenchResolution.scoring.height)
+            } else {
+                calibrationData = frozenLiveCalibration
+            }
             var definition: [String: Any] = [
                 // Every arm scores at the production resolution. The candidates
                 // reach it by replaying the luma plane of the same

@@ -1,0 +1,72 @@
+--- a/xrslam-interface/src/XRSLAMManager.h
++++ b/xrslam-interface/src/XRSLAMManager.h
+@@ -19,6 +19,19 @@
+ class XRSLAMManager {
+   public:
+     static XRSLAMManager &Instance();
++
++    /// How many of the two upstream workers still hold unprocessed frames.
++    ///
++    /// Read-only. With XRSLAM_ENABLE_THREADING, Worker::resume() only notifies
++    /// a condition variable, so run_one_frame() returns before the frame is
++    /// tracked and the caller has no way to learn that the engine is behind:
++    /// the pose returned by get_result is predict_pose(), which always tracks
++    /// the newest input regardless of how far the tracker has fallen behind.
++    /// A caller that cannot see the backlog cannot bound it, and FeatureTracker
++    /// queues whole images, so an unbounded caller grows it until the OS kills
++    /// the process. This exposes the backlog so the caller can apply the back
++    /// pressure upstream does not. It changes no estimate.
++    int PendingWorkerFrames() const;
+     ~XRSLAMManager();
+ 
+     void Init(std::shared_ptr<Config> config);
+--- a/xrslam-interface/src/XRSLAMManager.cpp
++++ b/xrslam-interface/src/XRSLAMManager.cpp
+@@ -1,5 +1,11 @@
+ #include "XRSLAMManager.h"
+ 
++// PendingWorkerFrames calls Worker::empty()/lock() on the two upstream
++// workers, so their definitions are needed here rather than the forward
++// declarations detail.h carries.
++#include "xrslam/core/feature_tracker.h"
++#include "xrslam/core/frontend_worker.h"
++
+ #define XRSLAM_VERSION "0.1.0"
+ 
+ namespace xrslam {
+@@ -8,6 +14,23 @@
+     return SLAMManagerInstance;
+ }
+ 
++int XRSLAMManager::PendingWorkerFrames() const {
++    if (!detail_)
++        return 0;
++    int pending = 0;
++    if (detail_->feature_tracker) {
++        auto l = detail_->feature_tracker->lock();
++        if (!detail_->feature_tracker->empty())
++            ++pending;
++    }
++    if (detail_->frontend) {
++        auto l = detail_->frontend->lock();
++        if (!detail_->frontend->empty())
++            ++pending;
++    }
++    return pending;
++}
++
+ XRSLAMManager::XRSLAMManager() {}
+ XRSLAMManager::~XRSLAMManager() {}
+ 
+--- a/xrslam-interface/src/XRSLAMInternal.cpp
++++ b/xrslam-interface/src/XRSLAMInternal.cpp
+@@ -88,3 +88,9 @@
+ }
+ 
+ void XRSLAMDestroy() { xrslam::XRSLAMManager::Instance().Destroy(); }
++
++/// Declared by the caller, not by XRSLAM.h, so the frozen public ABI header
++/// stays byte-identical. See XRSLAMManager::PendingWorkerFrames.
++extern "C" int XRSLAMGetPendingWorkerFrames(void) {
++    return xrslam::XRSLAMManager::Instance().PendingWorkerFrames();
++}

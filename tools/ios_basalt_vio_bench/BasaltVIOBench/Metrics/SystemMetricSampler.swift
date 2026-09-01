@@ -99,6 +99,12 @@ final class SystemMetricSampler {
         max(0, end - start)
     }
 
+    /// Exposed so a heartbeat can carry it; a killed run leaves no receipt.
+    static func currentFootprintMB() -> Double {
+        guard let bytes = physicalFootprintBytes() else { return 0 }
+        return Double(bytes) / (1024.0 * 1024.0)
+    }
+
     private static func physicalFootprintBytes() -> UInt64? {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)

@@ -36,6 +36,21 @@ final class XRSLAMNativeSession {
     private var degenerateQuaternionResults: UInt64 = 0
     private let stopRequestLock = NSLock()
     private var stopWasRequested = false
+    /// Cross-stream ordering of the live accelerometer and gyroscope events.
+    ///
+    /// The native guard is per stream, which is all XRSLAM asks of each stream
+    /// on its own. But `Detail::track_gyroscope` and `track_accelerometer` pair
+    /// the two streams against each other, and both of their failure paths are
+    /// silent: an accelerometer sample older than the oldest pending gyroscope
+    /// is dropped, and a gyroscope sample older than the oldest pending
+    /// accelerometer clears the entire gyroscope history. Nothing counted how
+    /// often that happened, so a live run that starved the estimator of IMU
+    /// looked identical to one that simply could not track.
+    private var lastLiveEventTimestamp: Int64? = nil
+    private var lastLiveEventWasGyroscope = false
+    private var liveCrossStreamInversions: UInt64 = 0
+    private var liveCrossStreamMaxInversionNanoseconds: Int64 = 0
+    private var liveSeparateEventsSubmitted: UInt64 = 0
 
     init(
         configURL: URL,
@@ -91,6 +106,19 @@ final class XRSLAMNativeSession {
         }
         let sample = event.sample
         let timestamp = Int64(event.timestampNanoseconds)
+        let isGyroscope: Bool
+        if case .gyroscope = event { isGyroscope = true } else { isGyroscope = false }
+        liveSeparateEventsSubmitted += 1
+        if let previous = lastLiveEventTimestamp,
+           lastLiveEventWasGyroscope != isGyroscope,
+           timestamp < previous {
+            liveCrossStreamInversions += 1
+            liveCrossStreamMaxInversionNanoseconds = max(
+                liveCrossStreamMaxInversionNanoseconds, previous - timestamp
+            )
+        }
+        lastLiveEventTimestamp = timestamp
+        lastLiveEventWasGyroscope = isGyroscope
         let status: xrslam_bench_status_t
         switch event {
         case .acceleration:
@@ -310,6 +338,20 @@ final class XRSLAMNativeSession {
         )
         snapshot.poseBridgeQueuePeak = native.result_queue_peak
         snapshot.additionalCounters = [
+            // Upstream reports no health at all; these are VINS-Mono's
+            // published divergence criteria, ported verbatim and read-only, so
+            // a consumer can tell a good pose from one behind a diverged
+            // estimator the way ARKit's non-normal tracking state lets it.
+            "xrslam_divergence_frames": native.divergence_frames,
+            "xrslam_divergence_longest_ms": native.divergence_longest_ms,
+            "xrslam_divergence_sustained_frames": native.divergence_sustained_frames,
+            "xrslam_divergence_flags_seen": native.divergence_flags_seen,
+            "xrslam_estimator_imu_ingested": native.estimator_imu_ingested,
+            "xrslam_estimator_camera_ingested": native.estimator_camera_ingested,
+            "xrslam_live_separate_events_submitted": liveSeparateEventsSubmitted,
+            "xrslam_live_cross_stream_inversions": liveCrossStreamInversions,
+            "xrslam_live_cross_stream_max_inversion_ns":
+                UInt64(max(0, liveCrossStreamMaxInversionNanoseconds)),
             "xrslam_events_offered": value.events_offered,
             "xrslam_events_accepted": value.events_accepted,
             "xrslam_events_processed": value.events_processed,

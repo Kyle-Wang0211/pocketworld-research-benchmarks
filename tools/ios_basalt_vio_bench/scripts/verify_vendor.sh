@@ -12,6 +12,7 @@ XR_VENDOR_ROOT=${PW_XRSLAM_VENDOR_ROOT:-"${VENDOR_ROOT}/xrslam"}
 XR_BACKEND_ROOT=${PW_XRSLAM_BACKEND_ROOT:-"${BENCH_ROOT}/XRSLAMBackend"}
 XR_RECEIPT="${XR_VENDOR_ROOT}/lib/libxrslam_generic_4beb1a9.receipt.json"
 XR_PATCH=${PW_XRSLAM_PATCH:-"${VENDOR_ROOT}/patches/xrslam_destroy_lifecycle.patch"}
+XR_PATCH_MASK=${PW_XRSLAM_MASK_PATCH:-"${VENDOR_ROOT}/patches/xrslam_zero_inlier_mask.patch"}
 XR_OPENCV_HEADERS="${XR_VENDOR_ROOT}/opencv-4.0.1-headers"
 
 BASALT_COMMIT=0f3b2b52c807f70ff4e2973ce253c73329eea7bc
@@ -125,9 +126,11 @@ require_sha256 "${XR_VENDOR_ROOT}/lib/libceres_official_1_14.a" \
 require_sha256 "${XR_VENDOR_ROOT}/lib/libopencv_generic_4_0_1.a" \
   2dac46bd0a07a80fa8f8e6edc736b3fb0b679e91c120b2a1aab789b801dce56d
 require_sha256 "$XR_RECEIPT" \
-  c38e4962903ecdba7f57f19d909e84fc03cba63062ed7ded14f85d5333d077d3
+  1b9d065939e718ae2a8c53b84dbb4d82fc3466448b7ef180ff535cfd4cf67fdf
 require_sha256 "$XR_PATCH" \
   13592cb486f159217fa5ecf9ef2f9863be78cf599d42fb1757e34bd7d4bbb220
+require_sha256 "$XR_PATCH_MASK" \
+  62b12204c647e445e88917859de6b29452df0e6cc65b447e7ea86005f98d1794
 require_sha256 "${XR_VENDOR_ROOT}/include/XRSLAM.h" \
   505556e153861d07b820bb50293186fcfb5546f57385cd070320d119a31e62e7
 require_sha256 "${XR_BACKEND_ROOT}/Native/Frozen/XRSLAM.h" \
@@ -176,14 +179,14 @@ receipt = json.load(open(sys.argv[1], "r", encoding="utf-8"))
 expected = {
     "artifact": "libxrslam_generic_4beb1a9.a",
     "artifact_sha256": "fdc75c99358014d9485bea36667547825465a85562847548d02a582da38c8011",
-    "base_artifact_sha256": "6b7ee542941aa1a6dc853a042cfcbdaf74b6d115c10dfb383bc832bafdcbd777",
     "upstream_revision": "4beb1a942f33da9afbfae2d70e2c641cfc2bb675",
     "xrslam_ios": False,
     "threading": False,
     "lifecycle_patch": "../../patches/xrslam_destroy_lifecycle.patch",
     "lifecycle_patch_sha256": "13592cb486f159217fa5ecf9ef2f9863be78cf599d42fb1757e34bd7d4bbb220",
-    "changed_object": "XRSLAMManager.o",
-    "algorithm_change": False,
+    "zero_inlier_mask_patch": "../../patches/xrslam_zero_inlier_mask.patch",
+    "zero_inlier_mask_patch_sha256": "62b12204c647e445e88917859de6b29452df0e6cc65b447e7ea86005f98d1794",
+    "algorithm_change": True,
 }
 for key, value in expected.items():
     if receipt.get(key) != value:

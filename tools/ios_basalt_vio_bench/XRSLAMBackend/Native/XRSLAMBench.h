@@ -65,6 +65,8 @@ typedef struct xrslam_bench_image {
 } xrslam_bench_image_t;
 
 typedef struct xrslam_bench_frame_result {
+  /// VINS-Mono divergence bitmask for the estimator behind this pose.
+  int32_t divergence_flags;
   int64_t input_timestamp_ns;
   int64_t pose_timestamp_ns;
   double pose_timestamp_seconds;
@@ -109,6 +111,12 @@ typedef struct xrslam_bench_counters {
   uint64_t results_polled;
   uint64_t results_rejected_queue_full;
   uint64_t nonfinite_results_rejected;
+  uint64_t divergence_frames;
+  uint64_t divergence_flags_seen;
+  /// Longest unbroken stretch the divergence condition held, and how many
+  /// frames it held past ORB-SLAM3's inertial time_recently_lost of 5 s.
+  uint64_t divergence_longest_ms;
+  uint64_t divergence_sustained_frames;
   uint64_t upstream_destroy_calls;
 } xrslam_bench_counters_t;
 
@@ -122,6 +130,19 @@ typedef struct xrslam_bench_snapshot {
   uint64_t pending_result_count;
   uint64_t event_queue_capacity;
   uint64_t event_queue_peak;
+  /// What actually reached the estimator, as opposed to what the bridge
+  /// accepted. Upstream pairs the accelerometer and gyroscope streams against
+  /// each other and drops unpaired samples without a trace.
+  uint64_t estimator_imu_ingested;
+  uint64_t estimator_camera_ingested;
+  /// Frames whose estimator met one of VINS-Mono's published divergence
+  /// criteria, and the union of which criteria ever fired.
+  uint64_t divergence_frames;
+  uint64_t divergence_flags_seen;
+  /// Longest unbroken stretch the divergence condition held, and how many
+  /// frames it held past ORB-SLAM3's inertial time_recently_lost of 5 s.
+  uint64_t divergence_longest_ms;
+  uint64_t divergence_sustained_frames;
   uint64_t result_queue_capacity;
   uint64_t result_queue_peak;
   xrslam_bench_counters_t counters;

@@ -54,6 +54,25 @@ public struct SensorTransportConfiguration: Equatable, Sendable {
     }
 
     public static let benchmark = SensorTransportConfiguration()
+
+    /// The production capture size. Selected by `-PWLiveFullResolution`; see
+    /// BenchResolution.liveFullResolutionRequested for why the frozen 640x480
+    /// pairing is no longer the only defensible live configuration.
+    /// 60 Hz, not 30: production's nominal rate is 60 and drops to 30 only
+    /// under thermal pressure. At 30 the camera, not the engine, sets the
+    /// ceiling -- both tracker_frequent settings processed every frame the
+    /// camera delivered and reported ~30 fps, which says nothing about how fast
+    /// the engine could go. Comparing against ARKit's measured 56.7 fps needs
+    /// the camera to offer more than 56.7.
+    public static let productionResolution = SensorTransportConfiguration(
+        cameraWidth: Int32(BenchResolution.scoring.width),
+        cameraHeight: Int32(BenchResolution.scoring.height),
+        cameraRateHz: 30
+    )
+
+    public static var live: SensorTransportConfiguration {
+        BenchResolution.liveFullResolutionRequested ? .productionResolution : .benchmark
+    }
 }
 
 /// A retained camera buffer whose plane zero is the 8-bit monochrome luma

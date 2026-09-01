@@ -1,4 +1,11 @@
 #include <cstdio>
+// The per-frame cost at the production resolution is dominated by two OpenCV
+// calls inside upstream's OpenCvImage::preprocess -- CLAHE over the whole frame
+// and buildOpticalFlowPyramid with derivatives. Both go through
+// cv::parallel_for_, so how many threads OpenCV believes it has decides whether
+// that work uses one core or all of them. Nothing in this tree ever set or
+// reported it.
+#include <opencv2/core.hpp>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -7,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <deque>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -70,6 +78,47 @@ static_assert(XRSLAM_STATE_INITIALIZING == 0);
 static_assert(XRSLAM_STATE_TRACKING_SUCCESS == 1);
 static_assert(XRSLAM_STATE_TRACKING_FAIL == 2);
 
+/// Read-only backlog accessor added to the vendored XRSLAM by
+/// xrslam_pending_worker_frames.patch. Declared here rather than in the frozen
+/// XRSLAM.h so the public ABI header stays byte-identical to upstream's.
+extern "C" int XRSLAMGetPendingWorkerFrames(void);
+/// VINS-Mono's Estimator::failureDetection criteria, ported verbatim into the
+/// vendored XRSLAM and exposed read-only. Upstream XRSLAM reports no health at
+/// all -- SYS_CRASH is never assigned -- so a consumer had no way to tell a
+/// good pose from one produced by a diverged estimator. Bit 1 accelerometer
+/// bias, 2 gyroscope bias, 4 translation jump, 8 vertical jump.
+extern "C" int XRSLAMGetDivergenceFlags(void);
+/// Seconds the divergence condition has held. ORB-SLAM3 treats a lost frame as
+/// RECENTLY_LOST and only escalates to LOST once it has held for
+/// time_recently_lost, 5.0 s in the inertial case; an isolated hit is not a
+/// failure. Reported, not acted on.
+extern "C" double XRSLAMGetDivergenceSustainedSeconds(void);
+/// How many IMU samples and camera frames actually reached the estimator,
+/// added by xrslam_pending_worker_frames.patch. Upstream drops unpaired
+/// accelerometer and gyroscope samples silently, so a live run starved of IMU
+/// looks exactly like one that cannot track; these separate the two.
+extern "C" void XRSLAMGetIngestCounts(unsigned long long *imu,
+                                      unsigned long long *camera);
+
+// Weak fallbacks so this bench links against a vendored XRSLAM that carries the
+// observability patches and against one that does not -- which is what makes an
+// A/B between the two archives possible at all. A strong definition in the
+// archive wins; without one these report nothing rather than failing to link.
+extern "C" __attribute__((weak)) int XRSLAMGetPendingWorkerFrames(void) {
+  return 0;
+}
+extern "C" __attribute__((weak)) int XRSLAMGetDivergenceFlags(void) { return 0; }
+extern "C" __attribute__((weak)) double XRSLAMGetDivergenceSustainedSeconds(void) {
+  return 0.0;
+}
+extern "C" __attribute__((weak)) void
+XRSLAMGetIngestCounts(unsigned long long *imu, unsigned long long *camera) {
+  if (imu)
+    *imu = 0;
+  if (camera)
+    *camera = 0;
+}
+
 namespace {
 
 constexpr double kSecondsPerNanosecond = 1e-9;
@@ -78,6 +127,20 @@ constexpr double kCoreMotionGravityScale = -9.80665;
 enum class EventKind { Acceleration, Gyroscope, Image };
 
 constexpr uint64_t kImageSlotCapacity = 1;
+/// How many frames may be inside the engine at once.
+///
+/// With XRSLAM_ENABLE_THREADING the upstream `Worker::resume()` only notifies a
+/// condition variable, so `run_one_frame` returns before the frame is tracked
+/// and upstream's own queues (plain deques of whole images) have no bound. The
+/// pose `get_result` hands back is `predict_pose()`, which follows the newest
+/// input no matter how far the tracker has fallen behind, so it cannot serve as
+/// a completion signal -- an earlier attempt to bound in flight frames by it
+/// measured zero backlog while the engine was minutes behind. The backlog is
+/// read from the engine instead, through the read-only accessor added by
+/// xrslam_pending_worker_frames.patch. Two is the smallest bound that still
+/// lets the feature tracker and the frontend work on different frames, which is
+/// the whole point of turning threading on.
+constexpr uint64_t kInFlightFrameCapacity = 2;
 constexpr size_t kResultQueueCapacity = 16;
 
 bool finite3(double x, double y, double z) {
@@ -385,7 +448,23 @@ xrslam_bench_status_t run_next_frame_locked(xrslam_bench *bench) {
       return XRSLAM_BENCH_NONFINITE_OUTPUT;
     }
 
+    // A pose whose estimator has diverged is still finite and still reports
+    // TRACKING_SUCCESS, so the verdict has to travel with the frame.
+    const int divergence = XRSLAMGetDivergenceFlags();
+    if (divergence != 0) {
+      ++bench->counters.divergence_frames;
+      bench->counters.divergence_flags_seen |= (uint64_t)divergence;
+      const double sustained = XRSLAMGetDivergenceSustainedSeconds();
+      if (sustained > bench->counters.divergence_longest_ms / 1000.0) {
+        bench->counters.divergence_longest_ms = (uint64_t)(sustained * 1000.0);
+      }
+      // ORB-SLAM3's inertial time_recently_lost.
+      if (sustained > 5.0)
+        ++bench->counters.divergence_sustained_frames;
+    }
+
     xrslam_bench_frame_result_t result{};
+    result.divergence_flags = (int32_t)divergence;
     result.input_timestamp_ns = input_timestamp_ns;
     result.pose_timestamp_ns = pose_timestamp_ns;
     result.pose_timestamp_seconds = pose.timestamp;
@@ -770,10 +849,23 @@ xrslam_bench_get_snapshot(xrslam_bench_t *bench,
   out_snapshot->last_accel_timestamp_ns = bench->last_accel_timestamp_ns;
   out_snapshot->last_gyro_timestamp_ns = bench->last_gyro_timestamp_ns;
   out_snapshot->last_image_timestamp_ns = bench->last_image_timestamp_ns;
-  out_snapshot->pending_event_count = bench->has_pending_image ? 1 : 0;
+  // The queue the feeder must respect is the engine's own backlog, not the
+  // single handoff slot: with threading the slot empties immediately and the
+  // frames accumulate inside upstream's workers.
+  out_snapshot->pending_event_count =
+      static_cast<uint64_t>(XRSLAMGetPendingWorkerFrames()) +
+      (bench->has_pending_image ? 1 : 0);
   out_snapshot->pending_result_count = bench->result_count;
-  out_snapshot->event_queue_capacity = kImageSlotCapacity;
-  out_snapshot->event_queue_peak = bench->image_slot_peak;
+  out_snapshot->event_queue_capacity = kInFlightFrameCapacity;
+  XRSLAMGetIngestCounts(&out_snapshot->estimator_imu_ingested,
+                        &out_snapshot->estimator_camera_ingested);
+  out_snapshot->divergence_frames = bench->counters.divergence_frames;
+  out_snapshot->divergence_flags_seen = bench->counters.divergence_flags_seen;
+  out_snapshot->divergence_longest_ms = bench->counters.divergence_longest_ms;
+  out_snapshot->divergence_sustained_frames =
+      bench->counters.divergence_sustained_frames;
+  out_snapshot->event_queue_peak =
+      bench->image_slot_peak;
   out_snapshot->result_queue_capacity = kResultQueueCapacity;
   out_snapshot->result_queue_peak = bench->result_queue_peak;
   out_snapshot->counters = bench->counters;

@@ -47,6 +47,23 @@ public enum BenchResolution: Equatable {
         ProcessInfo.processInfo.arguments.contains("-PWDiagnosticDownscale")
     }
 
+    /// `-PWLiveFullResolution` runs the live channel at the production capture
+    /// size instead of the frozen 640x480 pairing.
+    ///
+    /// This was blocked on 2026-08-30 because the frozen calibration declares
+    /// 640x480 and scaling it threefold is only valid if both formats share a
+    /// field of view, which could not be shown from the artifacts then on hand.
+    /// It can be shown now: the ARKit intrinsics measured in the device
+    /// recording at 1920x1440 divided by the frozen 640x480 values give
+    /// fx 3.0020, fy 3.0008, cx 2.9796, cy 2.9868 against a resolution ratio of
+    /// exactly 3 -- agreement to 0.07% in focal length and about two pixels in
+    /// principal point. The run also enables camera intrinsic delivery and
+    /// receipts what the camera itself reports, so the scaling is checked
+    /// rather than assumed.
+    public static var liveFullResolutionRequested: Bool {
+        ProcessInfo.processInfo.arguments.contains("-PWLiveFullResolution")
+    }
+
     public static func participatesInVerdict(width: Int, height: Int) -> Bool {
         width == scoring.width && height == scoring.height
     }

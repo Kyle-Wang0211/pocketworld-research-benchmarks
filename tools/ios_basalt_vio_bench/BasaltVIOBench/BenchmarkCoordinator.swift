@@ -998,11 +998,32 @@ final class BenchmarkCoordinator {
         let cpuStart = SystemMetricSampler.processCPUSeconds().total
         sampler.start()
         onPhase(.measuring)
+        // Unpaced replay assumes the engine cannot be outrun -- true only while
+        // the engine is synchronous. A threaded XRSLAM returns from
+        // `run_one_frame` before the frame is tracked and queues it in an
+        // unbounded deque of full-size images, so an unpaced feeder grows that
+        // deque by hundreds of MB per second until the OS kills the process.
+        // `-PWPaceReplay` feeds the recording at its own timestamps, which is
+        // the rate a camera would deliver at and the rate the real-time
+        // question is actually about.
+        let paceReplay = ProcessInfo.processInfo.arguments.contains("-PWPaceReplay")
+        // The live channel runs the camera at 30 fps while this recording holds
+        // 60. Halving the replay rate reproduces the live channel's camera
+        // cadence against the identical pixels, which is the only way to ask
+        // whether a live failure is about cadence without a hand-held capture.
+        let halfFrameRate = ProcessInfo.processInfo.arguments.contains("-PWHalfFrameRate")
+        var cameraFrameOrdinal = 0
         let scheduler = ReplayScheduler(
-            mode: mode == .replayPaced ? .paced : .maximumThroughput
+            mode: (mode == .replayPaced || paceReplay) ? .paced : .maximumThroughput
         )
         do {
             try scheduler.run(events: events) { event in
+                // Decoding one frame allocates its luma and chroma planes and a
+                // copy of the payload -- several MB that Foundation hands back
+                // autoreleased. A replay loop drains no run loop of its own, so
+                // without a pool per event those planes accumulate for the whole
+                // recording and the OS kills the process partway through.
+                try autoreleasepool {
                 if isAbortRequested { throw CoordinatorError.aborted }
                 switch event {
                 case .imu(let sample):
@@ -1019,6 +1040,8 @@ final class BenchmarkCoordinator {
                           frame.camera1ImageURL == nil else {
                         throw CoordinatorError.invalidRun("camera_count_drift")
                     }
+                    cameraFrameOrdinal += 1
+                    if halfFrameRate && cameraFrameOrdinal % 2 == 0 { return }
                     try waitForReplayCapacity(
                         camera: true,
                         session: session,
@@ -1037,6 +1060,7 @@ final class BenchmarkCoordinator {
                 let now = DispatchTime.now().uptimeNanoseconds
                 if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
                     try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
+                }
                 }
             }
         } catch {
@@ -1214,6 +1238,14 @@ final class BenchmarkCoordinator {
         heartbeatSchedule: inout HeartbeatSchedule,
         poses: inout [TimedPose]
     ) throws {
+        // An engine that has stopped consuming leaves this loop spinning
+        // forever: the queue never drains, no pose is ever produced, and the
+        // run neither finishes nor fails. Basalt printing "Finished VIOFilter"
+        // and exiting its processing thread did exactly that -- fourteen
+        // minutes of a full queue and a stale heartbeat, with nothing in any
+        // artifact saying why. A stall is now a named failure.
+        var stallDeadline: UInt64? = nil
+        var posesAtStallStart = poses.count
         while true {
             if isAbortRequested { throw CoordinatorError.aborted }
             let snapshot = try session.snapshot()
@@ -1227,12 +1259,33 @@ final class BenchmarkCoordinator {
             if size < capacity { return }
             poses.append(contentsOf: try drainPoses(session).map(\.pose))
             let now = DispatchTime.now().uptimeNanoseconds
+            if poses.count > posesAtStallStart {
+                // Progress: the engine is alive, just slower than the feeder.
+                posesAtStallStart = poses.count
+                stallDeadline = nil
+            } else if let deadline = stallDeadline {
+                if now > deadline {
+                    throw CoordinatorError.invalidRun(
+                        camera
+                            ? "replay_engine_stalled_camera_queue_full_no_pose_progress"
+                            : "replay_engine_stalled_imu_queue_full_no_pose_progress"
+                    )
+                }
+            } else {
+                stallDeadline = now + Self.replayStallTimeoutNanoseconds
+            }
             if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
                 try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
             }
             Thread.sleep(forTimeInterval: 0.0002)
         }
     }
+
+    /// How long a full queue may make no pose progress before the run is
+    /// declared stalled. Generous enough to cover a slow engine on a thermally
+    /// throttled device, short enough that a dead one is reported in seconds
+    /// rather than discovered by a human noticing nothing has happened.
+    private static let replayStallTimeoutNanoseconds: UInt64 = 20_000_000_000
 
     private func liveMetrics(
         firstUsablePoseLatencyMilliseconds: Double,
@@ -1555,7 +1608,8 @@ final class BenchmarkCoordinator {
             sequence: sequence,
             monotonicNS: monotonicNS,
             writtenAtUTC: BenchmarkRunPreparation.utcTimestamp(),
-            startedReceiptSHA256: context.startedReceiptSHA256
+            startedReceiptSHA256: context.startedReceiptSHA256,
+            footprintMB: SystemMetricSampler.currentFootprintMB()
         )
         let semaphore = DispatchSemaphore(value: 0)
         var result: Result<Void, Error>!

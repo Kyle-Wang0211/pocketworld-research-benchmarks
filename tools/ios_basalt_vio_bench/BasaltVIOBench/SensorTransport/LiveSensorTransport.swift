@@ -3,6 +3,7 @@ import CoreMedia
 import CoreMotion
 import CoreVideo
 import Foundation
+import simd
 
 /// Hardware sensor transport only. This type never creates ARKit, reads a pose,
 /// performs VIO policy, touches disk, or dispatches UI work from a callback.
@@ -57,7 +58,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     private var captureFormatReceipt: LiveCaptureFormatReceipt?
 
     public init(
-        configuration: SensorTransportConfiguration = .benchmark,
+        configuration: SensorTransportConfiguration = .live,
         imuDeliveryMode: IMUDeliveryMode = .basaltGyroDrivenPaired,
         clockMapper: MonotonicClockMapper
     ) {
@@ -83,7 +84,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     /// Samples the Core Media host clock around `systemUptime`, creating the
     /// sole production clock mapping used by both capture paths.
     public convenience init(
-        configuration: SensorTransportConfiguration = .benchmark,
+        configuration: SensorTransportConfiguration = .live,
         imuDeliveryMode: IMUDeliveryMode = .basaltGyroDrivenPaired
     ) throws {
         let hostBefore = CMTimeGetSeconds(CMClockGetTime(CMClockGetHostTimeClock()))
@@ -279,6 +280,15 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         if connection.isVideoStabilizationSupported {
             connection.preferredVideoStabilizationMode = .off
         }
+        // Ask the camera to attach the intrinsics it measured for the format it
+        // actually selected. The calibration this run feeds the engines is the
+        // frozen 640x480 one scaled by the resolution ratio, and that scaling is
+        // only sound if the two formats share a field of view. With delivery on,
+        // the run carries the camera's own answer next to the assumption, so a
+        // reader can check it instead of trusting it.
+        if connection.isCameraIntrinsicMatrixDeliverySupported {
+            connection.isCameraIntrinsicMatrixDeliveryEnabled = true
+        }
 
         captureSession.commitConfiguration()
         configurationIsOpen = false
@@ -390,6 +400,26 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         motionManager.startAccelerometerUpdates(to: motionCallbackQueue) { [weak self] data, error in
             self?.handleAccelerometer(data, error: error)
         }
+    }
+
+    /// Logged once: what the camera says its intrinsics are for the selected
+    /// format, so the scaled calibration can be checked against a measurement.
+    private var reportedIntrinsics = false
+
+    fileprivate func reportIntrinsicsIfNeeded(_ sampleBuffer: CMSampleBuffer) {
+        guard !reportedIntrinsics else { return }
+        guard let raw = CMGetAttachment(
+            sampleBuffer,
+            key: kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix,
+            attachmentModeOut: nil
+        ) as? Data, raw.count >= MemoryLayout<Float>.size * 9 else { return }
+        reportedIntrinsics = true
+        // The attachment is a matrix_float3x3 in column-major order:
+        // columns are (fx,0,0), (0,fy,0), (cx,cy,1).
+        let matrix = raw.withUnsafeBytes { $0.load(as: matrix_float3x3.self) }
+        NSLog("[VIOBench] camera-reported intrinsics fx=%.3f fy=%.3f cx=%.3f cy=%.3f",
+              Double(matrix.columns.0.x), Double(matrix.columns.1.y),
+              Double(matrix.columns.2.x), Double(matrix.columns.2.y))
     }
 
     private func handleGyroscope(_ data: CMGyroData?, error: Error?) {
@@ -577,6 +607,7 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
+        reportIntrinsicsIfNeeded(sampleBuffer)
         accounting.recordCameraInput()
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
               CVPixelBufferGetPixelFormatType(pixelBuffer)

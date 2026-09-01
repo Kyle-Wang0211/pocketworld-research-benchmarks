@@ -21,6 +21,41 @@ enum CalibrationMaterializer {
     /// Nothing here is extrapolated. The alternative -- scaling the frozen 640x480
     /// intrinsics threefold -- is only valid if both formats share a field of
     /// view, which is why it stays a cross-check and never a source.
+    /// Reads the pinhole intrinsics out of a frozen calibration so a caller can
+    /// derive new ones from them rather than restating literals that would then
+    /// have two sources of truth.
+    static func pinholeIntrinsics(
+        from frozenData: Data,
+        isYAML: Bool
+    ) throws -> (fx: Double, fy: Double, cx: Double, cy: Double) {
+        if !isYAML {
+            guard let root = try JSONSerialization.jsonObject(with: frozenData) as? [String: Any],
+                  let value0 = root["value0"] as? [String: Any],
+                  let intrinsicsArray = value0["intrinsics"] as? [[String: Any]],
+                  let camera = intrinsicsArray.first?["intrinsics"] as? [String: Any],
+                  let fx = camera["fx"] as? Double, let fy = camera["fy"] as? Double,
+                  let cx = camera["cx"] as? Double, let cy = camera["cy"] as? Double else {
+                throw CalibrationMaterializerError.invalidRoot
+            }
+            return (fx, fy, cx, cy)
+        }
+        // xrslam's YAML writes the camera as `intrinsics: [fx, fy, cx, cy]`,
+        // which is the same line deviceRecordingYAML rewrites.
+        guard let text = String(data: frozenData, encoding: .utf8) else {
+            throw CalibrationMaterializerError.invalidRoot
+        }
+        for line in text.split(whereSeparator: \.isNewline) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("intrinsics:") else { continue }
+            let values = trimmed.drop(while: { $0 != "[" })
+                .split(whereSeparator: { "[], ".contains($0) })
+                .compactMap { Double($0) }
+            guard values.count >= 4 else { break }
+            return (values[0], values[1], values[2], values[3])
+        }
+        throw CalibrationMaterializerError.invalidRoot
+    }
+
     static func deviceRecording(
         from frozenData: Data,
         intrinsics: DeviceRecordingIntrinsics,

@@ -143,6 +143,28 @@ final class ActiveVIOEngineSession {
         return GrayscaleImage(width: w, height: h, bytesPerRow: w, pixels: Data(out))
     }
 
+    /// Reads a replay frame and returns it at the engine's input size.
+    ///
+    /// The archive holds frames at the recording's own size. Reading one at the
+    /// engine's downscaled size makes the raw-plane length check fail, and the
+    /// full plane is then handed to the HEVC decoder, which cannot build a
+    /// decoder from it. Both engines go through here so the correction cannot
+    /// be applied to one arm and not the other -- which is what left Basalt
+    /// with no measurement at the downscaled size at all.
+    private static func loadReplayImageAtEngineSize(
+        _ frame: EuRoCCameraFrame,
+        width: Int,
+        height: Int
+    ) throws -> GrayscaleImage {
+        let factor = BenchResolution.diagnosticDownscaleRequested
+            ? BenchResolution.diagnosticDownscaleFactor : 1
+        var image = try loadReplayImage(
+            frame, width: width * factor, height: height * factor
+        )
+        if factor > 1 { image = downscale(image, by: factor) }
+        return image
+    }
+
     private static func loadReplayImage(
         _ frame: EuRoCCameraFrame,
         width: Int,
@@ -178,7 +200,7 @@ final class ActiveVIOEngineSession {
         case .basalt(let session):
             let image: GrayscaleImage
             do {
-                image = try Self.loadReplayImage(
+                image = try Self.loadReplayImageAtEngineSize(
                     frame, width: width, height: height
                 )
             } catch {
@@ -196,16 +218,9 @@ final class ActiveVIOEngineSession {
             // a recorded raw plane has no file format for it to open, so it goes
             // through the same in-memory submission Basalt uses.
             if isRaw {
-                // The archive holds frames at the recording's own size, so it
-                // is read at that size and downscaled after. Reading it at the
-                // engine's downscaled size made the raw-frame check fail and
-                // sent full planes into the HEVC decoder.
-                let factor = BenchResolution.diagnosticDownscaleRequested
-                    ? BenchResolution.diagnosticDownscaleFactor : 1
-                var image = try Self.loadReplayImage(
-                    frame, width: width * factor, height: height * factor
+                let image = try Self.loadReplayImageAtEngineSize(
+                    frame, width: width, height: height
                 )
-                if factor > 1 { image = Self.downscale(image, by: factor) }
                 // Temporary instrumentation: a replay produced no poses at all
                 // and no progress, and there was no way to tell whether frames
                 // were reaching the engine or the engine was not returning.

@@ -431,6 +431,13 @@ struct RunHeartbeat: Codable, Equatable {
     var monotonicNS: UInt64
     var writtenAtUTC: String
     var startedReceiptSHA256: String
+    /// Resident footprint at the moment this heartbeat was written.
+    ///
+    /// The receipt's peak footprint only exists for runs that finish, so a run
+    /// the OS kills leaves no memory record at all -- which is exactly the run
+    /// whose memory needs explaining. The heartbeat survives the kill, so
+    /// carrying the footprint here turns "it died" into a curve.
+    var footprintMB: Double = 0
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion = "schema_version"
@@ -438,6 +445,7 @@ struct RunHeartbeat: Codable, Equatable {
         case receiptState = "receipt_state"
         case sequence
         case monotonicNS = "monotonic_ns"
+        case footprintMB = "footprint_mb"
         case writtenAtUTC = "written_at_utc"
         case startedReceiptSHA256 = "started_receipt_sha256"
     }
@@ -449,7 +457,8 @@ struct RunHeartbeat: Codable, Equatable {
         sequence: Int,
         monotonicNS: UInt64,
         writtenAtUTC: String,
-        startedReceiptSHA256: String
+        startedReceiptSHA256: String,
+        footprintMB: Double = 0
     ) {
         self.schemaVersion = schemaVersion
         self.runID = runID
@@ -458,6 +467,7 @@ struct RunHeartbeat: Codable, Equatable {
         self.monotonicNS = monotonicNS
         self.writtenAtUTC = writtenAtUTC
         self.startedReceiptSHA256 = startedReceiptSHA256
+        self.footprintMB = footprintMB
     }
 
     func validate() throws {

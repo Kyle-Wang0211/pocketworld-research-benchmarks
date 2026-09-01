@@ -7,6 +7,63 @@ import Foundation
 /// encoded, so there is nothing to decode. The file *is* the plane, and the only
 /// check that matters is that its length is exactly one frame -- a short or long
 /// file means the recording is not what its manifest says.
+/// Reads byte ranges out of the recording's append-only frame stream without
+/// holding the whole stream in memory.
+///
+/// `Data(contentsOf:options:.mappedIfSafe)` decides for itself whether a map is
+/// "safe" and silently reads the file whole when it is not; on a multi-GiB
+/// archive that is an allocation the device refuses. A positioned read has no
+/// such fallback: it costs the range and nothing more.
+final class FrameStreamReader {
+    private let handle: FileHandle
+    let count: Int
+
+    /// A replay opens one of these per frame, so the descriptor has to be
+    /// released with the object rather than left to the autorelease pool.
+    deinit { try? handle.close() }
+
+    init(url: URL) throws {
+        handle = try FileHandle(forReadingFrom: url)
+        let size = try FileManager.default
+            .attributesOfItem(atPath: url.path)[.size] as? NSNumber
+        count = size?.intValue ?? 0
+    }
+
+    /// Streams the whole file in bounded pieces, for the case where a frame has
+    /// no access-unit list and the payload is the file itself.
+    func forEachChunk(_ body: (Data) -> Void) throws {
+        try handle.seek(toOffset: 0)
+        var remaining = count
+        while remaining > 0 {
+            try autoreleasepool {
+                let piece = min(remaining, 4 * 1024 * 1024)
+                guard let chunk = try handle.read(upToCount: piece), !chunk.isEmpty else {
+                    remaining = 0
+                    return
+                }
+                body(chunk)
+                remaining -= chunk.count
+            }
+        }
+    }
+
+    func read(_ range: Range<Int>) throws -> Data {
+        guard range.lowerBound >= 0, range.upperBound <= count else {
+            throw DeviceRecordingError.missingFrame(
+                handle.description
+            )
+        }
+        try handle.seek(toOffset: UInt64(range.lowerBound))
+        let data = try handle.read(upToCount: range.count) ?? Data()
+        guard data.count == range.count else {
+            throw DeviceRecordingError.frameSizeMismatch(
+                path: "frames.bin", expected: range.count, actual: data.count
+            )
+        }
+        return data
+    }
+}
+
 enum RawLumaFrameLoader {
     /// Decodes one frame out of the archived bitstream. [accessUnits] runs from
     /// the frame's GOP keyframe to the frame itself, the order production
@@ -16,7 +73,11 @@ enum RawLumaFrameLoader {
         format: DeviceRecordingCameraFormat,
         accessUnits: [Range<Int>]
     ) throws -> GrayscaleImage {
-        let stream = try Data(contentsOf: url, options: .mappedIfSafe)
+        // The archive is one append-only stream for the whole recording, so it
+        // is far larger than a frame -- a 30 s capture is several GiB. Mapping
+        // it whole (once per frame, at that) is what iOS refuses with ENOMEM,
+        // so only the frame's own byte ranges are read.
+        let stream = try FrameStreamReader(url: url)
         guard let first = accessUnits.first,
               first.lowerBound >= 0, first.upperBound <= stream.count else {
             throw DeviceRecordingError.missingFrame(url.lastPathComponent)
@@ -39,10 +100,10 @@ enum RawLumaFrameLoader {
             }
             return GrayscaleImage(
                 width: format.width, height: format.height,
-                bytesPerRow: format.width, pixels: stream.subdata(in: only)
+                bytesPerRow: format.width, pixels: try stream.read(only)
             )
         }
-        let keyframe = stream.subdata(in: first)
+        let keyframe = try stream.read(first)
         let decoder: OpaquePointer? = keyframe.withUnsafeBytes { key in
             pw_vt_dec_create(
                 Int32(format.width), Int32(format.height),
@@ -58,7 +119,7 @@ enum RawLumaFrameLoader {
             guard range.lowerBound >= 0, range.upperBound <= stream.count else {
                 throw DeviceRecordingError.missingFrame(url.lastPathComponent)
             }
-            let au = stream.subdata(in: range)
+            let au = try stream.read(range)
             let status: Int32 = au.withUnsafeBytes { bytes in
                 luma.withUnsafeMutableBufferPointer { y in
                     chroma.withUnsafeMutableBufferPointer { uv in
@@ -272,24 +333,25 @@ struct DeviceRecordingLoader {
     ) throws {
         var digest = SHA256()
         // The digest covers frame payloads in capture order, which is what the
-        // writer hashed. Reading the stream once and slicing it keeps that true
-        // without reopening it per frame.
-        var streamCache: [URL: Data] = [:]
+        // writer hashed. The stream is opened once per file and read by range,
+        // so a multi-GiB archive costs one frame of memory at a time rather
+        // than being mapped whole and cached.
+        var readers: [URL: FrameStreamReader] = [:]
         for frame in frames {
-            let whole: Data
-            if let cached = streamCache[frame.camera0ImageURL] {
-                whole = cached
+            let reader: FrameStreamReader
+            if let cached = readers[frame.camera0ImageURL] {
+                reader = cached
             } else {
-                whole = try Data(contentsOf: frame.camera0ImageURL, options: .mappedIfSafe)
-                streamCache[frame.camera0ImageURL] = whole
+                reader = try FrameStreamReader(url: frame.camera0ImageURL)
+                readers[frame.camera0ImageURL] = reader
             }
             // The writer hashed the stream as it wrote it, so the digest is
             // over each frame's own access unit in capture order -- the last
             // range of each frame's decode list.
             if let last = frame.camera0AccessUnits?.last {
-                digest.update(data: whole.subdata(in: last))
+                try autoreleasepool { digest.update(data: try reader.read(last)) }
             } else {
-                digest.update(data: whole)
+                try reader.forEachChunk { digest.update(data: $0) }
             }
         }
         let actual = DeviceRecordingWriter.hex(digest.finalize())
