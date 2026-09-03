@@ -211,6 +211,31 @@ dtu 官方权重已放远端未跑。**判决待定。** 许可：官方权重�
 - 输入映射铁律：`mvs_P16k/{s}.jpg` 是**源序号**，MapAnything 帧 = `capture_order_source_to_frame[s]`
   （相关 1.0 验过）；upright→landscape = `np.rot90(U, +1)`。
 
+# 结合 v1 判决 + 方向反转 + 锚定版（09-03 深夜）
+
+- **用户判决：结合 v1（先验初始化）= 目前最优，"粘连少了非常多"。** 已存研究仓
+  `experiments/mapanything_casdiffmvs_ghosting_2026-09-03/`（commit `744514f`，已 push；
+  只提交了该目录，未触碰共享脏树里别人的 24 个未跟踪 / 7 个修改文件）。
+- 用户指出短板：空间完整度 MapAnything 明显更好（整个房间 vs CasDiffMVS 只有中心区域）。
+  **新方向：最终呈现以 MapAnything 为底，CasDiffMVS 只负责让它没有重影。**
+- 锚定版 `anchor-mapanything-to-casdiffmvs`：每帧 MapAnything log 深度 + 平滑偏移场，
+  锚 = 先验初始化版 CasDiffMVS 融合保留像素（中位 63%），λ=4 半分辨率求解，两轮 Huber。
+  偏移场帧内跨度中位 5.1%（= 被钉住的 FOV 型畸变），锚处残差 0.05%。COLMAP 系官方
+  一致性：仿射对齐版 0.449 → 锚定版 0.268（均值 0.51 → 0.65）。剩余不一致在无锚的
+  37%（墙面 / 边缘）。30,553,793 点（导出步长 0.75）。
+  页面 `verdict_page/mapanything_anchored_to_casdiff_20260903/`。**判决待定。**
+- 第一次导出用 768×576 网格按 0.75 非整数步长取像素，平面上出现规则密度条纹（逐帧深度图
+  核过是干净的，条纹是导出走样）。改为在 MapAnything **原生 392×518 网格**上施加仿射+偏移
+  场，用转正生产 COLMAP 相机反投影（`export_native_anchored.py`）⇒ 点集与原生 MapAnything
+  云完全相同（25,150,854），原生网格官方一致性 0.471 → 0.262。页面即此版。
+- 第二刀 `consensus-on-anchorfree-pixels`：只对**无锚像素**（白墙/边缘；原生网格锚覆盖中位
+  0.675）做官方 2%/2% 共识平均，锚像素完全不动。98.6% 无锚像素找到一致伙伴，深度改动
+  0.50%/0.25%（两轮）⇒ 无锚区不一致 0.482 → 0.371，整体 0.262 → 0.218，均值 0.643 → 0.690，
+  点数不变。页面 `verdict_page/mapanything_anchored_consensus_20260903/`。**判决待定。**
+- 🔴 断网恢复经验：远端产物都在，重连后只需续传；`/usr/bin/time -p rsync … | grep real`
+  会把退出码变成 grep 的，rsync 失败也会报成功 —— 大文件续传用
+  `rsync -av --partial --inplace` 并单独判 `$?`。
+
 # 已排除、不要再做的
 
 1. 再换输入顺序、分辨率、去畸变、K-only / pose-only 条件：预测 K 都是 0.76–0.79。
