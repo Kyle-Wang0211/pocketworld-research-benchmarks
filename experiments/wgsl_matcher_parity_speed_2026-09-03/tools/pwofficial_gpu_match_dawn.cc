@@ -488,21 +488,55 @@ fn main(@builtin(workgroup_id) wg : vec3<u32>,
     cpIdx[sg * 32u + lane] = ci;
     workgroupBarrier();
 
-    if (lid < BT) {
-      var b = cpBest[lid];
-      var s2 = cpSecond[lid];
-      var bi = cpIdx[lid];
-      for (var w = 1u; w < 16u; w = w + 1u) {
-        let ob = cpBest[w * 32u + lid];
-        let os = cpSecond[w * 32u + lid];
-        let oi = cpIdx[w * 32u + lid];
-        if (ob > b) { s2 = max(b, os); b = ob; bi = oi; }
-        else { s2 = max(s2, ob); }
-      }
-      let j = col0 + lid;
-      if (j < U.numB) {
-        ColP[rb * U.numB + j] = ColPart(b, s2, bi);
-      }
+    // [MERGE-BUTTERFLY 2026-09-04] 跨 SG 归并由「32 线程 × 15 次串行」改为
+    // 「512 线程 × 每人 1 个 partial + 4 级蝶形」。
+    // Metal v2 在这里用的是串行形态,并注明"并行 shuffle 树试过更慢——串行形态
+    // 藏在其他线程的进度后面"。**那个前提在我们这里已经没了**:packed 上传把预取
+    // 从 8 次迭代压到 2 次,480 个线程两拍就干完,归并再没东西可藏。
+    // 分解实测(隔离台架,删掉本块):现役 6.555 → 4.982,这块值 ~1.5ms。
+    // 映射:mcl = lid/16 是列(0..31),ms = lid%16 是 SG 下标;同一列的 16 个线程
+    //   落在同一子组的同一半(偶数列 lane 0-15 / 奇数列 lane 16-31),掩码 1/2/4/8
+    //   的蝶形不会跨出那一半。**全部 512 线程无条件执行 ⇒ 控制流对子组一致**,
+    //   这正是 tint 允许 subgroupShuffleXor 的前提(条件分支里会被拒)。
+    // 共享内存读总量不变(512 次 = 32 列 × 16 SG),没有冗余读。
+    // 语义:ms 升序 == sg 升序 == 行号升序,`ob > b` 严格大于 ⇒ 平局留自己;
+    //   逐级 xor 后 ms==0 那条恰好是"最小行号胜",与串行形态逐字等价。
+    let mcl = lid / 16u;
+    let ms = lid % 16u;
+    var b = cpBest[ms * 32u + mcl];
+    var s2 = cpSecond[ms * 32u + mcl];
+    var bi = cpIdx[ms * 32u + mcl];
+    {
+      let ob = subgroupShuffleXor(b, 1u);
+      let os = subgroupShuffleXor(s2, 1u);
+      let oi = subgroupShuffleXor(bi, 1u);
+      if (ob > b) { s2 = max(b, os); b = ob; bi = oi; }
+      else { s2 = max(s2, ob); }
+    }
+    {
+      let ob = subgroupShuffleXor(b, 2u);
+      let os = subgroupShuffleXor(s2, 2u);
+      let oi = subgroupShuffleXor(bi, 2u);
+      if (ob > b) { s2 = max(b, os); b = ob; bi = oi; }
+      else { s2 = max(s2, ob); }
+    }
+    {
+      let ob = subgroupShuffleXor(b, 4u);
+      let os = subgroupShuffleXor(s2, 4u);
+      let oi = subgroupShuffleXor(bi, 4u);
+      if (ob > b) { s2 = max(b, os); b = ob; bi = oi; }
+      else { s2 = max(s2, ob); }
+    }
+    {
+      let ob = subgroupShuffleXor(b, 8u);
+      let os = subgroupShuffleXor(s2, 8u);
+      let oi = subgroupShuffleXor(bi, 8u);
+      if (ob > b) { s2 = max(b, os); b = ob; bi = oi; }
+      else { s2 = max(s2, ob); }
+    }
+    let j = col0 + mcl;
+    if (ms == 0u && j < U.numB) {
+      ColP[rb * U.numB + j] = ColPart(b, s2, bi);
     }
     col0 = col0 + BT;
   }
@@ -1039,7 +1073,9 @@ struct Ctx {
   // (PhysicalDeviceMTL.mm hardcoded two entries); the vendored tree now does.
   bool sgcfg_f16_f32 = false;
   bool mixed = false;  // use the f16-in/f32-out kernel
+  bool packed = false; // 描述子以 packed u8 上传(见 PackedWgsl)
   std::vector<uint16_t> scratch16;
+  std::vector<uint8_t> padZero;
   // [TS-GPU 2026-09-03] 真 GPU 时间戳(env OFFICIAL_AETHER_MATCH_DAWN_TSGPU=1)。
   // SubmitAndWait 量的是 submit→done 墙钟,含 CPU 侧排队 —— 机器有背景负载时
   // (实测 HydraRenderingService 常驻 ~96%)括号能飘 2ms,0.5ms 级归因不可做。
@@ -1187,6 +1223,7 @@ std::unique_ptr<Ctx> CreateCtx() {
     }
     if (want_mixed && c->sgcfg_f16_f32 && c->adapter.HasFeature(wgpu::FeatureName::ShaderF16)) {
       c->mixed = true;
+      c->packed = getenv("OFFICIAL_AETHER_MATCH_DAWN_UNPACKED") == nullptr;
       feats.push_back(wgpu::FeatureName::ShaderF16);
     }
     req.maxComputeWorkgroupStorageSize = alim.maxComputeWorkgroupStorageSize;
@@ -1388,6 +1425,91 @@ std::string NoScanWgsl(const std::string& src) {
   return t;
 }
 
+// [PACKED-DESC 2026-09-04] mma+mixed 档的描述子改为 packed u8(每个 u32 装 4 个),
+// 复刻出货 Metal 核 pw_match_gemm2 的 kPacked 分支。
+// 定价(隔离测量,不是估的):现役 upload_p50=0.653ms,其中 CPU 侧 u8→f16 转换
+//   只占 0.144ms(1M 元素 ×2),其余 0.51ms 是 4MB WriteBuffer 本身。
+//   packed 两头都省:转换消失 + 传输 4MB→2MB ⇒ 预计 upload → ~0.26ms。
+// A 与 B 缓冲被 plain 核和 guided 核共用,且两边取数行逐字相同 ⇒ 一个变换覆盖两者。
+// B:预取时解包(Bsh 仍是 f16),循环上界 BT*128 → BT*32,每次迭代写 4 个 half。
+// A:subgroupMatrixLoad 要求内存里就是 f16 ⇒ 照 Metal 的做法先解包进 Bsh 的一个
+//   象限,4 轮 × 4 个 SG(Bsh 4096 half = 4 象限 × 1024)。lane 用 lid % 32 算,
+//   免得给 guided 核加 builtin 参数。
+std::string PackedWgsl(const std::string& src) {
+  std::string t = src;
+  auto rep_all = [&t](const std::string& from, const std::string& to) {
+    size_t p = 0; int n = 0;
+    while ((p = t.find(from, p)) != std::string::npos) {
+      t.replace(p, from.size(), to);
+      p += to.size();
+      ++n;
+    }
+    return n;
+  };
+  auto rep = [&t](const std::string& from, const std::string& to) {
+    const size_t p = t.find(from);
+    if (p == std::string::npos) return false;
+    t.replace(p, from.size(), to);
+    return true;
+  };
+  bool ok = true;
+  ok &= rep("var<storage, read> A : array<f16>", "var<storage, read> A : array<u32>");
+  ok &= rep("var<storage, read> B : array<f16>", "var<storage, read> B : array<u32>");
+  // B 预取:上界与解包(fused 初始 / fused 双缓冲 / shape 顶部,三处同形)
+  ok &= (rep_all("e < BT * 128u", "e < BT * 32u") > 0);
+  ok &= (rep_all(
+             "      Bsh[e] = select(f16(0.0), B[brow * 128u + (e % 128u)], brow < U.numB);",
+             "      let pu = select(0u, B[brow * 32u + (e % 32u)], brow < U.numB);\n"
+             "      let po = (e / 32u) * 128u + (e % 32u) * 4u;\n"
+             "      Bsh[po] = f16(pu & 255u);\n"
+             "      Bsh[po + 1u] = f16((pu >> 8u) & 255u);\n"
+             "      Bsh[po + 2u] = f16((pu >> 16u) & 255u);\n"
+             "      Bsh[po + 3u] = f16(pu >> 24u);") > 0);
+  ok &= (rep_all("        Bsh[e] = select(f16(0.0), B[brow * 128u + (e % 128u)], brow < U.numB);",
+             "        let pu = select(0u, B[brow * 32u + (e % 32u)], brow < U.numB);\n"
+             "        let po = (e / 32u) * 128u + (e % 32u) * 4u;\n"
+             "        Bsh[po] = f16(pu & 255u);\n"
+             "        Bsh[po + 1u] = f16((pu >> 8u) & 255u);\n"
+             "        Bsh[po + 2u] = f16((pu >> 16u) & 255u);\n"
+             "        Bsh[po + 3u] = f16(pu >> 24u);") >= 0);
+  ok &= (rep_all("      let brow = 0u + e / 128u;", "      let brow = 0u + e / 32u;") >= 0);
+  ok &= (rep_all("      let brow = col0 + e / 128u;", "      let brow = col0 + e / 32u;") >= 0);
+  ok &= (rep_all("        let brow = nextT + e / 128u;", "        let brow = nextT + e / 32u;") >= 0);
+  // A:解包进 Bsh 象限后再取 fragment(Metal kPacked 的 4 轮 dance 同款)
+  ok &= (rep_all(
+             "  var aFrag : array<Left, 16>;\n"
+             "  for (var k = 0u; k < 16u; k = k + 1u) {\n"
+             "    aFrag[k] = subgroupMatrixLoad<Left>(&A, aRow0 * 128u + k * 8u, false, 128u);\n"
+             "  }",
+             "  var aFrag : array<Left, 16>;\n"
+             "  {\n"
+             "    let pwv = sg >> 2u;\n"
+             "    let pq = (sg & 3u) * 1024u;\n"
+             "    let plane = lid % 32u;\n"
+             "    for (var w = 0u; w < 4u; w = w + 1u) {\n"
+             "      if (w == pwv) {\n"
+             "        for (var e = plane; e < 256u; e = e + 32u) {\n"
+             "          let u = A[aRow0 * 32u + e];\n"
+             "          let o = pq + e * 4u;\n"
+             "          Bsh[o] = f16(u & 255u);\n"
+             "          Bsh[o + 1u] = f16((u >> 8u) & 255u);\n"
+             "          Bsh[o + 2u] = f16((u >> 16u) & 255u);\n"
+             "          Bsh[o + 3u] = f16(u >> 24u);\n"
+             "        }\n"
+             "      }\n"
+             "      workgroupBarrier();\n"
+             "      if (w == pwv) {\n"
+             "        for (var k = 0u; k < 16u; k = k + 1u) {\n"
+             "          aFrag[k] = subgroupMatrixLoad<Left>(&Bsh, pq + k * 8u, false, 128u);\n"
+             "        }\n"
+             "      }\n"
+             "      workgroupBarrier();\n"
+             "    }\n"
+             "  }") > 0);
+  if (!ok) return src;
+  return t;
+}
+
 std::string ColpTransposeWgsl(const std::string& src) {
   std::string t = src;
   auto rep = [&t](const std::string& from, const std::string& to) {
@@ -1482,6 +1604,7 @@ bool EnsureMainPipelines(Ctx& c) {
         getenv("OFFICIAL_AETHER_MATCH_DAWN_COLPC") == nullptr) {
       mixed_src = ColpTransposeWgsl(mixed_src);  // 新核已是 rb-major,不重复转置
     }
+    if (c.packed) mixed_src = PackedWgsl(mixed_src);
     if (c.mixed && getenv("OFFICIAL_AETHER_MATCH_DAWN_NOSCAN") != nullptr) {
       mixed_src = NoScanWgsl(mixed_src);
     }
@@ -1529,6 +1652,7 @@ bool EnsureGuidedPipeline(Ctx& c) {
   // f32). Without this the guided path reads f16 bytes as f32 and returns 0
   // matches — caught by the ABI test's guided mode2 identity case.
   if (c.mixed) src = MixedWgsl(src.c_str());
+  if (c.packed) src = PackedWgsl(src);
   wgpu::ShaderModule m = CompileWgsl(c, src, c.mixed ? "guided mixed" : "guided");
   if (!m) return false;
   c.p_guided = MakePipeline(c, m, "main");
@@ -1565,6 +1689,7 @@ constexpr wgpu::BufferUsage kUsageStaging =
 // Bytes of one descriptor table in the active kernel's storage format.
 uint64_t DescBytes(const Ctx& c, uint32_t n, uint32_t npad) {
   if (c.backend != Backend::kMma) return (uint64_t)n * kD;
+  if (c.packed) return (uint64_t)npad * kD;  // u8;npad*128 恒为 4 的倍数
   return (uint64_t)npad * kD * (c.mixed ? sizeof(uint16_t) : sizeof(float));
 }
 
@@ -1573,6 +1698,16 @@ uint64_t DescBytes(const Ctx& c, uint32_t n, uint32_t npad) {
 // TU, exact; tiled: raw u8 rows, the kernel guards rows itself).
 void UploadDesc(Ctx& c, wgpu::Buffer buf, uint64_t off, const uint8_t* d,
                 uint32_t n, uint32_t npad, std::vector<float>& scratch) {
+  if (c.backend == Backend::kMma && c.packed) {
+    // 原样传 u8,零 CPU 转换;补位行必须显式清零(A 的补位行会被 aFrag 直接读走)。
+    c.queue.WriteBuffer(buf, off, d, (uint64_t)n * kD);
+    if (npad > n) {
+      const size_t padBytes = (size_t)(npad - n) * kD;
+      if (c.padZero.size() < padBytes) c.padZero.assign(padBytes, 0);
+      c.queue.WriteBuffer(buf, off + (uint64_t)n * kD, c.padZero.data(), padBytes);
+    }
+    return;
+  }
   if (c.backend == Backend::kMma && c.mixed) {
     // u8 → f16, EXACT (no scaling): every u8 value is representable in f16.
     c.scratch16.assign((size_t)npad * kD, 0);
