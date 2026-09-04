@@ -1,0 +1,51 @@
+name: PWMatchBench
+options:
+  bundleIdPrefix: com.kyle
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  PWMatchBench:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - path: /Users/kaidongwang/Developer/pw-head-0827/vendor/official_sfm/src/pwofficial_gpu_match.mm
+        group: MatcherTU
+        compilerFlags: "-include /Users/kaidongwang/Developer/pw-head-0827/vendor/official_sfm/src/pwofficial_gpu_match_metal_rename.h"
+      - path: /Users/kaidongwang/Developer/pw-head-0827/vendor/official_sfm/src/pwofficial_gpu_match_dispatch.cc
+        group: MatcherTU
+      - path: /Users/kaidongwang/Developer/pw-head-0827/vendor/official_sfm/src/pwofficial_gpu_match_dawn.cc
+        group: MatcherTU
+        compilerFlags: "-DPWOFFICIAL_DAWN_OBSERVABLES_EXTERN=1"
+      - path: /Users/kaidongwang/Developer/pw-head-0827/vendor/official_sfm/src/pwofficial_gpu_match_thermal_apple.mm
+        group: MatcherTU
+    settings:
+      base:
+        DEVELOPMENT_TEAM: 26AH7V448L
+        PRODUCT_BUNDLE_IDENTIFIER: com.kyle.PWMatchBench
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Bridging.h
+        CLANG_CXX_LANGUAGE_STANDARD: "gnu++17"
+        CLANG_CXX_LIBRARY: "libc++"
+        CLANG_ENABLE_OBJC_ARC: YES
+        GCC_OPTIMIZATION_LEVEL: 3
+        ENABLE_BITCODE: NO
+        HEADER_SEARCH_PATHS:
+          - /Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/third_party/dawn/include
+          - /Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-ios-device-dawn/third_party/dawn/gen/include
+          - ~/Developer/pw-head-0827/vendor/official_sfm/include
+        OTHER_LDFLAGS:
+          - -ObjC
+          - -force_load
+          - /Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/build-ios-device-dawn/third_party/dawn/src/dawn/native/Debug-iphoneos/libwebgpu_dawn.a
+          - -lc++
+          - -lz
+    dependencies:
+      - sdk: Metal.framework
+      - sdk: CoreVideo.framework
+      - sdk: IOSurface.framework
+      - sdk: QuartzCore.framework
+      - sdk: Accelerate.framework
+      - sdk: CoreGraphics.framework
+      - sdk: ImageIO.framework
