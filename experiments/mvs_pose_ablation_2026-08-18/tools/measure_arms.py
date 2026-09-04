@@ -18,7 +18,9 @@
 import argparse, gc, importlib.util, json, os, sys, tempfile
 import numpy as np
 
-SPIKE = os.path.expanduser("~/Documents/progecttwo/_artifacts/lightglue_spike")
+# ⚠️ 同 run_arm.py 那个坑:硬编码路径换机器就废。允许 SPIKE_DIR 覆盖。
+SPIKE = os.environ.get("SPIKE_DIR") or os.path.expanduser(
+    "~/Documents/progecttwo/_artifacts/lightglue_spike")
 
 
 def _load(mod):

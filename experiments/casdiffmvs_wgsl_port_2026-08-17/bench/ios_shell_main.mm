@@ -41,9 +41,12 @@ int bench_run(int argc, char** argv);  // 同为 C++ 编译,mangling 一致,不�
     setvbuf(stderr, NULL, _IONBF, 0);
 
     NSBundle* b = NSBundle.mainBundle;
-    NSString* model  = [b pathForResource:@"casdiffmvs_v5" ofType:@"onnx"];
+    // PW_BENCH_MODEL = bundle 内模型基名(不含 .onnx),默认 fp32 母本 —— 双模型入包免装两次
+    const char* mname = getenv("PW_BENCH_MODEL") ?: "casdiffmvs_v5";
+    NSString* model  = [b pathForResource:@(mname) ofType:@"onnx"];
     NSString* inputs = [b pathForResource:@"inputs8" ofType:@"bin"];
-    if (!model || !inputs) { fprintf(stderr, "🔴 bundle 里找不到 model/inputs\n"); exit(2); }
+    if (!model || !inputs) { fprintf(stderr, "🔴 bundle 里找不到 model(%s)/inputs\n", mname); exit(2); }
+    fprintf(stdout, "模型:%s.onnx\n", mname);
     const char* ep = getenv("PW_BENCH_EP") ?: "1";  // 1=WebGPU(默认) 0=CPU
     char* argv2[] = {(char*)"casdiffbench", (char*)model.UTF8String,
                      (char*)inputs.UTF8String, (char*)ep, nullptr};

@@ -1,0 +1,58 @@
+===== birth_gate_ab/arm_base_prod
+/Users/kaidongwang/Documents/progecttwo/_artifacts/floater_removal_20260805/analyze_metadata_filter.py:111: RuntimeWarning: Mean of empty slice
+  v = (sa[:, None] < sb[None, :]).mean() if invert \
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/Users/kaidongwang/Documents/progecttwo/_artifacts/floater_removal_20260805/analyze_metadata_filter.py:112: RuntimeWarning: Mean of empty slice
+  else (sa[:, None] > sb[None, :]).mean()
+model points = 19034, images = 191
+track len: p50=2 2-view=87.4% >=3=12.6%
+error(px): p50=0.653 p90=1.613 p99=2.097
+max tri angle(deg): p10=2.78 p50=6.99 p90=22.71
+radius: p50=13.18 p99=110.36 p100=358.68
+bands: core=0 shell=1 far=19033
+
+AUC(shell vs core): track_len(low=bad) nan  error(high=bad) nan  tri_angle(low=bad) nan
+
+--- candidate delivery filters ---
+               #1 GUI: track>=3 & err<=2.0: drop= 16763 (88.07%)  shell cov=100.0%  core dmg= 0.00%  far cov= 88.1%  kept=2271
+                            track>=3 alone: drop= 16635 (87.40%)  shell cov=100.0%  core dmg= 0.00%  far cov= 87.4%  kept=2399
+                            err<=2.0 alone: drop=   441 ( 2.32%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  2.3%  kept=18593
+                                  track>=4: drop= 18562 (97.52%)  shell cov=100.0%  core dmg= 0.00%  far cov= 97.5%  kept=472
+                            tri_angle>=1.5: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=19034
+                            tri_angle>=2.0: drop=   710 ( 3.73%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  3.7%  kept=18324
+                            tri_angle>=3.0: drop=  2436 (12.80%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 12.8%  kept=16598
+                            tri_angle>=5.0: drop=  7111 (37.36%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 37.4%  kept=11923
+                         #1 + tri_angle>=3: drop= 17001 (89.32%)  shell cov=100.0%  core dmg= 0.00%  far cov= 89.3%  kept=2033
+                   track>=3 | tri_angle>=3: drop=  2182 (11.46%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 11.5%  kept=16852
+                2view & tri<3 dropped only: drop=  2182 (11.46%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 11.5%  kept=16852
+
+===== birth_gate_ab/arm_3deg_prod
+/Users/kaidongwang/Documents/progecttwo/_artifacts/floater_removal_20260805/analyze_metadata_filter.py:111: RuntimeWarning: Mean of empty slice
+  v = (sa[:, None] < sb[None, :]).mean() if invert \
+/opt/homebrew/lib/python3.14/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/Users/kaidongwang/Documents/progecttwo/_artifacts/floater_removal_20260805/analyze_metadata_filter.py:112: RuntimeWarning: Mean of empty slice
+  else (sa[:, None] > sb[None, :]).mean()
+model points = 14641, images = 187
+track len: p50=2 2-view=87.8% >=3=12.2%
+error(px): p50=0.680 p90=1.643 p99=2.094
+max tri angle(deg): p10=4.33 p50=8.30 p90=22.07
+radius: p50=48.30 p99=50.58 p100=32389.68
+bands: core=0 shell=0 far=14641
+
+AUC(shell vs core): track_len(low=bad) nan  error(high=bad) nan  tri_angle(low=bad) nan
+
+--- candidate delivery filters ---
+               #1 GUI: track>=3 & err<=2.0: drop= 12952 (88.46%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 88.5%  kept=1689
+                            track>=3 alone: drop= 12849 (87.76%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 87.8%  kept=1792
+                            err<=2.0 alone: drop=   324 ( 2.21%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  2.2%  kept=14317
+                                  track>=4: drop= 14223 (97.15%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 97.1%  kept=418
+                            tri_angle>=1.5: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=14641
+                            tri_angle>=2.0: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=14641
+                            tri_angle>=3.0: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=14641
+                            tri_angle>=5.0: drop=  3259 (22.26%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 22.3%  kept=11382
+                         #1 + tri_angle>=3: drop= 12952 (88.46%)  shell cov=  0.0%  core dmg= 0.00%  far cov= 88.5%  kept=1689
+                   track>=3 | tri_angle>=3: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=14641
+                2view & tri<3 dropped only: drop=     0 ( 0.00%)  shell cov=  0.0%  core dmg= 0.00%  far cov=  0.0%  kept=14641
+

@@ -25,7 +25,9 @@ import numpy as np
 import torch
 import cv2
 
-REPO = os.path.expanduser(
+# ⚠️ 硬编码 Mac 路径会让脚本在别的机器上直接 ModuleNotFoundError
+# (2026-08-19 在租的机器上踩到)。允许用 DIFFMVS_REPO 覆盖。
+REPO = os.environ.get("DIFFMVS_REPO") or os.path.expanduser(
     "~/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/diffmvs")
 sys.path.insert(0, REPO)
 from datasets import find_dataset_def                      # noqa: E402

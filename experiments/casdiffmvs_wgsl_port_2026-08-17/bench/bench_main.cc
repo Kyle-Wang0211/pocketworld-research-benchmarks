@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <thread>
@@ -126,7 +127,21 @@ int main(int argc, char** argv) {
   const size_t n2 = (size_t)(h.H / 4) * (h.W / 4);
   const size_t n3 = (size_t)(h.H / 2) * (h.W / 2);
 
-  for (uint32_t f = 0; f < h.n_frames; ++f) {
+  // PW_BENCH_LOOPS:同一批素材连跑 N 遍(默认 1=原行为),量持续负载下的热降频曲线。
+  // 🔴 循环必须在这层(帧循环层)而不是壳层:壳层重复调 bench_run 每遍都重建会话
+  //    (真机实测 732ms)并重复 parity,会污染热曲线。parity 只在第一遍做,后面纯计时。
+  int loops = 1;
+  if (const char* lv = getenv("PW_BENCH_LOOPS")) loops = std::max(1, atoi(lv));
+  if (loops > 1)
+    printf("持续负载模式:%d 遍 × %u 帧(热曲线看逐帧时间戳,t=帧结束时刻)\n",
+           loops, h.n_frames);
+
+  const char* frames_base = cur;
+  std::vector<double> pass_ms;
+  auto t_run0 = std::chrono::steady_clock::now();
+  for (uint32_t it = 0, total = h.n_frames * (uint32_t)loops; it < total; ++it) {
+    const uint32_t lp = it / h.n_frames, f = it % h.n_frames;
+    if (f == 0) cur = frames_base;
     const int32_t* vidx = (const int32_t*)cur;                 cur += 4 * h.n_view;
     const float*   pm[3];
     for (int s = 0; s < 3; ++s) { pm[s] = (const float*)cur;   cur += 4 * h.n_view * 32; }
@@ -182,17 +197,29 @@ int main(int argc, char** argv) {
                         vals.size(), out_names, 4);
     double dt = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - t0).count();
-    if (f > 0) ms.push_back(dt);                    // 丢弃首帧(编译+预热)
+    if (it > 0) { ms.push_back(dt); pass_ms.push_back(dt); }  // 丢弃全局首帧(编译+预热)
 
-    const float* d = out[0].GetTensorData<float>();
-    for (size_t i = 0; i < HW; ++i) {
-      if (!std::isfinite(d[i])) { ++nonfinite; continue; }
-      double r = std::fabs(d[i] - ref[i]) / std::max(ref[i], 1e-6f);
-      if (r > 0.01) ++bad1;
-      worst_rel = std::max(worst_rel, r);
-      ++tot;
+    if (lp == 0) {  // parity 对拍只在第一遍做,后面纯计时
+      const float* d = out[0].GetTensorData<float>();
+      for (size_t i = 0; i < HW; ++i) {
+        if (!std::isfinite(d[i])) { ++nonfinite; continue; }
+        double r = std::fabs(d[i] - ref[i]) / std::max(ref[i], 1e-6f);
+        if (r > 0.01) ++bad1;
+        worst_rel = std::max(worst_rel, r);
+        ++tot;
+      }
     }
-    printf("  帧%2u  %7.1f ms\n", f, dt);
+    double t_rel = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - t_run0).count();
+    printf("  遍%2u 帧%2u  t=%8.1fs  %7.1f ms\n", lp + 1, f, t_rel, dt);
+    if (f + 1 == h.n_frames) {
+      std::sort(pass_ms.begin(), pass_ms.end());
+      if (!pass_ms.empty())
+        printf("  ── 遍%2u 中位 %.1f ms(n=%zu%s)──\n", lp + 1,
+               pass_ms[pass_ms.size() / 2], pass_ms.size(),
+               lp == 0 ? ",已丢首帧" : "");
+      pass_ms.clear();
+    }
   }
 
   stop.store(true); sampler.join();
@@ -204,13 +231,14 @@ int main(int argc, char** argv) {
   size_t pk = std::max(peak.load(), peak_mem_hwm());
 #endif
 
-  printf("\n══ 结果(EP=%s)══\n", ep == 1 ? "WebGPU" : "CPU");
+  printf("\n══ 结果(EP=%s · %d 遍 × %u 帧)══\n",
+         ep == 1 ? "WebGPU" : "CPU", loops, h.n_frames);
   printf("  会话建立      %.0f ms\n", sess_ms);
   printf("  稳态延迟      中位 %.1f ms  (min %.1f  max %.1f,已丢首帧)\n",
          med, ms.empty() ? 0 : ms.front(), ms.empty() ? 0 : ms.back());
   printf("  峰值内存      %.0f MB   [%s]\n", pk / 1e6, kMemMetric);
   printf("  预算 1500 MB  %s\n", pk / 1e6 <= 1500 ? "✅ 在预算内" : "🔴 超预算");
-  printf("\n  与 host 参考对拍:非有限 %zu  >1%% 的像素 %.4f%%  最大相对差 %.3f%%\n",
+  printf("\n  与 host 参考对拍(只测第 1 遍):非有限 %zu  >1%% 的像素 %.4f%%  最大相对差 %.3f%%\n",
          nonfinite, 100.0 * bad1 / std::max<size_t>(tot, 1), 100.0 * worst_rel);
   printf("  ⇒ %s\n", (nonfinite == 0 && 100.0 * bad1 / std::max<size_t>(tot, 1) < 0.1)
                      ? "✅ 数值与 host 一致" : "🔴 数值不一致 —— 先查这个,别信上面的速度");

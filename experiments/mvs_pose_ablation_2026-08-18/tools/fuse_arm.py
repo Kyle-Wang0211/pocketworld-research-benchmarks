@@ -15,7 +15,9 @@
    深度平均         ← 官方 filter_depth 内部就有,不用也不能关
 """
 import argparse, os, sys
-REPO = os.path.expanduser(
+# ⚠️ 硬编码 Mac 路径会让脚本在别的机器上直接 ModuleNotFoundError
+# (2026-08-19 在租的机器上踩到)。允许用 DIFFMVS_REPO 覆盖。
+REPO = os.environ.get("DIFFMVS_REPO") or os.path.expanduser(
     "~/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/diffmvs")
 sys.path.insert(0, REPO)
 from filter import filter_depth          # noqa: E402  ← 官方判据,原样调用

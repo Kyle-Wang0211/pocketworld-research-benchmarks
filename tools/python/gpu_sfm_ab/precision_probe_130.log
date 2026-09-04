@@ -1,0 +1,42 @@
+scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+[probe] TARGET_REFS=130 WORKERS=8
+align->ARKit: common=413 inliers=382 scale=0.2168 med_resid=9.3mm
+[probe] N_full=413 subset=130 (31.5%) sel_sig=8e80093967e3 s_al=0.2168 (1 unit=216.8mm)
+[probe] fp16 out: depth=var_16044 conf=var_16002 | fp32 out: depth=var_16044 conf=var_16002
+[infer] determinism self-check (fp32, same feed x2): BIT-IDENTICAL
+  [1/130] cell_100_slot_1.jpg drange=[3.95,16.80] fp16-vs-fp32 depth mean|rel|=0.0152 med16=7.570 med32=7.517
+  [21/130] cell_106_slot_9.jpg drange=[1.90,12.79] fp16-vs-fp32 depth mean|rel|=0.0298 med16=6.211 med32=6.216
+  [41/130] cell_51_slot_0.jpg drange=[2.61,15.52] fp16-vs-fp32 depth mean|rel|=0.0301 med16=7.711 med32=7.580
+  [61/130] cell_67_slot_6.jpg drange=[3.50,15.72] fp16-vs-fp32 depth mean|rel|=0.0199 med16=5.699 med32=5.696
+  [81/130] cell_78_slot_3.jpg drange=[2.27,19.66] fp16-vs-fp32 depth mean|rel|=0.0313 med16=5.234 med32=5.139
+  [101/130] cell_87_slot_0.jpg drange=[2.86,13.45] fp16-vs-fp32 depth mean|rel|=0.0177 med16=5.258 med32=5.221
+  [121/130] cell_96_slot_11.jpg drange=[1.87,14.13] fp16-vs-fp32 depth mean|rel|=0.0291 med16=4.895 med32=4.799
+  [130/130] cell_99_slot_5.jpg drange=[3.89,17.37] fp16-vs-fp32 depth mean|rel|=0.0162 med16=7.367 med32=7.314
+[probe] inference done (59.6s wall)  fp16 median=139ms/frame  fp32 median=168ms/frame
+[probe] per-ref depth mean|rel| fp16-vs-fp32: median=0.0281 mean=0.0287 p90=0.0398
+[fp16] fused raw=1,879,019 -> voxel5mm+SOR 230,681 pts  kept/ref=3.2%  fuse=8.7s
+[fp32] fused raw=16,989,931 -> voxel5mm+SOR 1,047,687 pts  kept/ref=28.5%  fuse=9.3s
+[probe] wrote /Users/kaidongwang/Desktop/fp16_fused.ply (230,681 pts) and /Users/kaidongwang/Desktop/fp32_fused.ply (1,047,687 pts)
+
+================ (a) fp16 cloud vs fp32 cloud ================
+  points:  fp16=230,681  fp32=1,047,687  delta=-817,006 (-77.98% vs fp32)  raw fp16/fp32=1,879,019/16,989,931
+  completeness fp32->fp16 (frac of fp32 pts near fp16): @2mm=5.57%  @5mm=16.69%  @10mm=29.01%
+  one-sided dist fp32->fp16: median=27.11mm  p90=187.74mm
+  completeness fp16->fp32 (frac of fp16 pts near fp32): @2mm=25.38%  @5mm=59.25%  @10mm=79.04%
+  one-sided dist fp16->fp32: median=3.61mm  p90=16.28mm
+
+========= (b) vs gold mvs_ofull.ply (full-413 fp32 PyTorch) =========
+  gold: 3,620,875 pts  |  fp16 subset: 230,681 (6.4% of gold)  fp32 subset: 1,047,687 (28.9% of gold)
+  gold coverage BY fp16 (frac gold near fp16): @2mm=1.06%  @5mm=7.26%  @10mm=14.28%  med=67.94mm p90=680.74mm
+  gold coverage BY fp32 (frac gold near fp32): @2mm=15.52%  @5mm=36.30%  @10mm=53.19%  med=8.69mm p90=141.44mm
+  fp16 pts ON gold surface (frac fp16 near gold): @2mm=17.29%  @5mm=79.51%  @10mm=90.73%  med=2.78mm p90=9.47mm
+  fp32 pts ON gold surface (frac fp32 near gold): @2mm=53.81%  @5mm=95.71%  @10mm=99.10%  med=1.91mm p90=3.54mm
+
+================ VERDICT ================
+  fp16 point count is -77.98% vs fp32 on the FINAL fused cloud.
+  fp32 surface reproduced by fp16 within 5mm: 16.69% (within 10mm: 29.01%); median cl-to-cl dist 27.11mm.
+  gold-coverage gap (fp32 - fp16) @5mm = +29.04 pts, @10mm = +38.91 pts.
+  ⚠️ This gap includes ONE diffusion-noise realisation per model (traces baked separate eta noise); read >~2% only as SYSTEMATIC precision loss.
+
+[probe] wrote /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/gpu_sfm_ab/precision_quality_probe_result.json

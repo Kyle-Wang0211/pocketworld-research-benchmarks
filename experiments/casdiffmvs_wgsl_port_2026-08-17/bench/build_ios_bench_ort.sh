@@ -15,6 +15,7 @@ ORT_DYLIB="$ORT_LIB_DIR/libonnxruntime.1.29.0.dylib"     # install name = @rpath
 ORT_INC="$HOME/ort_ios_build/onnxruntime/include/onnxruntime/core/session"
 RES_DIR="/Users/kaidongwang/Documents/progecttwo/_artifacts/ios_bench_20260819"
 MODEL="$RES_DIR/casdiffmvs_v5.onnx"
+MODEL_FP16="$RES_DIR/casdiffmvs_v5_fp16.onnx"   # 有则一并入包(壳用 PW_BENCH_MODEL 选)
 INPUTS="$RES_DIR/inputs8.bin"
 
 # 🔴 .app 必须打在**非 File Provider 卷**上。progecttwo 在同步卷上,
@@ -51,8 +52,9 @@ xcrun -sdk iphoneos clang++ -arch arm64 -miphoneos-version-min="$MINOS" \
 # ── 3. dylib 进包:按 install name 命名(bundle 内不放符号链)──
 cp "$ORT_DYLIB" "$APP/Frameworks/libonnxruntime.1.dylib"
 
-# ── 4. 资源:model + inputs ──
+# ── 4. 资源:model + inputs(fp16 模型存在则双模型入包)──
 cp "$MODEL" "$INPUTS" "$APP/"
+[ -f "$MODEL_FP16" ] && cp "$MODEL_FP16" "$APP/"
 
 # ── 5. Info.plist ──
 cat > "$APP/Info.plist" <<PLIST

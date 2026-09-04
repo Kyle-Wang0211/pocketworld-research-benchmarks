@@ -29,7 +29,12 @@ from pathlib import Path
 # ⚠️ 我第一版凭记忆写,最后一个 ID 写错了一位(59817bed… 实际是 59817e4a…)。
 #    场景 ID 是 24 位十六进制,错一位不会报错,只会让那个场景静默落进 train,
 #    验证集少一个 —— 典型静默 bug。所以下面优先从仓库原文件读,硬编码只是兜底。
-_REPO_VAL = Path(__file__).resolve().parents[3] / "tools/python/diffmvs/lists/blend/val.txt"
+# ⚠️ 脚本被拷到别处时 parents[3] 会 IndexError(2026-08-19 在租的机器上踩到)。
+# 兜底成 None,靠 --val-from 或下面的硬编码。
+try:
+    _REPO_VAL = Path(__file__).resolve().parents[3] / "tools/python/diffmvs/lists/blend/val.txt"
+except IndexError:
+    _REPO_VAL = None
 DEFAULT_VAL = [
     "5b7a3890fc8fcf6781e2593a", "5c189f2326173c3a09ed7ef3",
     "5b950c71608de421b1e7318f", "5a6400933d809f1d8200af15",
