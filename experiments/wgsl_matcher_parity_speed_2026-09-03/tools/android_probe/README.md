@@ -63,14 +63,16 @@ Adreno 默认路径复验 `BACKEND_INFO backend=blocked`。产品仓 commit 5a31
 ## 2026-09-05 晚:真正的底板到了 —— Mate 10(麒麟 970 / Mali-G72 MP12 / Android 10,2017 年机)
 | 核 | 尺寸 | ms | sha | 判定 |
 |---|---|---|---|---|
+| tiled(env 强制) | **13312²(生产尺寸)** | 38107 | `a59db73512ce` | ✓ 逐字节 |
+| **blocked 8x4+PIPEB(默认)** | **13312²(生产尺寸)** | **7234** | `a59db73512ce` | ✓ 逐字节,比 tiled 快 **5.27×** |
 | tiled(env 强制) | 8192² | 14258 | `fcb72732ae09` | ✓ 逐字节 |
-| **blocked 8x4+PIPEB(默认)** | 8192² | **3063** | `fcb72732ae09` | ✓ 逐字节,比 tiled 快 **4.65×** |
-| **blocked 8x4+PIPEB(默认)** | 13312² | **7234** | `a59db73512ce` | ✓ 逐字节 |
+| blocked 8x4+PIPEB(默认) | 8192² | 3063 | `fcb72732ae09` | ✓ 逐字节,4.65× |
 
 指纹:**`subgroup=[0,0] subgroups=0`**(这块 GPU 连 subgroup 都没有)、sgmatrix=0、packed_dot=1、
 storage 32768 / invocations 384 / sizeX 384。通用核不依赖任何这些特性,照跑。
 **同一份 WGSL 现在在四个后端逐字节一致:Metal(M3 Pro)/ Metal(A16)/ Vulkan(Adreno 660)/ Vulkan(Mali-G72)。**
 慢是慢(13312² 7.2s,是 Adreno 660 的 15×、A16 的 77×),但那是 2017 年中端 GPU 的算力,不是算法分叉。
+🔴 比值一律按生产尺寸 13312² 报(用户 09-05:"为什么不用生产端的 13312²"),8192² 只留作跨端 sha 参照。
 
 ### 上机四个坑(都记在脚本里)
 1. **麒麟 970 的 Vulkan ICD 对 adb shell(uid 2000)进程返回 0 个物理设备**(`vkinfo.c` 纯 Vulkan 枚举同样 0)

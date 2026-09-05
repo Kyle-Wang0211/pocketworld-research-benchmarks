@@ -10,4 +10,6 @@ RESULT rows=13312 rc=0 count=174 sha256=a59db73512ce1ca27f9d527910f30a4f9c7bfa8b
 $ ./run_apk.sh 8192 1 tiled
 BACKEND_INFO backend=tiled(dot4U8Packed,V1/V2) adapter="Mali-G72" ... (forced tiled)
 RESULT rows=8192 rc=0 count=148 sha256=fcb72732ae098e0b8470e2fc764b47ec8797a227731db54211d6568d91bb8f3e p50_ms=14257.896 min_ms=14257.896
+$ ./run_apk.sh 13312 1 tiled
+RESULT rows=13312 rc=0 count=174 sha256=a59db73512ce1ca27f9d527910f30a4f9c7bfa8b6fa5feb08ba26d033e877ad0 p50_ms=38107.296 min_ms=38107.296
 # 注:此时探针 .so 的指纹标签仍是旧硬编码 "fma4x4";实际核 = 默认 8x4+PIPEB(产品仓 94621fe 已改为按 env 生成)
