@@ -132,3 +132,18 @@ Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI
   给 Mali 的 64 上限留余量)。
 - Mac 门齐:DIRECT / DIRECT-44 / DIRECT-G / DIRECT-TEX **db51 全量各 162/162**,ABI 门四臂绿,fx13 13312 sha 四臂 `a59db73512ce`。
   M3 Pro 13312²:基线 18.7 / DIRECT 18.6 / 44 20.7 / G 19.5 / TEX 20.7 ms。设备侧待 Mate 10 插回 USB(batch2.sh)与 A16。
+
+## 2026-09-05 夜 第二批(Mate 10,13312²,全部 sha `a59db73512ce`;`run_2026-09-05_mate10_batch2.tsv`)
+| 臂 | ms | vs 基线 | 判读 |
+|---|---|---|---|
+| base(8x4+PIPEB,LDS) | 6461 / 6083(再测) | 1.00 | |
+| DIRECT 8x4 | 6278 / 6270 | 0.97 | 去暂存+barrier 只赚 3% —— 不是病根 |
+| DIRECT 8x4 + chunk_off | 6084 | 0.94 | 分块提交间隙 ~3% |
+| DIRECT-G 8x4 | 4400 | 0.68 | 核内零线程组内存 −30%:"带 local memory 每核只驻一个 WG" 在 G72 上成立 |
+| DIRECT-G 8x4 + chunk_off | 4114 | 0.64 | |
+| DIRECT-TEX 8x4 | **2555** | **0.40** | B 走纹理 −60%:高通/ACL 的 image 路径在 Mali 上同样是真金 |
+| DIRECT-G+TEX 8x4 | 5215 | 0.81 | G 与 TEX 在 8x4 上反而互相拖累(占用率变了,纹理缓存命中随之变) |
+| **DIRECT-44(4x4/256)** | **849** | **0.13** | **病根 = 寄存器溢出**:8 个 vec4 累加器 + 载入超过 Bifrost 每线程 64 寄存器,内层 spill |
+| DIRECT-44+G / +TEX / +G+TEX | (失败,无 sha) | | G 锚点照 8x4 文本写,44 之后未命中 → 退回无 G 核但 C++ 仍绑 Scr → 管线失败;已修(第三批补测) |
+🔴 Mac 侧"叠加形态 sha 全对"当时是假的:Bash 工具是 zsh,未加引号的 `$e` 不分词,`env "A=1 B=1"` 只设 A。
+   已加 `OFFICIAL_AETHER_MATCH_DAWN_WGSL_DUMP=1` 打印最终 WGSL 与 `[direct-chain]` 逐步日志,四种叠加形态重验真实生效。
