@@ -1,0 +1,13 @@
+# Mate 10 (ALP-AL00, Kirin 970 / Mali-G72 MP12, Android 10 / EMUI 10) — 以 app 身份(com.kyle.pwprobe)跑
+# adb shell 直跑:vkEnumeratePhysicalDevices=0 ⇒ Dawn 无 Vulkan 适配器(Null 已拒)
+$ ./run_apk.sh 2048 1
+BACKEND_INFO backend=blocked(fma4x4,V3) adapter="Mali-G72" subgroups=0 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[0,0] packed_dot=1 timestamp=0 limits[storage=32768 invocations=384 sizeX=384]
+RESULT rows=2048 rc=0 count=22 sha256=b0fb600d56820cf86db82a134d3201fc640cd4292da3e6b0515f2ad42f7c9685 p50_ms=481.333 min_ms=481.333
+$ ./run_apk.sh 8192 1
+RESULT rows=8192 rc=0 count=148 sha256=fcb72732ae098e0b8470e2fc764b47ec8797a227731db54211d6568d91bb8f3e p50_ms=3062.750 min_ms=3062.750
+$ ./run_apk.sh 13312 1
+RESULT rows=13312 rc=0 count=174 sha256=a59db73512ce1ca27f9d527910f30a4f9c7bfa8b6fa5feb08ba26d033e877ad0 p50_ms=7234.264 min_ms=7234.264
+$ ./run_apk.sh 8192 1 tiled
+BACKEND_INFO backend=tiled(dot4U8Packed,V1/V2) adapter="Mali-G72" ... (forced tiled)
+RESULT rows=8192 rc=0 count=148 sha256=fcb72732ae098e0b8470e2fc764b47ec8797a227731db54211d6568d91bb8f3e p50_ms=14257.896 min_ms=14257.896
+# 注:此时探针 .so 的指纹标签仍是旧硬编码 "fma4x4";实际核 = 默认 8x4+PIPEB(产品仓 94621fe 已改为按 env 生成)

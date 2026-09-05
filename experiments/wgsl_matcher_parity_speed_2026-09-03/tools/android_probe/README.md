@@ -59,3 +59,26 @@ Vulkan ON / Metal OFF / Release)。🔴 Dawn 的代码生成器会被 brew pytho
 ## 2026-09-05 收官:通用核默认 8x4 + PIPEB;tiled 让位
 PIPEB(只提前 B 的一个 vec4)A16 −1~5% / Adreno −5.9%,三平台逐字节。无 MMA 设备默认落 blocked(不再 tiled),
 Adreno 默认路径复验 `BACKEND_INFO backend=blocked`。产品仓 commit 5a3138e。
+
+## 2026-09-05 晚:真正的底板到了 —— Mate 10(麒麟 970 / Mali-G72 MP12 / Android 10,2017 年机)
+| 核 | 尺寸 | ms | sha | 判定 |
+|---|---|---|---|---|
+| tiled(env 强制) | 8192² | 14258 | `fcb72732ae09` | ✓ 逐字节 |
+| **blocked 8x4+PIPEB(默认)** | 8192² | **3063** | `fcb72732ae09` | ✓ 逐字节,比 tiled 快 **4.65×** |
+| **blocked 8x4+PIPEB(默认)** | 13312² | **7234** | `a59db73512ce` | ✓ 逐字节 |
+
+指纹:**`subgroup=[0,0] subgroups=0`**(这块 GPU 连 subgroup 都没有)、sgmatrix=0、packed_dot=1、
+storage 32768 / invocations 384 / sizeX 384。通用核不依赖任何这些特性,照跑。
+**同一份 WGSL 现在在四个后端逐字节一致:Metal(M3 Pro)/ Metal(A16)/ Vulkan(Adreno 660)/ Vulkan(Mali-G72)。**
+慢是慢(13312² 7.2s,是 Adreno 660 的 15×、A16 的 77×),但那是 2017 年中端 GPU 的算力,不是算法分叉。
+
+### 上机四个坑(都记在脚本里)
+1. **麒麟 970 的 Vulkan ICD 对 adb shell(uid 2000)进程返回 0 个物理设备**(`vkinfo.c` 纯 Vulkan 枚举同样 0)
+   ⇒ Dawn 只剩 Null 后端(TU 已拒)。必须以 app 身份跑 ⇒ `apk/`(aapt2→javac→d8→zip .so→zipalign→apksigner,无 Gradle,
+   `build_apk.sh` 缺 keystore 自生成);夹具 `run-as` 拷进 `files/fixtures/fx13`,结果在 `files/probe_out.txt`。
+2. EMUI **纯净模式·增强防护**拒装未经应用市场检测的 APK:`INSTALL_FAILED_ABORTED: User rejected permissions`,
+   弹窗只有"查找类似应用/取消安装"。手机上 设置→系统和更新→纯净模式→退出增强防护 后直通。
+3. `run_apk.sh`:`pidof <包名>` 在此机返回空(改 `ps -A` + `tr -d '\r'`);adb shell 吞空的 `""` 参数 ⇒
+   `am start` 报 "Argument expected after extra"(非空才加 `--es`);灭屏时 Activity 不起(先 `KEYCODE_WAKEUP`)。
+4. 指纹标签硬编码 `blocked(fma4x4,V3)` 而默认核早已是 8x4+PIPEB —— 指纹说了假话;产品仓 94621fe 改为
+   `BlockedLabel()` 按选核 env 生成,Mac 阳性对照 `blocked(fma8x4+pipeb,V3)` + sha 不变。
