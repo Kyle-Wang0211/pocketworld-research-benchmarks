@@ -116,3 +116,12 @@ Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI
 🔴 Mac 活性检查:`unroll/noload/xbar` 三探针在 8x4+PIPEB 上生成代码与基线逐字节同 = 死锚点;noload/xbar 已修
 (先认 PIPEB 形态),unroll 仍只认 4x4。**每个探针对每种形态验活性**——第三次撞同一坑。
 设备:Mate 10 拔 USB 后 adbd 重启回 USB 模式,Wi-Fi adb(tcpip 5555)不跨拔线;此机必须插线测。
+
+### Adreno 官方口径(Qualcomm OnQ 博客《Matrix multiply on Adreno GPUs – Part 1》,2016-10-10,作者 Vladislav Shimanskiy,Adreno GPU Compute 团队)
+- 微块:"A typical micro-tile has 4 x 8 = 32 components" —— 每个 work-item 算 4×8(= 我们的 8x4 寄存器块)。
+- 向量读:"our kernels are written to use vectors of float4 type instead of just float … saturate the bandwidth to memory".
+- **纹理管线**:"The trick we use to increase the bandwidth is to load one matrix through TP and the other through the
+  direct load/store pipe … The TP has its own L1 cache and an independent connection to the L2 cache … We spend nearly
+  as much time on the ALU operation as we spend waiting for data to come back from caches, and we can pipeline them".
+- 通篇没有 local memory。⇒ Adreno 官方配方 = **DIRECT-TEX**(A 走缓冲、B 走纹理、寄存器 8x4、无 __local)。
+- 与 ACL 的 Mali 配方(export_to_cl_image)同形 ⇒ 纹理臂在两家安卓 GPU 上都有一手背书;Apple 侧 M3 实测 +2 ms(需 A16 定夺)。
