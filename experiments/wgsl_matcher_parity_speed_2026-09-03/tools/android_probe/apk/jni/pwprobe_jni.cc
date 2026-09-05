@@ -105,6 +105,12 @@ static int run_probe(const std::string& fx, int rows, int reps, FILE* out) {
 
   char info[512] = {0};
   const int ilen = pwdawn_gpu_match_backend_info(info, sizeof(info));
+#ifndef PW_PROBE_BUILD_ID
+#define PW_PROBE_BUILD_ID "unknown"
+#endif
+  // [BUILD-ID 2026-09-05] 装机≠生效:第三批曾在旧 .so 上跑(新 APK 只编未装)。把编进 .so 的 TU sha 打出来,
+  // 脚本对照期望值,不一致直接判 FAIL。
+  printf("BUILD_ID %s\n", PW_PROBE_BUILD_ID);
   printf("BACKEND_INFO %s\n", ilen > 0 ? info : "(无 GPU / Dawn 初始化失败)");
   if (ilen <= 0) {
     char err[512] = {0};

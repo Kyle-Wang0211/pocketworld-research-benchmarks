@@ -147,3 +147,17 @@ Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI
 | DIRECT-44+G / +TEX / +G+TEX | (失败,无 sha) | | G 锚点照 8x4 文本写,44 之后未命中 → 退回无 G 核但 C++ 仍绑 Scr → 管线失败;已修(第三批补测) |
 🔴 Mac 侧"叠加形态 sha 全对"当时是假的:Bash 工具是 zsh,未加引号的 `$e` 不分词,`env "A=1 B=1"` 只设 A。
    已加 `OFFICIAL_AETHER_MATCH_DAWN_WGSL_DUMP=1` 打印最终 WGSL 与 `[direct-chain]` 逐步日志,四种叠加形态重验真实生效。
+
+## 2026-09-05 夜 第三批(Mate 10,13312²,全部 sha `a59db73512ce`;`run_2026-09-05_mate10_batch3b.tsv`)
+| 臂 | ms | 判读 |
+|---|---|---|
+| **44_lds(原线程组暂存版 4x4/256)** | **829** | 老核本身就 7.8×:寄存器是全部,DIRECT/G 在 44 上不再有用 |
+| DIRECT-44 | 844 / 849 | ≈ 44_lds |
+| DIRECT-44-G | 874 / 866 | G 在 44 上反而 −3% |
+| **DIRECT-44-TEX** | **766 / 767** | TEX +9%,当前 Mali 最优 |
+| DIRECT-44-G-TEX | 783 / 776 | |
+| +chunk_off | 796 / 886 | 分块间隙在 44 形态上不再是钱 |
+| base | 6507 | |
+🔴 事故:第三批第一次跑在**旧 .so** 上(新 APK 只编未装),44+G 又"失败"了一遍。现在 .so 编进 TU sha(`BUILD_ID` 行),
+`run_apk.sh` 对照 `out_build_id.txt` 不一致直接 exit 4——装机≠生效,判据必须从进程里读出来。
+🔴 `am start` 对仍在前台的实例只投递 intent 不重跑 onCreate(runner 先 force-stop);新装包首启有 dexopt,进程判失改为连续两次未见。
