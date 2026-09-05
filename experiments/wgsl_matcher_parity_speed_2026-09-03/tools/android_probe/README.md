@@ -84,3 +84,35 @@ storage 32768 / invocations 384 / sizeX 384。通用核不依赖任何这些特�
    `am start` 报 "Argument expected after extra"(非空才加 `--es`);灭屏时 Activity 不起(先 `KEYCODE_WAKEUP`)。
 4. 指纹标签硬编码 `blocked(fma4x4,V3)` 而默认核早已是 8x4+PIPEB —— 指纹说了假话;产品仓 94621fe 改为
    `BlockedLabel()` 按选核 env 生成,Mac 阳性对照 `blocked(fma8x4+pipeb,V3)` + sha 不变。
+
+## 2026-09-05 夜:Mali 病根的一手证据 → DIRECT 形态(产品仓 f8b50ee / DIRECT-44 后续提交)
+**为什么 Mate 10 是 7.2 s:** 13312² × 128 = 22.7 G FMA;G72 MP12 @ 746 MHz 每核每拍 12 FMA(3 EE × 4 lane)
+⇒ 峰值 ≈107 G FMA/s ⇒ 地板 ≈212 ms。实测 7234 ms = **峰值的 3%**;A16 是 35%、Adreno 18%。
+载入/FMA 配比在纸面上不缺(每线程每 k 3 次 vec4 载入喂 32 次 FMA;quad 内 al/ah 广播、b4 落同一 64 B 行)。
+可疑项是**线程组暂存 + barrier**——而这正是 Arm 官方说不要在 Mali 上做的事:
+
+- Arm® Immortalis™ and Mali™ GPU OpenCL Developer Guide 6.1(101574_0601_25_en),§3.7:
+  "Immortalis and Mali GPUs use global memory backed with caches in place of local or private memories. …
+   Moving data from global to local memory typically does not improve performance."
+- 同上,"Use of local or private memory":"GPUs use caches instead of local memories. … There is therefore no
+  performance advantage using local or private memories … Some code copies data into a local or private memory,
+  processes it, then writes it out again. This code wastes both performance and power by performing these copies."
+- 同上,"Barriers":"If you remove copy operations to or from these memories, also remove the associated barriers."
+- 同上,"Avoid excessive register usage":"Every thread has 64 32-bit working registers. … If a thread requires
+  more than 64 registers, the compiler might start storing register data in memory."
+- chips&cheese《Arm's Bifrost Architecture and the Mali-G52》:">32 registers halve theoretical occupancy";
+  "Each Shader Core can only have one workgroup with local memory allocated"(G52 实测;G72 未证,待矩阵)。
+- Arm Compute Library `src/core/CL/cl_kernels/common/gemm.cl`:Mali GEMM **不用 __local**,RHS 预 reshape/转置,
+  寄存器分块 M0×N0 + vload,可选 cl_image 读 RHS(纹理缓存加带宽)。
+- Panfrost `pan_desc.h`:`pan_wls_instances = next_pow2(x)*next_pow2(y)*next_pow2(z)`——WLS(workgroup local
+  storage)是驱动按 dispatch 分配的内存区,实例数由驱动定 ⇒ "每核一个"不是硬件铁律,是驱动策略。
+
+**DIRECT 形态**(`OFFICIAL_AETHER_MATCH_DAWN_BLK_DIRECT=1`):A/B 各一次预转置到 f32 `[k][row/4]`(xpose 入口,
+绑定 0/3/7),主核绑定 7/8 读 At/Bt,GEMM 段零 barrier 零暂存;S 只留给扫描。算术逐 FMA 同源。
+`+BLK_44=1` 派生 4x4/256(寄存器减半)。
+Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI 门默认/DIRECT 双绿、parity 19 绿、
+**db51 全量 162/162**。M3 Pro:DIRECT 8x4 18.6 vs 基线 18.7 ms(持平),DIRECT-44 20.7。
+🔴 Dawn 自动布局只收实际用到的绑定:DIRECT 主核不读 A/B,bind group 里多给 0/1 直接报错(已处理)。
+🔴 Mac 活性检查:`unroll/noload/xbar` 三探针在 8x4+PIPEB 上生成代码与基线逐字节同 = 死锚点;noload/xbar 已修
+(先认 PIPEB 形态),unroll 仍只认 4x4。**每个探针对每种形态验活性**——第三次撞同一坑。
+设备:Mate 10 拔 USB 后 adbd 重启回 USB 模式,Wi-Fi adb(tcpip 5555)不跨拔线;此机必须插线测。
