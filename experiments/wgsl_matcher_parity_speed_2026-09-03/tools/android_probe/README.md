@@ -55,3 +55,7 @@ Vulkan ON / Metal OFF / Release)。🔴 Dawn 的代码生成器会被 brew pytho
 ⇒ 「一套核不分叉」的硬边:同一把预取刀两边反相关,得选一边吃亏,或找两边都赚的形态。
 🔴 探针纪律:PIPE / NOSTAGE 的锚点只认 4x4 文本,在 8x4 上静默 no-op,两台机器各读出一条假"零收益";
 设备侧 stderr 不可见,靠指纹文件的 anchor_mismatch 才抓到。**每个探针对每种核形态都要验一次活性。**
+
+## 2026-09-05 收官:通用核默认 8x4 + PIPEB;tiled 让位
+PIPEB(只提前 B 的一个 vec4)A16 −1~5% / Adreno −5.9%,三平台逐字节。无 MMA 设备默认落 blocked(不再 tiled),
+Adreno 默认路径复验 `BACKEND_INFO backend=blocked`。产品仓 commit 5a3138e。
