@@ -125,3 +125,8 @@ Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI
   as much time on the ALU operation as we spend waiting for data to come back from caches, and we can pipeline them".
 - 通篇没有 local memory。⇒ Adreno 官方配方 = **DIRECT-TEX**(A 走缓冲、B 走纹理、寄存器 8x4、无 __local)。
 - 与 ACL 的 Mali 配方(export_to_cl_image)同形 ⇒ 纹理臂在两家安卓 GPU 上都有一手背书;Apple 侧 M3 实测 +2 ms(需 A16 定夺)。
+- Part 2(2016-10-17)内核清单核实:`float4 a[8]; float4 b[4]; float4 c[8];`,`b[i] = read_imagef(Bi, (int2)(gx, pos + i))`
+  (x = 列四元组、y = k —— 与我们 DIRECT-TEX 的纹理布局逐字段相同),`a[i] = vload4(0, A + A_off)` 直读全局,
+  `c[i] += a[i].x*b[0] + … + a[i].w*b[3]`;**全文无 `__local`**,建议 `-cl-fast-relaxed-math`(我们不用:要逐字节)。
+  差异:高通每步 4 k 成批载入(a[8]+b[4]+c[8] ≈ 80 寄存器,Adreno 寄存器多),我们逐 k 载入 + 只预取 B(≈48 寄存器,
+  给 Mali 的 64 上限留余量)。
