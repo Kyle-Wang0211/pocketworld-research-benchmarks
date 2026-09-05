@@ -42,3 +42,16 @@ Vulkan ON / Metal OFF / Release)。🔴 Dawn 的代码生成器会被 brew pytho
 **同一份 WGSL 在第三个后端(Vulkan)上与 Mac(Metal/M3 Pro)、iPhone(Metal/A16)逐字节一致。**
 指纹:`sgmatrix=0`(Adreno 660 无 cooperative matrix)、**`subgroup=[64,128]`**(MMA 核写死 32 在此不可能跑)、
 `packed_dot=1`、storage 32768 / invocations 1024。完整日志 `run_2026-09-05_adreno660.log`。
+
+## 2026-09-05 傍晚:同一把刀在两台真机上方向相反(13312²,全部逐字节)
+| 8x4 + 刀 | A16(两轮交替) | Adreno 660(5 轮 min) |
+|---|---|---|
+| 基线 | 94 / 99 | 359 |
+| PIPE(线程组载入提前一拍) | **+12%** | **−13%** |
+| GPF(全局预取到寄存器) | **+9%** | **−11%** |
+| PIPE+GPF | — | −10% |
+| 8x8 / RSCAN | 赔 | 赔 |
+开销结构:A16 载入 8% / 暂存 8.5% / 扫描 9%(FMA 循环≈峰值 35%);Adreno 24% / 16% / 10%(≈18%)。
+⇒ 「一套核不分叉」的硬边:同一把预取刀两边反相关,得选一边吃亏,或找两边都赚的形态。
+🔴 探针纪律:PIPE / NOSTAGE 的锚点只认 4x4 文本,在 8x4 上静默 no-op,两台机器各读出一条假"零收益";
+设备侧 stderr 不可见,靠指纹文件的 anchor_mismatch 才抓到。**每个探针对每种核形态都要验一次活性。**
