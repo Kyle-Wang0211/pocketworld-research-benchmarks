@@ -414,3 +414,14 @@ R6 WebGPU/Vulkan GEMM 代码(tfjs/ORT/llama.cpp-webgpu/ncnn/ACL/MNN/Dawn toggles
 | 12 | (佐证)Arm ACL 自家 Bifrost GEMM = 4x4×k0=4 直载、无 local memory;ncnn 集成 GPU 关 local memory | R5-#13、R6-#5/#6 | 形态 A 的形状是 Arm/腾讯验证过的 | 不是刀,是背书 |
 
 裁决顺序:#1 KEYSCAN 两机数字 → #2 WG64 → #3 两段 dispatch(若 Mali 扫描段仍是大头)。#5 先诊断不动刀。
+
+### 09-06 深夜 A16 结果(13312²,wall p50 ms,每臂 9 rep,交替)
+| 臂 | 轮 1 | 轮 2 | 轮 3 | 中位 | vs ref | sha |
+|---|---|---|---|---|---|---|
+| A ref(默认形态 A) | 68.0 / 67.3 | 68.6 / 68.8 | 69.3 | ~68.4 | — | a59db73512ce |
+| A + KEYSCAN | 69.2 | 69.1 | 69.4 | 69.2 | +1.1% | 同 |
+| A + W64 | 68.6 | 69.0 | — | 68.8 | +0.6% | 同 |
+| A + W64 + KEYSCAN | 68.2 | 68.6 | — | 68.4 | 0 | 同 |
+
+ref 自身当晚散布 67.3–69.3(3%),三臂差都在散布内 ⇒ **A16 三臂持平**(与 Apple 报告一致:S ≤ 8 KiB、barrier 数不变则 A16 不赔)。裁决交 Mate 10(原始 json/err:a16_2026-09-06_keyscan.log、a16_2026-09-06_w64.log)。
+W64 两臂 Mac 闸:parity PASS、db51 162/162(w64 / w64+keyscan)。
