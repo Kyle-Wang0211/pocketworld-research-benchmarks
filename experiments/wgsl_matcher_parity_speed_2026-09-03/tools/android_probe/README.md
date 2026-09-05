@@ -388,3 +388,29 @@ Mac 门:fx13 sha 同、db51 162/162、parity 绿、ABI 双绿。理由:A 让"三
 | PSCAN2(S 扩到 768 vec4,3 barrier) | 706 / 696 | 77.7 / 71.4 / 75.9(+5~15%) |
 读法:Apple 对线程组内存量敏感(8→12 KiB 每核可驻组数 4→2,比多一次 barrier 还伤);Mali 上扩 S 也赔(占用率/缓存)。
 ⇒ 下一形态 PSCAN3:只并行列扫描(Mali 的 31% 全在此),局部结果写 1.5 KiB 独立小区,S 不扩、barrier 不增;待六路调研回来再定。
+
+## 2026-09-06 深夜:六路调研汇总(来源 × 思路 × 风险)+ KEYSCAN
+
+用户 09-06 要求"多 agent 多语言联网查学术/社交/代码库,任何有用的代码或参考思路都行"。六路并行:
+R1 Apple GPU 微架构(metal-benchmarks/Rosenzweig/Apple Tech Talk)、R2 GPU 精确 top-2 归约代码(SiftGPU/OpenCV cuda/FAISS/ORT/tfjs)、
+R3 学术+英文社交(Romou MobiCom'22、SIGMOD'18 top-k、Dr.Top-k SC'21、Li&Amenta SISAP'15、TFLite GPU、TMModel ICS'25、RadiK、Arm 论坛、Chips&Cheese、Qualcomm 指南)、
+R4 中文社区(知乎/CSDN 全被墙 → 极术/博客园/阿里云 MNN/Arm 一手)、R5 Mali Bifrost 寄存器与占用率(Arm 文档三份 + Mesa panfrost 源码 + Hot Chips 28)、
+R6 WebGPU/Vulkan GEMM 代码(tfjs/ORT/llama.cpp-webgpu/ncnn/ACL/MNN/Dawn toggles/LlamaWeb arXiv 2605.20706)。
+所有引用在各 agent 报告原文(会话产物);下表只列决策级条目。
+
+| # | 思路 | 来源(一手优先) | 三端风险 / 逐字节 | 状态 |
+|---|---|---|---|---|
+| 1 | **寄存器预归约 + 打包键**:每线程把 4x4 块在寄存器归约成 4 行 + 4 列局部 (best,second),键=(score<<6)\|(63-列)/(score<<5)\|(31-行),score 0→键 0;合并无分支 `s=max(max(s,s2),min(b,b2)); b=max(b,b2)` | R2:COLMAP SiftGPU `MultiplyDescriptorG`、OpenCV cuda knnMatch(k=2)、FAISS 同形;ORT/tfjs 复合键;R3-A2 SIGMOD'18 "每线程寄存器内局部 top-k 再合并";Arm 最佳实践 §9.3 "归约拆成短链" | barrier 仍 2 次、S 仍 8 KiB(A16 两条红线都不碰);串行链 64/32→16/8;忙线程 64→96;并列语义逐条对过(高键=小序号=先出现者胜;second 含重复 best;全零 idx=-1) | **KEYSCAN 已实装**(34ed156,env `…_BLK_DIRECT_KEYSCAN=1`)。Mac:fx13 sha a59db73512ce 同、parity 全案例 PASS(含 zeros/tie_xwg/eq_best2)、db51 全闸 162/162。A16:第 1 轮 ref 68.0 / keyscan 69.2 ms(sha 同),后两轮见下。Mate 10:离线,batch18 守候中 |
+| 2 | **工作组 128→64**(8×8 线程,tile 32×32,仍 4x4/线程) | R6:tfjs/ORT/llama.cpp-webgpu/ncnn/MNN 移动端 GEMM **全部**用 64;Arm 最佳实践 r3.4 §9.2 "Do not use more than 64 threads per workgroup";R4-#3 Bifrost 每核 192 线程容量 ⇒ 64 线程组可驻 3 组;Qualcomm 无 barrier 核走 streaming mode | A16:每 WG 只 2 个 simdgroup、延迟隐藏靠更多 WG;A 复用减半、全局流量 +;Adreno 对 WG 尺寸敏感 5–7×(TFLite GPU 论文)。逐字节无影响 | 未测 → **下一刀候选 #1**(纯文本变换) |
+| 3 | **扫描剥离成第二个 dispatch**:GEMM 核无 barrier、无 workgroup 内存,每 tile 写列局部结果到全局,小核归并 | R3-A3 Dr.Top-k;Arm §9.2/9.3 "有 barrier/共享内存的 WG 不能拆合调度"、"拆成多核更便宜";R5-#11 Chips&Cheese G52 实测"含 local memory 的 WG 每核只驻 1 个";Qualcomm 80-NB295 "无 barrier 核可最大 WG" | A16 多一次 dispatch(~1 ms 级)+ 中间流量 ≈ 2×44 MB;Mali 11 GB/s ≈ 8 ms ≪ 830。逐字节靠 (score,idx) 字典序。先做无 `var<workgroup>` 变体 A/B 验证 #11 | 未测 → **候选 #2**(要改主机侧 dispatch + 缓冲) |
+| 4 | 撤软件预取,延迟由占用率隐藏 | R3-P4 Harris "Mali 无硬件预取";R5-#10 Hot Chips 28 clause 拆分只能靠其它 warp;R3-P11 A16(Family 8)按峰值寄存器静态分配 ⇒ 预取直接减 simdgroup | 依赖 #2/#3 先解除"每核 1 组" | 形态 A 已是 NOPB;PIPEB 只在 Mali 赚 → 按"没有专属"已淘汰 |
+| 5 | 寄存器压到 ≤32 | **disputed**:Arm malioc 手册/Bifrost 文档说 32 是断点;但 Mesa `bi_ra.c` 只在 arch≥7 才试 32 寄存器分配、v6 genxml 无 register_allocation 字段、Harris 2016 "G71 64 寄存器仍满占用" ⇒ **G72(v6)大概率没有 32 档** | 若属实,追 ≤32 在 Mate 10 零收益;09-05 "寄存器溢出"定案指的是 8x4 的真 stack spill,不是占用率减半 | 降级为诊断:Tint SPIR-V → `malioc --vulkan --compute -c Mali-G72`(Arm Performance Studio 需登录,用户装) |
+| 6 | K 维 2 路展开,先发两次载入再 FMA | R6 idea3;TVM Mali 博客 unroll 0.66→9.98 GFLOPS | A16 任何循环携带/提前载入都赔 | **已测死**(UNROLLH/UNROLLHB/TAILB 09-05/06) |
+| 7 | quad 连续地址线程映射 | R5-#2 Bifrost 4 线程 lock-step 合并载入;R6 tfjs `sequentialAccessByThreads` | — | **已测死**(TMAP,A16 赔) |
+| 8 | Dawn `disable_robustness` + `disable_workgroup_init` | R6-#8 Dawn Toggles.cpp;LlamaWeb 量出 bounds check 吃 14–23% | 索引由构造在界内;P 全部 2048 项先写后读 | **09-03 已默认开**(env `…_DAWN_ROBUST` 可关做 A/B) |
+| 9 | 纹理路径 | Romou/姚定界:G76 之前纹理无增益 | 两端赔 35% | 已死 |
+| 10 | subgroup / 基数选择 / OpenCL thread_limit_hint | ncnn #6457 G72 subgroupSize=0;RadiK 小 k 无优势;hint 仅 OpenCL | 不可用 | 排除 |
+| 11 | 常量进 uniform 寄存器、禁动态私有数组索引、缩活跃区间 | R5-#14 Vulkan-Samples "Mali 寄存器映射 uniform 免费";Apple Tech Talk 10580 / Qualcomm §7.1.4 动态索引私有数组会溢出 | 零风险小刀;acc0..3 已是命名 vec4 | 可顺手查 tint 输出 |
+| 12 | (佐证)Arm ACL 自家 Bifrost GEMM = 4x4×k0=4 直载、无 local memory;ncnn 集成 GPU 关 local memory | R5-#13、R6-#5/#6 | 形态 A 的形状是 Arm/腾讯验证过的 | 不是刀,是背书 |
+
+裁决顺序:#1 KEYSCAN 两机数字 → #2 WG64 → #3 两段 dispatch(若 Mali 扫描段仍是大头)。#5 先诊断不动刀。
