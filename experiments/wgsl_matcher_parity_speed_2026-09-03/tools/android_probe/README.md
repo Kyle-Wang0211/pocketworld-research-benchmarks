@@ -130,3 +130,5 @@ Mac 门:fx13 13312 pairs sha `a59db73512ce`(8x4 四轮交替 / 4x4 两轮)、ABI
   `c[i] += a[i].x*b[0] + … + a[i].w*b[3]`;**全文无 `__local`**,建议 `-cl-fast-relaxed-math`(我们不用:要逐字节)。
   差异:高通每步 4 k 成批载入(a[8]+b[4]+c[8] ≈ 80 寄存器,Adreno 寄存器多),我们逐 k 载入 + 只预取 B(≈48 寄存器,
   给 Mali 的 64 上限留余量)。
+- Mac 门齐:DIRECT / DIRECT-44 / DIRECT-G / DIRECT-TEX **db51 全量各 162/162**,ABI 门四臂绿,fx13 13312 sha 四臂 `a59db73512ce`。
+  M3 Pro 13312²:基线 18.7 / DIRECT 18.6 / 44 20.7 / G 19.5 / TEX 20.7 ms。设备侧待 Mate 10 插回 USB(batch2.sh)与 A16。
