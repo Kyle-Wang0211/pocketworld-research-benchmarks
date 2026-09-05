@@ -176,10 +176,13 @@ Java_com_kyle_pwprobe_Main_run(JNIEnv* env, jclass, jstring jfix, jint rows, jin
   if (!out) return env->NewStringUTF("open out failed");
   if (getenv("PW_PROBE_ALU") != nullptr) {
     // [ALU-PEAK] 纯算术峰值探针:此刻这台 GPU 的 FMA 天花板(GFMA/s),与匹配核无关。
-    extern int pwdawn_probe_alu_peak(uint32_t, uint32_t, double*, double*);
-    double ms = 0, gf = 0;
-    const int arc = pwdawn_probe_alu_peak(1024u, 4096u, &ms, &gf);
-    fprintf(out, "ALU_PEAK rc=%d ms=%.3f gfma_s=%.2f (1024wg x 256thr x 4096it x 32fma)\n", arc, ms, gf);
+    extern int pwdawn_probe_alu_shape(const char*, uint32_t, uint32_t, double*, double*);
+    const char* shapes[] = {"chain16", "gemm44", "gemm44ld", "gemm84"};
+    for (const char* sh : shapes) {
+      double ms = 0, gf = 0;
+      const int arc = pwdawn_probe_alu_shape(sh, 1024u, 4096u, &ms, &gf);
+      fprintf(out, "ALU_LADDER shape=%s rc=%d ms=%.3f gfma_s=%.2f\n", sh, arc, ms, gf);
+    }
   }
   const int rc = run_probe(fix, rows, reps, out);
   fprintf(out, "PROBE_DONE rc=%d\n", rc);
