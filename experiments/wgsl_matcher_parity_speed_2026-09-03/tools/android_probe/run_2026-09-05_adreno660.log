@@ -1,0 +1,36 @@
+守望开始 18:28:04
+18:45:50 看到设备但未授权 —— 请在手机上点「允许」
+18:45:55 看到设备但未授权 —— 请在手机上点「允许」
+18:46:00 看到设备但未授权 —— 请在手机上点「允许」
+18:46:05 设备已授权,开跑
+List of devices attached
+PHQ0223207007217       device usb:1048576X product:PAL-AL00 model:PAL_AL00 device:HWPAL transport_id:1
+
+═══ 1/5 找设备 ═══
+PHQ0223207007217       device usb:1048576X product:PAL-AL00 model:PAL_AL00 device:HWPAL transport_id:1
+
+═══ 2/5 推送(二进制 + 夹具,约 30MB)═══
+/Users/kaidongwang/Developer/pw_android_probe/pwmatchprobe: 1 file pushed, 0 skipped. 118.5 MB/s (11256984 bytes in 0.091s)
+/Users/kaidongwang/Developer/pw_android_probe/fx13/: 3 files pushed, 0 skipped. 38.4 MB/s (3408086 bytes in 0.085s)
+═══ 3/5 设备自报家门 + 默认核 8192²(Mali-G72 预计落 tiled)═══
+[pwofficial_gpu_match_dawn] backend=tiled(dot4U8Packed,V1/V2) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+BACKEND_INFO backend=tiled(dot4U8Packed,V1/V2) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+RESULT rows=8192 rc=0 count=148 sha256=fcb72732ae098e0b8470e2fc764b47ec8797a227731db54211d6568d91bb8f3e p50_ms=3202.678 min_ms=3143.199
+[pwofficial_gpu_match_dawn] device lost #1 reason=2 rc=8: Device was destroyed.
+═══ 4/5 通用核 blocked(8x4)8192² ═══
+[pwofficial_gpu_match_dawn] backend=blocked(fma4x4,V3) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+BACKEND_INFO backend=blocked(fma4x4,V3) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+RESULT rows=8192 rc=0 count=148 sha256=fcb72732ae098e0b8470e2fc764b47ec8797a227731db54211d6568d91bb8f3e p50_ms=430.385 min_ms=273.860
+[pwofficial_gpu_match_dawn] device lost #1 reason=2 rc=8: Device was destroyed.
+═══ 5/5 通用核 blocked(8x4)产线口径 13312² ═══
+[pwofficial_gpu_match_dawn] backend=blocked(fma4x4,V3) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+BACKEND_INFO backend=blocked(fma4x4,V3) adapter="Adreno (TM) 660" subgroups=1 sgmatrix=0 f32_8x8x8=0 f16_f32=0 mixed=0 subgroup=[64,128] packed_dot=1 timestamp=1 limits[storage=32768 invocations=1024 sizeX=1024]
+RESULT rows=13312 rc=0 count=174 sha256=a59db73512ce1ca27f9d527910f30a4f9c7bfa8b6fa5feb08ba26d033e877ad0 p50_ms=485.508 min_ms=376.341
+[pwofficial_gpu_match_dawn] device lost #1 reason=2 rc=8: Device was destroyed.
+
+🔴 判据(与速度无关):
+   8192²  的 sha256 应当是 fcb72732ae098e0b… (Mac 与 A16 都是这个)
+   13312² 的 sha256 应当是 a59db73512ce…     (Mac 与 A16 都是这个)
+   对得上 ⇒ 一套源码三端逐字节一致,得到实证。
+   BACKEND_INFO 里的 kernel= 决定它走的是 mma 还是 tiled;subgroup=[a,b] 是这台机器的真实宽度。
+ANDROID_RUN_DONE rc=0

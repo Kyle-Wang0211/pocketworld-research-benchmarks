@@ -31,3 +31,14 @@ Vulkan ON / Metal OFF / Release)。🔴 Dawn 的代码生成器会被 brew pytho
 必须 `-DPython3_EXECUTABLE=/usr/bin/python3`。
 探针自带可移植 SHA-256 —— 不用 `fair_match_common.h`,那个头依赖 Apple 的 CommonCrypto,
 为安卓去改它会动到 Apple 侧四道门在用的公共代码。
+
+## 2026-09-05 首次实测:PAL-AL00(骁龙 888 / Adreno 660 / Android 12)
+| 核 | 尺寸 | ms(p50) | sha | 判定 |
+|---|---|---|---|---|
+| 默认 → tiled(sgmatrix=0) | 8192² | 3202 | `fcb72732ae09` | ✓ 逐字节 |
+| **blocked 8x4(通用核)** | 8192² | **430** | `fcb72732ae09` | ✓ 逐字节,快 7.4× |
+| **blocked 8x4(通用核)** | 13312² | **485** | `a59db73512ce` | ✓ 逐字节 |
+
+**同一份 WGSL 在第三个后端(Vulkan)上与 Mac(Metal/M3 Pro)、iPhone(Metal/A16)逐字节一致。**
+指纹:`sgmatrix=0`(Adreno 660 无 cooperative matrix)、**`subgroup=[64,128]`**(MMA 核写死 32 在此不可能跑)、
+`packed_dot=1`、storage 32768 / invocations 1024。完整日志 `run_2026-09-05_adreno660.log`。
