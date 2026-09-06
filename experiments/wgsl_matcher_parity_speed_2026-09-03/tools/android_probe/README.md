@@ -821,3 +821,15 @@ K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pa
 根因(K9o):方向核共享内存 13.4 KB ⇒ 每核驻留 workgroup 少,64 lane 只有 4 个 SIMD 组藏不住共享内存/barrier 延迟;扩 lane 不改任何求和顺序。
 
 调研台账(agent,09-06,原文抓在 scratchpad):Apple 每 threadgroup 上限 32 KB、每核容量未公布(32 vs ~60 KB 二手源矛盾);**Mali 没有专用共享内存,shared=L1/L2 背书**(Arm BP 3.4 §9.3),Bifrost 每核 L1 16 KB;Adreno local 片上、"maximal waves<4 要减复杂度"(Qualcomm 80-NB295-11);WGSL textureGather = 线性采样会用的 4 纹素、Vulkan 按 LINEAR 规则 i0=⌊u−0.5⌋、Metal = ±半像素 nearest,喂 u=⌊x⌋+1.0 三端脚印一致,但 r32float 非可过滤时 gather 的 WebGPU 校验**未证**;Apple IMUL32 4 拍 / IMULHI 8 拍(metal-benchmarks),Adreno 整除极贵;VLFeat covdet 仿射每迭代重 warp,无精确捷径;PopSift/CudaSift 都不做位相同;Dawn lazy-clear 可按 device 关但实测无收益(成本是 OS 新页清零)。
+
+**K10 判决(A16 13312 ×2):affine 133→174/174,赔 ⇒ 淘汰**(两个 keypoint 迭代次数不同要互等)。
+
+### 🏁 09-06 提取器收官(A16,12MP,cap 13312,reps 3)
+
+| 臂 | p50 ms | GPU 段(pyr/det/sup/aff/ori/desc) | GPU 和 |
+|---|---|---|---|
+| 老路径(现役 Dawn 提取器)×3 | 842 / 853 / 832 | 95/107/79/142/211/81 | 715 |
+| **全刀 = K1a+K2d32+K5a+K9o(WGSL)+K7+K8(host)** ×3 | **601 / 598 / 598** | 86/71/1/133/119/81 | 491–499 |
+| 全刀 + 2-pass blur | 600(min 577) | 78/71/1/133/119/81 | 484 |
+
+**842 → 600 ms(−29%)**,cap 65536 四摘要全同。仍未动:affine 133(64-lane 求和顺序封死占用率路)、descriptor 81(原子撞地址)、detect 71、pyramid 78–86。K8 常驻已被用户否决,去掉 K8 约 +45 ms。WGSL 默认已切 K1a+K2d32+K5a+K9o(工作树,补丁 wgsl_defaults_k1a_k2d32_k5a_k9o.patch)。Mali/Adreno 提取器未测(无 APK);Mali 没有专用共享内存,K9o 在 Mate 10 必须单独验。
