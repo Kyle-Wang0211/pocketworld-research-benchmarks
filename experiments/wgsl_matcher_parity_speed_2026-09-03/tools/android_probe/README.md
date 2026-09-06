@@ -586,3 +586,13 @@ KEYSCAN3 = v1 的顺序折叠(峰值活寄存器最低)去掉 32 个逐键 selec
 Mac:KEYSCAN3 文件 sha a59db73512ce、parity PASS(zeros/tie);TU 旋钮 `…_DIRECT_KEYSCAN3=1` 生成文本与文件逐字节同,标签 `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr,V6)`;parity/db51/ABI 全闸进行中。
 **按"任一端赔=淘汰":A″ 出局,A‴ 是唯一三端不赔且保住 Mali −30%/A16 −6% 的形态;默认是否从 A″ 改 A‴ 交用户裁决。**
 A‴ Mac 四闸(TU 旋钮 `…_DIRECT_KEYSCAN3=1`,8ecbf98):fx13 sha a59db73512ce、parity 全 PASS(zeros/tie_xwg/eq_best2)、db51 162/162、abi_test PASS。
+
+## 🏁 09-06 13:4x A‴ 切三端默认(用户裁决;TU 1a790c1,标签 **V7** `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr,V7)`;KEYSCAN2 退 opt-in;形态 A = NOW64+NOKEYSCAN+NOPTR)
+Mac 四闸:sha a59db73512ce、parity 全 PASS、db51 162/162、abi PASS;默认生成文本与三机跑过的 w64_ks3_ptr.wgsl 逐字节同。
+三机 ref 对照(ABBA ×3,探针 TU d79942823044 / 台架同 TU;**此后不再有任何重装**,用户 13:2x 铁律):
+| 端 | 默认 A‴ | 形态 A | 增益 | sha |
+|---|---|---|---|---|
+| iPhone 14 Pro(Metal 70.1–71.1) | 64.2 / 64.0 / 63.7 | 70.4 / 68.1 / 68.9 | **−7.5%** | 同 |
+| Mate 10 | 738.6(装后首臂)/ 582.7 / 582.1 | 825.7 / 817.6 / 823.5 | **−29%** | 同 |
+| P50 Pocket | 597.5(装后首臂)/ 478.5 / 487.7 | 451.0 / 461.8 / 451.0 | **+3~5%(偏赔)** | 同 |
+P50 形态 A 跨批散布 451–488(8%),A‴/ks3 五臂 473–488 ⇒ Adreno 上 A‴ ≈ 形态 A 偏慢 ~3%,需稳态长序列定正负(batch39:default/formA/nokeyscan ×5 轮换,进行中)。"装后首臂"三机一致偏慢(shader 缓存/时钟爬坡),不入统计。
