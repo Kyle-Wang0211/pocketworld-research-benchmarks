@@ -474,3 +474,5 @@ Mate 10 晾机后的 A′ vs KEYSCAN2(batch21,带频率采样)见下。
   根因是**屏幕已灭 + 锁屏(Keyguard=true)**:`svc power stayon true` + WAKEUP 后同臂 1301,仍是 600 的 2×,剩余差额只能是锁屏态的 EMUI 调度(11:31 那批 600 是用户刚解锁时跑的)。
   gpufreq sysfs 对 shell 时而 Permission denied(11:46 读到 415 MHz 一次),采样臂全 0,不可靠;改用 dumpsys thermalservice 温度 + ref 夹臂比值。
   规矩补:Mate 10 跑批前必须**解锁并保持亮屏**(stayon 已设),批内 ref 夹每一臂看比值,ref 漂 >10% 整批作废。
+- **batch23(锁屏态,只看比值;run_2026-09-06_batch23_LOCKED_ratios_only.tsv)**:ref 1161/1451/1330/1325/1353(漂 25%,thermalservice 数值全程冻结在 45/55 ⇒ 锁屏态连温度也不更新),
+  ks2 1200/1206、ks2_ptr 1197/1197 ⇒ 相对相邻 ref 约 −8~−10%,ptr ≈ ks2。只证"不劣",不入裁决。batch24 等 Keyguard=false 自动开跑(解锁后)。
