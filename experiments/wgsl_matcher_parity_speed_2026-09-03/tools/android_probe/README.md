@@ -547,3 +547,13 @@ Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PAS
 | iPhone 14 Pro(原生 Metal 69.1–70.5) | 63.0 / 63.1 / 63.2 | 68.3 / 68.2 / 68.3 | **−7.6%**,0.90× 原生 | 6/6 同 |
 | Mate 10(解锁亮屏) | 613.6(装后首臂)/ 571.5 / 573.5 | 826.7 / 849.8 / (见 tsv) | **−31%** | 全同 |
 探针 APK / 台架 app 各装一次(主机侧默认改了,必须装);生产机未动。
+
+## ⚠️ 09-06 13:0x 第三家 GPU 上机:华为 P50 Pocket(PAL-AL00,HarmonyOS 4.2 / 骁龙 888 / Adreno 660)—— A″ 在 Adreno 赔 18%
+探针 APK(TU 63443541bba1)直接装成、fx13 推 files/fixtures/;13312² 逐字节 sha a59db73512ce **在 Adreno 660 也同**(Apple/Mali/Adreno 三家齐)。
+| 臂(ABBA ×3;run_2026-09-06_p50pocket_batch31_default_vs_formA.tsv) | ms |
+|---|---|
+| 默认 A″(w64+keyscan2+ptr) | 639.3(装后首臂)/ 557.1 / 547.6 |
+| 形态 A(NOW64+NOKEYSCAN+NOPTR) | 481.5 / 467.0 / 466.9 |
+**A″ 比形态 A 慢 ~18% ⇒ 按"任一端赔=淘汰",A″ 作三端默认不成立**(上午切默认时只有 Apple+Mali 两端在手)。
+另:2021 的 Adreno 660 跑形态 A 467 ms,比 2017 的 Mali-G72 的 816 快 1.75×,但比 A16 的 68 慢 6.9×。
+分解批 batch32(default / NOW64 / NOPTR / NOKEYSCAN / formA)在 P50 上跑;Mate 10 batch33 与 A16 a16ad 同时补量 NOW64 形态(W128+KEYSCAN2+PTR)。
