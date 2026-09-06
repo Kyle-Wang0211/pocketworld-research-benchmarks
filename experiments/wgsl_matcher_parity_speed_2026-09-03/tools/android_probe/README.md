@@ -840,3 +840,11 @@ K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pa
 2. harness 硬要 `maxComputeInvocationsPerWorkgroup=512` ⇒ Mali 上限 384 ⇒ 失败(已改成钳到 adapter 支持值;探针打印 `limits:` 行)。
 3. **结构性阻断:Mali-G72 `maxStorageBufferBindingSize = 256 MB`,而 PACK-ZERO 把整座金字塔放在一个 390 MB(12MP)storage buffer 里,每个 bind group 都报 "Binding size (390159984) … larger than 268435456"** ⇒ 12MP GPU 提取器在 Mali-G72 上根本绑不上,CPU 回退又被 12MP OOM 守卫拦 ⇒ 掉帧。octave 0 单独就 293 MB(6 层×48.8 MB)也超;affine/orient/descriptor 经 level_meta 全局偏移采样任意层 ⇒ 不能靠子区间绑定绕过。可行方向:每 octave 一个 `texture_2d_array<r32float>`(6 层)或 ≤256 MB 分块重排,都是布局级改动,需要重写所有采样核的寻址。Adreno 660 的该上限未测(P50 不在手)。
 ⇒ Mali/Adreno 的提取器计时在布局改动之前不存在;K9o 等刀在 Mali 上的胜负也要等这一步。
+
+### 09-07 凌晨(A16 13312,env-only)
+| 刀 | 结果 | 判决 |
+|---|---|---|
+| K9o384(方向核 384 lane;Mali 上限正好 384) | orient 120→111.8/113.8,总 591/592 | ✓ 逐位同,成默认 |
+| K9d128(描述子 128 lane) | descriptor 81→83.7/85.2 | ✗ |
+| K8 策略 | 用户裁决:不常驻、不用 Metal purgeable(iOS 独有不要);改成三端一致的 opt-in(`OFFICIAL_AETHER_PYR_PERSIST=1` 会话内复用 + `aether_pyr_persist_release()` 会话结束/内存告警释放),默认关 | 默认关 ⇒ A16 约 +45 ms |
+| K8d(种子平滑走 fused 核 → 下一层槽,再单 tap [1.0] 恒等拷回;去掉 scratch/tmp 两块 49 MB 每帧分配与 2-pass 往返) | Mac 逐位同;设备待归档 | 待 A16 |
