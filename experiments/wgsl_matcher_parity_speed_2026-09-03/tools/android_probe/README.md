@@ -724,3 +724,6 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 | A16(台架 TU 3c2a96fd5d3c) | XRES(默认) | **57.8 / 57.4** | 661–711 / 690–727 | 与非驻留 sha 同 |
 | A16 | NOXRES=1 | 60.9 / 59.8 | 711–738 / 716–727 | 同 |
 ⇒ A16 每候选 **−4.5%**(≈ 跳过的两次转置 + 一次同步),12 候选/帧省 ~30 ms。分块 48/帧(每候选 4 块)。Mate 10 batch47 进行中。
+- **Mate 10 驻留回路 XRES**(batch47,12 候选 × 4 帧):xres 322.6–329.3 vs NOXRES 327.0–329.2 每候选 ⇒ ≈ −1%(噪声内,不赔);sha 同。
+- **🔴 尺子更正(09-06 16:2x)**:探针批一直用 reps=1 ⇒ RESULT p50 = 首次调用,**含管线编译与首次上传**。Mate 10 暖态复测(reps=3):p50 306.3 / min 304.5 ms,而单臂数字是 5xx。**所有 Mate 10 / P50 的单臂绝对值都含 ~200+ ms 一次性开销;相对比较不受影响(同一常数),但 README 里"Mate 10 573 ms"这类绝对值以暖态复测(batch49)为准。** A16 台架自带预热,不受影响。
+- **FINISHFOLD**(aeb9eb3):finish(合并核+两次拷贝)折进最后一个列分块的命令缓冲(每候选 −1 次同步);**XFOLD**(5f4a70d):DIRECT 预转置折进第一个分块(需要转置时 −1 次同步)。两刀 Mac:sha 同、parity PASS、db51 162/162、ABI PASS;env NOFINISHFOLD/NOXFOLD 关。三刀合并(XRES+FINISHFOLD+XFOLD)在两台台架的驻留回路上 all-on vs all-off 对照中。
