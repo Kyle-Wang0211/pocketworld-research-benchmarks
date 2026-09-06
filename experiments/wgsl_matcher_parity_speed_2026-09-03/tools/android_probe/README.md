@@ -486,3 +486,20 @@ Mate 10 晾机后的 A′ vs KEYSCAN2(batch21,带频率采样)见下。
 九臂 sha 全同,isStatusBarKeyguard=false 全程(锁屏判据已从恒真的 `Keyguard=` 改为 `isStatusBarKeyguard`)。
 ⇒ **KEYSCAN2 两端都赚(Mate 10 −5.5%、A16 −4.4%)**;**PTR 在 Mate 10 中性、A16 −4.5%(半速态比值,正常态复测 a16w 进行中)**。
 候选终形态 **A″ = f16 + 4x4 + W64 + NOPB + KEYSCAN2 + PTR**:Mate 10 816 → 573(−30%),Mac 三闸绿,A16 待正常态复测后定绝对值。
+
+### 09-06 12:2x A16 正常态复测(晾 15 分钟后 ref 68.3 / Metal 68.7 已回正常;a16_2026-09-06_normal_A_ks2_ptr_3round.log)
+| 臂 | 3 轮(轮换顺序)dawn ms | 中位 | vs 形态 A | vs 原生 Metal(~70.3) |
+|---|---|---|---|---|
+| 形态 A(当前默认) | 69.8 / 68.2 / 67.8 | 68.2 | — | 0.970× |
+| A + W64 + KEYSCAN2 | 65.1 / 64.9 / 64.9 | 64.9 | −4.8% | 0.923× |
+| **A″ = A + W64 + KEYSCAN2 + PTR** | 63.0 / 63.3 / 62.9 | **63.0** | **−7.6%** | **0.896×** |
+九臂 sha 全同;原生 Metal 臂 68.4–70.7 证明整机在正常态。PTR 在正常态 −2.9%(vs ks2),与半速态的 −4.5% 同向。
+
+## 🏁 09-06 三端总账:A″ = f16 + 4x4 + W64 + NOPB + KEYSCAN2 + PTR
+| 端 | 形态 A(09-06 凌晨默认) | A″ | 增益 | 逐字节 |
+|---|---|---|---|---|
+| Mac M3(尺子=闸) | — | — | — | sha a59db73512ce、parity 全 PASS、db51 162/162 |
+| iPhone 14 Pro A16 | 68.2 ms(0.97× 原生) | **63.0 ms(0.90× 原生)** | **−7.6%** | 9/9 臂 sha 同 |
+| Mate 10 Mali-G72 | 816 ms | **573 ms** | **−30%** | 9/9 臂 sha 同 |
+三把刀各自在两端都不赔(KEYSCAN2:A16 −4.8% / Mali −5.5%;W64 只与 KEYSCAN 同用;PTR:A16 −2.9% / Mali −0.7%)。
+env:`OFFICIAL_AETHER_MATCH_DAWN_BLK_DIRECT_W64=1 …_KEYSCAN2=1 …_PTR=1`(TU 7081932)。切默认交用户裁决;生产机未动。
