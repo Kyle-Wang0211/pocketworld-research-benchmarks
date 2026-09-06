@@ -806,3 +806,18 @@ K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pa
 | 全刀 2-pass ×2 | 691 / 690(min 663/672) | **78**/71/0.9/133/212/81 | 576 |
 
 **A16 生产操作点:842 → 690 ms(−18%);GPU 段 715 → 576(−19%)。** 13312 下 (o,s) 前置剪枝几乎不剪 ⇒ orient 212 + affine 133 = GPU 60%,都是未动的段(K5a 仅 −9)。2-pass 仍稳定比 fused 少 8.5 ms GPU,wall 持平(K8b 未进本归档)。Mac 13312:167 → 114(−31%)。
+
+### 09-06 深夜 · orient/affine 无损刀(A16,cap 13312,env-only)
+
+| 刀 | 改动 | A16 段 GPU ms | 判决 |
+|---|---|---|---|
+| **K9o** | 方向核 workgroup 64→256 lane(逐像素独立、直方图整数原子、max 顺序无关;host 零改动) | **orient 212→120,总 690→600(601/598)**;128 lane=147 | ✓ 逐位同(65536) |
+| K9d | 描述子核 64→256 lane | descriptor 81→127 | ✗(8 次原子加/像素撞地址) |
+| K9(仿射直接 256) | Mac affine 23.6→46 | — | ✗ 二阶矩求和顺序绑 64 lane,其余 lane 空转 |
+| K4c-v | imsmooth 边缘复制去 clamp | orient 212→217 | ✗ |
+| K6a | 双线性 4 采样索引提升 | affine 132.8 / orient 213(持平) | 零收益 |
+| K10 | 仿射 128-lane 装两个 keypoint(各 64 lane 原序) | Mac affine 23.7→31.8(赔);A16 跑中 | 待定 |
+
+根因(K9o):方向核共享内存 13.4 KB ⇒ 每核驻留 workgroup 少,64 lane 只有 4 个 SIMD 组藏不住共享内存/barrier 延迟;扩 lane 不改任何求和顺序。
+
+调研台账(agent,09-06,原文抓在 scratchpad):Apple 每 threadgroup 上限 32 KB、每核容量未公布(32 vs ~60 KB 二手源矛盾);**Mali 没有专用共享内存,shared=L1/L2 背书**(Arm BP 3.4 §9.3),Bifrost 每核 L1 16 KB;Adreno local 片上、"maximal waves<4 要减复杂度"(Qualcomm 80-NB295-11);WGSL textureGather = 线性采样会用的 4 纹素、Vulkan 按 LINEAR 规则 i0=⌊u−0.5⌋、Metal = ±半像素 nearest,喂 u=⌊x⌋+1.0 三端脚印一致,但 r32float 非可过滤时 gather 的 WebGPU 校验**未证**;Apple IMUL32 4 拍 / IMULHI 8 拍(metal-benchmarks),Adreno 整除极贵;VLFeat covdet 仿射每迭代重 warp,无精确捷径;PopSift/CudaSift 都不做位相同;Dawn lazy-clear 可按 device 关但实测无收益(成本是 OS 新页清零)。
