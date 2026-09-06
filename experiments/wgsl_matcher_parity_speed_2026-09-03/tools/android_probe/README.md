@@ -631,3 +631,18 @@ PCA 前 32/64/96 维累计能量 0.890 / 0.965 / 0.990。未旋转的前缀在 S
 | 10% 子集预扫(低 0.9%) | 0.86% | 13.8% | 1.36 |
 | 顺序累积(行阈值按 tile 累积,列阈值 0) | — | 0.00% | — |
 界离阈值只有 <0.125·N² 的薄边(直方图),阈值低 1% 就把组级剪枝率从 64% 打到 5–14%;而拿到接近 oracle 的阈值需要先算接近全量的精确结果——循环论证。**结论:在逐字节精确 + SIMT 组级跳过的约束下,剪枝路线关闭。**
+
+### 09-06 14:4x 调研:三端整数点积路线(一手:Dawn/Tint 源码、gpuinfo 设备报告、MSL 4.1 规范、Mesa asahi/turnip/bifrost、Qualcomm 指南、philipturner metal-benchmarks)⇒ 判死
+- Tint 的 `packed_4x8_integer_dot_product` 是 kShipped 语言特性,**三端都报 true 但与硬件无关**;Metal 后端无条件 polyfill(MSL `dot` 只收浮点),A16 上每 4 MAC ≈ 21 条整数指令且 shift/imul 四分之一速率 ⇒ ≥10× 慢。
+- Vulkan 后端只看 `VK_KHR_shader_integer_dot_product` 是否存在:**P50 Pocket 本机型(BAL-AL00,驱动 512.530.0,Vulkan 1.1.128)与 Adreno 660 全部 232 份报告都没有该扩展**;Mate 10 的 Kirin 970 驱动线止于 r18p0,同样没有;G72 即便新驱动暴露也 `*Accelerated` 全 false。Adreno 660 硅片有 dp4acc 但只有 Turnip 才发(HarmonyOS 装不了)。
+- 精确替代表示不存在:u8×u8 需 16 位有效位(f16 只有 11);i32 IMAD Apple 四分之一速率;"u8 打包存储 + unpack4xU8 + f32 FMA"(TU 里的 PACKED)M3 实测 +67%。**f32 FMA 是三端全速且逐字节精确的下限,现役 f16 存 f32 算就是它。**
+- 开源跨厂商 int8 GEMM 数字只有桌面(llama.cpp DP4A、Chrome dp4a、ORT),移动三端零命中;llama.cpp 作者原话:没有加速硬件不值得用。
+
+## 🏁 09-06 下午总结:三路调研 + 两条实验路线全部关闭,A‴ 是 WGSL-only 的终点
+| 路线 | 结论 | 证据 |
+|---|---|---|
+| 精确剪枝(PCA 旋转前缀 + CS 界 + 组级跳过) | 死:oracle 阈值 −14%,现实阈值成本 1.36–1.45 | prune_probe/prune_probe2(fx13) |
+| 整数点积 / 打包存储 | 死:三端全 polyfill,PACKED M3 +67% | 调研 B + Mac 实测 |
+| 尾段结构(KEYSCAN1/2/3、PDB) | KS3 = 三端唯一不赔 Mali/A16 的;PDB 三机全死 | batch36–42 |
+| GEMM 体(展开/dep/fma/cnt/dot4) | 全死或中性 | batch25–29 |
+唯一未测且有依据的刀 = **k 成对打包成一次 128 位载入**(Qualcomm §6.3:每事务 128 位,vec4<f16> 只用一半;Adreno noload 探针 −28%);**要改 xpose 布局 = 主机侧 = 必须重装探针/台架**,按用户铁律只能等用户批准;A16/Mali 方向未知(多 8 个活寄存器,Adreno 可能掉档)。
