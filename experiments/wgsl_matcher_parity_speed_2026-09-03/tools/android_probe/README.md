@@ -833,3 +833,10 @@ K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pa
 | 全刀 + 2-pass blur | 600(min 577) | 78/71/1/133/119/81 | 484 |
 
 **842 → 600 ms(−29%)**,cap 65536 四摘要全同。仍未动:affine 133(64-lane 求和顺序封死占用率路)、descriptor 81(原子撞地址)、detect 71、pyramid 78–86。K8 常驻已被用户否决,去掉 K8 约 +45 ms。WGSL 默认已切 K1a+K2d32+K5a+K9o(工作树,补丁 wgsl_defaults_k1a_k2d32_k5a_k9o.patch)。Mali/Adreno 提取器未测(无 APK);Mali 没有专用共享内存,K9o 在 Mate 10 必须单独验。
+
+### 🔴 Mate 10 提取器首跑(09-06 深夜,探针 APK 第一次带提取器;三次装包:两次 harness 建 device 失败、第三次跑到金字塔)
+
+1. harness 无条件请求 `FeatureName::Subgroups` ⇒ Mali-G72 RequestDevice 失败(已改成 HasFeature 才请求)。
+2. harness 硬要 `maxComputeInvocationsPerWorkgroup=512` ⇒ Mali 上限 384 ⇒ 失败(已改成钳到 adapter 支持值;探针打印 `limits:` 行)。
+3. **结构性阻断:Mali-G72 `maxStorageBufferBindingSize = 256 MB`,而 PACK-ZERO 把整座金字塔放在一个 390 MB(12MP)storage buffer 里,每个 bind group 都报 "Binding size (390159984) … larger than 268435456"** ⇒ 12MP GPU 提取器在 Mali-G72 上根本绑不上,CPU 回退又被 12MP OOM 守卫拦 ⇒ 掉帧。octave 0 单独就 293 MB(6 层×48.8 MB)也超;affine/orient/descriptor 经 level_meta 全局偏移采样任意层 ⇒ 不能靠子区间绑定绕过。可行方向:每 octave 一个 `texture_2d_array<r32float>`(6 层)或 ≤256 MB 分块重排,都是布局级改动,需要重写所有采样核的寻址。Adreno 660 的该上限未测(P50 不在手)。
+⇒ Mali/Adreno 的提取器计时在布局改动之前不存在;K9o 等刀在 Mali 上的胜负也要等这一步。
