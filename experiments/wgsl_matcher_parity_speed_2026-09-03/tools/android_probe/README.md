@@ -793,3 +793,16 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pass pyramid host 50→24 ms、与 fused 持平;cap 65536 逐位同。2-pass 路径的 wall 收益要 K8b 进归档后才在设备上兑现(本轮 bench 归档只有 K8)。
 
 **定案(A16 + Mac,Mali/Adreno 提取器未测——无 APK):** WGSL 默认切成 K1a+K2d32+K5a(已写进 shaders/wgsl 工作树,补丁 wgsl_defaults_k1a_k2d32_k5a.patch);host 默认 K7+K8(b);GSS_FUSED 默认是否翻成 2-pass 待用户裁决(两端都赢但缺 Android 数据)。
+
+### ⚠️ 操作点更正:生产 cap = 13312(09-06 22:2x,A16 重跑,env-only)
+
+上两节的 8192 计时是错的操作点(用户:"有用也不会上生产")。以下为生产参数(12MP,max_features 13312,reps 3):
+
+| 臂 | p50 ms | GPU 段 ms(pyr/det/sup/aff/ori/desc) | GPU 和 |
+|---|---|---|---|
+| old ×3 | 842 / 853 / 832 | 95/107/79/142/211/81 | 715 |
+| K7+K8 | 737 | 94/107/0.9/142/212/81 | 637 |
+| 全刀 fused ×2 | 689 / 690 | 86/71/1.0/133/212/81 | 584 |
+| 全刀 2-pass ×2 | 691 / 690(min 663/672) | **78**/71/0.9/133/212/81 | 576 |
+
+**A16 生产操作点:842 → 690 ms(−18%);GPU 段 715 → 576(−19%)。** 13312 下 (o,s) 前置剪枝几乎不剪 ⇒ orient 212 + affine 133 = GPU 60%,都是未动的段(K5a 仅 −9)。2-pass 仍稳定比 fused 少 8.5 ms GPU,wall 持平(K8b 未进本归档)。Mac 13312:167 → 114(−31%)。
