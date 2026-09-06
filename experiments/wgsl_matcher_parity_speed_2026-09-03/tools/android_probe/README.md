@@ -435,3 +435,14 @@ W64 两臂 Mac 闸:parity PASS、db51 162/162(w64 / w64+keyscan)。
 | A + W64 + KEYSCAN | 604.5 / 602.9 | 604 | **−26%**(比 KEYSCAN 再 −5%:64 线程全忙 + 每核可驻 3 组) |
 十臂 sha 全部 a59db73512ce。A16 同形态:KEYSCAN +1.1%、W64+KEYSCAN 0(见上表,均在 ref 3% 散布内),补测三轮见下。
 **三端同赚结论:W64+KEYSCAN**(Mac 逐字节 + parity + db51 全绿;A16 持平;Mate 10 −26%)—— 形态候选 A′ = f16 + 4x4 + W64 + NOPB + KEYSCAN,是否切默认交用户裁决。
+
+### 09-06 中午:A′ 段账(batch19)、KEYSCAN2、热降频事故(batch20)
+- **A′ 段账(Mate 10,全走 WGSL_FILE 推文件、零重装;run_2026-09-06_batch19_aprime_segments.tsv)**:基线 600.8/606.2/599.6;
+  合并链归零(nomerge)610.8 ⇒ 合并段 **0%**;GEMM 载入提出循环(noload)591.4 ⇒ 载入延迟 **−1.5%**(W64 每核 3 组已把延迟藏住);
+  整段尾巴连两次 barrier 一起删(noscan)1118.8 ⇒ **反而慢 86%**:barrier 让同核 3 组步调一致、Bt 同一 k 行在 L1 共享,删了各组漂开 Bt 重复取 ⇒ 变成访存瓶颈。
+  结论:A′ 在 Mali 上 600 ms **全在 GEMM 循环 ALU**(22.7 GFMA / 0.6 s = 37.8 GFMA/s = ALU 峰值 105.7 的 36%;f16→f32 转换 8 条 + 地址算术 + 循环开销与 16 FMA 抢发射)。
+- **KEYSCAN2**(3d38d91,env `…_BLK_DIRECT_KEYSCAN2=1`):尾段向量化——4 个 vec4<u32> 转换 + 8 次向量移位/或得全部 32 键;行/列 top-2 各 7 步树形一次算 4 行/4 列;零分键不再逐键 select,保留列/行位(<64/<32,小于任何正分键)在解码时按 (key>>bits)==0 判无候选。
+  Mac:sha 同、parity PASS(zeros/tie_xwg/eq_best2)、db51 162/162;M3 时间与 KEYSCAN 同(16.3)。A16 第 1 轮 65.4 vs w64ks 68.3 / ref 68.1(五轮 ABC/CBA 进行中)。
+- **batch20 作废(run_2026-09-06_batch20_THROTTLED_invalid.log)**:连跑 18/19/20 三批 ~15 分钟后 ref 600 → 2100/1716/1709,电池 38 °C;这批相对值也不可信。
+  规矩:Mate 10 每臂必须同时采样 `/sys/class/devfreq/gpufreq/cur_freq`(G72 满频 767 MHz)记 max/众数进表,臂间 ≥60 s;batch21 起照做。
+- 台架:gen_wgsl.sh 头改 zsh(`${=var}` 只在 zsh 成立,bash 下 "bad substitution" 且文件不推——第二次同类坑,见 09-05 env 叠加事故);iOS 台架 WGSL_FILE 支持 `~/Documents/...`(容器 HOME 展开),以后 iPhone 也只推文件。
