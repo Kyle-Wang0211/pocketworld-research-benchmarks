@@ -687,3 +687,11 @@ add_frame 平均 1556 ms = 提取 625(40%)+ 匹配 853(55%,候选均 9.6 ⇒ 每
 **重新定性"A16 半速态"**:不是时钟降频——同一时刻单次提交的 dawn 54.7 / metal 58.6 都是正常速,慢的只有分块臂 ⇒ 是 **ThermalGapPct(serious=100%)在每块后插入等长空隙**,台架带 capture_active 所以和生产一样触发。生产 serious 时每候选 ≈ 2× 就是这条策略(热稳定硬约束,用户所定),不是核。
 Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 59.3 vs 5 块 69.6(15%)为准(colchunk 已去掉尾部空转)。
 ⇒ 匹配段在生产里剩下的三块:热隙策略(产品决策)、分块次数(FPS30 时 24 ms 档,产品决策)、每候选 ~40 ms 的非核开销(上传/合并/回读/CPU 几何验证,待拆)。
+
+## 09-06 16:3x 三块并行 · 第 1 块:让路/热隙策略调研落地(一手:Apple 文档/WWDC19-422/WWDC20-10632、Asahi 逆向、Khronos VK_EXT/KHR_global_priority、AOSP、Arm 异步计算博客、Linux msm a6xx_preempt.c、Qualcomm 专利、Computational Sprinting)
+- **业界没有一家用"睡眠空隙"控热**:Apple 对 fair/serious/critical 的处方全是减工作/降帧率(critical=停相机),ARCore/Snap/Unity Adaptive Performance 同;我们 GAP 100%/300% 零外部背书。
+- **物理**:温升由热时间常数窗口内的平均功率决定;空隙只在匹配队列背靠背排队(深度≥2)时才降平均功率,拍摄节奏慢于 GPU 忙时的话空隙只是把空闲挪位——温度收益≈0、墙钟 +50% 以上是确定的。
+- **iOS**:Metal 无 GPU 优先级 API(MTLIO 的 priority 是 I/O),固件有抢占但不暴露;Apple 唯一指导是"command buffer 越少越好",16 ms 分块是自研策略非 Apple 推荐;预览若走 AVCaptureVideoPreviewLayer 由系统合成器承担,自绘(ARSCNView/Metal)才与 compute 同权。
+- **Android**:`VK_EXT/KHR_global_priority` 在 Adreno/Mali 驱动广泛声明,正确姿势=把 compute 队列建成 LOW(永远被允许);Arm 明文高优先级队列可抢占;Adreno 老代长 compute 会冻屏 ⇒ 保留粗分块保底;Camera2→SurfaceView 预览不经 app GPU。
+- **推荐**:让路与控热解耦——默认单次提交,预览/UI 帧时序超阈值才切块(滞回);热隙只在"队列深度≥2 且 serious"时启用,长度按 kernel 耗时膨胀率(iOS)/getThermalHeadroom(Android)连续调;承认逐字节不变约束下热隙对温度的贡献上限很小,由用户裁决用拍摄节奏买热稳定值不值。
+- **零构建 A/B 路径**:official_env.json 推 `OFFICIAL_AETHER_MATCH_GAP_SERIOUS_PCT`(0/50)与 `OFFICIAL_AETHER_MATCH_CHUNK_TARGET_MS(_FPS30)`,重启 app 后拍同类场,对比每张 match ms 与 thermal 轨迹。
