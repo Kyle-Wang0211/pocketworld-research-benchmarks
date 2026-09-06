@@ -425,3 +425,13 @@ R6 WebGPU/Vulkan GEMM 代码(tfjs/ORT/llama.cpp-webgpu/ncnn/ACL/MNN/Dawn toggles
 
 ref 自身当晚散布 67.3–69.3(3%),三臂差都在散布内 ⇒ **A16 三臂持平**(与 Apple 报告一致:S ≤ 8 KiB、barrier 数不变则 A16 不赔)。裁决交 Mate 10(原始 json/err:a16_2026-09-06_keyscan.log、a16_2026-09-06_w64.log)。
 W64 两臂 Mac 闸:parity PASS、db51 162/162(w64 / w64+keyscan)。
+
+### 09-06 上午 Mate 10 batch18(13312²,ms,Wi-Fi adb,TU 3f38655808ba;原始 run_2026-09-06_batch18_keyscan_w64.tsv)
+| 臂 | 各轮 | 稳态中位 | vs ref 816 |
+|---|---|---|---|
+| A ref | 1139.7(装完 app 首臂,冷态离群)/ 822.0 / 811.4 | 816 | — |
+| A + KEYSCAN | 652.5 / 638.5 / 619.7 | 638 | **−22%** |
+| A + W64 | 1125.3 / 1139.8 | 1133 | +39%(单独=淘汰:老扫描按 32 列一段做,串行列扫描总时长翻倍) |
+| A + W64 + KEYSCAN | 604.5 / 602.9 | 604 | **−26%**(比 KEYSCAN 再 −5%:64 线程全忙 + 每核可驻 3 组) |
+十臂 sha 全部 a59db73512ce。A16 同形态:KEYSCAN +1.1%、W64+KEYSCAN 0(见上表,均在 ref 3% 散布内),补测三轮见下。
+**三端同赚结论:W64+KEYSCAN**(Mac 逐字节 + parity + db51 全绿;A16 持平;Mate 10 −26%)—— 形态候选 A′ = f16 + 4x4 + W64 + NOPB + KEYSCAN,是否切默认交用户裁决。
