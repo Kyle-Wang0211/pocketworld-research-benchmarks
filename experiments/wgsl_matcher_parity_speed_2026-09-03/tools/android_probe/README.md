@@ -559,3 +559,16 @@ Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PAS
 分解批 batch32(default / NOW64 / NOPTR / NOKEYSCAN / formA)在 P50 上跑;Mate 10 batch33 与 A16 a16ad 同时补量 NOW64 形态(W128+KEYSCAN2+PTR)。
 - **batch32/33 作废**(INVALID_…_declareA_all_formA.log):脚本用 `declare -A`,macOS bash 3.2 不支持 ⇒ 所有臂 env = 最后一项(formA);**标签列全是 w128 揪出来的**(P50 十臂 450–473、Mate 10 八臂 800–850 全是形态 A)。规矩:批脚本禁 declare -A,读表必须核标签与臂名一致。修正版 batch34(case 写法)两机重跑。
 - **A16 a16ad(有效,case 写法;a16_2026-09-06_default_now64_formA.log)**:默认 A″ 63.3 / 63.0 / 62.9;**NOW64(W128+KEYSCAN2+PTR)63.4 / 64.2 / 64.7**;形态 A 67.7 / 67.8 / 70.3 ⇒ 去 W64 的 A″ 在 A16 −5.5%(A″ −7.5%)。
+
+### 09-06 13:1x 修正版分解(case 写法,标签逐臂核对;run_…_p50pocket_batch34 / run_…_mate10_batch35)
+| 形态(13312²,ms) | P50 Pocket / Adreno 660 | Mate 10 / Mali-G72 | A16(a16ad) |
+|---|---|---|---|
+| 默认 A″ = W64+KEYSCAN2+PTR | 525.6 / 530.5 / 538.8 | 573.4 / 569.6 / 574.2 | 63.3 / 63.0 / 62.9 |
+| NOW64 = W128+KEYSCAN2+PTR | 547.0 / 538.2 | 570.8 / 578.9 / 579.3 | 63.4 / 64.2 / 64.7 |
+| NOPTR = W64+KEYSCAN2 | 571.3 / 558.8 | — | — |
+| NOKEYSCAN = W128+PTR | **458.4 / 465.4** | — | — |
+| 形态 A | 488.3 / 473.7(batch31:481/467/467) | 829.1 / 831.0 | 67.7 / 67.8 / 70.3 |
+读法:**Adreno 上赔的是 KEYSCAN2(+11~17%),PTR 赚 ~5%,W64 ≈ 0**;Mali 的 −31% 全来自 KEYSCAN2,W64 无贡献;A16 KEYSCAN2 −5.5%(W128)/−7.5%(W64)。
+机制假设:Adreno 与 Apple Family 8 一样按峰值寄存器分 wave,KEYSCAN2 向量化尾段(u0..3/r0..3/c0..3/ra..rd 同时活)峰值 +~48 寄存器 ⇒ 整段 GEMM 的 wave 数掉;Mali 无此惩罚(64 寄存器档已到)。
+⇒ 做 **KEYSCAN3**(w64_ks3_ptr.wgsl:v1 顺序折叠 + 去 32 个逐键 select,零分键靠 (key>>5)==0 判;峰值活寄存器 ≈ v1):Mac sha 同、parity PASS(zeros/tie);三机 batch36/37 + a16ae 对照 v1/v2/v3 进行中。
+若 v3 在 Adreno 不劣于形态 A 且在 Mali/A16 保住增益 ⇒ 默认改 v3;否则退到 W128+PTR(三端都不赔但丢 Mali 的 30%)交用户裁决。
