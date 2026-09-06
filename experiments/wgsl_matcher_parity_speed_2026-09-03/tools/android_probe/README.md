@@ -660,3 +660,13 @@ Adreno 没拿到 noload 探针暗示的 28%(合并载入后仍是同样的等待
 ## 🏁 09-06 15:1x KP 进三端默认(产品 TU 标签 **V8** `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr+kp,V8)`,退回 `…_NOKP=1`;Mac abi/parity/db51 全绿;默认文本与三机跑过的 KP=1 文本逐字节同,**探针/台架无需再装**)
 三端相对 09-06 凌晨形态 A:**A16 68.2 → 60.3(−12%,0.86× 原生 Metal)、Mate 10 816 → 534(−35%)、Adreno 660 467–488 → 470–481(≈0)**;全部逐字节同。
 连接:P50 拔 USB 后 adbd 复位,tcpip 5555 关闭(Connection refused)——需要用户在开发者选项开"无线调试"并配对,或短暂插回 USB 再 `adb tcpip`。
+
+## 🏁 09-06 15:13 生产上机:build 102(= build 100 原样换 PWOfficialSfm,A‴+KP 默认,V8)装上 iPhone 14 Pro
+装机:装前备份 1400/1400 + 45/45 对账全绿;app 空闲 4 分钟后原地覆盖(用户明令);装后清单缺失 0。**首场 未命名(4)(15:32,30 张)**:`matcher_backend.jsonl` = `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr+kp,V8)`;cpuM=0、raw-fallback=0、rc=ok ×30、0 error;registered 30/30、points 23211。
+| 场次(同机,13312 预算) | 匹配核 | 张数 | 单张中位 | 提取中位 | 匹配中位 | 候选中位 | 热状态 |
+|---|---|---|---|---|---|---|---|
+| 09-03 11:31 / 18:39(原生 Metal) | metal | 20 / 20 | 2012 / 1610 | 719 / 600 | 1106 / 901 | 10 / 10 | nominal |
+| 09-04 23:13 / 23:30(build 100 Dawn) | mma V0 / tiled | 20 / 20 | 2593 / 2657 | 478 / 516 | 2042 / 2080 | 10 / 10 | nominal/fair |
+| 09-06 15:07 未命名(2)(build 100,我台架烤热) | mma V0 | 33 | 2802 | 970 | 1763 | 12 | serious ×33 |
+| **09-06 15:32 未命名(4)(build 102)** | **blocked V8** | 30 | **1472** | 614 | **803** | 12 | fair 16 / serious 14 |
+每候选匹配:build 102 ≈ 67 ms vs 原生 Metal 90–111 ms vs build 100 Dawn 204–208 ms。用户体感:"这次就快多了"。
