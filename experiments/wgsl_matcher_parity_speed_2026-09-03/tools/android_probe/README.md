@@ -572,3 +572,16 @@ Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PAS
 机制假设:Adreno 与 Apple Family 8 一样按峰值寄存器分 wave,KEYSCAN2 向量化尾段(u0..3/r0..3/c0..3/ra..rd 同时活)峰值 +~48 寄存器 ⇒ 整段 GEMM 的 wave 数掉;Mali 无此惩罚(64 寄存器档已到)。
 ⇒ 做 **KEYSCAN3**(w64_ks3_ptr.wgsl:v1 顺序折叠 + 去 32 个逐键 select,零分键靠 (key>>5)==0 判;峰值活寄存器 ≈ v1):Mac sha 同、parity PASS(zeros/tie);三机 batch36/37 + a16ae 对照 v1/v2/v3 进行中。
 若 v3 在 Adreno 不劣于形态 A 且在 Mali/A16 保住增益 ⇒ 默认改 v3;否则退到 W128+PTR(三端都不赔但丢 Mali 的 30%)交用户裁决。
+
+## 🏁 09-06 13:3x KEYSCAN 三版三机对照 ⇒ 三端不赔的形态 A‴ = f16 + 4x4 + W64 + NOPB + **KEYSCAN3** + PTR
+(标签逐臂核对、WGSL_FILE 列核对 len=8665;run_…_p50pocket_batch36 / run_…_mate10_batch37 / a16_2026-09-06_keyscan_v123.log)
+| 形态(13312²,ms) | P50 Pocket / Adreno 660 | Mate 10 / Mali-G72 | A16 |
+|---|---|---|---|
+| 形态 A(09-06 凌晨默认) | 467–488(三批) | 829–831 | 67.7–70.3 |
+| A″ = W64+KEYSCAN2+PTR(de453a8 默认) | 533 / 555 / 563(**+13~17%**) | 573 / 574 / 580 | 63.0 / 63.0 / 62.9 |
+| W64+KEYSCAN(v1)+PTR | 540 / 546(+13%) | 600 / 597 | 64.1 / 63.6 / 64.3 |
+| **A‴ = W64+KEYSCAN3+PTR** | **473 / 488 / 477(≈ 形态 A,0%)** | **583 / 583(−30%)** | **63.9 / 63.7 / 63.8(−6%)** |
+| W128+PTR(无 KEYSCAN) | 457 / 476(−3~5%,Adreno 最快) | ≈ 形态 A(PTR 在 Mali 中性) | ≈ −3% |
+KEYSCAN3 = v1 的顺序折叠(峰值活寄存器最低)去掉 32 个逐键 select(零分键靠 (key>>5)==0 判);v1 与 v3 只差这 32 个 select,在 Adreno 差 13% ⇒ Adreno 对尾段每条指令/每个寄存器都敏感(按峰值寄存器分 wave)。
+Mac:KEYSCAN3 文件 sha a59db73512ce、parity PASS(zeros/tie);TU 旋钮 `…_DIRECT_KEYSCAN3=1` 生成文本与文件逐字节同,标签 `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr,V6)`;parity/db51/ABI 全闸进行中。
+**按"任一端赔=淘汰":A″ 出局,A‴ 是唯一三端不赔且保住 Mali −30%/A16 −6% 的形态;默认是否从 A″ 改 A‴ 交用户裁决。**
