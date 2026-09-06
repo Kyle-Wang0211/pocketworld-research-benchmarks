@@ -728,3 +728,5 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 - **🔴 尺子更正(09-06 16:2x)**:探针批一直用 reps=1 ⇒ RESULT p50 = 首次调用,**含管线编译与首次上传**。Mate 10 暖态复测(reps=3):p50 306.3 / min 304.5 ms,而单臂数字是 5xx。**所有 Mate 10 / P50 的单臂绝对值都含 ~200+ ms 一次性开销;相对比较不受影响(同一常数),但 README 里"Mate 10 573 ms"这类绝对值以暖态复测(batch49)为准。** A16 台架自带预热,不受影响。
 - **FINISHFOLD**(aeb9eb3):finish(合并核+两次拷贝)折进最后一个列分块的命令缓冲(每候选 −1 次同步);**XFOLD**(5f4a70d):DIRECT 预转置折进第一个分块(需要转置时 −1 次同步)。两刀 Mac:sha 同、parity PASS、db51 162/162、ABI PASS;env NOFINISHFOLD/NOXFOLD 关。三刀合并(XRES+FINISHFOLD+XFOLD)在两台台架的驻留回路上 all-on vs all-off 对照中。
 - **A16 台架驻留回路,三刀合并(XRES+FINISHFOLD+XFOLD)vs 全关**:每候选稳态 **56.4 / 56.4 vs 60.3 / 59.7(−6%)**,每帧 672–700 vs 714–730 ms;逐字节同。(XRES 单独 −4.5%,两次折叠再 −1.5%。)
+- **Mate 10 台架驻留回路,三刀合并 vs 全关**(batch48):allon 322.6 / 325.8 vs alloff 324.8 / 326.9 / 330.5 每候选(稳态)⇒ ≈ −1%(噪声内,不赔);后两臂设备漂移(帧 6–9 s,锁屏/热)不入。sha 同。
+**三刀(XRES+FINISHFOLD+XFOLD)三端结论**:A16 −6% / Mali −1% / Adreno 未测(P50 不在手);逐字节同;已在 Runner-103-xres.app 里备好,不装。
