@@ -695,3 +695,12 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 - **Android**:`VK_EXT/KHR_global_priority` 在 Adreno/Mali 驱动广泛声明,正确姿势=把 compute 队列建成 LOW(永远被允许);Arm 明文高优先级队列可抢占;Adreno 老代长 compute 会冻屏 ⇒ 保留粗分块保底;Camera2→SurfaceView 预览不经 app GPU。
 - **推荐**:让路与控热解耦——默认单次提交,预览/UI 帧时序超阈值才切块(滞回);热隙只在"队列深度≥2 且 serious"时启用,长度按 kernel 耗时膨胀率(iOS)/getThermalHeadroom(Android)连续调;承认逐字节不变约束下热隙对温度的贡献上限很小,由用户裁决用拍摄节奏买热稳定值不值。
 - **零构建 A/B 路径**:official_env.json 推 `OFFICIAL_AETHER_MATCH_GAP_SERIOUS_PCT`(0/50)与 `OFFICIAL_AETHER_MATCH_CHUNK_TARGET_MS(_FPS30)`,重启 app 后拍同类场,对比每张 match ms 与 thermal 轨迹。
+
+## 09-06 16:4x 第 3 块 · 安卓提取器探针可行性(只读考古)
+- 提取器 = 纯 C++20 + Dawn(`tools/sift_extract_dawn.cc`、`sift_pyramid_dawn.cc`、`dawn_kernel_harness.cpp`、`bench/dsp_sift_gpu_c.cc`、`src/sfm/canonical_feature_selector_v1.cc` + `official_preclamp_instr_v1.cc` + `sha256.cpp`),无 Eigen/glog/Apple 依赖;宏 `AETHER_FEATURE_SELECTION_ENV_OFFICIAL=1 AETHER_GPU_TIMESTAMPS_ENV_OFFICIAL=1` + 两个字符串宏。CPU 回退符号 stub 掉即可。
+- 契约:输入 8-bit 灰度紧凑 w*h(4032×3024),`aether_dsp_sift_extract_gpu_v2(gray,w,h,8192,…)` → xy(+0.5)+128 u8 描述子(与 fx13 a.u8 同格式,可直接喂匹配探针);内部 6 层/octave 全部常驻一个 f32 缓冲 ≈390 MB。
+- 九段钩子已在:`aether_sed_last_stages(double[9])`(主机墙钟)/`aether_sed_last_stages_gpu`(GPU 时间戳,需 `OFFICIAL_AETHER_GPU_TIMESTAMPS=1` 且 adapter 有 TimestampQuery:P50 有、**Mate 10 无**(timestampComputeAndGraphics=false)⇒ Mate 10 只有主机九段)。
+- WGSL 烘进二进制;探针用 `-DAETHER_WGSL_DIR=/data/data/com.kyle.pwprobe/files/wgsl` 编 ⇒ 之后 14 个 sift_*.wgsl 推文件迭代(**一次装机**);iOS 台架要推文件需 load_wgsl 加运行期 env(小补丁)。
+- Mate 10 三个未知量:harness 无条件要 Subgroups 特性(Mate 10 subgroups=0 ⇒ RequestDevice 失败)、要求 1 GB 缓冲上限、Null adapter 静默回退——各需 1–3 行 harness 补丁 + 先打印 GetLimits。
+- 夹具:12MP 图在 `~/Documents/progecttwo/.fixtures_12mp.nosync/frames/f_01..17.png`;三端逐字节闸要统一 `frame1.gray`(Mac 转一次,三端 fread)。f16 描述子核在有 ShaderF16 时自动启用 ⇒ 跨端比对要带 `SED_FORCE_F32=1` 臂。
+- 工作量:小时级的确定工作 + Mate 10 三个未知量;**需要一次探针装机(待用户批)**。生产 A16 的九段可先由 env 诊断零构建拿到(sfm_match_fail.jsonl 的 gpu_timestamp_frame_v1)。
