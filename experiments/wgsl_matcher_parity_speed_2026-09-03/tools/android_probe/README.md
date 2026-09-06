@@ -704,3 +704,16 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 - Mate 10 三个未知量:harness 无条件要 Subgroups 特性(Mate 10 subgroups=0 ⇒ RequestDevice 失败)、要求 1 GB 缓冲上限、Null adapter 静默回退——各需 1–3 行 harness 补丁 + 先打印 GetLimits。
 - 夹具:12MP 图在 `~/Documents/progecttwo/.fixtures_12mp.nosync/frames/f_01..17.png`;三端逐字节闸要统一 `frame1.gray`(Mac 转一次,三端 fread)。f16 描述子核在有 ShaderF16 时自动启用 ⇒ 跨端比对要带 `SED_FORCE_F32=1` 臂。
 - 工作量:小时级的确定工作 + Mate 10 三个未知量;**需要一次探针装机(待用户批)**。生产 A16 的九段可先由 env 诊断零构建拿到(sfm_match_fail.jsonl 的 gpu_timestamp_frame_v1)。
+
+## 09-06 17:0x 第 2 块 · 生产"match=853ms"真相(核心自带 frame_split,零构建;prod_splits/*.jsonl)
+代码地图(agent):`match_ms` 从 `official_aether_sfm_c.cc:9233` 到 `:10241`,含候选循环 + **每帧局部 BA**(`IterativeLocalRefinement`)+ 三角化 + tail-cache + 预览快照 + 诊断;每候选 GPU 路径 ≈ 7 次 host↔GPU 同步(DIRECT 预转置 SubmitAndWait + N 块 + finish + map),**A/B 预转置每候选重做**(B 一帧被转 12 次);驻留已开(Swift 插件 setenv);probe_batch 是死路径;overlap 生产者线程的 gpu_ms 未计时(恒 0),但 `m_gpu`(每块 submit→done 之和)可用。
+| 场次(每帧中位) | cand | m_gpu(GPU 匹配) | m_chunks | m_sleep | tvg | tri | **lba** | tail(=等 GPU+cache+预览+诊断) |
+|---|---|---|---|---|---|---|---|---|
+| 09-03 10:40 原生 Metal | 9.5 | 697 | 52 | 0 | 65 | 3 | 135 | 675 |
+| 09-03 11:15 原生 Metal | 5 | 121 | 10 | 9.5 | 16 | 1 | 32 | 143 |
+| 09-04 15:14 / 15:31 build 100 | 9.5 | **1961 / 1965** | 133 / 120 | 0 | 26 / 41 | 1 / 1.5 | 46 / 82 | 1968 / 1938 |
+| 09-06 15:07 build 100 未命名(2) | 12 | 1116 | 51 | 17 | 62 | 7 | 458 | 1200 |
+| **09-06 15:32 build 102 未命名(4)** | 12 | **419.5** | 27 | 0 | 22.5 | 3 | **263.5** | 466.5 |
+读法:build 102 把 GPU 匹配从 build 100 的 ~1960 压到 **420 ms/帧(每候选 35 ms,4.7×)**;"match=853" 里剩下的大头是 **每帧局部 BA 264 ms(31%)** 与等待/杂项 ~140;TVG 只有 22。
+无损刀清单(第 2 块):(a) 预转置布局驻留(与 ResidentBuffer 同键,省每候选 2 次 xpose+同步);(b) 每候选同步次数 7→2(转置驻留后:N 块+finish 合并、map);(c) 生产者线程 gpu_ms 计时补上(15 行);(d) 每帧 LBA 264 ms 是下一座山(Ceres,另立战役)。(a)(b)(c) 都在 Dawn TU/核心 = build 103(PIPELINE_ONLY)。
+第 1 块结合:fair 热态下分块本身只 ~3 ms/候选(27 块/帧 ≈ 2.25/候选),真正翻倍的是 serious 热隙 ⇒ A/B 只需动 GAP_SERIOUS_PCT。
