@@ -599,3 +599,16 @@ P50 形态 A 跨批散布 451–488(8%),A‴/ks3 五臂 473–488 ⇒ Adreno 上
 - **P50 batch39 稳态 15 臂(轮换,无重装;run_2026-09-06_p50pocket_batch39_steady15.tsv)**:默认 A‴ 484.7 / 485.4 / 509.5 / 494.3 / 470.9(中位 485);形态 A 464.6 / 473.2 / 460.3 / 458.5 / 446.8(中位 460);W128+PTR 485.8 / 459.8 / 472.2 / 482.0 / 462.2(中位 472)。
   ⇒ **Adreno 660 上 A‴ 比形态 A 慢 ~5%(485 vs 460),W128+PTR 慢 ~2.6%,形态 A 是 Adreno 最快形态**;KEYSCAN3 的尾段在 Adreno 是净成本。段账批 batch40(nomerge/noload/notail/KS3@W128)定它花在哪。
   三端现状:A‴ = Mali −29% / A16 −7.5% / Adreno +5%。按"任一端赔=淘汰"字面 A‴ 不成立;需要用户裁决"Adreno 赔 5% 换 Mali 29%"还是继续找 Adreno 中性的尾段。
+
+### 09-06 14:0x Adreno 段账(P50,batch40;A‴ 基线 481–495)+ 三端"W128+PTR"权衡表 + 两路调研落地
+| 探针 | ms | 读法 |
+|---|---|---|
+| nomerge(合并链 8→1 步) | 447.1 / 447.6 | 合并段 **−8%**(Mali 是 0%) |
+| noload(GEMM 载入/转换/地址提出循环) | 349.1 | **−28%**:Adreno 的 GEMM 是载入受限(Mali 1.5%) |
+| notail(整段尾巴+2 barrier 删掉) | 360.9 | 尾段合计 **−26%**;形态 A 自己的尾段也 ≈21%(460 vs 361) |
+| KS3@W128(NOW64) | 533.4 / 529.0 | +10%:KS3 的 16 步行合并链 + 96/128 忙在 Adreno 更差 |
+| W128+PTR(老扫描) | 456.8 | −6% |
+三端 "W128+PTR"(不带 KEYSCAN):A16 66.4(−2.6% vs A)、Mate 10 821–836(0)、Adreno 457–472(−2%)⇒ 三端都不赔但几乎没肉;A‴ = Mali −29% / A16 −7.5% / Adreno +5%。
+**调研落地(Adreno 成本模型,一手:Qualcomm 80-NB295-11 §3.2.2/§6/§7/§8 + Mesa ir3/turnip 源码 + Romou)**:Adreno 按核**峰值**寄存器静态分 wave(A660 `reg_size_vec4=64`,wave64 时 ≤32 regs→16 waves、33–48→8、49–64→6…;wave 成对发射,粒度 128/256);KEYSCAN2 的 +64 活寄存器把 GEMM 段 wave 数砍 2–4 倍 = +13~17% 的机制;"只用一次的 local memory + barrier"是官方点名坏模式("Using global memory directly to avoid barriers may be a better option");载入事务 128 位而 vec4<f16> 只用一半(合并 2 个 k 一次 128 位载入 = 改 xpose 布局 = 主机侧 ⇒ 需用户批准装);kgsl sysfs 在 P50 上只有 gpubusy 可读(cur_freq/gpuclk Permission denied);AOC(Adreno Offline Compiler,Qualcomm Software Center)可离线读 SPIR-V 的 footprint/wave 数——需用户下载。
+**调研落地(精确剪枝)**:文献(LEMP/FEXIPRO/Maximus/GPU-IPRO/SiftGPU/OpenCV)一致:归一化 SIFT 无范数偏斜、未旋转前缀只拿 ~50% 内积、GPU 生产匹配器全是暴力;**真实 fx13 探针(prune_probe.py,只计数)**:零值 0.4–1%(无稀疏);identity K=32 逐对双侧可剪 23.8% 但 4×4 块全剪 0.75%、512 对组全剪 **0.00%**;能量排序 K=32:36.5% / 1.93% / 0.00%(K=64/96 与 PCA 见 prune_probe.log)⇒ **SIMT 粒度剪枝率 ≈ 0,精确剪枝路线判死**。
+**PDB**(w64_ks3_ptr_pdb.wgsl:P 双缓冲 8 KiB、每 tile 一次 barrier;Mac sha 同、parity PASS)三机对照进行中——针对 Adreno 尾段 26% 与 A16 "barrier=drain"。
