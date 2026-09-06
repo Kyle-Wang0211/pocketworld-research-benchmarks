@@ -779,3 +779,17 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 | kall + GSS_FUSED=0(2-pass) | 8192 | 514(min 484) | **78**/71/1.0/82/130/47 | |
 
 要点:① 逐位闸在设备上成立(cap 65536 三臂同、老路径两次同);② K5a 在 A16 −6%(Mac 零收益)⇒ barrier 在 A16 更贵;③ **2-pass blur 在 A16 GPU 77.8 < fused 85.9 < 老 fused 96 ⇒ 08-10 的 GSS-FUSED 在 A16 是赔的**(交替 3 轮复验 R2 链跑中);④ 方向段 129 ms 成为最大段(31%)。老路径首尾两臂 672/667 ⇒ 无热漂移。
+
+### A16 复验 R2/R3(09-06 21:3x–22:0x,env-only,无重装)
+
+| 臂 | pyramid GPU ms | orient GPU ms | 判决 |
+|---|---|---|---|
+| fused(K2d32)×3 | 86.3 / 86.1 / 86.0 | 129 | |
+| 2-pass ×3(+R3 两次) | 78.1 / 77.9 / 77.8 / 77.8 / 78.0 | 129 | **2-pass 在 A16 稳定 −8.3 ms**,Mac 也 19.0 vs 19.9 |
+| K2f(2-pass tile 分段) | 112 | | ✗(逐位同但 +34) |
+| K4a / K4b(方向核循环重排) | | 156 / 136 | ✗(逐位同但更慢),原版循环两端最优 |
+| 诊断:去 imsmooth | | 42 | imsmooth = 方向段 67%(A16)/70%(Mac) |
+
+K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pass pyramid host 50→24 ms、与 fused 持平;cap 65536 逐位同。2-pass 路径的 wall 收益要 K8b 进归档后才在设备上兑现(本轮 bench 归档只有 K8)。
+
+**定案(A16 + Mac,Mali/Adreno 提取器未测——无 APK):** WGSL 默认切成 K1a+K2d32+K5a(已写进 shaders/wgsl 工作树,补丁 wgsl_defaults_k1a_k2d32_k5a.patch);host 默认 K7+K8(b);GSS_FUSED 默认是否翻成 2-pass 待用户裁决(两端都赢但缺 Android 数据)。
