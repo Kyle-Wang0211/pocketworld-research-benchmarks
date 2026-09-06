@@ -753,3 +753,15 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 | **K7** | 网格分桶非极值抑制(host 四 pass,`OFFICIAL_AETHER_SUPPRESS_GRID=0` 关) | **suppress 20.4→0.5** | ✓ |
 
 合刀(K1a+K2d32+K5a+K7)cap 8192:p50 134.0→105.6~108.8 ms(−21%),GPU 段和 103.8→72.4(−30%)。Mac 上 2-pass blur(19.9)本就比 08-10 的 fused(25.7)快,fused 的胜负要在设备上重判。K7 已在 aether_cpp 暂存(commit 因 iCloud .git 写超时未落,补丁在 ~/Developer/pw_extract_knives/k7_suppress_grid.patch);WGSL 变体持久副本 ~/Developer/pw_extract_knives/。
+
+### 补充(09-06 傍晚,Mac M3)
+
+| 刀 | 改动 | 结果 | 判决 |
+|---|---|---|---|
+| **K8** | 金字塔 packed/scratch/tmp 三缓冲按 (device,size) 跨帧常驻,省掉 Dawn lazy-clear 每帧 ≈490 MB 清零(host,`OFFICIAL_AETHER_PYR_PERSIST=0` 关) | pyramid host 50.9→23.8 ms(wait 49.1→21.8),逐位同 | ✓ 但 +490 MB 常驻,产品侧要空闲释放钩子(待用户) |
+| K2f | 2-pass blur 8×8 tile+halo 进共享内存 | pyramid 19.5→25.4 | ✗ |
+| K4a | 方向核 imsmooth 三段同序循环去 clamp | orient 19.4→23.5(逐位同) | ✗ 三段不等长 ⇒ lane 分歧 |
+| K4b | imsmooth 静态 15 步 + 统一谓词、taps 常量索引 | orient 19.5→21.0(逐位同) | ✗ |
+| 诊断 | 方向核去 imsmooth 两趟 | orient 19.5→5.8 | imsmooth 占方向段 70%(非刀) |
+
+**Mac 全刀(K1a+K2d32+K5a+K7+K8)cap 8192:134.0→85.4 ms(−36%)**;剩余 GPU 段:pyramid 20 / orient 19.4 / affine 14.6 / detect 9.2 / desc 8.4 / suppress 0.5。设备验证链 `/private/tmp/ext_k78_chain.sh`(归档+bench 已编好,等 iPhone available 后一次安装,9 臂:old/new/kall × 65536 逐位闸 + 8192 计时 + 2-pass)。
