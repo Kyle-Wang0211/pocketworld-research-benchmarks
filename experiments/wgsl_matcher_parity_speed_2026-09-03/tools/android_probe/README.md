@@ -446,3 +446,12 @@ W64 两臂 Mac 闸:parity PASS、db51 162/162(w64 / w64+keyscan)。
 - **batch20 作废(run_2026-09-06_batch20_THROTTLED_invalid.log)**:连跑 18/19/20 三批 ~15 分钟后 ref 600 → 2100/1716/1709,电池 38 °C;这批相对值也不可信。
   规矩:Mate 10 每臂必须同时采样 `/sys/class/devfreq/gpufreq/cur_freq`(G72 满频 767 MHz)记 max/众数进表,臂间 ≥60 s;batch21 起照做。
 - 台架:gen_wgsl.sh 头改 zsh(`${=var}` 只在 zsh 成立,bash 下 "bad substitution" 且文件不推——第二次同类坑,见 09-05 env 叠加事故);iOS 台架 WGSL_FILE 支持 `~/Documents/...`(容器 HOME 展开),以后 iPhone 也只推文件。
+
+### 09-06 中午 A16 五轮 ABC/CBA(13312²,dawn wall p50 ms,每臂 9 rep;a16_2026-09-06_5round_ref_w64ks_w64ks2.log)
+| 臂 | 5 轮 | 中位 | vs ref | vs 原生 Metal(~70.5) |
+|---|---|---|---|---|
+| A ref | 68.1 / 68.4 / 68.0 / 68.0 / 68.2 | 68.1 | — | 0.966× |
+| A + W64 + KEYSCAN | 68.3 / 68.2 / 68.1 / 67.9 / 67.9 | 68.1 | 0 | 0.966× |
+| A + W64 + KEYSCAN2 | 65.4 / 65.1 / 65.0 / 65.1 / 64.8 | **65.1** | **−4.4%** | **0.923×** |
+十五臂 sha 全同。KEYSCAN2 的向量化尾段(去 16 个逐键 select、7 步树形)在 A16 上把 KEYSCAN 的 +1% 变成 −4.4%,五轮散布 0.6 ms、无重叠 ⇒ 不是噪声。
+Mate 10 晾机后的 A′ vs KEYSCAN2(batch21,带频率采样)见下。
