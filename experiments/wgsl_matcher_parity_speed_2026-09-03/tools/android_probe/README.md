@@ -476,3 +476,13 @@ Mate 10 晾机后的 A′ vs KEYSCAN2(batch21,带频率采样)见下。
   规矩补:Mate 10 跑批前必须**解锁并保持亮屏**(stayon 已设),批内 ref 夹每一臂看比值,ref 漂 >10% 整批作废。
 - **batch23(锁屏态,只看比值;run_2026-09-06_batch23_LOCKED_ratios_only.tsv)**:ref 1161/1451/1330/1325/1353(漂 25%,thermalservice 数值全程冻结在 45/55 ⇒ 锁屏态连温度也不更新),
   ks2 1200/1206、ks2_ptr 1197/1197 ⇒ 相对相邻 ref 约 −8~−10%,ptr ≈ ks2。只证"不劣",不入裁决。batch24 等 Keyguard=false 自动开跑(解锁后)。
+
+### 09-06 12:11 Mate 10 batch24(用户解锁、亮屏常亮、ref 夹每臂;run_2026-09-06_batch24_unlocked_ks2_ptr.tsv)
+| 臂 | 各轮 ms | 中位 | vs A′ 611 | vs 形态 A 816 |
+|---|---|---|---|---|
+| A′ = A + W64 + KEYSCAN(ref ×5) | 625.2 / 600.8 / 613.3 / 611.3 / 598.4 | 611 | — | −25% |
+| A′ + KEYSCAN2 | 581.3 / 573.4 | 577 | **−5.5%** | −29% |
+| A′ + KEYSCAN2 + PTR | 570.8 / 575.9 | 573 | −6.2%(vs ks2 −0.7%,噪声内) | **−30%** |
+九臂 sha 全同,isStatusBarKeyguard=false 全程(锁屏判据已从恒真的 `Keyguard=` 改为 `isStatusBarKeyguard`)。
+⇒ **KEYSCAN2 两端都赚(Mate 10 −5.5%、A16 −4.4%)**;**PTR 在 Mate 10 中性、A16 −4.5%(半速态比值,正常态复测 a16w 进行中)**。
+候选终形态 **A″ = f16 + 4x4 + W64 + NOPB + KEYSCAN2 + PTR**:Mate 10 816 → 573(−30%),Mac 三闸绿,A16 待正常态复测后定绝对值。

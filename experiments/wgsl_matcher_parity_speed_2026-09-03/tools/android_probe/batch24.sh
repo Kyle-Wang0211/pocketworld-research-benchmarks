@@ -1,7 +1,7 @@
 #!/bin/bash
 # 第二十四批(等用户解锁后自动开跑):ref 夹每一臂,臂 = ks2 / ks2_ptr / ks2 / ks2_ptr;每臂前 WAKEUP + 查 Keyguard,Keyguard=true 的臂标记;15 s 间隔。
 cd "$(dirname "$0")"; export PW_ADB_SERIAL=${PW_ADB_SERIAL:-192.168.1.11:5555}; d=$PW_ADB_SERIAL
-kg(){ adb -s $d shell dumpsys window 2>/dev/null | grep -oE 'Keyguard=[a-z]+' | head -1 | cut -d= -f2; }
+kg(){ adb -s $d shell dumpsys window 2>/dev/null | grep -oE 'isStatusBarKeyguard=[a-z]+' | head -1 | cut -d= -f2; }  # 09-06: 'Keyguard=' 会匹配 deviceHasKeyguard=true(恒真),真正的锁屏指示是 isStatusBarKeyguard
 echo "waiting for unlock $(date +%H:%M)"; while [ "$(kg)" != "false" ]; do sleep 20; done; echo "UNLOCKED $(date +%H:%M)"
 adb -s $d shell svc power stayon true >/dev/null 2>&1
 L=~/Developer/pw_android_probe/mate10_batch24_$(date +%m%d_%H%M).tsv; echo -e "arm\tms\tsha12\tgpu_C\tcl1_C\tkeyguard\tchain" > $L
