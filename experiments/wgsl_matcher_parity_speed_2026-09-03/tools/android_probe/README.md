@@ -765,3 +765,17 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 | 诊断 | 方向核去 imsmooth 两趟 | orient 19.5→5.8 | imsmooth 占方向段 70%(非刀) |
 
 **Mac 全刀(K1a+K2d32+K5a+K7+K8)cap 8192:134.0→85.4 ms(−36%)**;剩余 GPU 段:pyramid 20 / orient 19.4 / affine 14.6 / detect 9.2 / desc 8.4 / suppress 0.5。设备验证链 `/private/tmp/ext_k78_chain.sh`(归档+bench 已编好,等 iPhone available 后一次安装,9 臂:old/new/kall × 65536 逐位闸 + 8192 计时 + 2-pass)。
+
+### A16 设备实测(09-06 21:0x,PWMatchBench 一次安装,frame1.gray 12MP,reps 3)
+
+| 臂 | cap | p50 ms | GPU 段 ms(pyr/det/sup/aff/ori/desc) | 摘要 |
+|---|---|---|---|---|
+| old(GRID=0,PERSIST=0,烘焙 WGSL) | 65536 | 1043 / 1031 | 95/107/79/146/217/232 | 3307182d4163 两次同 |
+| new(K7+K8) | 65536 | 922 | 93/107/**0.9**/146/217/232 | 同 |
+| kall(+K1a+K2d32+K5a) | 65536 | 867 | 86/**71**/1.0/**136**/216/232 | 同 |
+| old | 8192 | 672 / 667 | 96/107/79/87/129/48 | (截断非确定) |
+| new | 8192 | 557 | 93/107/0.9/87/129/47 | |
+| **kall** | 8192 | **510(−24%)** | 86/71/1.0/82/129/47 | |
+| kall + GSS_FUSED=0(2-pass) | 8192 | 514(min 484) | **78**/71/1.0/82/130/47 | |
+
+要点:① 逐位闸在设备上成立(cap 65536 三臂同、老路径两次同);② K5a 在 A16 −6%(Mac 零收益)⇒ barrier 在 A16 更贵;③ **2-pass blur 在 A16 GPU 77.8 < fused 85.9 < 老 fused 96 ⇒ 08-10 的 GSS-FUSED 在 A16 是赔的**(交替 3 轮复验 R2 链跑中);④ 方向段 129 ms 成为最大段(31%)。老路径首尾两臂 672/667 ⇒ 无热漂移。
