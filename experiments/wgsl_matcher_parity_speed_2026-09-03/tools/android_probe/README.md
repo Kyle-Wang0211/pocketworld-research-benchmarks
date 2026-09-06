@@ -585,3 +585,4 @@ Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PAS
 KEYSCAN3 = v1 的顺序折叠(峰值活寄存器最低)去掉 32 个逐键 select(零分键靠 (key>>5)==0 判);v1 与 v3 只差这 32 个 select,在 Adreno 差 13% ⇒ Adreno 对尾段每条指令/每个寄存器都敏感(按峰值寄存器分 wave)。
 Mac:KEYSCAN3 文件 sha a59db73512ce、parity PASS(zeros/tie);TU 旋钮 `…_DIRECT_KEYSCAN3=1` 生成文本与文件逐字节同,标签 `blocked(fma4x4+direct+w64+nopb+f16+keyscan3+ptr,V6)`;parity/db51/ABI 全闸进行中。
 **按"任一端赔=淘汰":A″ 出局,A‴ 是唯一三端不赔且保住 Mali −30%/A16 −6% 的形态;默认是否从 A″ 改 A‴ 交用户裁决。**
+A‴ Mac 四闸(TU 旋钮 `…_DIRECT_KEYSCAN3=1`,8ecbf98):fx13 sha a59db73512ce、parity 全 PASS(zeros/tie_xwg/eq_best2)、db51 162/162、abi_test PASS。
