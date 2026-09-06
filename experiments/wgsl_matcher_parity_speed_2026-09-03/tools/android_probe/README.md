@@ -465,3 +465,12 @@ Mate 10 晾机后的 A′ vs KEYSCAN2(batch21,带频率采样)见下。
 | ks2 + ptru2(两者) | 59.9 / 62.8 / 64.3 | 62.8 | −2.8%(散布大) |
 十二臂 sha 全同。ptr 三轮全部低于 ks2 的两轮稳态(64.6/64.7);ks2 首轮 60.7 是休息 60 s 后的冷态离群。iOS WGSL_FILE `~/Documents/...` 路径展开成功(/private/var/mobile/Containers/...)。
 待 Mate 10 batch22 同四臂对照。
+
+### 09-06 午后:PTR 进 TU、设备状态事故(锁屏 / 热)
+- **PTR**(7081932,env `…_BLK_DIRECT_PTR=1`,链尾):GEMM 循环地址改指针递增;TU 生成文本与手工 ptr 文件**逐字节相同**;完整候选形态 **W64+KEYSCAN2+PTR** Mac 三闸:sha 同、parity PASS(zeros/tie/eq_best2)、db51 162/162。
+- **A16 ks2 vs ks2+ptr 五轮 ABBA(a16_2026-09-06_ks2_vs_ptr_5round_THROTTLED.log)**:ks2 136.8/134.4/139.0/136.4/139.7、ptr 131.3/130.7/130.3/130.2/132.2 ⇒ **−4.5%,五轮无重叠**。
+  但整机在半速:原生 Metal 臂同批 150–159 ms(正常 70)—— iPhone 连跑 ~40 分钟后降频。比值成立、绝对值不入账;晾 15 分钟后单臂复测(a16v)。
+- **Mate 10 batch21 作废(run_2026-09-06_batch21_LOCKED_invalid.log)**:晾 45 分钟、电池 37 °C、thermalservice GPU 45 °C/mStatus=0(未报节流)仍 1705–1877 ms;
+  根因是**屏幕已灭 + 锁屏(Keyguard=true)**:`svc power stayon true` + WAKEUP 后同臂 1301,仍是 600 的 2×,剩余差额只能是锁屏态的 EMUI 调度(11:31 那批 600 是用户刚解锁时跑的)。
+  gpufreq sysfs 对 shell 时而 Permission denied(11:46 读到 415 MHz 一次),采样臂全 0,不可靠;改用 dumpsys thermalservice 温度 + ref 夹臂比值。
+  规矩补:Mate 10 跑批前必须**解锁并保持亮屏**(stayon 已设),批内 ref 夹每一臂看比值,ref 漂 >10% 整批作废。
