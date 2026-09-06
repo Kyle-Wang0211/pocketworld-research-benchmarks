@@ -538,3 +538,12 @@ A16 +1.5–2%:与 09-06 上午 u2(+0.9%)同向,Apple 静态按峰值寄存器分
 - 唯一还能让 Mali 再降的是软件流水(PIPEB,曾 −26%),A16 +15% ⇒ 按"没有专属"规矩不做。
 - 未测且中等风险的一条:At/Bt 按 k 成对打包成 vec4<u32>(一次 16 B 载入带 2 个 k),载入 clause 数减半、寄存器占用与 u2 同(u2 已死 ⇒ 大概率也死),需改 xpose 布局(主机侧)才能量。
 **今日三端总账不变:A″ = f16 + 4x4 + W64 + NOPB + KEYSCAN2 + PTR:Mate 10 816 → 573(−30%),A16 68.2 → 63.0(−7.6%,0.90× 原生),Mac 三闸绿。切默认待用户裁决。**
+
+## 🏁 09-06 12:5x A″ 切三端默认(用户裁决)+ 两机 ref 对照
+产品 TU de453a8:`ResolveDirectKnobs` 默认 w64/keyscan2/ptr 全开,标签 **V6** `blocked(fma4x4+direct+w64+nopb+f16+keyscan2+ptr,V6)`;退回形态 A:`…_DIRECT_NOW64=1 …_NOKEYSCAN=1 …_NOPTR=1` → `blocked(fma4x4+direct+w128+nopb+f16,V6)`。默认生成文本与两机验过的 aprime_ks2_ptr.wgsl 逐字节同。
+Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PASS。
+| 端(13312²,ABBA ×3,新装 app 的 TU 63443541bba1) | 默认 A″ | 形态 A(env 退回) | 增益 | sha |
+|---|---|---|---|---|
+| iPhone 14 Pro(原生 Metal 69.1–70.5) | 63.0 / 63.1 / 63.2 | 68.3 / 68.2 / 68.3 | **−7.6%**,0.90× 原生 | 6/6 同 |
+| Mate 10(解锁亮屏) | 613.6(装后首臂)/ 571.5 / 573.5 | 826.7 / 849.8 / (见 tsv) | **−31%** | 全同 |
+探针 APK / 台架 app 各装一次(主机侧默认改了,必须装);生产机未动。
