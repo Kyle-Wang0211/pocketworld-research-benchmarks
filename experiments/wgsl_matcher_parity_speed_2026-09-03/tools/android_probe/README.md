@@ -737,3 +737,19 @@ Mali 上分块 ≈ 0 成本;A16 nominal 下分块成本以 09-05 的 monolithic 
 | 形态 A(09-06 凌晨默认) | 602.3 / 597.3 | 554.7 / 544.8 |
 | **默认 A‴+KP(V8)** | **302.7 / 303.0** | **297.8 / 300.0** |
 ⇒ Mate 10 暖态 **−50%(2.0×)**;此前单臂(reps=1)数字含 ~200–270 ms 首次调用开销,稀释了比值(报成 −35%)。sha 同。
+
+## 提取器无损刀(09-06 下午,Mac M3 宿主 CLI;设备段账待 iPhone 隧道恢复)
+
+逐位闸定案:max_features 截断时(8192/32768)同一二进制两次运行的集合摘要都不同——42418 个候选里挑 8192 的选择器按 GPU 原子追加序破并列,**生产今天就不是跨运行确定的**;cap 65536(不截断)两次运行四摘要全同 ⇒ 提取器刀的逐位闸 = cap 65536 下 desc/xy/scale/ori 四摘要全同。下表所有刀都过了这道闸。
+
+| 刀 | 改动 | Mac M3 12MP 段 GPU ms(cap 65536) | 逐位 |
+|---|---|---|---|
+| K1a | DoG 26 邻域早退(`sift_dog_detect.wgsl`) | detect 15.4→9.3 | ✓ |
+| K2a | fused blur 源段+taps 进共享内存 | pyramid 25.7→25.3 | ✓ |
+| K2b | K2a + 环形缓冲 64 行按位与(去 `% 40`) | pyramid →23.1 | ✓ |
+| K2d32 | K2b + 每块 32 行(256 线程) | pyramid →20.4(2-pass 基线 19.9) | ✓ |
+| K2d16 / K2e | 16 行 / 16 列×16 行 | 21.2 / 21.5 | ✓ |
+| K5a | 仿射三路归约合一(21→7 barrier/迭代) | affine 24.0→24.5(无收益) | ✓ |
+| **K7** | 网格分桶非极值抑制(host 四 pass,`OFFICIAL_AETHER_SUPPRESS_GRID=0` 关) | **suppress 20.4→0.5** | ✓ |
+
+合刀(K1a+K2d32+K5a+K7)cap 8192:p50 134.0→105.6~108.8 ms(−21%),GPU 段和 103.8→72.4(−30%)。Mac 上 2-pass blur(19.9)本就比 08-10 的 fused(25.7)快,fused 的胜负要在设备上重判。K7 已在 aether_cpp 暂存(commit 因 iCloud .git 写超时未落,补丁在 ~/Developer/pw_extract_knives/k7_suppress_grid.patch);WGSL 变体持久副本 ~/Developer/pw_extract_knives/。
