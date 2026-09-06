@@ -848,3 +848,5 @@ K8b:2-pass 路径的 octave scratch 也常驻(按 slot+size 缓存),Mac 上 2-pa
 | K9d128(描述子 128 lane) | descriptor 81→83.7/85.2 | ✗ |
 | K8 策略 | 用户裁决:不常驻、不用 Metal purgeable(iOS 独有不要);改成三端一致的 opt-in(`OFFICIAL_AETHER_PYR_PERSIST=1` 会话内复用 + `aether_pyr_persist_release()` 会话结束/内存告警释放),默认关 | 默认关 ⇒ A16 约 +45 ms |
 | K8d(种子平滑走 fused 核 → 下一层槽,再单 tap [1.0] 恒等拷回;去掉 scratch/tmp 两块 49 MB 每帧分配与 2-pass 往返) | Mac 逐位同;设备待归档 | 待 A16 |
+| K1b(检测核 4 层 10×10 tile 进共享内存) | A16 detect 71→79 | ✗(Mac 9.2→12.2 也输) |
+| **K2g**(2-pass blur 单绑定+双偏移,scratch 住"下一层的槽";种子 H A→B、V B→A 原地平滑;去掉全部 scratch/tmp 缓冲) | Mac 两条路径逐位同;persist 关时 pyramid host 48.8→40.2,2-pass GPU 19.0 vs fused 19.9;**2-pass 路径从此零额外内存** | ✓ 待 A16 归档(取代 K8d) |
