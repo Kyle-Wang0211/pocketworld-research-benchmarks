@@ -557,3 +557,5 @@ Mac 四闸:fx13 sha a59db73512ce、parity 全 PASS、db51 162/162、abi_test PAS
 **A″ 比形态 A 慢 ~18% ⇒ 按"任一端赔=淘汰",A″ 作三端默认不成立**(上午切默认时只有 Apple+Mali 两端在手)。
 另:2021 的 Adreno 660 跑形态 A 467 ms,比 2017 的 Mali-G72 的 816 快 1.75×,但比 A16 的 68 慢 6.9×。
 分解批 batch32(default / NOW64 / NOPTR / NOKEYSCAN / formA)在 P50 上跑;Mate 10 batch33 与 A16 a16ad 同时补量 NOW64 形态(W128+KEYSCAN2+PTR)。
+- **batch32/33 作废**(INVALID_…_declareA_all_formA.log):脚本用 `declare -A`,macOS bash 3.2 不支持 ⇒ 所有臂 env = 最后一项(formA);**标签列全是 w128 揪出来的**(P50 十臂 450–473、Mate 10 八臂 800–850 全是形态 A)。规矩:批脚本禁 declare -A,读表必须核标签与臂名一致。修正版 batch34(case 写法)两机重跑。
+- **A16 a16ad(有效,case 写法;a16_2026-09-06_default_now64_formA.log)**:默认 A″ 63.3 / 63.0 / 62.9;**NOW64(W128+KEYSCAN2+PTR)63.4 / 64.2 / 64.7**;形态 A 67.7 / 67.8 / 70.3 ⇒ 去 W64 的 A″ 在 A16 −5.5%(A″ −7.5%)。
