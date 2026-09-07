@@ -1,0 +1,136 @@
+enable f16;
+
+const INV_SQ_NORM : f32 = 0.000003814697265625; // 1/262144
+const WGR : u32 = 32u;
+const BT : u32 = 32u;
+const KD : u32 = 128u;
+
+struct Params {
+  numA : u32,
+  numB : u32,
+  maxRatio : f32,
+  maxDistance : f32,
+  numWg : u32,
+  rowBase : u32,
+  colBase : u32,
+  colSpan : u32,
+};
+
+struct ColPart {
+  best : f32,
+  second : f32,
+  idx : i32,
+};
+
+@group(0) @binding(0) var<storage, read> A : array<u32>;
+@group(0) @binding(1) var<storage, read> B : array<u32>;
+@group(0) @binding(2) var<storage, read_write> OutAB : array<i32>;
+@group(0) @binding(3) var<uniform> U : Params;
+@group(0) @binding(4) var<storage, read_write> ColP : array<ColPart>;
+@group(0) @binding(5) var<storage, read_write> OutBA : array<i32>;
+@group(0) @binding(6) var<storage, read_write> RowP : array<ColPart>;
+@group(0) @binding(7) var<storage, read> At : array<vec4<u32>>;
+@group(0) @binding(8) var<storage, read> Bt : array<vec4<u32>>;
+
+fn gatef(best : f32, second : f32, bestIndex : i32) -> i32 {
+  if (bestIndex < 0) { return -1; }
+  let bd = acos(min(best * INV_SQ_NORM, 1.0));
+  let sd = acos(min(second * INV_SQ_NORM, 1.0));
+  if (bd <= U.maxDistance && bd < U.maxRatio * sd) { return bestIndex; }
+  return -1;
+}
+
+@compute @workgroup_size(64)
+fn main(@builtin(workgroup_id) wg : vec3<u32>,
+        @builtin(local_invocation_index) lid : u32) {
+  let rb = U.rowBase + wg.x;
+  let row0 = rb * WGR;
+  let tr = lid / 8u;
+  let tc = lid % 8u;
+  let rowPad4 = ((U.numA + 31u) / 32u) * 8u;
+  let colPad4 = ((U.numB + 127u) / 128u) * 32u;
+  let rq = row0 / 4u + tr;
+
+  let myRow = row0 + lid;
+  var rowBest = 0.0;
+  var rowSecond = 0.0;
+  var rowBestI = -1;
+  if (U.colBase != 0u && lid < WGR && myRow < U.numA) {
+    let rp = RowP[myRow];
+    rowBest = rp.best;
+    rowSecond = rp.second;
+    rowBestI = rp.idx;
+  }
+
+  var col0 = U.colBase;
+  let colEnd = min(U.colBase + U.colSpan, U.numB);
+  loop {
+    if (col0 >= colEnd) { break; }
+    let cq = col0 / 4u + tc;
+
+    var acc0 = vec4<f32>(0.0);
+    var acc1 = vec4<f32>(0.0);
+    var acc2 = vec4<f32>(0.0);
+    var acc3 = vec4<f32>(0.0);
+
+    var ia = rq;
+    var ib = cq;
+    for (var k = 0u; k < KD; k = k + 2u) {
+      let wb = Bt[ib];
+      let wa = At[ia];
+      let b4 = vec4<f32>(unpack2x16float(wb.x), unpack2x16float(wb.y));
+      let al = vec4<f32>(unpack2x16float(wa.x), unpack2x16float(wa.y));
+      acc0 = acc0 + al.x * b4;
+      acc1 = acc1 + al.y * b4;
+      acc2 = acc2 + al.z * b4;
+      acc3 = acc3 + al.w * b4;
+      let b4b = vec4<f32>(unpack2x16float(wb.z), unpack2x16float(wb.w));
+      let alb = vec4<f32>(unpack2x16float(wa.z), unpack2x16float(wa.w));
+      acc0 = acc0 + alb.x * b4b;
+      acc1 = acc1 + alb.y * b4b;
+      acc2 = acc2 + alb.z * b4b;
+      acc3 = acc3 + alb.w * b4b;
+      ia = ia + rowPad4;
+      ib = ib + colPad4;
+    }
+    {
+      let m0 = max(max(acc0.x, acc0.y), max(acc0.z, acc0.w));
+      let m1 = max(max(acc1.x, acc1.y), max(acc1.z, acc1.w));
+      let m2 = max(max(acc2.x, acc2.y), max(acc2.z, acc2.w));
+      let m3 = max(max(acc3.x, acc3.y), max(acc3.z, acc3.w));
+      let b = max(max(m0, m1), max(m2, m3));
+      let s = min(max(m0, m1), max(m2, m3));
+      rowBest = max(rowBest, b);
+      rowSecond = max(rowSecond, s);
+      let gc = col0 + tc * 4u;
+      if (gc < U.numB) { ColP[rb * U.numB + gc] = ColPart(b, s, i32(gc)); }
+    }
+    col0 = col0 + BT;
+  }
+
+  if (lid < WGR && myRow < U.numA) {
+    RowP[myRow] = ColPart(rowBest, rowSecond, rowBestI);
+    OutAB[myRow] = gatef(rowBest, rowSecond, rowBestI);
+  }
+}
+
+@compute @workgroup_size(64)
+fn merge(@builtin(global_invocation_id) gid : vec3<u32>) {
+  let c = gid.x;
+  if (c >= U.numB) { return; }
+  var best = 0.0;
+  var second = 0.0;
+  var bi = -1;
+  for (var w = 0u; w < U.numWg; w = w + 1u) {
+    let p = ColP[w * U.numB + c];
+    if (p.best > best) {
+      second = max(best, p.second);
+      best = p.best;
+      bi = p.idx;
+    } else {
+      second = max(second, p.best);
+    }
+  }
+  OutBA[c] = gatef(best, second, bi);
+}
+
