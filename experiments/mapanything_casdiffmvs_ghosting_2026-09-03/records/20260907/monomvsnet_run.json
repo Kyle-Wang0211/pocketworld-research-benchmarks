@@ -1,0 +1,55 @@
+{
+ "purpose": "MonoMVSNet (ICCV 2025, MIT; DAv2 ViT-S Apache + TEED MIT) as a second MVS engine on the 132-image scene, fused with the OFFICIAL CasDiffMVS filter so the gate is identical to the casdiff pane",
+ "engine": {
+  "repo": "https://github.com/JianfeiJ/MonoMVSNet",
+  "ckpt": "bld_best.ckpt (BlendedMVS fine-tuned, Google Drive 1fkprHMlk7MA4gFdL80wIC7wYlBkyj7ao, 133,972,608 B)",
+  "mono_prior": "depth_anything_v2_vits.pth from HF depth-anything/Depth-Anything-V2-Small (Apache-2.0)",
+  "edge": "TEED_model.pth (Drive 1j8wRHMozt_eJwBjs1JXxTDRboP_lKiSp, 249,139 B; xavysp/TEED MIT)"
+ },
+ "input": {
+  "from": "/root/casdiffmvs_official_20260903/mvs_P16k (same COLMAP poses/K/pair.txt as CasDiffMVS)",
+  "images": "4032x3024 jpg",
+  "cam_convention": "general_eval_vit.read_cam_file divides K rows 0-1 by 4 and stage4 multiplies by 4 => cam.txt must hold FULL-RES K (first attempt with K*4 gave garbage: |rel|<1% vs CasDiffMVS only 2-4%)",
+  "depth_line": "depth_min interval 192 depth_max (interval=(max-min)/192)",
+  "scan_name": "scan1 (dypcd worker does int(scene[4:]))"
+ },
+ "inference": {
+  "cmd": "test_dtu_dypcd.py --dataset=general_eval_vit --ndepths 8,8,4,4 --depth_inter_r 0.5,0.5,0.5,0.5 --num_view 11 --group_cor True --attn_temp 2 --max_h 864 --max_w 1152 --interval_scale 1.06 (inverse_depth default True)",
+  "depth_res": "1152x832",
+  "time_per_view_s": 0.17,
+  "gpu_mem_MiB": 3289
+ },
+ "depth_vs_casdiffmvs_768": {
+  "view0": {
+   "rel_med": 0.0,
+   "p10": -0.016,
+   "p90": 0.0174,
+   "within1pct": 0.73,
+   "within2pct": 0.82
+  },
+  "view40": {
+   "rel_med": 0.0001,
+   "within1pct": 0.67
+  },
+  "view90": {
+   "rel_med": -0.0002,
+   "within1pct": 0.64
+  },
+  "view120": {
+   "rel_med": 0.0018,
+   "within1pct": 0.4
+  }
+ },
+ "fusion": {
+  "own_dypcd_DTU_thresholds": "final mask ~1% => 104 MB ply, unusable (DTU mm-scale thresholds: dist<0.5*i px, rel<log10(i)*0.001)",
+  "official_casdiffmvs_filter": "diffmvs/filter.py::filter_depth(pair, out, ply, 3, 1.0, 0.01, [0.55,0.55,0.55], 'casdiffmvs', 'general'); conf0/1/2 all -> MonoMVSNet single confidence; cams line 11 must carry 'depth_max depth_min' (zeros => geo mask 0)",
+  "photo_mask_mean": "~0.55-0.60",
+  "geo_mask_mean": "~0.56 mid-scene, 0.13-0.20 at trajectory ends",
+  "points": 38496566
+ },
+ "artifacts": {
+  "remote": "/root/mono_out (depth_est, confidence), /root/mono_fuse/mono_official_gate.ply (577 MB), /root/bins_mono/mono.{pos,col}",
+  "page": "verdict_page/mono_20260907 (casdiff | mono | up15_hyst)"
+ },
+ "verdict": "USER (09-07): 'MonoMVSNet的白墙粘连比CasDiffMVS更严重' => second engine rejected; monocular prior + edge-guided sampling did not reduce wall-object sticking, it worsened it"
+}
