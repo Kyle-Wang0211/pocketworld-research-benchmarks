@@ -33,6 +33,13 @@ for ref, srcs in pair:
     P.append(xyz); C.append(col); V.append(vis)
     print(f"ref {ref:3d} final {final.mean():.3f} pts {len(x)}", flush=True)
 P = np.concatenate(P); C = np.concatenate(C); V = np.concatenate(V); print("official fused points", len(P), flush=True)
+WS.mkdir(parents=True, exist_ok=True)
+with open(WS/"official_full.ply","wb") as f:                      # full-resolution official cloud, the deliverable
+    f.write(("ply\nformat binary_little_endian 1.0\nelement vertex %d\nproperty float x\nproperty float y\nproperty float z\n"
+             "property uchar red\nproperty uchar green\nproperty uchar blue\nend_header\n" % len(P)).encode())
+    r = np.zeros(len(P), dtype=[("x","<f4"),("y","<f4"),("z","<f4"),("r","u1"),("g","u1"),("b","u1")])
+    r["x"],r["y"],r["z"] = P[:,0],P[:,1],P[:,2]; r["r"],r["g"],r["b"] = C[:,0],C[:,1],C[:,2]; r.tofile(f)
+print("wrote official_full.ply", flush=True)
 # ---- voxel merge with visibility union
 lo = P.min(0); ijk = np.floor((P - lo) / VOX).astype(np.int64); dims = ijk.max(0) + 1
 key = (ijk[:, 0] * dims[1] + ijk[:, 1]) * dims[2] + ijk[:, 2]
