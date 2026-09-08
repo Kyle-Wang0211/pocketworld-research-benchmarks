@@ -1,0 +1,28 @@
+══ xrslam archive + bench app ══
+members: gpufe=58 thrbp=55
+thrbp members not in gpufe: 
+sha256 a15b1bb7432389ec11ddd843bbbf7fa51c8c3129c8d10fac16d6fa59c00eed2f
+** BUILD SUCCEEDED **
+  engine sha16 3cedb7157b13dfad  xrslam.a a15b1bb7432389ec  gpufe.a b3616217b5bf47b3  engine size  38M
+vendor 已还原,verify 绿
+══ replay: ctrl + gpu×3 ══
+══════ gpufe_replay_ctrl mode=replay-device-recording flags=-PWFeederGateOff 01:59:46 ══════
+run=run-04ac2fc9-999c-4d25-9c31-d71d1dc816e2
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json poses.tum receipt.json telemetry.jsonl 
+run=run-04ac2fc9 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=3cedb715
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 97.31, 'imu_samples_replayed': 2842, 'pose_count': 1638, 'processed_fps': 35.65}
+  telemetry n=47 footprint MB start=61 q1max=170 q2max=158 q3max=157 end=144 max=170 thermal={'nominal': 47} cpu核当量 均值2.12 峰2.35
+── ctrl run=run-04ac2fc9-999c-4d25-9c31-d71d1dc816e2
+ATE:   配对 1638 | Sim3 ATE 2.29 cm | 尺度偏差 2.72% | SE3 ATE 2.49 cm 
+gpufe stats (ctrl): {"gpu_frontend":true,"frames":1651,"fallbacks":0,"n_preprocess":1651,"n_detect":1650,"n_track":1649,"avg_preprocess_ms":8.203,"avg_detect_ms":4.103,"avg_track_ms":13.000,"healthy":true}
+══════ gpufe_replay_gpu mode=replay-device-recording flags=-PWFeederGateOff -PWXrslamGpuFrontend 02:06:11 ══════
+run=run-82ccb081-8233-4ac4-b21e-bb05c30a4d4f
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json poses.tum receipt.json telemetry.jsonl 
+run=run-82ccb081 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=3cedb715
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 25.96, 'imu_samples_replayed': 2842, 'pose_count': 1637, 'processed_fps': 36.74}
+  telemetry n=46 footprint MB start=61 q1max=245 q2max=215 q3max=213 end=210 max=245 thermal={'nominal': 46} cpu核当量 均值0.58 峰1.08
+── gpu run=run-82ccb081-8233-4ac4-b21e-bb05c30a4d4f
+ATE:   配对 1637 | Sim3 ATE 2.73 cm | 尺度偏差 1.18% | SE3 ATE 2.76 cm 
+gpufe stats (gpu): {"gpu_frontend":true,"frames":1651,"fallbacks":0,"n_preprocess":1651,"n_detect":1650,"n_track":1649,"avg_preprocess_ms":8.206,"avg_detect_ms":4.110,"avg_track_ms":13.028,"healthy":true}
+══════ gpufe_replay_gpu mode=replay-device-recording flags=-PWFeederGateOff -PWXrslamGpuFrontend 02:07:13 ══════
+run=run-3fbbb5e5-e9a8-4849-aed9-57af4e7e1f45

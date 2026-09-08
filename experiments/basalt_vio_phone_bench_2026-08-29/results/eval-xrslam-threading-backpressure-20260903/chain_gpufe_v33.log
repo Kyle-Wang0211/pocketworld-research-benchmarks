@@ -1,0 +1,15 @@
+══ replay (pipelined) ══
+App installed:
+installed gpufe: engine sha16 5d6ccfe2c4e730d5  app sha16 e3741a29ca1e327e
+run=run-238ededd-e089-4ea7-890f-791347df0a08
+run=run-238ededd engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=5d6ccfe2
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 22.78, 'imu_samples_replayed': 2842, 'pose_count': 1639, 'processed_fps': 48.15}
+── gpu run=run-238ededd-e089-4ea7-890f-791347df0a08
+ATE:   配对 1639 | Sim3 ATE 2.20 cm | 尺度偏差 2.89% | SE3 ATE 2.44 cm 
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+    for k in (prefetch_declined,frames,'fallbacks','avg_preprocess_ms','avg_detect_ms','avg_track_ms','empty_submit_ms'): m=re.search(k+r'":(-?[0-9.]+)',s); print(k, m.group(1) if m else '?')
+              ^^^^^^^^^^^^^^^^^
+NameError: name 'prefetch_declined' is not defined
+CHAIN_V32_DONE

@@ -1,0 +1,10 @@
+#!/bin/bash
+S=/Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/basalt-vio-phone-bench-20260829/tools/ios_basalt_vio_bench/scripts; D=1B290474-D354-5B4C-AAB0-0805AC5DC832
+stats() { T=$(mktemp -d); xcrun devicectl device copy from --device $D --domain-type appDataContainer --domain-identifier com.kyle.viobench --user mobile --source "Documents/xrslam_gpufe_stats.json" --destination $T/st.json >/dev/null 2>&1; python3 -c "
+s=open('$T/st.json').read(); import re
+for k in ('frames','fallbacks','avg_preprocess_ms','avg_detect_ms','avg_track_ms','empty_submit_ms'): m=re.search(k+r'\":(-?[0-9.]+)',s); print(k, m.group(1) if m else '?')
+for key in ('\"audit\"','\"buckets_per1000\"','\"last_fallback\"'): i=s.find(key); print(s[i:i+150])"; }
+echo "══ build ══"; /Users/kaidongwang/Developer/viobench-build/gpufe/build_gpufe_ios.sh 2>&1 | tail -1; /Users/kaidongwang/Developer/viobench-build/gpufe/assemble_and_build.sh 2>&1 | grep -vE "^\+" | grep -E "error:|BUILD|engine sha16|Traceback"
+echo "══ cool → replay (fused, clean thermal) ══"; $S/pw_wait_cool.sh 2>&1 | tail -1; ARMS="gpu" $S/pw_chain_gpufe_replay.sh 2>&1 | grep -E "run=run|metrics|ATE|拒绝|退出" | cut -c1-220; stats
+echo "══ cool → live 120 s (diagnostic) ══"; $S/pw_wait_cool.sh 2>&1 | tail -1; SECS=120 $S/pw_chain_gpufe_live.sh 2>&1 | grep -aE "run=run|metrics|camera off|telemetry|退出|⇒" | cut -c1-300; stats
+echo CHAIN_V25_DONE

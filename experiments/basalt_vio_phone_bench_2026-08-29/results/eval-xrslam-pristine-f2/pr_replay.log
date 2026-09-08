@@ -1,0 +1,161 @@
+2026-09-02 00:15:40.853 VIOReplacementBench[29935:1424571] [VIOBench] preparing xrslam / replay-device-recording dataset=run-6e2d4b99-896b-4372-ae47-ac0b4679cf18
+2026-09-02 00:15:40.937 VIOReplacementBench[29935:1424571] [VIOBench] dropped 5 leading camera frames with no IMU behind them
+[xrslam-trace] create() slam=/var/mobile/Containers/Data/Application/B333655C-652E-4FCB-B84B-195ECA4FB81A/Documents/VIOBenchRuns/run-4a79d01f-6396-4235-85c9-8a4bac41264f/config.json device=/var/mobile/Containers/Data/Application/B333655C-652E-4FCB-B84B-195ECA4FB81A/Documents/VIOBenchRuns/run-4a79d01f-6396-4235-85c9-8a4bac41264f/calibration.json
+2026-09-02 00:15:40.964 - [XRSLAM][[32minfo[m] 
+██╗  ██╗██████╗ ███████╗██╗      █████╗ ███╗   ███╗
+╚██╗██╔╝██╔══██╗██╔════╝██║     ██╔══██╗████╗ ████║
+ ╚███╔╝ ██████╔╝███████╗██║     ███████║██╔████╔██║
+ ██╔██╗ ██╔══██╗╚════██║██║     ██╔══██║██║╚██╔╝██║
+██╔╝ ██╗██║  ██║███████║███████╗██║  ██║██║ ╚═╝ ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝NSt3__120__shared_ptr_emplaceIN12xrslam_0_5_05extra11OpenCvImageENS_9allocatorIS3_EEEE
+[xrslam-trace] create() -> 1 config=0x116848820
+2026-09-02 00:15:40.969 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #0 1920x1440 -> engine
+[xrslam-trace] imu so far: accel=1 gyro=1
+[xrslam-trace] frame 0 push_image 1920x1440 stride=1920
+[xrslam-trace] push_image returned
+[xrslam-trace] run_one_frame enter
+[xrslam-trace] run_one_frame returned
+[xrslam-trace] get_result enter
+[xrslam-trace] get_result returned state=0
+2026-09-02 00:15:40.970 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #0 returned
+2026-09-02 00:15:40.964 - [XRSLAM][[32minfo[m] Configurations: 
+Config::camera_intrinsic:
+1.34779e+03 0.00000e+00 9.57469e+02
+0.00000e+00 1.34779e+03 7.18964e+02
+0.00000e+00 0.00000e+00 1.00000e+00
+
+Config::camera_distortion_flag:
+0
+
+Config::camera_distortion:
+0.00000e+00 0.00000e+00 0.00000e+00 0.00000e+00
+
+Config::camera_time_offset:
+0.00000e+00
+
+Config::camera_to_body_rotation:
+-7.07107e-01  7.07107e-01  0.00000e+00  0.00000e+00
+
+Config::camera_to_body_translation:
+ 3.29036e-02 -6.96553e-03 -2.86231e-03
+
+Config::imu_to_body_rotation:
+0.00000e+00 0.00000e+00 0.00000e+00 1.00000e+00
+
+Config::imu_to_body_translation:
+0.00000e+00 0.00000e+00 0.00000e+00
+
+Config::keypoint_noise_cov:
+5.00000e-01 0.00000e+00
+0.00000e+00 5.00000e-01
+
+Config::gyroscope_noise_cov:
+2.87913e-08 0.00000e+00 0.00000e+00
+0.00000e+00 2.87913e-08 0.00000e+00
+0.00000e+00 0.00000e+00 2.87913e-08
+
+Config::accelerometer_noise_cov:
+4.00000e-06 0.00000e+00 0.00000e+00
+0.00000e+00 4.00000e-06 0.00000e+00
+0.00000e+00 0.00000e+00 4.00000e-06
+
+Config::gyroscope_bias_noise_cov:
+3.76088e-10 0.00000e+00 0.00000e+00
+0.00000e+00 3.76088e-10 0.00000e+00
+0.00000e+00 0.00000e+00 3.76088e-10
+
+Config::accelerometer_bias_noise_cov:
+9.00000e-06 0.00000e+00 0.00000e+00
+0.00000e+00 9.00000e-06 0.00000e+00
+0.00000e+00 0.00000e+00 9.00000e-06
+
+Config::sliding_window_size: 10
+Config::sliding_window_subframe_size: 3
+Config::sliding_window_force_keyframe_landmarks: 35
+Config::sliding_window_tracker_frequent: 2
+Config::feature_tracker_min_keypoint_distance: 2.50000e+01
+Config::feature_tracker_max_keypoint_detection: 200
+Config::feature_tracker_max_init_frames: 60
+Config::feature_tracker_max_frames: 20
+Config::feature_tracker_predict_keypoints: true
+Config::feature_tracker_clahe_clip_limit: 6.00000e+00
+Config::feature_tracker_clahe_width: 8
+Config::feature_tracker_clahe_height: 8
+Config::initializer_keyframe_gap: 5
+Config::initializer_min_matches: 50
+Config::initializer_min_parallax: 1.00000e+01
+Config::initializer_min_triangulation: 20
+Config::initializer_min_landmarks: 30
+Config::initializer_refine_imu: true
+Config::visual_localization_enable: false
+Config::visual_localization_config_ip: 10.156.16.69
+Config::visual_localization_config_port: 12345
+Config::solver_iteration_limit: 30
+Config::solver_time_limit: 1.00000e+06
+Config::parsac_flag: false
+Config::parsac_dynamic_probability: 1.50000e-01
+Config::parsac_threshold: 1.00000e+00
+Config::parsac_norm_scale: 1.00000e+00
+Config::rotation_misalignment_threshold: 2.00000e-02
+Config::rotation_ransac_threshold: 1.00000e+01
+
+THREADING DISABLE
+
+-----------------Create XRSLAM v0.1.0 successfully-----------
+2026-09-02 00:15:41.021 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1 1920x1440 -> engine
+[xrslam-trace] imu so far: accel=3 gyro=3
+[xrslam-trace] frame 1 push_image 1920x1440 stride=1920
+[xrslam-trace] push_image returned
+[xrslam-trace] run_one_frame enter
+[xrslam-trace] run_one_frame returned
+[xrslam-trace] get_result enter
+[xrslam-trace] get_result returned state=0
+2026-09-02 00:15:41.022 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1 returned
+2026-09-02 00:15:41.070 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #2 1920x1440 -> engine
+[xrslam-trace] imu so far: accel=4 gyro=4
+[xrslam-trace] frame 2 push_image 1920x1440 stride=1920
+[xrslam-trace] push_image returned
+[xrslam-trace] run_one_frame enter
+[xrslam-trace] run_one_frame returned
+[xrslam-trace] get_result enter
+[xrslam-trace] get_result returned state=0
+2026-09-02 00:15:41.071 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #2 returned
+2026-09-02 00:15:41.116 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #3 1920x1440 -> engine
+2026-09-02 00:15:41.117 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #3 returned
+2026-09-02 00:15:41.163 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #4 1920x1440 -> engine
+2026-09-02 00:15:41.163 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #4 returned
+2026-09-02 00:15:45.243 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #100 1920x1440 -> engine
+2026-09-02 00:15:45.243 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #100 returned
+2026-09-02 00:15:49.421 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #200 1920x1440 -> engine
+2026-09-02 00:15:49.422 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #200 returned
+2026-09-02 00:15:53.667 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #300 1920x1440 -> engine
+2026-09-02 00:15:53.668 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #300 returned
+2026-09-02 00:15:57.756 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #400 1920x1440 -> engine
+2026-09-02 00:15:57.756 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #400 returned
+2026-09-02 00:16:02.148 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #500 1920x1440 -> engine
+2026-09-02 00:16:02.148 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #500 returned
+2026-09-02 00:16:06.885 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #600 1920x1440 -> engine
+2026-09-02 00:16:06.886 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #600 returned
+2026-09-02 00:16:11.204 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #700 1920x1440 -> engine
+2026-09-02 00:16:11.205 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #700 returned
+2026-09-02 00:16:15.379 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #800 1920x1440 -> engine
+2026-09-02 00:16:15.379 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #800 returned
+2026-09-02 00:16:20.185 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #900 1920x1440 -> engine
+2026-09-02 00:16:20.185 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #900 returned
+2026-09-02 00:16:24.612 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1000 1920x1440 -> engine
+2026-09-02 00:16:24.612 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1000 returned
+2026-09-02 00:16:28.921 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1100 1920x1440 -> engine
+2026-09-02 00:16:28.921 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1100 returned
+2026-09-02 00:16:34.090 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1200 1920x1440 -> engine
+2026-09-02 00:16:34.090 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1200 returned
+2026-09-02 00:16:39.245 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1300 1920x1440 -> engine
+2026-09-02 00:16:39.245 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1300 returned
+2026-09-02 00:16:44.064 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1400 1920x1440 -> engine
+2026-09-02 00:16:44.064 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1400 returned
+2026-09-02 00:16:48.511 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1500 1920x1440 -> engine
+2026-09-02 00:16:48.511 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1500 returned
+2026-09-02 00:16:53.122 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1600 1920x1440 -> engine
+2026-09-02 00:16:53.122 VIOReplacementBench[29935:1424571] [VIOBench][xrslam] submit #1600 returned
+[xrslam-trace] destroy() called
+-----------------Destroy XRSLAM v0.1.0 successfully-----------
+2026-09-02 00:16:57.557 VIOReplacementBench[29935:1424571] [VIOBench] 1 of 1646 poses were rejected as non-finite

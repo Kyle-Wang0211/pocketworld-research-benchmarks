@@ -1,0 +1,30 @@
+══════ gpufe_live_gpu mode=live-soak flags=-PWAutoRunSeconds 300 -PWLiveFullResolution -PWXrslamGpuFrontend 11:59:16 ══════
+Launched application with com.kyle.viobench bundle identifier.
+预期 320s 后才检查 (中间不拉心跳)
+run=run-413ab8df-f5dc-46f8-b7a5-ddf5ee1e16e2
+diagnostics.json 可拷 @ +321s ⇒ 完成(列表失效兜底)
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-413ab8df engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=0f69c2b3
+  metrics: {'diagnostic_elapsed_seconds': 300.14, 'diagnostic_first_usable_pose_latency_ms': 13322.81, 'diagnostic_max_pipeline_latency_ms': 1507.33, 'diagnostic_p95_pipeline_latency_ms': 827.3, 'diagnostic_pose_count': 7951, 'diagnostic_processed_fps': 26.49}
+  camera off/acc=8310/8310 imu=30068 poses=7951 backlog_peak=6 drops_late=1 handoff_peak=264
+  telemetry n=302 footprint MB start=60 q1max=280 q2max=279 q3max=275 end=256 max=280 thermal={'nominal': 45, 'fair': 30, 'serious': 227} cpu核当量 均值1.23 峰2.23
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/gpufe_live_gpu_0905_115916.log
+── live gpu run=run-413ab8df-f5dc-46f8-b7a5-ddf5ee1e16e2
+  4 {'serious': 60}                  274   1.41   60
+  5 {'serious': 1}                   256   1.90    1
+首次 serious: 74 s | 首次 critical: None s | 总时长 300 s
+── 相对 ARKit 判决:
+候选 xrslam (run-413ab8df, invalid/platform_camera_loss, 300s) vs 参考 arkit_reference (run-f3d525c9, valid_pass/thresholds_met, 600s)
+  指标                             候选      ARKit
+  位姿/s                         26.5       59.9  劣于
+  相机交付 fps                     27.7       59.9  劣于
+  p95 延迟 ms                   827.3       55.5  劣于
+  首个可用位姿 ms                   13323       1481  劣于
+  footprint 峰 MB                280        266  劣于
+  serious 秒                     227          0  劣于
+  critical 秒                      0          0  不劣于
+  CPU 核当量                      1.23       0.80  劣于
+  平台丢帧                          663          0  劣于
+  ⇒ 1/9 项不劣于 ARKit;有劣于项 ⇒ 未过
+gpufe stats: {"gpu_frontend":true,"frames":8301,"fallbacks":0,"n_preprocess":8301,"n_detect":8300,"n_track":0,"avg_preprocess_ms":1.096,"avg_detect_ms":5.262,"avg_track_ms":0.000,"healthy":true,"audit":{"every":50,"clahe":[0,0],"detect":[0,0],"track":[0,0],"last_track":{"pts":0,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the same inputs every 50th frame; [frames, mismatching frames]"},"breakdown_ms":{"pre_wait":2.37,"pre_host":0.26,"pre_gpu":16.69,"pre_read":0.33,"det_gpu":4.98,"det_read":0.09,"det_host":0.19,"trk_host":0.00,"trk_gpu":0.00,"trk_read":0.00},"last_fallback":"","cpu_pyramid_ms":2.78,"cpu_lk_ms":3.19,"prefetch_declined":1469,"empty_submit_ms":11.08,"buckets_per1000":[[1.0,5.8,0.0],[0.8,6.9,0.0],[1.0,4.9,0.0],[1.1,6.1,0.0],[1.2,5.3,0.0],[1.1,5.7,0.0],[1.0,5.7,0.0],[1.5,2.6,0.0]],"gpu_kernel_ms":{},"selfcheck":{"n":16384,"strict":true,"shader_warnings":"","div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}}
+CHAIN_GPUFE_LIVE_DONE

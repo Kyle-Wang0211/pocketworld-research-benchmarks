@@ -1,0 +1,25 @@
+lever1 ended 23:32:03; replay start
+══════ S3r-thrbp-replay640-freq2 mode=replay-device-recording flags=-PWDiagnosticDownscale -PWTrackerFrequent 2 23:32:04 ══════
+Launched application with com.kyle.viobench bundle identifier.
+run=run-ca319492-3f46-4e9a-a098-acb5953add3c
+t=+   6s seq=0 footprint_mb=28.7 state=started
+t=+  12s seq=1 footprint_mb=25.2 state=started
+t=+  18s seq=3 footprint_mb=25.1 state=started
+t=+  24s seq=4 footprint_mb=25.1 state=started
+diagnostics.json 已落盘 @ +24s ⇒ 完成
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json poses.tum receipt.json 
+run=run-ca319492 engine=xrslam channel=replay_device_recording state=invalid reason=runtime_error eng_sha=7eb5445f
+  metrics: {}
+  camera off/acc=None/None imu=None poses=None backlog_peak=None drops_late=None handoff_peak=None
+  telemetry 空
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/S3r-thrbp-replay640-freq2_0903_233204.log
+── ATE/scale vs ARKit (ate.py) ──
+Traceback (most recent call last):
+  File "/Users/kaidongwang/Developer/viobench-recordings/ate.py", line 20, in <module>
+    te,Pe=load(sys.argv[1]); tr,Pr=load(sys.argv[2])
+          ~~~~^^^^^^^^^^^^^
+  File "/Users/kaidongwang/Developer/viobench-recordings/ate.py", line 10, in load
+    return np.array(T), np.array(P)
+           ^^^^^^^^
+AttributeError: module 'numpy' has no attribute 'array'
+lever1-replay chain end 2026-09-03 23:32:33

@@ -1,0 +1,34 @@
+══ iOS lib ══
+1
+══ archive + bench ══
+sha256 db3e4bef6de685b0ae758934a3b9b126f374cef71fe64b0321ea8ffe0924af70
+** BUILD SUCCEEDED **
+  engine sha16 2347570a5b7ff48c  xrslam.a db3e4bef6de685b0  gpufe.a e9dc33bec429024c  engine size  38M
+══ replay gpu×1 ══
+run=run-c4387217-d61a-4229-a169-f1c5aa8fce51
+run=run-c4387217 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=2347570a
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 38.12, 'imu_samples_replayed': 2842, 'pose_count': 1642, 'processed_fps': 23.58}
+── gpu run=run-c4387217-d61a-4229-a169-f1c5aa8fce51
+ATE:   配对 1642 | Sim3 ATE 2.24 cm | 尺度偏差 3.40% | SE3 ATE 2.56 cm 
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+── stats:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json;d=json.load(open('/var/folders/g7/g_f5s2y90_gftx3vklv67t2h0000gn/T/tmp.uwlWcwQ5FM/st.json'));print(json.dumps(d['audit'],ensure_ascii=False));print('stage ms',d['avg_preprocess_ms'],d['avg_detect_ms'],d['avg_track_ms'],'fallbacks',d['fallbacks'])
+                  ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 1 column 692 (char 691)
+CHAIN_V16_DONE

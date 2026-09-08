@@ -1,0 +1,33 @@
+run=run-7d61f64d-c20f-48f1-9cfd-41f30ea61304
+diagnostics.json 已落盘 @ +621s ⇒ 完成
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-7d61f64d engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=ddfa269e
+  metrics: {'diagnostic_elapsed_seconds': 600.15, 'diagnostic_first_usable_pose_latency_ms': 2519.12, 'diagnostic_max_pipeline_latency_ms': 1713.65, 'diagnostic_p95_pipeline_latency_ms': 33.38, 'diagnostic_pose_count': 17739, 'diagnostic_processed_fps': 29.56}
+  camera off/acc=17805/17805 imu=60155 poses=17739 backlog_peak=6 drops_late=0 handoff_peak=201
+  telemetry n=602 footprint MB start=61 q1max=315 q2max=299 q3max=340 end=311 max=340 thermal={'nominal': 146, 'fair': 120, 'serious': 336} cpu核当量 均值0.82 峰1.59
+── live gpu run=run-7d61f64d-c20f-48f1-9cfd-41f30ea61304
+首次 serious: 265 s | 首次 critical: None s | 总时长 600 s
+  指标                             候选      ARKit
+  位姿/s                         29.6       59.9  劣于
+  相机交付 fps                     29.7       59.9  劣于
+  p95 延迟 ms                    33.4       55.5  不劣于
+  首个可用位姿 ms                    2519       1481  劣于
+  footprint 峰 MB                340        266  劣于
+  serious 秒                     336          0  劣于
+  critical 秒                      0          0  不劣于
+  CPU 核当量                      0.82       0.80  劣于
+  平台丢帧                          185          0  劣于
+  ⇒ 2/9 项不劣于 ARKit;有劣于项 ⇒ 未过
+cpu_pyramid_ms 2.22
+cpu_lk_ms 1.80
+prefetch_declined 289
+frames 17801
+fallbacks 0
+avg_preprocess_ms 0.781
+avg_detect_ms 0.235
+avg_track_ms 0.000
+empty_submit_ms 0.81
+"audit":{"every":50,"clahe":[356,0],"detect":[356,0],"track":[0,0],"last_track":{"pts":0,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the sam
+"buckets_per1000":[[0.8,0.4,0.0],[0.7,0.2,0.0],[0.7,0.3,0.0],[0.7,0.2,0.0],[0.8,0.3,0.0],[0.6,0.3,0.0],[0.6,0.2,0.0],[0.8,0.2,0.0]],"gpu_kernel_ms":{},"selfcheck":{"n":16384,"strict":true,"shader_warn
+"last_fallback":"","cpu_pyramid_ms":2.22,"cpu_lk_ms":1.80,"prefetch_declined":289,"empty_submit_ms":0.81,"buckets_per1000":[[0.8,0.4,0.0],[0.7,0.2,0.0],[0.7,0.3,0.0],[0.7,0.2,0.0],[0.8,0.3,0.0],[0.6,0
+CHAIN_V36_DONE

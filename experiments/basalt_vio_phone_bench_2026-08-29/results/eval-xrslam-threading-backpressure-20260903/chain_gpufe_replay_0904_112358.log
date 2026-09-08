@@ -1,0 +1,17 @@
+App installed:
+installed gpufe: engine sha16 67a78ed3aaa5e48c  app sha16 40cbd657a2e265ba
+note: stale stats file existed on device before runs
+══════ gpufe_replay_gpu mode=replay-device-recording flags=-PWFeederGateOff -PWXrslamGpuFrontend 11:24:04 ══════
+Launched application with com.kyle.viobench bundle identifier.
+run=run-f10347a4-5520-42b8-aa90-1b5153582eb1
+t=+   7s seq=0 footprint_mb=61.1 state=started
+进程已退出 @ +9s(多半是被杀)
+已拉取: calibration.json config.json heartbeat.json input_manifest.json poses.tum receipt.json 
+无 diagnostics(未收尾)
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/gpufe_replay_gpu_0904_112404.log
+── gpu run=run-f10347a4-5520-42b8-aa90-1b5153582eb1
+receipt backend= gpu_frontend engine_sha16= 67a78ed3aaa5e48c state= started
+ATE:     items *= arr.shape[mu.normalize_axis_index(ax, arr.ndim)]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ numpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1 
+gpufe stats (gpu): {"gpu_frontend":true,"frames":51,"fallbacks":0,"n_preprocess":51,"n_detect":50,"n_track":49,"avg_preprocess_ms":13.389,"avg_detect_ms":15.363,"avg_track_ms":14.779,"healthy":true,"audit":{"every":50,"clahe":[1,0],"detect":[1,0],"track":[0,0],"last_track":{"pts":0,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"pyramid":[0,0],"pyramid_detail":"","lk_on_cpu_pyramid":[0,0],"lk_on_cpu_pyramid_err":"","lk_simple_kernel":[0,0],"lk_variants_bad_of":[[0,0],[0,0],[0,0],[0,0],[0,0]]},"selfcheck":{"n":16384,"strict":true,"div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}}
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+CHAIN_GPUFE_REPLAY_DONE

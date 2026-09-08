@@ -1,0 +1,30 @@
+run=run-173d0878-b1ed-42b0-8586-756493d0feb2
+diagnostics.json 已落盘 @ +621s ⇒ 完成
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-173d0878 engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=30e52761
+  metrics: {'diagnostic_elapsed_seconds': 601.03, 'diagnostic_first_usable_pose_latency_ms': 1867.7, 'diagnostic_max_pipeline_latency_ms': 1735.84, 'diagnostic_p95_pipeline_latency_ms': 1081.38, 'diagnostic_pose_count': 10838, 'diagnostic_processed_fps': 18.03}
+  camera off/acc=10887/10887 imu=60205 poses=10842 backlog_peak=6 drops_late=0 handoff_peak=223
+  telemetry n=602 footprint MB start=60 q1max=333 q2max=335 q3max=333 end=275 max=335 thermal={'nominal': 48, 'fair': 55, 'serious': 499} cpu核当量 均值0.61 峰1.11
+── live gpu run=run-173d0878-b1ed-42b0-8586-756493d0feb2
+首次 serious: 102 s | 首次 critical: None s | 总时长 600 s
+  指标                             候选      ARKit
+  位姿/s                         18.0       59.9  劣于
+  相机交付 fps                     18.1       59.9  劣于
+  p95 延迟 ms                  1081.4       55.5  劣于
+  首个可用位姿 ms                    1868       1481  劣于
+  footprint 峰 MB                335        266  劣于
+  serious 秒                     499          0  劣于
+  critical 秒                      0          0  不劣于
+  CPU 核当量                      0.61       0.80  不劣于
+  平台丢帧                         7115          0  劣于
+  ⇒ 2/9 项不劣于 ARKit;有劣于项 ⇒ 未过
+frames 10851
+fallbacks 0
+avg_preprocess_ms 22.932
+avg_detect_ms 13.167
+avg_track_ms 14.513
+empty_submit_ms 1.04
+"audit":{"every":50,"clahe":[217,0],"detect":[217,0],"track":[216,0],"last_track":{"pts":320,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the
+"buckets_per1000":[[10.0,6.4,7.1],[21.4,12.5,14.1],[22.4,12.7,13.6],[22.2,12.7,13.5],[20.4,11.9,13.1],[26.0,14.8,16.1],[26.0,14.8,16.3],[26.1,14.8,16.5]],"gpu_kernel_ms":{},"selfcheck":{"n":16384,"str
+"last_fallback":"","empty_submit_ms":1.04,"buckets_per1000":[[10.0,6.4,7.1],[21.4,12.5,14.1],[22.4,12.7,13.6],[22.2,12.7,13.5],[20.4,11.9,13.1],[26.0,14.8,16.1],[26.0,14.8,16.3],[26.1,14.8,16.5]],"gpu
+CHAIN_V29_DONE

@@ -1,0 +1,31 @@
+run=run-080d4034-13bd-4c32-aff3-1a0283e79fe0
+diagnostics.json 可拷 @ +621s ⇒ 完成(列表失效兜底)
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-080d4034 engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=5d6ccfe2
+  metrics: {'diagnostic_elapsed_seconds': 600.83, 'diagnostic_first_usable_pose_latency_ms': 9540.95, 'diagnostic_max_pipeline_latency_ms': 1482.49, 'diagnostic_p95_pipeline_latency_ms': 977.08, 'diagnostic_pose_count': 10848, 'diagnostic_processed_fps': 18.06}
+  camera off/acc=11125/11125 imu=60201 poses=10849 backlog_peak=6 drops_late=0 handoff_peak=175
+  telemetry n=602 footprint MB start=60 q1max=367 q2max=367 q3max=367 end=363 max=367 thermal={'nominal': 56, 'fair': 546} cpu核当量 均值0.50 峰1.11
+── live gpu run=run-080d4034-13bd-4c32-aff3-1a0283e79fe0
+首次 serious: None s | 首次 critical: None s | 总时长 600 s
+  指标                             候选      ARKit
+  位姿/s                         18.1       59.9  劣于
+  相机交付 fps                     18.5       59.9  劣于
+  p95 延迟 ms                   977.1       55.5  劣于
+  首个可用位姿 ms                    9541       1481  劣于
+  footprint 峰 MB                367        266  劣于
+  serious 秒                       0          0  不劣于
+  critical 秒                      0          0  不劣于
+  CPU 核当量                      0.50       0.80  不劣于
+  平台丢帧                         6875          0  劣于
+  ⇒ 3/9 项不劣于 ARKit;有劣于项 ⇒ 未过
+prefetch_declined 7068
+frames 11101
+fallbacks 0
+avg_preprocess_ms 1.752
+avg_detect_ms 15.835
+avg_track_ms 17.886
+empty_submit_ms 2.40
+"audit":{"every":50,"clahe":[222,0],"detect":[222,0],"track":[221,1],"last_track":{"pts":266,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the
+"buckets_per1000":[[1.8,10.4,13.1],[1.3,15.5,17.5],[1.6,16.2,18.4],[1.7,16.3,18.2],[1.7,16.3,18.5],[2.0,16.8,18.4],[1.8,16.4,18.6],[1.9,16.5,18.5]],"gpu_kernel_ms":{},"selfcheck":{"n":16384,"strict":t
+"last_fallback":"","prefetch_declined":7068,"empty_submit_ms":2.40,"buckets_per1000":[[1.8,10.4,13.1],[1.3,15.5,17.5],[1.6,16.2,18.4],[1.7,16.3,18.2],[1.7,16.3,18.5],[2.0,16.8,18.4],[1.8,16.4,18.6],[1
+CHAIN_V34_DONE

@@ -1,0 +1,21 @@
+══ iOS lib (unchanged) ══
+══ archive + bench ══
+sha256 a536f17a4322f2927603b86f6dbf4546dd8d40135f045bc22ce5a410224c3aa0
+** BUILD SUCCEEDED **
+  engine sha16 62975b964da702f5  xrslam.a a536f17a4322f292  gpufe.a 4d71eeb5b5f8eab2  engine size  38M
+══ replay gpu×1 ══
+run=run-8588ea31-e8f9-4587-9339-b070d34bf54f
+diagnostics.json 已落盘 @ +65s ⇒ 完成
+run=run-8588ea31 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=62975b96
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 32.54, 'imu_samples_replayed': 2842, 'pose_count': 1641, 'processed_fps': 27.48}
+── gpu run=run-8588ea31-e8f9-4587-9339-b070d34bf54f
+ATE:   配对 1641 | Sim3 ATE 2.23 cm | 尺度偏差 3.53% | SE3 ATE 2.57 cm 
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+── init markers:
+init: create front end
+init: front end ok; selfcheck
+init: selfcheck done {"n":16384,"strict":true,"div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}
+first preprocess
+── stats:
+{"gpu_frontend":true,"frames":1651,"fallbacks":0,"n_preprocess":1651,"n_detect":1650,"n_track":1649,"avg_preprocess_ms":8.567,"avg_detect_ms":11.198,"avg_track_ms":13.390,"healthy":true,"audit":{"every":50,"clahe":[33,0],"detect":[33,0],"track":[32,32],"last_track":{"pts":343,"fwd_pos_bad":165,"fwd_status_bad":0,"rev_bad":127,"fwd_maxdiff":0.00805664,"example":"i=0 curr=(857.0067,337.9245) cpu=(873.1456,345.5982) gpu=(873.1455,345.5982)"}},"selfcheck":{"n":16384,"strict":true,"div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}}
+CHAIN_V8_DONE

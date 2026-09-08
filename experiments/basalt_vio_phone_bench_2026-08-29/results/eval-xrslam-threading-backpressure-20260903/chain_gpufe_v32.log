@@ -1,0 +1,14 @@
+══ replay (pipelined) ══
+App installed:
+installed gpufe: engine sha16 fb146a9626be10a6  app sha16 82db1ad9f98c1db9
+run=run-6f2c759e-747b-480b-8f38-842572b3f18f
+进程已退出 @ +71s(多半是被杀)
+── gpu run=run-6f2c759e-747b-480b-8f38-842572b3f18f
+ATE:     items *= arr.shape[mu.normalize_axis_index(ax, arr.ndim)]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ numpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1 
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+    for k in (prefetch_declined,frames,'fallbacks','avg_preprocess_ms','avg_detect_ms','avg_track_ms','empty_submit_ms'): m=re.search(k+r'":(-?[0-9.]+)',s); print(k, m.group(1) if m else '?')
+              ^^^^^^^^^^^^^^^^^
+NameError: name 'prefetch_declined' is not defined
+CHAIN_V32_DONE

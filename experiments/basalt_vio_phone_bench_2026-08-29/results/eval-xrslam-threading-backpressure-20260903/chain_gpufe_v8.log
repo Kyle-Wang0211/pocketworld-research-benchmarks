@@ -1,0 +1,14 @@
+══ iOS lib ══
+1
+══ archive + bench ══
+/Users/kaidongwang/Developer/xrslam-4beb1a9-thr/xrslam-extra/src/xrslam/extra/gpu_image.cpp:30:79: error: use of undeclared identifier 'write_stats'
+══ replay gpu×1 ══
+run=run-7fe59197-2abf-468d-9359-731128a1a6fc
+进程已退出 @ +9s(多半是被杀)
+── gpu run=run-7fe59197-2abf-468d-9359-731128a1a6fc
+ATE:     items *= arr.shape[mu.normalize_axis_index(ax, arr.ndim)]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ numpy.exceptions.AxisError: axis 1 is out of bounds for array of dimension 1 
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+── init markers:
+── stats:
+{"gpu_frontend":true,"frames":1651,"fallbacks":0,"n_preprocess":1651,"n_detect":1650,"n_track":1649,"avg_preprocess_ms":8.211,"avg_detect_ms":4.108,"avg_track_ms":12.948,"healthy":true,"audit":{"every":50,"clahe":[33,0],"detect":[33,0],"track":[32,32],"last_track":{"pts":342,"fwd_pos_bad":159,"fwd_status_bad":0,"rev_bad":123,"fwd_maxdiff":0.00610352,"example":"i=3 curr=(828.9986,300.7137) cpu=(844.3948,308.4648) gpu=(844.3949,308.4649)"}}}
+CHAIN_V8_DONE

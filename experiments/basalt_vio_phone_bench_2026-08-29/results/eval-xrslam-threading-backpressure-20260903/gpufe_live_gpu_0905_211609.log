@@ -1,0 +1,11 @@
+══════ gpufe_live_gpu mode=live-soak flags=-PWAutoRunSeconds 300 -PWLiveFullResolution -PWXrslamGpuFrontend -PWXrslamDropStaleCamera 21:16:09 ══════
+Launched application with com.kyle.viobench bundle identifier.
+预期 320s 后才检查 (中间不拉心跳)
+run=run-bf460e8f-a3e8-496f-82c5-f760466c5cb0
+diagnostics.json 已落盘 @ +321s ⇒ 完成
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-bf460e8f engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=64d197a4
+  metrics: {'diagnostic_elapsed_seconds': 300.43, 'diagnostic_first_usable_pose_latency_ms': 9586.42, 'diagnostic_max_pipeline_latency_ms': 1404.89, 'diagnostic_p95_pipeline_latency_ms': 1029.27, 'diagnostic_pose_count': 6752, 'diagnostic_processed_fps': 22.47}
+  camera off/acc=7030/7030 imu=30073 poses=6752 backlog_peak=6 drops_late=0 handoff_peak=173
+  telemetry n=302 footprint MB start=61 q1max=308 q2max=277 q3max=276 end=270 max=308 thermal={'nominal': 53, 'fair': 40, 'serious': 209} cpu核当量 均值1.19 峰1.47
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/gpufe_live_gpu_0905_211609.log

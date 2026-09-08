@@ -1,0 +1,26 @@
+App installed:
+installed gpufe: engine sha16 ce4b5e197a3fc8b2  app sha16 23d2e306543455c5
+note: stale stats file existed on device before runs
+══════ gpufe_replay_gpu mode=replay-device-recording flags=-PWFeederGateOff -PWXrslamGpuFrontend 13:21:35 ══════
+Launched application with com.kyle.viobench bundle identifier.
+run=run-1b55e848-6e07-481f-ab16-128dad4f2515
+t=+   6s seq=0 footprint_mb=61.2 state=started
+t=+  14s seq=2 footprint_mb=229.7 state=started
+t=+  23s seq=4 footprint_mb=205.2 state=started
+t=+  31s seq=5 footprint_mb=235.8 state=started
+t=+  39s seq=7 footprint_mb=215.0 state=started
+t=+  47s seq=8 footprint_mb=226.0 state=started
+t=+  56s seq=9 footprint_mb=240.7 state=started
+diagnostics.json 可拷 @ +58s ⇒ 完成(列表失效兜底)
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json poses.tum receipt.json telemetry.jsonl 
+run=run-1b55e848 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=ce4b5e19
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 28.37, 'imu_samples_replayed': 2842, 'pose_count': 1640, 'processed_fps': 33.25}
+  camera off/acc=1697/1697 imu=2842 poses=1640 backlog_peak=6 drops_late=None handoff_peak=0
+  telemetry n=51 footprint MB start=61 q1max=261 q2max=251 q3max=240 end=222 max=261 thermal={'serious': 51} cpu核当量 均值0.58 峰1.05
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/gpufe_replay_gpu_0904_132135.log
+── gpu run=run-1b55e848-6e07-481f-ab16-128dad4f2515
+receipt backend= gpu_frontend engine_sha16= ce4b5e197a3fc8b2 state= invalid
+ATE:   配对 1640 | Sim3 ATE 2.50 cm | 尺度偏差 3.69% | SE3 ATE 2.84 cm 
+gpufe stats (gpu): {"gpu_frontend":true,"frames":1651,"fallbacks":0,"n_preprocess":1651,"n_detect":1650,"n_track":1649,"avg_preprocess_ms":10.851,"avg_detect_ms":7.156,"avg_track_ms":8.830,"healthy":true,"audit":{"every":50,"clahe":[33,0],"detect":[33,0],"track":[32,0],"last_track":{"pts":342,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the same inputs every 50th frame; [frames, mismatching frames]"},"breakdown_ms":{"pre_host":0.38,"pre_gpu":10.23,"pre_read":0.24,"det_gpu":6.77,"det_read":0.03,"det_host":0.36,"trk_host":0.03,"trk_gpu":8.79,"trk_read":0.02},"gpu_kernel_ms":{},"selfcheck":{"n":16384,"strict":true,"shader_warnings":"","div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}}
+对照基线: R2b run-2de39ccd (thrbp, 无旗) ATE:   配对 1638 | Sim3 ATE 2.39 cm | 尺度偏差 3.74% | SE3 ATE 2.75 cm 
+CHAIN_GPUFE_REPLAY_DONE

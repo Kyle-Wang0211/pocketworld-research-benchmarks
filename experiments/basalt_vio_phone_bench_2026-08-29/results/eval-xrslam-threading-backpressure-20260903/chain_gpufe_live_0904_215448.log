@@ -1,0 +1,31 @@
+  thermal=0 (21:54:52)
+══════ gpufe_live_gpu mode=live-soak flags=-PWAutoRunSeconds 300 -PWLiveFullResolution -PWXrslamGpuFrontend -PWLiveCameraRate 60 21:54:52 ══════
+Launched application with com.kyle.viobench bundle identifier.
+预期 320s 后才检查 (中间不拉心跳)
+run=run-44a75d0e-cdf0-4d30-a765-bb6ddf2d17c6
+diagnostics.json 已落盘 @ +321s ⇒ 完成
+已拉取: SHA256SUMS artifact_manifest.json calibration.json config.json diagnostics.json heartbeat.json input_manifest.json receipt.json telemetry.jsonl 
+run=run-44a75d0e engine=xrslam channel=live_soak state=invalid reason=platform_camera_loss eng_sha=9580f22c
+  metrics: {'diagnostic_elapsed_seconds': 300.33, 'diagnostic_first_usable_pose_latency_ms': 32790.01, 'diagnostic_max_pipeline_latency_ms': 1519.14, 'diagnostic_p95_pipeline_latency_ms': 993.96, 'diagnostic_pose_count': 9712, 'diagnostic_processed_fps': 32.34}
+  camera off/acc=11110/11110 imu=30076 poses=9712 backlog_peak=6 drops_late=0 handoff_peak=190
+  telemetry n=302 footprint MB start=61 q1max=345 q2max=342 q3max=336 end=296 max=345 thermal={'nominal': 67, 'fair': 45, 'serious': 190} cpu核当量 均值1.27 峰1.63
+日志: /Users/kaidongwang/Developer/viobench-recordings/eval-xrslam-threading-backpressure-20260903/gpufe_live_gpu_0904_215452.log
+── live gpu run=run-44a75d0e-cdf0-4d30-a765-bb6ddf2d17c6
+  4 {'serious': 60}                  333   1.47   60
+  5 {'serious': 1}                   296   1.36    1
+首次 serious: 111 s | 首次 critical: None s | 总时长 300 s
+── 相对 ARKit 判决:
+候选 xrslam (run-44a75d0e, invalid/platform_camera_loss, 300s) vs 参考 arkit_reference (run-f3d525c9, valid_pass/thresholds_met, 600s)
+  指标                             候选      ARKit
+  位姿/s                         32.3       59.9  劣于
+  相机交付 fps                     37.0       59.9  劣于
+  p95 延迟 ms                   994.0       55.5  劣于
+  首个可用位姿 ms                   32790       1481  劣于
+  footprint 峰 MB                345        266  劣于
+  serious 秒                     190          0  劣于
+  critical 秒                      0          0  不劣于
+  CPU 核当量                      1.27       0.80  劣于
+  平台丢帧                         6871          0  劣于
+  ⇒ 1/9 项不劣于 ARKit;有劣于项 ⇒ 未过
+gpufe stats: {"gpu_frontend":true,"frames":11101,"fallbacks":0,"n_preprocess":11102,"n_detect":11100,"n_track":0,"avg_preprocess_ms":1.429,"avg_detect_ms":0.934,"avg_track_ms":0.000,"healthy":true,"audit":{"every":50,"clahe":[222,0],"detect":[222,0],"track":[0,0],"last_track":{"pts":0,"fwd_pos_bad":0,"fwd_status_bad":0,"rev_bad":0,"fwd_maxdiff":0,"example":""},"note":"CPU path re-run on the same inputs every 50th frame; [frames, mismatching frames]"},"breakdown_ms":{"pre_wait":14.92,"pre_host":0.73,"pre_gpu":41.10,"pre_read":0.38,"det_gpu":0.00,"det_read":0.11,"det_host":0.93,"trk_host":0.00,"trk_gpu":0.00,"trk_read":0.00},"last_fallback":"","cpu_pyramid_ms":2.62,"cpu_lk_ms":1.97,"prefetch_declined":7403,"empty_submit_ms":1.51,"buckets_per1000":[[0.9,7.0,0.0],[1.1,2.1,0.0],[1.1,0.1,0.0],[1.3,0.1,0.0],[1.5,0.1,0.0],[1.5,0.1,0.0],[1.5,0.1,0.0],[1.7,0.2,0.0]],"gpu_kernel_ms":{},"selfcheck":{"n":16384,"strict":true,"shader_warnings":"","div":0,"sqrt":4804,"sqrt_ex":"1.18074131 vs 1.18074143","i2f":0,"fma0_guard":0,"round":0,"mul":0,"add":0,"lk_delta":0,"floor":0,"flt_scale":0,"i2f_neg":0,"unguarded_contract":4655,"unguarded_contract_ex":"2.07184029 vs 2.07184052","sqrt_rn":0,"div_rn":0}}
+CHAIN_GPUFE_LIVE_DONE
