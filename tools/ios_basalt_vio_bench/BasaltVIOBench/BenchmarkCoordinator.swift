@@ -34,6 +34,7 @@ final class BenchmarkCoordinator {
         return hz
     }()
     private var lastPosePollNS: UInt64 = 0
+    private var lastPollSensorNS: Int64 = 0
     private var polledPoseCount: UInt64 = 0
     private var xrslamStaleCameraDrops: UInt64 = 0
     enum CoordinatorError: LocalizedError {
@@ -752,7 +753,11 @@ final class BenchmarkCoordinator {
                     livePoses.removeAll()
                     let period = UInt64(1_000_000_000 / Self.posePollHz)
                     if now &- lastPosePollNS >= period {
-                        lastPosePollNS = now
+                        // Advance the deadline by whole periods rather than resetting it to now:
+                        // resetting folds each iteration's overshoot into the next interval, which on
+                        // 09-09 turned a 60 Hz request into a measured 47.9 Hz (60 x 16.7/20.9).
+                        let missed = (now &- lastPosePollNS) / period
+                        lastPosePollNS &+= period &* max(1, missed)
                         if let polled = try session.queryPose() {
                             polledPoseCount += 1
                             livePoses.append(polled)
@@ -1088,6 +1093,21 @@ final class BenchmarkCoordinator {
                         poses: &poses
                     )
                     try session.submitIMU(sample)
+                    // [2026-09-09] With -PWPosePollHz N the replay emits the IMU-propagated pose on a
+                    // SENSOR-time grid, not a wall-clock one: replay runs at 70-130 fps, so a wall
+                    // clock would sample the trajectory at an arbitrary rate. This is what makes the
+                    // propagated track scorable -- ate.py pairs it against ARKit by timestamp, which
+                    // answers whether the poses between visual updates are as good as the ones on them.
+                    if Self.posePollHz > 0 {
+                        let period = Int64(1_000_000_000 / Self.posePollHz)
+                        if sample.timestampNanoseconds &- lastPollSensorNS >= period {
+                            lastPollSensorNS = sample.timestampNanoseconds
+                            if let polled = try session.queryPose() {
+                                polledPoseCount += 1
+                                poses.append(polled.pose)
+                            }
+                        }
+                    }
                 case .camera(let frame):
                     guard frame.inputCameraCount == context.inputCameraCount,
                           frame.camera1ImageURL == nil else {
@@ -1109,7 +1129,10 @@ final class BenchmarkCoordinator {
                         height: context.imageHeight
                     )
                 }
-                poses.append(contentsOf: try drainPoses(session).map(\.pose))
+                // With -PWPosePollHz the polled track is the arm: drain the per-frame results so the
+                // engine's result queue cannot fill, but do not score both trajectories at once.
+                if Self.posePollHz > 0 { _ = try drainPoses(session) }
+                else { poses.append(contentsOf: try drainPoses(session).map(\.pose)) }
                 let now = DispatchTime.now().uptimeNanoseconds
                 if let sequence = heartbeatSchedule.consumeSequenceIfDue(nowNanoseconds: now) {
                     try writeHeartbeat(context, sequence: sequence, monotonicNS: now)
@@ -1122,7 +1145,10 @@ final class BenchmarkCoordinator {
         }
         onPhase(.draining)
         try session.sealDrainStop()
-        poses.append(contentsOf: try drainPoses(session).map(\.pose))
+        // With -PWPosePollHz the polled track is the arm: drain the per-frame results so the
+                // engine's result queue cannot fill, but do not score both trajectories at once.
+                if Self.posePollHz > 0 { _ = try drainPoses(session) }
+                else { poses.append(contentsOf: try drainPoses(session).map(\.pose)) }
         sampler.stop()
         let endNS = DispatchTime.now().uptimeNanoseconds
         let cpuEnd = SystemMetricSampler.processCPUSeconds().total
@@ -1315,7 +1341,10 @@ final class BenchmarkCoordinator {
                 : snapshot.imuInputQueue.capacity
             if capacity == 0 { return }
             if size < capacity { return }
-            poses.append(contentsOf: try drainPoses(session).map(\.pose))
+            // With -PWPosePollHz the polled track is the arm: drain the per-frame results so the
+                // engine's result queue cannot fill, but do not score both trajectories at once.
+                if Self.posePollHz > 0 { _ = try drainPoses(session) }
+                else { poses.append(contentsOf: try drainPoses(session).map(\.pose)) }
             let now = DispatchTime.now().uptimeNanoseconds
             if poses.count > posesAtStallStart {
                 // Progress: the engine is alive, just slower than the feeder.

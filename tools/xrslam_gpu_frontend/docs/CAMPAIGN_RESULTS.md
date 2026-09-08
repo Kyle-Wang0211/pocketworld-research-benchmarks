@@ -223,3 +223,53 @@ Rebuild note: `~/Developer/viobench-build` had been reclaimed (disk 99%); the iO
 | first pose s | 38.5 | 3.6 | 1.5 |
 | verdict | 1/9 | **3/9** | |
 387 stale frames dropped; handoff peak still hits 264/264 (the producer gate still stalls the feeder) — but latency no longer follows the queue, because only the newest frame of each batch is submitted. Latency and CPU now match ARKit; the remaining gaps are structural: pose rate is capped by the 30 fps camera channel (ARKit takes 60), 173 s serious = our pipeline draws more power, footprint +10 MB, first pose needs motion to initialise.
+
+## 09-09 pose delivery decoupled from the visual frame rate
+Upstream already computes the IMU-propagated pose: `Detail::track_gyroscope` and `track_accelerometer`
+both `return predict_pose(t)`. The C interface discarded that return value, and `XRSLAM_RESULT_BODY_POSE`
+reads `latest_pose_`, which is only written in `track_camera` - so our pose rate was the visual frame
+rate by construction. Additive fix (`XRSLAMGetPropagatedPose`, XRSLAMGetResult untouched) plus a bench
+flag `-PWPosePollHz N` that polls it instead of taking one pose per frame.
+
+| live 300 s, charging | 09-08 per-frame | 09-09 first try (BODY_POSE) | 09-09 propagated |
+|---|---|---|---|
+| poses/s | 28.4 | 23.8 | **47.9** |
+| p95 latency ms | 42.0 | 6.5 | 7.6 |
+| CPU cores | 0.80 | 1.25 | 1.06 |
+| serious s | 173 | 220 | 197 |
+| verdict | 3/9 | 2/9 | 2/9 |
+47.9 rather than 60 is the poll scheduler, not the engine: the loop resets its deadline to `now` after
+each poll, so每 iteration's overshoot accumulates (60 x 16.7/20.9 = 47.9). Accumulating the deadline
+instead should reach 60. Unverified: these are propagated predictions and the live channel has no
+ground truth, so a replay arm polling in sensor time and scoring ATE against ARKit still owes us the
+accuracy answer.
+
+### Engine build environment restored (the 09-08 disk cleanup had destroyed it)
+OpenCV 4.0.1 iOS framework re-downloaded (MD5 35ebe10d... = the value upstream's CMake pins) and Eigen
+3.3.7 (the tag upstream pins; the local Aether3D copy is 3.4.0 and was not used). `configure_engine.sh`
+and `assemble_and_build.sh` reconstructed from the recipe recorded in the artifact receipt.
+Bit-identity was NOT achieved: 44 of 57 archive members differ from the 09-05 build. Compiler version,
+SDK and determinism were all checked and are unchanged; the one object disassembled differs by register
+allocation and one stack spill, i.e. equivalent instruction sequences, but that was not proven for all
+44 and the cause is unidentified. The gate therefore fell back to behaviour, which passed: on-device
+audits CLAHE 33/0 and detect 33/0 (bit-exact against the CPU path), 0 fallbacks, ATE 2.21 cm inside the
+2.36-2.54 band. The 09-05 archive is preserved at ~/Developer/pw_backups/.
+
+### 09-09 02:42 poll scheduler fixed (accumulate the deadline) — run-099164cd, engine aa1250ce
+52.3 poses/s (was 47.9), CPU 0.81 cores (ARKit 0.80), p95 7.6 ms, footprint 302, serious 203 s, first
+pose 4.2 s, verdict 2/9. The remaining 13 % to 60 is the harness, not the engine: polling happens inside
+the single-threaded live drain loop, one pose per iteration, and an iteration sometimes exceeds 16.7 ms.
+The engine can emit a pose per IMU sample (100 Hz). Pose rate is now a harness property; the open gaps
+are power (203 s serious vs 0), memory (302 vs 266 MB) and initialisation (4.2 s vs 1.5 s).
+
+### Propagated-pose accuracy, replay against the ARKit reference (same recording, same build aa1250ce)
+| arm | what the poses are | Sim3 ATE | scale |
+|---|---|---|---|
+| per-frame | one per visual update | 2.60 cm | 3.23% |
+| poll 60 Hz | recording is 60 fps, so ~one per frame | 2.59 cm | 2.35% |
+| half frame rate + poll 60 Hz | **~half are pure IMU propagation between visual updates** | **2.53 cm** | 3.50% |
+Propagation costs nothing measurable: the arm where every second pose is predicted scores no worse than
+the arm where every pose is visually updated. ate.py pairs by timestamp against ARKit's 60 Hz track, so
+the propagated poses land on the reference trajectory rather than merely existing.
+Not measured: `-PWHalfFrameRate` without polling died with `runtime_error` after 849 frames / 796 poses
+(run-d180db0f). New failure mode, uninvestigated, does not affect the comparison above.
