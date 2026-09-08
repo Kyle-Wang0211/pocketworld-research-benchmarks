@@ -155,3 +155,40 @@ AUTO / W256=0 / W256=1 / W256=1+KPBIND=0 / W256=0+KPBIND=1 —— 五臂
 - 🔴 **Mate 10 / Mali 一端始终未验**(设备两天不在线):要看到它自动选 `w256=1` 且 12MP 跑得起来。
 - `DESC_ATOMIC=0` 在 Adreno 进程消失(每臂都冷却过,不是"连跑第三次"那个毛病)。
 - A16 未测;现役 iOS 载体不含提取器 W256。
+
+---
+
+# 三端闭合(09-08,BUILD_ID dca296ff0608)
+
+| 设备 | GPU / 后端 | granted limit | 需要 | **自动选** | p50 @13312 |
+|---|---|---|---|---|---|
+| M3 Mac | Metal | 1024 MB | 372 MB | 整缓冲 | — (65536 口径 ~153 ms) |
+| P50 Pocket | Adreno 660 / Vulkan | 512 MB | 372 MB | 整缓冲 | **1546.5** |
+| Mate 10 | Mali-G72 / Vulkan | 256 MB | 372 MB | **子区间** | **10099.2** |
+
+**三端都有阳性对照,证明这个选择是承重的:**
+- Mac:两个方向强制都能跑,四摘要逐位相同 ⇒ 选择不改结果。
+- Adreno:强制 `W256=1` → 5.69× 慢(选择承的是**速度**)。
+- **Mali:强制 `W256=0` → 直接失败** `dawn_error@pyramid/detect Validation`
+  (372 MB > granted 256 MB)⇒ 选择承的是**能不能跑**。
+
+**逐字节**:Mac cap 65536 五臂全同且等于 W256 落地前基线;Mali cap 65536 `count=42425`,
+与 09-07 改动前的 Mate 10 完全相同 ⇒ 改动没动 Vulkan 侧的结果。
+
+Mali 段账(13312,W256):pyramid=2806.3 / orient=2581.2 / affine=2268.6 / descriptor=1722.5 /
+detect=567.8 / clamp=**24.9**。注意与 Adreno 形状不同 —— Mali 上 clamp 几乎为零(不积压),
+钱是实打实摊在各段上的。
+
+## 🔴 一条差点被误判成代码回归的坑
+第一次三臂**全废**,`dawn_error@pyramid/detect Validation`,长得和"整块超限"一模一样。
+真因是**设备上的着色器是旧的**:`files/wgsl_ext_new` 里 `sift_dog_detect` / `sift_gss_blur` /
+`sift_gss_resample` 还停在 W256 之前(09-07 的 W256 着色器当时推到的是 `wgsl_ext_w256`)。
+对拍文件大小 3 秒现形(14420/2482/1552 vs 树里 14783/2692/1976)。
+
+**规程:上机跑提取器之前,先把 `shaders/wgsl/sift_*.wgsl` 与设备目录逐文件对拍。**
+设备目录与源码树之间没有任何自动对齐机制。
+
+## 下一刀(三端同向,不是分叉)
+Adreno 上已定罪:**逐 dispatch 子区间绑定** 值 6.7 s,而 A/B 布局只值 0.56 s。
+Mali 因为绑不下整块,必须走子区间 —— 所以**把"每次 dispatch 重绑一次"改成更少、更大的绑定**
+是直接冲着 Mali 那 10.1 s 去的,而另外两端本来就不走这条路,**不可能赔**。
