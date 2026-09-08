@@ -36,7 +36,19 @@ public enum BenchResolution: Equatable {
     /// `diagnostic` is derived from the recording by deterministic downscale, so
     /// the two share one physical capture. Both are 4:3, so a single factor
     /// relates them.
-    public static let diagnosticDownscaleFactor = 3
+    /// [2026-09-09] `-PWDiagnosticDownscale [N]` takes an optional integer factor so the
+    /// resolution sweep (1920x1440 / 960x720 / 640x480 = factors 1 / 2 / 3) is one build and
+    /// one recording. Bare `-PWDiagnosticDownscale` keeps its old meaning, factor 3. Only
+    /// factors dividing both 1920 and 1440 are accepted, because the box filter in
+    /// `ActiveVIOEngineSession.downscale` averages exact factor-by-factor blocks.
+    public static var diagnosticDownscaleFactor: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-PWDiagnosticDownscale") else { return 3 }
+        guard i + 1 < args.count, let n = Int(args[i + 1]), n >= 1 else { return 3 }
+        precondition(scoring.width % n == 0 && scoring.height % n == 0,
+                     "-PWDiagnosticDownscale \(n): factor must divide \(scoring.width)x\(scoring.height)")
+        return n
+    }
 
     /// `-PWDiagnosticDownscale` replays at [diagnostic] instead of [scoring].
     /// Not scoreable, and never enabled by default: its only job is to separate
@@ -176,9 +188,9 @@ enum ARKitIntrinsicsCrossCheck {
     }
 
     static var expectedScoringIntrinsics: CameraIntrinsics {
-        frozenUpstream640x480.scaled(
-            by: Double(BenchResolution.diagnosticDownscaleFactor)
-        )
+        // Fixed 3: this compares the frozen 640x480 config against the 1920x1440 scoring
+        // format, a ratio that does not move when the replay sweep changes its own factor.
+        frozenUpstream640x480.scaled(by: 3.0)
     }
 
     /// Checks that the reported intrinsics can describe the frames they came

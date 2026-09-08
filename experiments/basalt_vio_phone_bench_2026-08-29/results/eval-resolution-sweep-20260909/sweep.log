@@ -1,0 +1,36 @@
+== sweep start 09-09 00:28:32
+-- 1920x1440 rep2 00:28:32
+run=run-e722dc2a engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=8707c345
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 40.55, 'imu_samples_replayed': 2842, 'pose_count': 1635, 'processed_fps': 54.22}
+  telemetry n=32 footprint MB start=62 q1max=206 q2max=202 q3max=200 end=190 max=206 thermal={'nominal': 32} cpu核当量 均值1.35 峰2.22
+RESULT 1920x1440 rep2 run-e722dc2a-9e42-40df-9c82-4244571150a7 ::   配对 1635 | Sim3 ATE 2.52 cm | 尺度偏差 4.66% | SE3 ATE 3.05 cm
+   fps 54.2 cpu_s 40.6 poses 1635
+-- 960x720 rep2 00:31:09
+run=run-4f5c95d3 engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=8707c345
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 33.36, 'imu_samples_replayed': 2842, 'pose_count': 1641, 'processed_fps': 108.56}
+  telemetry n=17 footprint MB start=61 q1max=84 q2max=95 q3max=92 end=88 max=95 thermal={'nominal': 17} cpu核当量 均值2.21 峰2.64
+RESULT 960x720 rep2 run-4f5c95d3-c55e-4c0f-8c30-8055e762a9b7 ::   配对 1641 | Sim3 ATE 1.93 cm | 尺度偏差 6.24% | SE3 ATE 3.04 cm
+   fps 108.6 cpu_s 33.4 poses 1641
+-- 640x480 rep2 00:33:47
+run=run-d6f4a8bd engine=xrslam channel=replay_device_recording state=invalid reason=device_recording_replay_complete_no_ground_truth eng_sha=8707c345
+  metrics: {'camera_frames_replayed': 1697, 'cpu_seconds': 25.72, 'imu_samples_replayed': 2842, 'pose_count': 1641, 'processed_fps': 127.55}
+  telemetry n=14 footprint MB start=61 q1max=73 q2max=72 q3max=72 end=68 max=73 thermal={'nominal': 14} cpu核当量 均值2.00 峰2.39
+RESULT 640x480 rep2 run-d6f4a8bd-5107-46c3-adfd-ddba8e036b99 ::   配对 1641 | Sim3 ATE 2.03 cm | 尺度偏差 5.48% | SE3 ATE 2.88 cm
+   fps 127.6 cpu_s 25.7 poses 1641
+SWEEP_DONE 00:36:24
+
+## Final table (same build 8707c345, same recording run-6e2d4b99, intrinsics scaled from this phone's measured values)
+| tracker input | run | Sim3 ATE | scale dev | replay fps | cpu_s |
+|---|---|---|---|---|---|
+| 1920x1440 | run-44332bea | 2.40 cm | 3.07% | 67.0 | 41.6 |
+| 1920x1440 | run-e722dc2a | 2.52 cm | 4.66% | 54.2 | 40.6 |
+| 960x720   | run-c3718cc9 | 1.92 cm | 6.21% | 105.7 | 33.6 |
+| 960x720   | run-4f5c95d3 | 1.93 cm | 6.24% | 108.6 | 33.4 |
+| 640x480   | run-e9ed7e65 | 2.08 cm | 5.44% | 129.2 | 25.4 |
+| 640x480   | run-d6f4a8bd | 2.03 cm | 5.48% | 127.6 | 25.7 |
+Reading: trajectory error is BETTER at lower resolution (1.9-2.1 vs 2.4-2.5 cm); scale deviation is WORSE
+(5.4-6.2% vs 3.1-4.7%) and the effect is not monotonic - 640 beats 960 on scale, twice. Low-resolution
+arms repeat to within 0.03 cm / 0.03 points; the 1920 arm's own scale spread is 1.6 points, so its "3.07%"
+is not a reliable floor. Under the stated gate (scale must stay inside the full-resolution spread) neither
+downscaled arm passes. CPU seconds fall only 38% for 9x fewer pixels, so the front end is not the whole
+replay cost.
