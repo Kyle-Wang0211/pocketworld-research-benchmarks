@@ -262,14 +262,24 @@ the single-threaded live drain loop, one pose per iteration, and an iteration so
 The engine can emit a pose per IMU sample (100 Hz). Pose rate is now a harness property; the open gaps
 are power (203 s serious vs 0), memory (302 vs 266 MB) and initialisation (4.2 s vs 1.5 s).
 
-### Propagated-pose accuracy, replay against the ARKit reference (same recording, same build aa1250ce)
-| arm | what the poses are | Sim3 ATE | scale |
-|---|---|---|---|
-| per-frame | one per visual update | 2.60 cm | 3.23% |
-| poll 60 Hz | recording is 60 fps, so ~one per frame | 2.59 cm | 2.35% |
-| half frame rate + poll 60 Hz | **~half are pure IMU propagation between visual updates** | **2.53 cm** | 3.50% |
-Propagation costs nothing measurable: the arm where every second pose is predicted scores no worse than
-the arm where every pose is visually updated. ate.py pairs by timestamp against ARKit's 60 Hz track, so
-the propagated poses land on the reference trajectory rather than merely existing.
-Not measured: `-PWHalfFrameRate` without polling died with `runtime_error` after 849 frames / 796 poses
-(run-d180db0f). New failure mode, uninvestigated, does not affect the comparison above.
+### Propagated-pose accuracy, replay against the ARKit reference — CORRECTED
+The first attempt (02:21-02:33, runs 4f58a9f1 / 80f57848 / a53a95b0 / d180db0f) is **void**: the flags
+were passed from an interactive zsh as an unquoted `$flag`, and zsh does not word-split, so
+`-PWHalfFrameRate -PWPosePollHz 60` reached the app as ONE argument and neither flag was parsed. Three
+of those four "arms" were the same unmodified configuration run three times, and the 2.53 cm number
+reported from them as evidence of propagation quality proved nothing. Same trap as 09-05; the bench now
+writes `diagnostic_half_frame_rate` so a flag that was passed but not parsed shows up in the receipt.
+
+Re-run with arguments passed as separate words, both arms verified at 849/849 accepted frames (30 fps):
+| arm | poses | pairs vs ARKit 60 Hz | Sim3 ATE | scale |
+|---|---|---|---|---|
+| half rate, per-frame poses | 796 | 796 | 4.33 cm | 4.16% |
+| half rate + 60 Hz polling (**every second pose is IMU propagation**) | 1331 | 1331 | **3.71 cm** | **1.44%** |
+Propagation does not cost accuracy — it improves the score, because ATE pairs by timestamp against
+ARKit's 60 Hz track and the propagated poses fill the gaps between visual updates, giving a denser and
+more evenly spaced alignment (796 -> 1331 pairs).
+
+Also fixed: `-PWHalfFrameRate` was never scoreable. The replay guard compared `cameraAccepted` against
+every camera event in the recording, so deliberately feeding half of them was reported as
+`replay_input_count_mismatch` — a harness invariant, not the engine crash it looked like. The guard now
+halves its expectation when the flag is on.

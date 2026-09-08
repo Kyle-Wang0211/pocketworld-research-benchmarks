@@ -1196,9 +1196,13 @@ final class BenchmarkCoordinator {
                   snapshot.counters.nonfinitePoseRejected,
                   snapshot.counters.posesProduced)
         }
-        let expectedCamera = events.reduce(into: UInt64(0)) {
+        // -PWHalfFrameRate deliberately submits every second frame, so the invariant is "everything
+        // the arm meant to feed arrived", not "every event in the recording arrived". Comparing
+        // against the raw event count invalidated every half-rate replay ever run (09-09).
+        var expectedCamera = events.reduce(into: UInt64(0)) {
             if case .camera = $1 { $0 += 1 }
         }
+        if halfFrameRate { expectedCamera = (expectedCamera + 1) / 2 }
         let expectedIMU = events.reduce(into: UInt64(0)) {
             if case .imu = $1 { $0 += 1 }
         }
@@ -1568,6 +1572,7 @@ final class BenchmarkCoordinator {
             "diagnostic_processed_fps": Double(poseCount) / elapsedSeconds,
             "diagnostic_stale_camera_dropped": Double(xrslamStaleCameraDrops),
             "diagnostic_polled_poses": Double(polledPoseCount),
+            "diagnostic_half_frame_rate": ProcessInfo.processInfo.arguments.contains("-PWHalfFrameRate") ? 1 : 0,
             "diagnostic_pose_poll_hz": Double(Self.posePollHz),
         ]
         if let firstPoseLatencyMS, firstPoseLatencyMS.isFinite {
