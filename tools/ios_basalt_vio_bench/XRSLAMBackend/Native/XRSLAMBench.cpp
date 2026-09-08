@@ -82,6 +82,11 @@ static_assert(XRSLAM_STATE_TRACKING_FAIL == 2);
 /// xrslam_pending_worker_frames.patch. Declared here rather than in the frozen
 /// XRSLAM.h so the public ABI header stays byte-identical to upstream's.
 extern "C" int XRSLAMGetPendingWorkerFrames(void);
+/// [2026-09-09] The IMU-propagated pose. Upstream's core already returns it from
+/// Detail::track_gyroscope / track_accelerometer (both `return predict_pose(t)`); the C interface
+/// discarded that value, so XRSLAM_RESULT_BODY_POSE could only advance once per image. Declared here
+/// for the same reason as the accessors above: the frozen XRSLAM.h stays byte-identical to upstream.
+extern "C" void XRSLAMGetPropagatedPose(XRSLAMPose *pose);
 /// VINS-Mono's Estimator::failureDetection criteria, ported verbatim into the
 /// vendored XRSLAM and exposed read-only. Upstream XRSLAM reports no health at
 /// all -- SYS_CRASH is never assigned -- so a consumer had no way to tell a
@@ -785,6 +790,49 @@ xrslam_bench_poll_result(xrslam_bench_t *bench,
   bench->result_head = (bench->result_head + 1) % kResultQueueCapacity;
   --bench->result_count;
   ++bench->counters.results_polled;
+  return XRSLAM_BENCH_OK;
+}
+
+extern "C" xrslam_bench_status_t
+xrslam_bench_query_pose(xrslam_bench_t *bench,
+                        xrslam_bench_frame_result_t *out_result) {
+  if (bench == nullptr || out_result == nullptr) {
+    return XRSLAM_BENCH_INVALID_ARGUMENT;
+  }
+  *out_result = {};
+  std::lock_guard<std::mutex> lock(bench->mutex);
+  if (bench->phase != XRSLAM_BENCH_PHASE_RUNNING) {
+    return XRSLAM_BENCH_END_OF_STREAM;
+  }
+  if (bench->counters.frames_run == 0) {
+    return XRSLAM_BENCH_NO_OUTPUT;
+  }
+  XRSLAMState state = XRSLAM_STATE_INITIALIZING;
+  XRSLAMPose pose{};
+  bench->api.get_result(XRSLAM_RESULT_STATE, &state);
+  /* Not get_result(BODY_POSE): that one is written in track_camera and so advances once per image.
+     XRSLAMGetPropagatedPose returns what track_gyroscope/track_accelerometer already computed for
+     the newest IMU sample. */
+  XRSLAMGetPropagatedPose(&pose);
+  int64_t pose_timestamp_ns = 0;
+  if (state < XRSLAM_STATE_INITIALIZING || state > XRSLAM_STATE_TRACKING_FAIL ||
+      !pose_is_finite(pose) || pose.timestamp <= 0.0 ||
+      !seconds_to_nanoseconds(pose.timestamp, &pose_timestamp_ns)) {
+    return XRSLAM_BENCH_NONFINITE_OUTPUT;
+  }
+  /* No input_timestamp_ns: this pose belongs to no single image. The caller
+     dates it by pose_timestamp_ns, which is the sensor time the propagation
+     reached. */
+  out_result->divergence_flags = (int32_t)XRSLAMGetDivergenceFlags();
+  out_result->input_timestamp_ns = 0;
+  out_result->pose_timestamp_ns = pose_timestamp_ns;
+  out_result->pose_timestamp_seconds = pose.timestamp;
+  for (int i = 0; i < 4; ++i)
+    out_result->quaternion_xyzw[i] = pose.quaternion[i];
+  for (int i = 0; i < 3; ++i)
+    out_result->translation_xyz[i] = pose.translation[i];
+  out_result->state = (int32_t)state;
+  ++bench->counters.poses_queried;
   return XRSLAM_BENCH_OK;
 }
 

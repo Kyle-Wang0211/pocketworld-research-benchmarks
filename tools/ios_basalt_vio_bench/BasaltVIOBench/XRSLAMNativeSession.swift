@@ -113,7 +113,15 @@ final class XRSLAMNativeSession {
         xrslam_bench_destroy(handle)
     }
 
+    /// Monotonic time at which the newest IMU sample was handed to the engine, with its own sensor
+    /// timestamp. A pose read by `queryPose()` is propagated up to that sensor time, so this pair
+    /// dates it on the same clock the per-frame path uses for camera frames.
+    private var lastIMUSensorNanoseconds: Int64 = 0
+    private var lastIMUAcceptedNanoseconds: UInt64 = 0
+
     func submitIMU(_ event: RawIMUEvent) throws {
+        lastIMUSensorNanoseconds = Int64(bitPattern: UInt64(event.timestampNanoseconds))
+        lastIMUAcceptedNanoseconds = DispatchTime.now().uptimeNanoseconds
         guard event.timestampNanoseconds <= UInt64(Int64.max) else {
             throw XRSLAMNativeSessionError.invalidTimestamp
         }
@@ -256,6 +264,54 @@ final class XRSLAMNativeSession {
         }
         try Self.requireOK(runStatus, operation: "run_one_frame")
     }
+
+    /// Reads the engine's IMU-propagated pose without consuming a frame result.
+    ///
+    /// [2026-09-09] The per-frame path emits exactly one pose per image, so our pose rate has always
+    /// been the visual frame rate. ARKit's is not: it delivers 60 ARFrames/s and skips the vision
+    /// work on some of them (WWDC18 610). Upstream's `get_result(BODY_POSE)` is the same
+    /// construction -- the last optimised state propagated through the IMU that arrived after it --
+    /// so polling it on a timer measures our pose delivery the way ARKit's is measured.
+    ///
+    /// Returns nil when the engine has no pose yet, when the state is not tracking-success, or when
+    /// the propagation has not advanced since the previous call (no new IMU, so no new pose).
+    func queryPose() throws -> NativePoseSample? {
+        var output = xrslam_bench_frame_result_t()
+        let status = xrslam_bench_query_pose(handle, &output)
+        if status == XRSLAM_BENCH_NO_OUTPUT || status == XRSLAM_BENCH_END_OF_STREAM
+            || status == XRSLAM_BENCH_NONFINITE_OUTPUT {
+            return nil
+        }
+        try Self.requireOK(status, operation: "query_pose")
+        guard output.state == 1 else { return nil }
+        guard output.pose_timestamp_ns > lastQueriedPoseNanoseconds else { return nil }
+        lastQueriedPoseNanoseconds = output.pose_timestamp_ns
+        guard let pose = XRSLAMPoseAdapter.makeTimedPose(
+            timestampNanoseconds: output.pose_timestamp_ns,
+            translationX: output.translation_xyz.0,
+            translationY: output.translation_xyz.1,
+            translationZ: output.translation_xyz.2,
+            quaternionX: output.quaternion_xyzw.0,
+            quaternionY: output.quaternion_xyzw.1,
+            quaternionZ: output.quaternion_xyzw.2,
+            quaternionW: output.quaternion_xyzw.3
+        ) else {
+            degenerateQuaternionResults += 1
+            return nil
+        }
+        // Staleness of the sensor data behind this pose, on the same monotonic clock the per-frame
+        // path uses: the pose is propagated to the newest IMU sample, which entered the app at
+        // lastIMUAcceptedNanoseconds.
+        let now = DispatchTime.now().uptimeNanoseconds
+        let accepted = lastIMUAcceptedNanoseconds == 0 ? now : lastIMUAcceptedNanoseconds
+        return NativePoseSample(
+            pose: pose,
+            capturedMonotonicNanoseconds: accepted,
+            pipelineLatencyNanoseconds: now >= accepted ? now - accepted : 0
+        )
+    }
+
+    private var lastQueriedPoseNanoseconds: Int64 = 0
 
     func pollPose() throws -> NativePoseSample? {
         while true {

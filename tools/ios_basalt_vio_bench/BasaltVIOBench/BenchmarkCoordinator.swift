@@ -21,6 +21,20 @@ final class BenchmarkCoordinator {
     // order) and counts the older frames as stale drops. Without overload a batch holds at most one camera frame, so the
     // default path is byte-identical.
     private static let dropStaleCamera = ProcessInfo.processInfo.arguments.contains("-PWXrslamDropStaleCamera")
+    // [bench 2026-09-09] `-PWPosePollHz N`: emit poses by polling the engine's IMU-propagated pose at
+    // N Hz instead of taking one per processed camera frame. ARKit delivers 60 ARFrames/s while
+    // skipping the vision work on some of them (WWDC18 610), so counting our frame results against
+    // its ARFrame count compares two different quantities. xrslam already propagates
+    // (Detail::get_latest_pose through frontal_imus); this reads it. xrslam arm only, live only, and
+    // when it is off nothing about the pose path changes.
+    private static let posePollHz: Int = {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-PWPosePollHz"), i + 1 < args.count,
+              let hz = Int(args[i + 1]), hz > 0, hz <= 240 else { return 0 }
+        return hz
+    }()
+    private var lastPosePollNS: UInt64 = 0
+    private var polledPoseCount: UInt64 = 0
     private var xrslamStaleCameraDrops: UInt64 = 0
     enum CoordinatorError: LocalizedError {
         case backendUnavailable(String)
@@ -731,7 +745,21 @@ final class BenchmarkCoordinator {
                 }
 
                 try drainLiveTransport(transport, into: session)
-                for pose in try drainPoses(session) {
+                var livePoses = try drainPoses(session)
+                if Self.posePollHz > 0 {
+                    // The propagated pose replaces the per-frame ones rather than adding to them, so
+                    // a pose is never counted twice.
+                    livePoses.removeAll()
+                    let period = UInt64(1_000_000_000 / Self.posePollHz)
+                    if now &- lastPosePollNS >= period {
+                        lastPosePollNS = now
+                        if let polled = try session.queryPose() {
+                            polledPoseCount += 1
+                            livePoses.append(polled)
+                        }
+                    }
+                }
+                for pose in livePoses {
                     poses.append(pose)
                     if firstUsablePoseLatencyMS == nil {
                         firstUsablePoseLatencyMS = firstPoseLatencyMilliseconds(
@@ -1510,6 +1538,8 @@ final class BenchmarkCoordinator {
             "diagnostic_pose_count": Double(poseCount),
             "diagnostic_processed_fps": Double(poseCount) / elapsedSeconds,
             "diagnostic_stale_camera_dropped": Double(xrslamStaleCameraDrops),
+            "diagnostic_polled_poses": Double(polledPoseCount),
+            "diagnostic_pose_poll_hz": Double(Self.posePollHz),
         ]
         if let firstPoseLatencyMS, firstPoseLatencyMS.isFinite {
             metrics["diagnostic_first_usable_pose_latency_ms"] = firstPoseLatencyMS

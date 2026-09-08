@@ -252,6 +252,16 @@ final class ActiveVIOEngineSession {
         }
     }
 
+    /// xrslam only: the IMU-propagated pose, polled on a timer instead of once per frame.
+    /// Basalt exposes no equivalent, so its arm keeps the per-frame path.
+    func queryPose() throws -> NativePoseSample? {
+        switch implementation {
+        case .basalt: return nil
+        case .xrslam(let session):
+            return try performXRSLAM("query_pose") { try session.queryPose() }
+        }
+    }
+
     func pollPose() throws -> NativePoseSample? {
         switch implementation {
         case .basalt(let session):

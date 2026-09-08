@@ -77,6 +77,8 @@ typedef struct xrslam_bench_frame_result {
 } xrslam_bench_frame_result_t;
 
 typedef struct xrslam_bench_counters {
+  /// Poses read with xrslam_bench_query_pose (IMU-propagated, no frame consumed).
+  uint64_t poses_queried;
   uint64_t events_offered;
   uint64_t events_accepted;
   uint64_t events_processed;
@@ -202,6 +204,21 @@ xrslam_bench_status_t xrslam_bench_run_one_frame(xrslam_bench_t *bench);
 xrslam_bench_status_t
 xrslam_bench_poll_result(xrslam_bench_t *bench,
                          xrslam_bench_frame_result_t *out_result);
+
+/// Reads the engine's CURRENT pose without consuming a frame result.
+///
+/// [2026-09-09] `get_result(BODY_POSE)` returns upstream's `predict_pose()`: the last optimised
+/// state propagated forward through the IMU samples that arrived after it. That is the same
+/// construction ARKit describes for its own 60 Hz output -- "World Tracking can skip the computer
+/// vision processing for some of those frames" (WWDC18 610) -- so a caller that wants a pose rate
+/// decoupled from the visual frame rate polls this instead of counting frame results. It runs no
+/// estimator work: call it from the same serial queue that pushes sensor data.
+///
+/// Returns XRSLAM_BENCH_NO_OUTPUT before the engine has a pose, and
+/// XRSLAM_BENCH_NONFINITE_OUTPUT if the state or pose does not validate.
+xrslam_bench_status_t
+xrslam_bench_query_pose(xrslam_bench_t *bench,
+                        xrslam_bench_frame_result_t *out_result);
 
 xrslam_bench_status_t xrslam_bench_seal_inputs(xrslam_bench_t *bench);
 xrslam_bench_status_t xrslam_bench_drain(xrslam_bench_t *bench);
