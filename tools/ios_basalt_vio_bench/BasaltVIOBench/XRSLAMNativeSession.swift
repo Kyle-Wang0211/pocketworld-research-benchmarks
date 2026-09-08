@@ -71,6 +71,19 @@ final class XRSLAMNativeSession {
         var created: OpaquePointer?
         let status = configURL.path.withCString { configPath in
             calibrationURL.path.withCString { calibrationPath in
+                // [bench 2026-09-04] `-PWXrslamGpuFrontend`: the gpufe engine arm reads PW_XRSLAM_GPU_FRONTEND=1
+                // once (xrslam::extra::GpuImage::front_end) and runs CLAHE/pyramid/GFTT/LK on the GPU.
+                // Without the flag, or on an arm built without XRSLAM_GPU_FRONTEND, the engine is byte-for-byte
+                // the CPU path. Audit trail: receipt app.backend = "gpu_frontend".
+                if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontend") {
+                    setenv("PW_XRSLAM_GPU_FRONTEND", "1", 1)
+                    // `-PWXrslamGpuFrontendAudit`: every 50th frame re-runs the CPU path and compares (costs ~0.5 ms/frame avg)
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendAudit") { setenv("PW_XRSLAM_GPUFE_AUDIT", "1", 1) }
+                    // `-PWXrslamGpuFrontendCpuPyr`: LK pyramid built on the CPU (buildOpticalFlowPyramid) instead of read back from the GPU
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendGpuPyr") { setenv("PW_XRSLAM_GPUFE_PYR", "1", 1) }
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendFusedHarris") { setenv("PW_GPUFE_FUSED_HARRIS", "1", 1) }
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendSplit") { setenv("PW_GPUFE_SPLIT", "1", 1) }
+                }
                 var options = xrslam_bench_create_options_t()
                 options.struct_size = MemoryLayout<xrslam_bench_create_options_t>.size
                 options.slam_config_path = configPath
@@ -326,9 +339,15 @@ final class XRSLAMNativeSession {
             nonfinitePoseRejected:
                 value.nonfinite_results_rejected + degenerateQuaternionResults
         )
+        // [bench 2026-09-02] `-PWFeederGateOff` 让回放喂帧端不再按引擎 backlog 等待
+        // (waitForReplayCapacity 见 capacity==0 立即返回)。用途只有一个:验证
+        // 库内部的生产者侧背压闸(libxrslam_thrbp)能否独自把队列封顶。size 仍是
+        // 真实 backlog,所以 diagnostics 里 camera_input_peak 照常可读;
+        // camera_input_capacity=0 即为本旗生效的可审计痕迹。不设旗时逐字节等价。
+        let feederGateOff = ProcessInfo.processInfo.arguments.contains("-PWFeederGateOff")
         snapshot.cameraInputQueue = VIOEngineQueueMeasurement(
             size: native.pending_event_count,
-            capacity: native.event_queue_capacity,
+            capacity: feederGateOff ? 0 : native.event_queue_capacity,
             peak: native.event_queue_peak
         )
         snapshot.imuInputQueue = VIOEngineQueueMeasurement(
@@ -386,6 +405,8 @@ final class XRSLAMNativeSession {
             "sensor_fifo_policy": "serialized_direct_imu_then_image_run",
             "native_image_slot": "one_create_time_preallocated_grayscale_buffer",
             "native_event_queue_capacity": String(native.event_queue_capacity),
+            // [bench 2026-09-02] 引擎内部 deque 的峰值(不是单槽峰值)。
+            "xrslam_engine_backlog_peak": String(native.engine_backlog_peak),
             "native_result_queue_capacity": String(native.result_queue_capacity),
             "camera_width": String(imageWidth),
             "camera_height": String(imageHeight),

@@ -15,6 +15,13 @@ private final class SystemSampleStore: @unchecked Sendable {
 }
 
 final class BenchmarkCoordinator {
+    // [bench 2026-09-05] `-PWXrslamDropStaleCamera`: graceful degradation under overload. When the engine's producer-side
+    // gate (xrslam await_capacity) stalls the feeder, sensor events pile up in the serial handoff (peak 155 of 264 seen live,
+    // p95 latency 864 ms). With the flag, each drained batch submits only its NEWEST camera frame (IMU events all pass, in
+    // order) and counts the older frames as stale drops. Without overload a batch holds at most one camera frame, so the
+    // default path is byte-identical.
+    private static let dropStaleCamera = ProcessInfo.processInfo.arguments.contains("-PWXrslamDropStaleCamera")
+    private var xrslamStaleCameraDrops: UInt64 = 0
     enum CoordinatorError: LocalizedError {
         case backendUnavailable(String)
         case anotherRunActive
@@ -460,6 +467,11 @@ final class BenchmarkCoordinator {
                 latenciesMS: []
             )
         ) {
+            // [2026-09-03] An invalid verdict used to discard the system samples
+            // (telemetry.jsonl stayed empty), so a 10-minute thermal soak that
+            // lost one late camera frame left no memory or thermal series at
+            // all. The verdict is unchanged; the measurement is kept.
+            try writeSystemSamples(systemSamples.snapshot(), to: context.directoryURL)
             try writeTerminal(
                 context,
                 state: .invalid,
@@ -553,7 +565,7 @@ final class BenchmarkCoordinator {
         let lastBattery = measuredSystem.last!.batteryLevel!
         let firstUsablePoseLatencyMS = final.firstNormalDeliveryLatencyMilliseconds
             ?? (Double(LiveBenchmarkDuration.totalNanoseconds) / 1_000_000 + 1)
-        let metrics: [String: Double] = [
+        var metrics: [String: Double] = [
             "first_usable_pose_latency_ms": firstUsablePoseLatencyMS,
             "measurement_duration_seconds": max(
                 0.001,
@@ -620,6 +632,8 @@ final class BenchmarkCoordinator {
         ]
         try writePoses(final.poses.map(\.pose), to: context.directoryURL)
         try writeSystemSamples(measuredSystem, to: context.directoryURL)
+        let arkitReferenceFirstUsablePoseLatencyMS = Self.arkitReferenceFirstUsablePoseLatencyMS()
+        metrics["arkit_reference_first_usable_pose_latency_ms"] = arkitReferenceFirstUsablePoseLatencyMS ?? -1
         let verdict = BenchGateEvaluator.live(
             firstUsablePoseLatencyMilliseconds: firstUsablePoseLatencyMS,
             processedFPS: metrics["processed_fps"]!,
@@ -629,7 +643,9 @@ final class BenchmarkCoordinator {
             thermalSeriousSeconds: metrics["thermal_serious_seconds"]!,
             peakFootprintMB: metrics["peak_phys_footprint_mb"]!,
             finitePoseRatio: metrics["finite_pose_ratio"]!,
-            processedFPSMinimum: Double(configuration.selectedFramesPerSecond) * 0.9
+            processedFPSMinimum: Double(configuration.selectedFramesPerSecond) * 0.9,
+            referenceFirstUsablePoseLatencyMilliseconds: arkitReferenceFirstUsablePoseLatencyMS,
+            reference: Self.arkitLiveReference()
         )
         try writeTerminal(
             context,
@@ -867,6 +883,11 @@ final class BenchmarkCoordinator {
                 latenciesMS: measurementLatenciesMS
             )
         ) {
+            // [2026-09-03] An invalid verdict used to discard the system samples
+            // (telemetry.jsonl stayed empty), so a 10-minute thermal soak that
+            // lost one late camera frame left no memory or thermal series at
+            // all. The verdict is unchanged; the measurement is kept.
+            try writeSystemSamples(systemSamples.snapshot(), to: context.directoryURL)
             try writeTerminal(
                 context,
                 state: .invalid,
@@ -929,7 +950,7 @@ final class BenchmarkCoordinator {
         guard let measurementCPUEnd else {
             throw CoordinatorError.invalidRun("measurement_cpu_endpoint_missing")
         }
-        let metrics = liveMetrics(
+        var metrics = liveMetrics(
             firstUsablePoseLatencyMilliseconds: firstUsablePoseLatencyMS
                 ?? (Double(LiveBenchmarkDuration.totalNanoseconds) / 1_000_000 + 1),
             nativeBaseline: nativeBaseline,
@@ -953,6 +974,8 @@ final class BenchmarkCoordinator {
         )
         try writePoses(poses.map(\.pose), to: context.directoryURL)
         try writeSystemSamples(measuredSystem, to: context.directoryURL)
+        let arkitReferenceFirstUsablePoseLatencyMS = Self.arkitReferenceFirstUsablePoseLatencyMS()
+        metrics["arkit_reference_first_usable_pose_latency_ms"] = arkitReferenceFirstUsablePoseLatencyMS ?? -1
         let verdict = BenchGateEvaluator.live(
             firstUsablePoseLatencyMilliseconds: metrics["first_usable_pose_latency_ms"]!,
             processedFPS: metrics["processed_fps"]!,
@@ -961,7 +984,9 @@ final class BenchmarkCoordinator {
             thermalCriticalSeconds: metrics["thermal_critical_seconds"]!,
             thermalSeriousSeconds: metrics["thermal_serious_seconds"]!,
             peakFootprintMB: metrics["peak_phys_footprint_mb"]!,
-            finitePoseRatio: metrics["finite_pose_ratio"]!
+            finitePoseRatio: metrics["finite_pose_ratio"]!,
+            referenceFirstUsablePoseLatencyMilliseconds: arkitReferenceFirstUsablePoseLatencyMS,
+            reference: Self.arkitLiveReference()
         )
         try writeTerminal(
             context,
@@ -1188,10 +1213,15 @@ final class BenchmarkCoordinator {
     ) throws -> Bool {
         if transport.imuDeliveryMode == .xrslamRawSeparateEvents {
             let batch = transport.drainXRSLAMSensorEvents(maxCount: 512)
-            for event in batch.items {
+            var lastCameraIndex: Int? = nil
+            if Self.dropStaleCamera {
+                for (i, event) in batch.items.enumerated() { if case .camera = event { lastCameraIndex = i } }
+            }
+            for (index, event) in batch.items.enumerated() {
                 do {
                     switch event {
                     case .camera(let frame):
+                        if let last = lastCameraIndex, index != last { xrslamStaleCameraDrops += 1; continue }
                         try session.submitCamera(
                             frame,
                             acceptedNanoseconds: frame.timestampNanoseconds
@@ -1287,6 +1317,54 @@ final class BenchmarkCoordinator {
     /// rather than discovered by a human noticing nothing has happened.
     private static let replayStallTimeoutNanoseconds: UInt64 = 20_000_000_000
 
+    /// ARKit's first-usable-pose latency measured on this device, read from
+    /// the newest `arkit_reference` record receipt under VIOBenchRuns. nil when
+    /// no such receipt exists; the cold-start gate is then not evaluated.
+    /// The newest same-device ARKit **live-soak** reference receipt as a full metric set;
+    /// nil when none exists (record-channel receipts are not comparable to a soak).
+    static func arkitLiveReference() -> LiveReference? {
+        let root = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+        let runs = (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        var best: (date: Date, ref: LiveReference)?
+        for run in runs {
+            guard let data = try? Data(contentsOf: run.appendingPathComponent("receipt.json")),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let app = json["app"] as? [String: Any], app["engine_id"] as? String == "arkit_reference",
+                  json["channel"] as? String == "live_soak",
+                  let m = json["metrics"] as? [String: Any],
+                  let fps = m["processed_fps"] as? Double, let p95 = m["p95_pipeline_latency_ms"] as? Double,
+                  let drop = m["app_drop_rate"] as? Double, let crit = m["thermal_critical_seconds"] as? Double,
+                  let ser = m["thermal_serious_seconds"] as? Double, let fp = m["peak_phys_footprint_mb"] as? Double,
+                  let fin = m["finite_pose_ratio"] as? Double else { continue }
+            let date = (try? run.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+            let ref = LiveReference(processedFPS: fps, p95LatencyMilliseconds: p95, appDropRate: drop, thermalCriticalSeconds: crit, thermalSeriousSeconds: ser, peakFootprintMB: fp, finitePoseRatio: fin)
+            if best == nil || date > best!.date { best = (date, ref) }
+        }
+        return best?.ref
+    }
+
+    static func arkitReferenceFirstUsablePoseLatencyMS() -> Double? {
+        let root = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+        let runs = (try? FileManager.default.contentsOfDirectory(
+            at: root, includingPropertiesForKeys: [.contentModificationDateKey]
+        )) ?? []
+        var best: (date: Date, value: Double)?
+        for run in runs {
+            let receiptURL = run.appendingPathComponent("receipt.json")
+            guard let data = try? Data(contentsOf: receiptURL),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let app = json["app"] as? [String: Any],
+                  app["engine_id"] as? String == "arkit_reference",
+                  let metrics = json["metrics"] as? [String: Any],
+                  let value = metrics["first_usable_pose_latency_ms"] as? Double,
+                  value > 0 else { continue }
+            let date = (try? run.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            if best == nil || date > best!.date { best = (date, value) }
+        }
+        return best?.value
+    }
+
     private func liveMetrics(
         firstUsablePoseLatencyMilliseconds: Double,
         nativeBaseline: VIOEngineSnapshot,
@@ -1321,6 +1399,7 @@ final class BenchmarkCoordinator {
             "processed_fps": Double(measurementPoseCount) / measurementDurationSeconds,
             "p95_pipeline_latency_ms": Statistics.nearestRankPercentile(latenciesMS, percentile: 0.95) ?? 0,
             "app_drop_rate": Double(nativeDrops + handoffDrops + platformDrops) / Double(denominator),
+            "stale_camera_dropped": Double(xrslamStaleCameraDrops),
             "thermal_critical_seconds": thermalCriticalObserved
                 ? max(0.001, thermalDwell["critical", default: 0])
                 : thermalDwell["critical", default: 0],
@@ -1430,6 +1509,7 @@ final class BenchmarkCoordinator {
             "diagnostic_elapsed_seconds": elapsedSeconds,
             "diagnostic_pose_count": Double(poseCount),
             "diagnostic_processed_fps": Double(poseCount) / elapsedSeconds,
+            "diagnostic_stale_camera_dropped": Double(xrslamStaleCameraDrops),
         ]
         if let firstPoseLatencyMS, firstPoseLatencyMS.isFinite {
             metrics["diagnostic_first_usable_pose_latency_ms"] = firstPoseLatencyMS

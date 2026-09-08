@@ -109,6 +109,30 @@ enum BenchmarkRunPreparation {
         // the purge leaves the directory alone, which is what protects a capture
         // the operator shot by hand.
         BenchSelfTest.markSelfTestRunIfNeeded(directoryURL: directory)
+        // [2026-09-03] A throw anywhere in the rest of preparation used to leave a
+        // run directory holding only the self-test marker and no statement of what
+        // failed (the ARKit live-soak arm did exactly that, and the catch in the
+        // coordinator only writes a terminal receipt once preparation has
+        // succeeded). Keep the failure with the directory.
+        do {
+            return try prepareInDirectory(
+                directory: directory, runID: runID, backend: backend, mode: mode, datasetURL: datasetURL
+            )
+        } catch {
+            let note: [String: String] = [
+                "error": String(describing: error), "backend": backend.id, "mode": mode.rawValue,
+            ]
+            if let data = try? JSONSerialization.data(withJSONObject: note, options: [.prettyPrinted]) {
+                try? data.write(to: directory.appendingPathComponent("failure.json"))
+            }
+            throw error
+        }
+    }
+
+    private static func prepareInDirectory(
+        directory: URL, runID: String, backend: BenchBackend, mode: BenchMode, datasetURL: URL?
+    ) throws -> PreparedBenchmarkRun {
+        let fileManager = FileManager.default
 
         let resourcePlan = EngineResourcePlan.forRun(
             backend: backend,
@@ -126,6 +150,42 @@ enum BenchmarkRunPreparation {
         // `-PWTrackerFrequent N` sweeps it. The receipt hashes the config that
         // actually ran, so each point on the curve names its own setting.
         var configData = try Data(contentsOf: configSource)
+        // [2026-09-03] `-PWYamlOverride <section>.<key>=<value>` (repeatable) rewrites one
+        // existing scalar key of the frozen xrslam YAML, restricted to the
+        // `feature_tracker` and `sliding_window` sections. Upstream's own keys only;
+        // the receipt's config_sha256 changes with it, so every run declares what it ran.
+        if configSource.pathExtension == "yaml",
+           var text = String(data: configData, encoding: .utf8) {
+            let args = ProcessInfo.processInfo.arguments
+            var i = 0
+            while i < args.count {
+                if args[i] == "-PWYamlOverride", i + 1 < args.count,
+                   let eq = args[i + 1].firstIndex(of: "="),
+                   let dot = args[i + 1].firstIndex(of: ".") , dot < eq {
+                    let section = String(args[i + 1][..<dot])
+                    let key = String(args[i + 1][args[i + 1].index(after: dot)..<eq])
+                    let value = String(args[i + 1][args[i + 1].index(after: eq)...])
+                    if ["feature_tracker", "sliding_window"].contains(section) {
+                        var lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
+                        var inSection = false; var replaced = false
+                        for (n, line) in lines.enumerated() {
+                            let trimmed = line.trimmingCharacters(in: .whitespaces)
+                            if !line.hasPrefix(" ") && trimmed.hasSuffix(":") { inSection = (trimmed == section + ":") ; continue }
+                            if inSection, trimmed.hasPrefix(key + ":") {
+                                let indent = String(line.prefix(line.count - line.drop(while: { $0 == " " }).count))
+                                lines[n] = "\(indent)\(key): \(value)"; replaced = true; break
+                            }
+                        }
+                        precondition(replaced, "-PWYamlOverride: \(section).\(key) not found in frozen YAML")
+                        text = lines.joined(separator: "\n")
+                    } else {
+                        preconditionFailure("-PWYamlOverride: section \(section) not allowed")
+                    }
+                    i += 2
+                } else { i += 1 }
+            }
+            configData = Data(text.utf8)
+        }
         if configSource.pathExtension == "yaml",
            let index = ProcessInfo.processInfo.arguments
                .firstIndex(of: "-PWTrackerFrequent"),
@@ -244,7 +304,11 @@ enum BenchmarkRunPreparation {
             // receipt, because it is the artifact every later verdict cites.
             let configured = SensorTransportConfiguration.live
             let frozenLiveCalibration = try Data(contentsOf: calibrationSource)
-            if BenchResolution.liveFullResolutionRequested {
+            // [2026-09-03] ARKit owns its calibration; arkit_runtime_calibration.json is a
+            // descriptor (calibration_owner / intrinsics_source / pose_frame / status), not
+            // a Basalt-layout file. Rewriting it here threw invalidRoot before the started
+            // receipt, which is why the ARKit live-soak arm never ran.
+            if BenchResolution.liveFullResolutionRequested, backend != .arkit {
                 // The frozen calibration describes 640x480. Both arms need one
                 // that describes the frames they will actually receive, and the
                 // two formats were shown to share a field of view (see
@@ -387,7 +451,8 @@ enum BenchmarkRunPreparation {
             app: RunAppIdentity(
                 bundleID: Bundle.main.bundleIdentifier ?? "",
                 usesARKit: backend.usesARKit,
-                backend: backend == .arkit ? "apple_arkit" : "cpu",
+                backend: backend == .arkit ? "apple_arkit"
+                    : (ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontend") ? "gpu_frontend" : "cpu"),
                 algorithmMode: backend.algorithmMode,
                 engineID: backend.id,
                 upstreamRevision: backend.upstreamRevision,

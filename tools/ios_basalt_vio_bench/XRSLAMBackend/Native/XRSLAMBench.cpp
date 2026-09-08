@@ -217,6 +217,7 @@ struct xrslam_bench {
   size_t result_head = 0;
   size_t result_count = 0;
   uint64_t result_queue_peak = 0;
+  uint64_t engine_backlog_peak = 0;
   xrslam_bench_counters_t counters{};
 };
 
@@ -852,9 +853,13 @@ xrslam_bench_get_snapshot(xrslam_bench_t *bench,
   // The queue the feeder must respect is the engine's own backlog, not the
   // single handoff slot: with threading the slot empties immediately and the
   // frames accumulate inside upstream's workers.
+  const uint64_t engine_backlog =
+      static_cast<uint64_t>(XRSLAMGetPendingWorkerFrames());
+  bench->engine_backlog_peak =
+      std::max<uint64_t>(bench->engine_backlog_peak, engine_backlog);
+  out_snapshot->engine_backlog_peak = bench->engine_backlog_peak;
   out_snapshot->pending_event_count =
-      static_cast<uint64_t>(XRSLAMGetPendingWorkerFrames()) +
-      (bench->has_pending_image ? 1 : 0);
+      engine_backlog + (bench->has_pending_image ? 1 : 0);
   out_snapshot->pending_result_count = bench->result_count;
   out_snapshot->event_queue_capacity = kInFlightFrameCapacity;
   XRSLAMGetIngestCounts(&out_snapshot->estimator_imu_ingested,

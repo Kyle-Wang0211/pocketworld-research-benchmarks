@@ -308,7 +308,11 @@ struct RunReceipt: Codable, Equatable {
         guard expectedBackend != .arkit || !channel.isReplay else {
             throw RunReceiptValidationError.invalid("ARKit reference cannot use replay channels")
         }
-        let expectedComputeBackend = expectedBackend == .arkit ? "apple_arkit" : "cpu"
+        // [bench 2026-09-04] gpufe arm: `-PWXrslamGpuFrontend` declares app.backend = "gpu_frontend"
+        // (xrslam only). Any other combination is still rejected here.
+        let gpuFrontEnd = expectedBackend == .xrslam
+            && ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontend")
+        let expectedComputeBackend = expectedBackend == .arkit ? "apple_arkit" : (gpuFrontEnd ? "gpu_frontend" : "cpu")
         guard app.backend == expectedComputeBackend,
               app.algorithmMode == expectedBackend.algorithmMode,
               app.upstreamRevision == expectedBackend.upstreamRevision,

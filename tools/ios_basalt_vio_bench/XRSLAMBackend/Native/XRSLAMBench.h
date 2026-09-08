@@ -130,6 +130,11 @@ typedef struct xrslam_bench_snapshot {
   uint64_t pending_result_count;
   uint64_t event_queue_capacity;
   uint64_t event_queue_peak;
+  /// [bench 2026-09-02] Peak of XRSLAMGetPendingWorkerFrames() observed at any
+  /// snapshot. event_queue_peak is the single handoff slot, which saturates at 1
+  /// and says nothing about the engine's own deque; this is what "the queue is
+  /// bounded" has to be read from. 0 when the accessor is the weak fallback.
+  uint64_t engine_backlog_peak;
   /// What actually reached the estimator, as opposed to what the bridge
   /// accepted. Upstream pairs the accelerometer and gyroscope streams against
   /// each other and drops unpaired samples without a trace.

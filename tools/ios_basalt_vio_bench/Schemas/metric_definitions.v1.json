@@ -5,7 +5,7 @@
     "first_usable_pose_latency_ms": {
       "unit": "milliseconds",
       "aggregation": "first_usable_pose_delivery_minus_live_run_start",
-      "definition": "Cold-start latency from the live run request, before selected estimator/session initialization, until the first usable pose is delivered to the app. ARKit uses callback delivery of its first normal-tracking pose; Basalt/XRSLAM use publication of the first finite pose emitted after estimator initialization. The production AR page opens by normal tracking, six pose events, or a 1800 ms fallback, so a value above 1800 ms fails the replacement gate.",
+      "definition": "Cold-start latency from the live run request, before selected estimator/session initialization, until the first usable pose is delivered to the app. ARKit uses callback delivery of its first normal-tracking pose; Basalt/XRSLAM use publication of the first finite pose emitted after estimator initialization. Gated relative to the ARKit reference measured on the same device and recording: a candidate fails only if its latency exceeds the reference's. Production's 1800 ms (ar_capture_page.dart _warmupFallbackDuration) is a UI warm-up fallback that opens the page regardless of tracking state, not a tracking requirement, and ARKit itself measures about 2.9 s to normal tracking here; an absolute 1800 ms gate therefore failed the reference it was meant to compare against and was removed on 2026-09-03.",
       "applicable_channels": ["live_soak"]
     },
     "measurement_duration_seconds": {

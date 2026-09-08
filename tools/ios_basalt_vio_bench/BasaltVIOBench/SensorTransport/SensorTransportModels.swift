@@ -71,7 +71,15 @@ public struct SensorTransportConfiguration: Equatable, Sendable {
     )
 
     public static var live: SensorTransportConfiguration {
-        BenchResolution.liveFullResolutionRequested ? .productionResolution : .benchmark
+        let base: SensorTransportConfiguration = BenchResolution.liveFullResolutionRequested ? .productionResolution : .benchmark
+        // [bench 2026-09-04] `-PWLiveCameraRate N` overrides the live camera rate (60 = production's nominal rate; the
+        // receipt's active-format fields record what actually ran). Without the flag: byte-equivalent to before.
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-PWLiveCameraRate"), i + 1 < args.count, let hz = Int32(args[i + 1]), hz > 0, hz <= 240 {
+            return SensorTransportConfiguration(cameraWidth: base.cameraWidth, cameraHeight: base.cameraHeight, cameraRateHz: hz, motionRateHz: base.motionRateHz,
+                                                cameraQueueCapacity: base.cameraQueueCapacity, imuQueueCapacity: base.imuQueueCapacity, pendingGyroscopeCapacity: base.pendingGyroscopeCapacity)
+        }
+        return base
     }
 }
 
