@@ -85,6 +85,8 @@ final class XRSLAMNativeSession {
                     if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendSplit") { setenv("PW_GPUFE_SPLIT", "1", 1) }
                     // `-PWInitFastReject`: skip the mirror build when the shared-track test would fail anyway
                     if ProcessInfo.processInfo.arguments.contains("-PWInitFastReject") { setenv("PW_INIT_FAST_REJECT", "1", 1) }
+                    // `-PWXrslamGpuLK`: optical flow on the GPU too — the pre-hybrid path, audited bit-exact
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuLK") { setenv("PW_XRSLAM_GPUFE_LK", "1", 1) }
                 }
                 var options = xrslam_bench_create_options_t()
                 options.struct_size = MemoryLayout<xrslam_bench_create_options_t>.size

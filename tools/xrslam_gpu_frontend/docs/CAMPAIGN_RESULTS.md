@@ -311,3 +311,32 @@ Where the intake shortfall really is: during initialisation the engine consumed 
 initializer. Making initialisation converge sooner without changing which observations it uses therefore
 reduces to making the front end faster, which is the work already done and now bounded by the throttled
 GPU.
+
+### 09-09 GPU optical flow is bit-exact on device (run-5379600c, engine 5f40e652)
+The pre-hybrid all-GPU path was re-enabled behind `-PWXrslamGpuLK` and re-audited on the phone:
+CLAHE 33/0, detection 33/0, **optical flow 32/0 mismatching frames**, 0 fallbacks, n_track 1649 with
+CPU LK at 0.0 ms, replay ATE 2.46 cm (in band). So the hybrid split and the all-GPU path are two
+implementations with identical output, and choosing between them on thermals costs no accuracy — the
+only kind of lever left under a lossless constraint.
+Cost side: GPU LK is **20.3 ms/frame** against the CPU's 2.2 ms, which is why the hybrid was chosen on
+wall clock. The owner's objective is now heat only ("费电无所谓"), so wall clock does not disqualify it;
+whether it is cooler is unmeasured.
+
+Two flag bugs found and fixed on the way, both of the same family as the 09-09 zsh one: an engine-side
+`const bool` initialised at namespace scope reads its env var when the library loads, which is BEFORE
+the app's setenv, so `PW_XRSLAM_GPUFE_LK` and `PW_XRSLAM_GPUFE_PYR` silently stayed false and the first
+GPU-LK run measured the default path (`n_track 0`, `cpu_lk_ms 2.18` gave it away). Both are lazy now,
+and `xrslam_gpufe_stats.json` reports `gpu_lk` / `gpu_pyr` as parsed so this cannot hide again.
+
+### 09-09 device blocked the thermal A/B twice
+Two live launches (14:48, 16:26) were refused by pw_run_arm.sh's `进程列表异常` guard: the debug channel
+drops after the EuRoC run was killed, `devicectl device info processes` returns 0 lines, and the camera
+never opens (the operator sees a black screen). A pre-check moments earlier returned 377 lines, so the
+channel is flapping rather than simply down. Phone reboot requested; the A/B is unrun.
+
+### 09-09 EuRoC ground truth: staged, run killed
+V1_01_easy (2912 frames, 1.06 GB, with `state_groundtruth_estimate0`) was staged to the device as
+`Documents/euroc_v101`; `prepare_euroc_mh01_mono.py` now takes `--dataset-name` because the name is
+hashed into the manifest. The 300-frame probe already on the device is unusable — the bench rejects it
+with `ground truth does not cover the full stereo replay span`. The full-sequence run
+(run-c78cab8e) died at +1058 s with no artifacts on device, i.e. the app was killed. Uninvestigated.

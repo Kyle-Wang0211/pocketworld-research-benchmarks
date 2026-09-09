@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create the strict cam0-only EuRoC MH_01_easy replay manifest."""
+"""Create a strict cam0-only EuRoC replay manifest (MH_01_easy by default).
+
+[2026-09-09] --dataset-name lets the same recipe stage the V1_* sequences. The name is part of the
+manifest digest, so it has to be chosen before hashing, not patched afterwards.
+"""
 
 from __future__ import annotations
 
@@ -158,10 +162,13 @@ def write_manifest(root: Path, destination: Path) -> None:
 
 
 def main() -> int:
+    global DATASET_NAME   # the name is hashed into the manifest, so it must be set before write_manifest
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("dataset_root", type=Path, help="extracted MH_01_easy directory containing mav0/")
     parser.add_argument("--output", type=Path, help="default: DATASET_ROOT/input_manifest.json")
+    parser.add_argument("--dataset-name", default=DATASET_NAME, help="name recorded in and hashed into the manifest")
     args = parser.parse_args()
+    DATASET_NAME = args.dataset_name
     destination = args.output or args.dataset_root / "input_manifest.json"
     write_manifest(args.dataset_root, destination)
     print(destination)
