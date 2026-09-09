@@ -283,3 +283,31 @@ Also fixed: `-PWHalfFrameRate` was never scoreable. The replay guard compared `c
 every camera event in the recording, so deliberately feeding half of them was reported as
 `replay_input_count_mismatch` — a harness invariant, not the engine crash it looked like. The guard now
 halves its expectation when the flag is on.
+
+### 09-09 time-to-first-pose, attributed and closed
+Instrumented the initializer's four exits (two were silent) plus the frame-count floor, and split the
+wall clock. Live, engine cd5948cf:
+| | run-acec8e26 | run-29d3398b |
+|---|---|---|
+| first pose | 3555 ms | 5221 ms |
+| capture warm-up (start → first frame in engine) | — | **317 ms** |
+| frame-count floor (`gap*(num-1)`) | 35 | 35 |
+| attempts | 3 | 54 |
+| failed on shared tracks < 50 | 2 | **53** |
+| failed on parallax / rotation / triangulation | 0 | 0 |
+So ~70 % of the wait is the geometric condition "the first and last sampled keyframes share 50 tracked
+features" not yet holding, and the spread between runs is entirely that. Capture warm-up is 6 %.
+
+**Lossless optimisation attempted and measured worthless.** `mirror_keyframe_map` clones eight frames,
+rebuilds their tracks and concatenates 35 frames of IMU on *every* attempt, before init_sfm() applies
+the shared-track test that rejects nearly all of them; `PW_INIT_FAST_REJECT=1` applies that same test on
+the source map first. Replay off/on: every counter identical (35 / 15 / 13 / 1 / 1), so the decision is
+provably unchanged — but the whole mirror cost is **14.4 ms across 15 attempts**, about 1 ms each. The
+hypothesis that failed attempts were starving frame intake is refuted by its own measurement. Flag kept,
+default off.
+Where the intake shortfall really is: during initialisation the engine consumed 91 frames in 4.9 s
+(18.5 fps) while the camera delivered ~29 fps. The limit is the per-frame front end — tracker waits
+14.5 ms for the GPU (21.3 ms of GPU work), plus 2.2 ms CPU pyramid and 2.2 ms CPU LK — not the
+initializer. Making initialisation converge sooner without changing which observations it uses therefore
+reduces to making the front end faster, which is the work already done and now bounded by the throttled
+GPU.

@@ -83,6 +83,8 @@ final class XRSLAMNativeSession {
                     if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendGpuPyr") { setenv("PW_XRSLAM_GPUFE_PYR", "1", 1) }
                     if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendFusedHarris") { setenv("PW_GPUFE_FUSED_HARRIS", "1", 1) }
                     if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuFrontendSplit") { setenv("PW_GPUFE_SPLIT", "1", 1) }
+                    // `-PWInitFastReject`: skip the mirror build when the shared-track test would fail anyway
+                    if ProcessInfo.processInfo.arguments.contains("-PWInitFastReject") { setenv("PW_INIT_FAST_REJECT", "1", 1) }
                 }
                 var options = xrslam_bench_create_options_t()
                 options.struct_size = MemoryLayout<xrslam_bench_create_options_t>.size
@@ -421,6 +423,19 @@ final class XRSLAMNativeSession {
             "xrslam_divergence_longest_ms": native.divergence_longest_ms,
             "xrslam_divergence_sustained_frames": native.divergence_sustained_frames,
             "xrslam_divergence_flags_seen": native.divergence_flags_seen,
+            // [2026-09-09] Why initialisation has not finished. Two of the engine's four SfM exits
+            // are silent, so before these a run could not separate "the user has not moved enough"
+            // from "the geometry is degenerate" -- which is the whole question behind our 3.5 s
+            // time-to-first-pose against ARKit's 1.5 s.
+            "xrslam_init_too_few_frames": native.init_too_few_frames,
+            "xrslam_init_attempts": native.init_attempts,
+            "xrslam_init_fail_matches": native.init_fail_matches,
+            "xrslam_init_fail_parallax": native.init_fail_parallax,
+            "xrslam_init_fail_rotation": native.init_fail_rotation,
+            "xrslam_init_fail_triangulation": native.init_fail_triangulation,
+            "xrslam_init_fail_imu": native.init_fail_imu,
+            "xrslam_init_success": native.init_success,
+            "xrslam_init_mirror_us": native.init_mirror_us,
             "xrslam_estimator_imu_ingested": native.estimator_imu_ingested,
             "xrslam_estimator_camera_ingested": native.estimator_camera_ingested,
             "xrslam_live_separate_events_submitted": liveSeparateEventsSubmitted,

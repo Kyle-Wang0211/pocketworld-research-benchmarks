@@ -87,6 +87,8 @@ extern "C" int XRSLAMGetPendingWorkerFrames(void);
 /// discarded that value, so XRSLAM_RESULT_BODY_POSE could only advance once per image. Declared here
 /// for the same reason as the accessors above: the frozen XRSLAM.h stays byte-identical to upstream.
 extern "C" void XRSLAMGetPropagatedPose(XRSLAMPose *pose);
+/// [2026-09-09] Initialisation exit counts, read-only. See xrslam_bench_counters_t.
+extern "C" void XRSLAMGetInitCounters(unsigned long long *out, int count);
 /// VINS-Mono's Estimator::failureDetection criteria, ported verbatim into the
 /// vendored XRSLAM and exposed read-only. Upstream XRSLAM reports no health at
 /// all -- SYS_CRASH is never assigned -- so a consumer had no way to tell a
@@ -906,6 +908,27 @@ xrslam_bench_get_snapshot(xrslam_bench_t *bench,
   bench->engine_backlog_peak =
       std::max<uint64_t>(bench->engine_backlog_peak, engine_backlog);
   out_snapshot->engine_backlog_peak = bench->engine_backlog_peak;
+  {
+    unsigned long long ic[9] = {};
+    XRSLAMGetInitCounters(ic, 9);
+    bench->counters.init_too_few_frames = ic[0];
+    bench->counters.init_attempts = ic[1];
+    bench->counters.init_fail_matches = ic[2];
+    bench->counters.init_fail_parallax = ic[3];
+    bench->counters.init_fail_rotation = ic[4];
+    bench->counters.init_fail_triangulation = ic[5];
+    bench->counters.init_fail_imu = ic[6];
+    bench->counters.init_success = ic[7];
+    out_snapshot->init_too_few_frames = ic[0];
+    out_snapshot->init_attempts = ic[1];
+    out_snapshot->init_fail_matches = ic[2];
+    out_snapshot->init_fail_parallax = ic[3];
+    out_snapshot->init_fail_rotation = ic[4];
+    out_snapshot->init_fail_triangulation = ic[5];
+    out_snapshot->init_fail_imu = ic[6];
+    out_snapshot->init_success = ic[7];
+    out_snapshot->init_mirror_us = ic[8];
+  }
   out_snapshot->pending_event_count =
       engine_backlog + (bench->has_pending_image ? 1 : 0);
   out_snapshot->pending_result_count = bench->result_count;

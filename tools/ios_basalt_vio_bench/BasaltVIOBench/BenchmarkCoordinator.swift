@@ -14,6 +14,76 @@ private final class SystemSampleStore: @unchecked Sendable {
     }
 }
 
+
+/// Polls the engine's IMU-propagated pose on its own thread, on an absolute time grid.
+///
+/// [2026-09-09] Polling from inside the live drain loop capped delivery at 52.3 poses/s for a 60 Hz
+/// request: that loop takes one pose per iteration and an iteration sometimes runs past 16.7 ms, so
+/// the measurement was reporting the harness, not the engine. A consumer of a tracker does not poll
+/// inside its own sensor loop -- ARKit hands poses to a display-rate callback -- so this thread is
+/// what makes the pose rate an engine measurement.
+///
+/// Serialisation is the bridge's: xrslam_bench_query_pose takes the same mutex as the submit path.
+final class PosePoller {
+    private let session: ActiveVIOEngineSession
+    private let periodNanoseconds: UInt64
+    private let lock = NSLock()
+    private var collected: [NativePoseSample] = []
+    private var stopping = false
+    private var thread: Thread?
+    private(set) var queryFailures = 0
+
+    init(session: ActiveVIOEngineSession, hz: Int) {
+        self.session = session
+        self.periodNanoseconds = UInt64(1_000_000_000 / max(1, hz))
+    }
+
+    func start() {
+        let t = Thread { [weak self] in self?.run() }
+        t.qualityOfService = .userInteractive
+        t.name = "pose-poller"
+        thread = t
+        t.start()
+    }
+
+    private func run() {
+        var deadline = DispatchTime.now().uptimeNanoseconds
+        while true {
+            lock.lock(); let done = stopping; lock.unlock()
+            if done { return }
+            deadline &+= periodNanoseconds
+            let now = DispatchTime.now().uptimeNanoseconds
+            if deadline > now {
+                // Absolute grid: never "sleep one period from now", which folds each iteration's
+                // overshoot into the next interval.
+                Thread.sleep(forTimeInterval: Double(deadline &- now) / 1_000_000_000)
+            } else if now &- deadline > periodNanoseconds {
+                deadline = now   // fell far behind (a stall); resynchronise rather than burst
+            }
+            do {
+                if let sample = try session.queryPose() {
+                    lock.lock(); collected.append(sample); lock.unlock()
+                }
+            } catch {
+                lock.lock(); queryFailures += 1; lock.unlock()
+            }
+        }
+    }
+
+    func drain() -> [NativePoseSample] {
+        lock.lock(); defer { lock.unlock() }
+        let out = collected
+        collected.removeAll(keepingCapacity: true)
+        return out
+    }
+
+    func stop() {
+        lock.lock(); stopping = true; lock.unlock()
+        while let t = thread, !t.isFinished { Thread.sleep(forTimeInterval: 0.001) }
+        thread = nil
+    }
+}
+
 final class BenchmarkCoordinator {
     // [bench 2026-09-05] `-PWXrslamDropStaleCamera`: graceful degradation under overload. When the engine's producer-side
     // gate (xrslam await_capacity) stalls the feeder, sensor events pile up in the serial handoff (peak 155 of 264 seen live,
@@ -35,6 +105,11 @@ final class BenchmarkCoordinator {
     }()
     private var lastPosePollNS: UInt64 = 0
     private var lastPollSensorNS: Int64 = 0
+    // [2026-09-09] Time-to-first-pose splits into three parts and only the middle one is the engine's:
+    // the capture session warming up, the engine consuming ~40 frames to initialise, and the first
+    // pose reaching us. Counting only the total made a 2.1 s gap invisible.
+    private var firstCameraSubmittedNS: UInt64 = 0
+    private var firstEngineResultNS: UInt64 = 0
     private var polledPoseCount: UInt64 = 0
     private var xrslamStaleCameraDrops: UInt64 = 0
     enum CoordinatorError: LocalizedError {
@@ -733,6 +808,10 @@ final class BenchmarkCoordinator {
         var invalidReason: String?
         var safetyStopReason: String?
 
+        let posePoller: PosePoller? = Self.posePollHz > 0
+            ? PosePoller(session: session, hz: Self.posePollHz) : nil
+        posePoller?.start()
+        defer { posePoller?.stop() }
         do {
             onPhase(.measuring)
             try transport.start()
@@ -747,22 +826,17 @@ final class BenchmarkCoordinator {
 
                 try drainLiveTransport(transport, into: session)
                 var livePoses = try drainPoses(session)
-                if Self.posePollHz > 0 {
-                    // The propagated pose replaces the per-frame ones rather than adding to them, so
-                    // a pose is never counted twice.
+                if let poller = posePoller {
+                    // The propagated track replaces the per-frame one rather than adding to it, so a
+                    // pose is never counted twice. The engine calls happen on the poller's thread;
+                    // this loop only moves what it has already collected.
                     livePoses.removeAll()
-                    let period = UInt64(1_000_000_000 / Self.posePollHz)
-                    if now &- lastPosePollNS >= period {
-                        // Advance the deadline by whole periods rather than resetting it to now:
-                        // resetting folds each iteration's overshoot into the next interval, which on
-                        // 09-09 turned a 60 Hz request into a measured 47.9 Hz (60 x 16.7/20.9).
-                        let missed = (now &- lastPosePollNS) / period
-                        lastPosePollNS &+= period &* max(1, missed)
-                        if let polled = try session.queryPose() {
-                            polledPoseCount += 1
-                            livePoses.append(polled)
-                        }
-                    }
+                    let polled = poller.drain()
+                    polledPoseCount &+= UInt64(polled.count)
+                    livePoses.append(contentsOf: polled)
+                }
+                if firstEngineResultNS == 0 && !livePoses.isEmpty {
+                    firstEngineResultNS = DispatchTime.now().uptimeNanoseconds
                 }
                 for pose in livePoses {
                     poses.append(pose)
@@ -1280,6 +1354,7 @@ final class BenchmarkCoordinator {
                     switch event {
                     case .camera(let frame):
                         if let last = lastCameraIndex, index != last { xrslamStaleCameraDrops += 1; continue }
+                        if firstCameraSubmittedNS == 0 { firstCameraSubmittedNS = DispatchTime.now().uptimeNanoseconds }
                         try session.submitCamera(
                             frame,
                             acceptedNanoseconds: frame.timestampNanoseconds
@@ -1571,6 +1646,10 @@ final class BenchmarkCoordinator {
             "diagnostic_pose_count": Double(poseCount),
             "diagnostic_processed_fps": Double(poseCount) / elapsedSeconds,
             "diagnostic_stale_camera_dropped": Double(xrslamStaleCameraDrops),
+            "diagnostic_first_camera_submitted_ms": firstCameraSubmittedNS == 0 ? -1
+                : Double(firstCameraSubmittedNS &- startNS) / 1_000_000,
+            "diagnostic_first_engine_result_ms": firstEngineResultNS == 0 ? -1
+                : Double(firstEngineResultNS &- startNS) / 1_000_000,
             "diagnostic_polled_poses": Double(polledPoseCount),
             "diagnostic_half_frame_rate": ProcessInfo.processInfo.arguments.contains("-PWHalfFrameRate") ? 1 : 0,
             "diagnostic_pose_poll_hz": Double(Self.posePollHz),

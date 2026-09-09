@@ -79,6 +79,16 @@ typedef struct xrslam_bench_frame_result {
 typedef struct xrslam_bench_counters {
   /// Poses read with xrslam_bench_query_pose (IMU-propagated, no frame consumed).
   uint64_t poses_queried;
+  /// Why initialisation has not finished. Two of the engine's four SfM exits are silent, so without
+  /// these a run can only say "still initialising"; with them, time-to-first-pose is attributable.
+  uint64_t init_too_few_frames;   ///< history shorter than keyframe_gap * (keyframe_num - 1)
+  uint64_t init_attempts;
+  uint64_t init_fail_matches;     ///< common tracks < initializer.min_matches
+  uint64_t init_fail_parallax;    ///< mean parallax < initializer.min_parallax
+  uint64_t init_fail_rotation;    ///< homography says pure rotation
+  uint64_t init_fail_triangulation;
+  uint64_t init_fail_imu;
+  uint64_t init_success;
   uint64_t events_offered;
   uint64_t events_accepted;
   uint64_t events_processed;
@@ -142,6 +152,19 @@ typedef struct xrslam_bench_snapshot {
   /// each other and drops unpaired samples without a trace.
   uint64_t estimator_imu_ingested;
   uint64_t estimator_camera_ingested;
+  /// Initialisation exit counts, mirrored from the counters block: too_few_frames, attempts, the
+  /// four SfM exits, the IMU exit, success. Two of the SfM exits are silent in the engine's logging,
+  /// which is why time-to-first-pose could not be attributed before these existed.
+  uint64_t init_too_few_frames;
+  uint64_t init_attempts;
+  uint64_t init_fail_matches;
+  uint64_t init_fail_parallax;
+  uint64_t init_fail_rotation;
+  uint64_t init_fail_triangulation;
+  uint64_t init_fail_imu;
+  uint64_t init_success;
+  /// Microseconds spent cloning keyframes for initialisation attempts.
+  uint64_t init_mirror_us;
   /// Frames whose estimator met one of VINS-Mono's published divergence
   /// criteria, and the union of which criteria ever fired.
   uint64_t divergence_frames;
