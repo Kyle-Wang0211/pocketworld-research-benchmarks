@@ -1,0 +1,53 @@
+# ---------------- 写 MVSNet 格式 ----------------
+sys.path.insert(0, "/root/diffmvs")
+from datasets.data_io import save_pfm
+for i in range(NV):
+    z = Ds[i].copy()
+    z[~np.isfinite(z)] = 0.0
+    z[z > 1e4] = 0.0                       # Blender 背景是极大值
+    save_pfm(f"{OUT_ROOT}/{SCAN}/rendered_depth_maps/{i:08d}.pfm", z.astype(np.float32))
+    v = z[z > 0]
+    dmin, dmax = float(v.min()), float(v.max())
+    with open(f"{OUT_ROOT}/{SCAN}/cams/{i:08d}_cam.txt", "w") as f:
+        f.write("extrinsic\n")
+        for r in Es[i]: f.write(" ".join("%.9f" % x for x in r) + "\n")
+        f.write("\nintrinsic\n")
+        for r in Ks[i]: f.write(" ".join("%.9f" % x for x in r) + "\n")
+        f.write("\n%f %f\n" % (dmin, dmax))
+print("[WRITE] cams/depth 完成", flush=True)
+
+# ---------------- pair.txt:复用已验证的官方共视分数实现 ----------------
+import importlib.util
+spec = importlib.util.spec_from_file_location("tg", "/root/tartanground2mvsnet.py")
+tg = importlib.util.module_from_spec(spec)
+os.environ["DIFFMVS_DIR"] = "/root/diffmvs"
+import types
+_argv = sys.argv; sys.argv = ["tg"]
+try: spec.loader.exec_module(tg)
+except SystemExit: pass
+sys.argv = _argv
+print("[SCORE] 复用 tartanground2mvsnet 的官方共视分数实现:",
+      [n for n in ("calc_score_from_points", "check_geometric_consistency", "cam_center_from_E") if hasattr(tg, n)], flush=True)
+
+centers = [tg.cam_center_from_E(E) for E in Es]
+scores = np.zeros((NV, NV))
+for i in range(NV):
+    zi = Ds[i]; m = np.isfinite(zi) & (zi > 0) & (zi < 1e4)
+    ys, xs = np.nonzero(m)
+    if len(xs) < 200: continue
+    sel = np.random.default_rng(i).choice(len(xs), size=min(4000, len(xs)), replace=False)
+    xs, ys = xs[sel], ys[sel]; d = zi[ys, xs]
+    pc = np.linalg.inv(Ks[i]) @ (np.stack([xs, ys, np.ones_like(xs)]) * d)
+    pw = (np.linalg.inv(Es[i]) @ np.vstack([pc, np.ones(pc.shape[1])]))[:3].T
+    for j in range(NV):
+        if i == j: continue
+        scores[i, j] = tg.calc_score_from_points(centers[i], centers[j], pw)
+with open(f"{OUT_ROOT}/{SCAN}/cams/pair.txt", "w") as f:
+    f.write("%d\n" % NV)
+    for i in range(NV):
+        order = np.argsort(-scores[i]); order = [j for j in order if j != i][:10]
+        f.write("%d\n%d " % (i, len(order)))
+        f.write(" ".join("%d %.6f" % (j, scores[i, j]) for j in order) + "\n")
+nz = int((scores > 0).sum())
+print("[PAIR] 写出 pair.txt;共视矩阵非零 %d/%d" % (nz, NV * NV - NV), flush=True)
+print("[DONE]", SCAN, flush=True)

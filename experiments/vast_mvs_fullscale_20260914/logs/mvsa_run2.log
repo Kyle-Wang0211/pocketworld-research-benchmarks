@@ -1,0 +1,201 @@
+/root/mvsanywhere/src/mvsanywhere/run_demo.py:75: SyntaxWarning: invalid escape sequence '\ '
+  --scan_name house \ # Scan name (house or living_room)
+########################### Options ###########################
+
+     random_seed: 0
+     name: mvsanywhere
+     log_dir: /root/tmp/tensorboard
+     notes: 
+     log_interval: 100
+     val_interval: 1000
+     val_batches: 100
+     datasets: [DataOptions(dataset='colmap', dataset_path='/datasets/scannetv2', tuple_info_file_location='data_splits/ScanNetv2/standard_split/', mv_tuple_file_suffix='_eight_view_deepvmvs.txt', frame_tuple_type='dense_offline', dataset_scan_split_file='data_splits/ScanNetv2/standard_split/scannetv2_train.txt', split='test')]
+     val_datasets: None
+     num_workers: 8
+     model_num_views: 8
+     num_images_in_tuple: 8
+     image_width: 640
+     image_height: 480
+     val_image_width: 640
+     val_image_height: 480
+     shuffle_tuple: False
+     test_keyframe_buffer_size: 30
+     rotate_images: False
+     lr: 0.0001
+     lr_da_encoder: 5e-06
+     lr_da_decoder: 5e-05
+     wd: 0.0001
+     num_sanity_val_steps: 0
+     max_steps: 220000
+     batch_size: 2
+     val_batch_size: 4
+     gpus: 2
+     precision: 16
+     lr_steps: [70000, 80000]
+     resume: None
+     load_weights_from_checkpoint: weights/mvsanywhere_hero.ckpt
+     lazy_load_weights_from_checkpoint: None
+     image_encoder_name: dinov2_vitb14
+     depth_decoder_name: dpt
+     loss_type: log_l1
+     matching_encoder_type: resnet
+     matching_feature_dims: 16
+     prediction_scale: 1.0
+     prediction_num_scales: 5
+     matching_scale: 0.25
+     matching_num_depth_bins: 64
+     min_matching_depth: 0.25
+     max_matching_depth: 5.0
+     cv_encoder_type: vit_encoder
+     da_weights_path: None
+     feature_volume_type: view_agnostic_mlp_feature_volume
+     output_base_path: /root/mvsa_out2
+     run_fusion: False
+     fuse_color: False
+     fusion_max_depth: 3.0
+     fusion_resolution: 0.04
+     depth_fuser: ours
+     extended_neg_truncation: False
+     single_debug_scan_id: None
+     skip_frames: None
+     skip_to_frame: None
+     mask_pred_depth: False
+     cache_depths: True
+     fusion_use_raw_lowest_cost: False
+     high_res_validation: False
+     fast_cost_volume: True
+     shift_world_origin: False
+     save_for_regsplatfacto: False
+     standard_fps: 30
+     dump_depth_visualization: True
+     use_precomputed_partial_meshes: False
+     viz_render_width: 640
+     viz_render_height: 480
+     cam_marker_size: 0.7
+     back_face_alpha: 0.5
+     viz_fixed_min_max: False
+     scan_parent_directory: /root/mvsa_data
+     scan_name: scene0:0
+
+###############################################################
+
+
+Completed scan scene0:0, 1 of total 0. # Samples: 132 of 132 poses. Samples with repeated frames: 0.
+################################################################################
+###################### Colmap Dataset, number of scans: 1 ######################
+################################################################################
+
+################################################################################
+################################ Caching depths.################################
+###Output directory:
+/root/mvsa_out2/mvsanywhere/colmap/dense_offline/depths ###
+################################################################################
+
+################################################################################
+############################### Saving quick viz.###############################
+Output directory:
+/root/mvsa_out2/mvsanywhere/colmap/dense_offline/viz/quick_viz 
+################################################################################
+
+2026-09-08 12:11:23.857 | INFO     | mvsanywhere.utils.model_utils:load_model_inference:31 - Failed to load model normally. Using manual loading via state_dict.
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_main
+Using cache found in /root/.cache/torch/hub/facebookresearch_dinov2_main
+################################################################################
+#################### Using ViewAgnosticFeatureVolumeManager ####################
+ Using all metadata.  
+ Number of channels:          [46, 32, 32, 2]  
+################################################################################
+
+2026-09-08 12:11:26.616 | INFO     | mvsanywhere.utils.model_utils:load_model_inference:44 - WARNING: Missing keys for mv_depth_loss.backproject.pix_coords_13N
+2026-09-08 12:11:26.616 | INFO     | mvsanywhere.utils.model_utils:load_model_inference:44 - WARNING: Missing keys for compute_normals.backproject.pix_coords_13N
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/66 [00:00<?, ?it/s][A
+  2%|▏         | 1/66 [00:05<05:44,  5.30s/it][A
+  3%|▎         | 2/66 [00:06<03:23,  3.18s/it][A
+  5%|▍         | 3/66 [00:08<02:34,  2.45s/it][A
+  6%|▌         | 4/66 [00:10<02:13,  2.15s/it][A
+  8%|▊         | 5/66 [00:11<02:01,  2.00s/it][A
+  9%|▉         | 6/66 [00:13<01:52,  1.88s/it][A
+ 11%|█         | 7/66 [00:15<01:46,  1.81s/it][A
+ 12%|█▏        | 8/66 [00:16<01:42,  1.76s/it][A
+ 14%|█▎        | 9/66 [00:18<01:38,  1.73s/it][A
+ 15%|█▌        | 10/66 [00:20<01:35,  1.70s/it][A
+ 17%|█▋        | 11/66 [00:21<01:32,  1.67s/it][A
+ 18%|█▊        | 12/66 [00:23<01:29,  1.66s/it][A
+ 20%|█▉        | 13/66 [00:25<01:26,  1.64s/it][A
+ 21%|██        | 14/66 [00:26<01:25,  1.65s/it][A
+ 23%|██▎       | 15/66 [00:28<01:25,  1.67s/it][A
+ 24%|██▍       | 16/66 [00:30<01:23,  1.68s/it][A
+ 26%|██▌       | 17/66 [00:31<01:22,  1.69s/it][A
+ 27%|██▋       | 18/66 [00:33<01:20,  1.68s/it][A
+ 29%|██▉       | 19/66 [00:35<01:19,  1.69s/it][A
+ 30%|███       | 20/66 [00:36<01:15,  1.65s/it][A
+ 32%|███▏      | 21/66 [00:38<01:14,  1.65s/it][A
+ 33%|███▎      | 22/66 [00:40<01:12,  1.65s/it][A
+ 35%|███▍      | 23/66 [00:41<01:11,  1.67s/it][A
+ 36%|███▋      | 24/66 [00:43<01:09,  1.66s/it][A
+ 38%|███▊      | 25/66 [00:45<01:08,  1.66s/it][A
+ 39%|███▉      | 26/66 [00:46<01:05,  1.65s/it][A
+ 41%|████      | 27/66 [00:48<01:04,  1.66s/it][A
+ 42%|████▏     | 28/66 [00:50<01:03,  1.67s/it][A
+ 44%|████▍     | 29/66 [00:51<01:02,  1.68s/it][A
+ 45%|████▌     | 30/66 [00:53<01:00,  1.67s/it][A
+ 47%|████▋     | 31/66 [00:55<00:58,  1.67s/it][A
+ 48%|████▊     | 32/66 [00:56<00:56,  1.67s/it][A
+ 50%|█████     | 33/66 [00:58<00:55,  1.69s/it][A
+ 52%|█████▏    | 34/66 [01:00<00:53,  1.68s/it][A
+ 53%|█████▎    | 35/66 [01:01<00:51,  1.67s/it][A
+ 55%|█████▍    | 36/66 [01:03<00:49,  1.66s/it][A
+ 56%|█████▌    | 37/66 [01:05<00:47,  1.65s/it][A
+ 58%|█████▊    | 38/66 [01:06<00:46,  1.65s/it][A
+ 59%|█████▉    | 39/66 [01:08<00:44,  1.66s/it][A
+ 61%|██████    | 40/66 [01:10<00:42,  1.64s/it][A
+ 62%|██████▏   | 41/66 [01:11<00:41,  1.65s/it][A
+ 64%|██████▎   | 42/66 [01:13<00:39,  1.66s/it][A
+ 65%|██████▌   | 43/66 [01:15<00:38,  1.66s/it][A
+ 67%|██████▋   | 44/66 [01:16<00:36,  1.66s/it][A
+ 68%|██████▊   | 45/66 [01:18<00:34,  1.65s/it][A
+ 70%|██████▉   | 46/66 [01:20<00:33,  1.67s/it][A
+ 71%|███████   | 47/66 [01:21<00:31,  1.64s/it][A
+ 73%|███████▎  | 48/66 [01:23<00:29,  1.63s/it][A
+ 74%|███████▍  | 49/66 [01:24<00:27,  1.64s/it][A
+ 76%|███████▌  | 50/66 [01:26<00:26,  1.64s/it][A
+ 77%|███████▋  | 51/66 [01:28<00:24,  1.62s/it][A
+ 79%|███████▉  | 52/66 [01:29<00:23,  1.64s/it][A
+ 80%|████████  | 53/66 [01:31<00:21,  1.62s/it][A
+ 82%|████████▏ | 54/66 [01:32<00:19,  1.61s/it][A
+ 83%|████████▎ | 55/66 [01:34<00:17,  1.60s/it][A
+ 85%|████████▍ | 56/66 [01:36<00:15,  1.58s/it][A
+ 86%|████████▋ | 57/66 [01:37<00:14,  1.59s/it][A
+ 88%|████████▊ | 58/66 [01:39<00:12,  1.58s/it][A
+ 89%|████████▉ | 59/66 [01:40<00:10,  1.57s/it][A
+ 91%|█████████ | 60/66 [01:42<00:09,  1.57s/it][A
+ 92%|█████████▏| 61/66 [01:43<00:07,  1.50s/it][A
+ 94%|█████████▍| 62/66 [01:45<00:06,  1.53s/it][A
+ 95%|█████████▌| 63/66 [01:46<00:04,  1.52s/it][A
+ 97%|█████████▋| 64/66 [01:48<00:02,  1.44s/it][A
+ 98%|█████████▊| 65/66 [01:49<00:01,  1.50s/it][A
+100%|██████████| 66/66 [01:51<00:00,  1.54s/it][A100%|██████████| 66/66 [01:51<00:00,  1.69s/it]
+WARNING: no valid entry to average!
+
+Scene metrics:
+mvsanywhere, scene scene0:0 metrics
+WARNING: No valid metrics to print.
+WARNING: No valid metrics will be output.
+
+Running frame metrics:
+mvsanywhere, frame metrics
+WARNING: No valid metrics to print.
+100%|██████████| 1/1 [01:51<00:00, 111.57s/it]100%|██████████| 1/1 [01:51<00:00, 111.57s/it]
+
+Final metrics:
+mvsanywhere, scene metrics
+mvsanywhere, scene metrics
+
+
+
+WARNING: no valid entry to average!
+WARNING: No valid metrics to print.
+mvsanywhere, frame metrics
+WARNING: No valid metrics to print.
+WARNING: No valid metrics will be output.

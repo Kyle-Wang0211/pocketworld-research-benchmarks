@@ -1,0 +1,382 @@
+[arm] VAR_GATE=0 TEX_GATE=0 (0=官方原逻辑)
+[arm] ckpt=/root/diffmvs/checkpoints/casdiff_AB/model_000015.ckpt  md5=fcaab387123a14  out=/root/arm_ab_ep15
+argv: ['--dataset=general', '--batch_size=1', '--num_view=10', '--method=casdiffmvs', '--save_depth', '--testpath=/root/mvs_P16k', '--testlist=/root/sp_testlist.txt', '--numdepth_initial=48', '--numdepth=384', '--max_h=576', '--max_w=768', '--loadckpt=/root/diffmvs/checkpoints/casdiff_AB/model_000015.ckpt', '--outdir=/root/arm_ab_ep15', '--scale', '0.0', '0.125', '0.025', '--sampling_timesteps', '0', '1', '1', '--ddim_eta', '0', '1', '1', '--stage_iters', '1', '3', '3', '--cost_dim_stage', '4', '4', '4', '--CostNum', '0', '4', '4', '--hidden_dim', '0', '32', '20', '--context_dim', '32', '32', '16', '--unet_dim', '0', '16', '8', '--min_radius', '0.125', '--max_radius', '8', '--photo_thres', '0.3', '0.5', '0.5', '--geo_mask_thres', '2', '--geo_pixel_thres', '1.0', '--geo_depth_thres', '0.01']
+################################  args  ################################
+method    	casdiffmvs                    	<class 'str'>       
+batch_size	1                             	<class 'int'>       
+loadckpt  	/root/diffmvs/checkpoints/casdiff_AB/model_000015.ckpt	<class 'str'>       
+outdir    	/root/arm_ab_ep15             	<class 'str'>       
+seed      	123                           	<class 'int'>       
+save_depth	True                          	<class 'bool'>      
+dataset   	general                       	<class 'str'>       
+testpath  	/root/mvs_P16k                	<class 'str'>       
+testlist  	/root/sp_testlist.txt         	<class 'str'>       
+num_view  	10                            	<class 'int'>       
+max_h     	576                           	<class 'int'>       
+max_w     	768                           	<class 'int'>       
+numdepth_initial	48                            	<class 'int'>       
+numdepth  	384                           	<class 'int'>       
+ddim_eta  	[0.0, 1.0, 1.0]               	<class 'list'>      
+scale     	[0.0, 0.125, 0.025]           	<class 'list'>      
+timesteps 	[1000, 1000, 1000]            	<class 'list'>      
+sampling_timesteps	[0, 1, 1]                     	<class 'list'>      
+hidden_dim	[0, 32, 20]                   	<class 'list'>      
+context_dim	[32, 32, 16]                  	<class 'list'>      
+stage_iters	[1, 3, 3]                     	<class 'list'>      
+cost_dim_stage	[4, 4, 4]                     	<class 'list'>      
+CostNum   	[0, 4, 4]                     	<class 'list'>      
+unet_dim  	[0, 16, 8]                    	<class 'list'>      
+min_radius	0.125                         	<class 'float'>     
+max_radius	8.0                           	<class 'float'>     
+geo_mask_thres	2                             	<class 'int'>       
+geo_pixel_thres	1.0                           	<class 'float'>     
+geo_depth_thres	0.01                          	<class 'float'>     
+photo_thres	[0.3, 0.5, 0.5]               	<class 'list'>      
+########################################################################
+dataset general scans ['']
+loading model /root/diffmvs/checkpoints/casdiff_AB/model_000015.ckpt
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Iter 0/132, Time:19.976203680038452 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 1/132, Time:0.05444216728210449 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 2/132, Time:0.05750560760498047 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 3/132, Time:0.057886362075805664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 4/132, Time:0.05840492248535156 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 5/132, Time:0.13244175910949707 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 6/132, Time:0.05739545822143555 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 7/132, Time:0.057060956954956055 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 8/132, Time:0.06037592887878418 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 9/132, Time:0.057520151138305664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 10/132, Time:0.05987048149108887 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 11/132, Time:0.05803632736206055 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 12/132, Time:0.05791449546813965 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 13/132, Time:0.05783367156982422 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 14/132, Time:0.05822420120239258 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 15/132, Time:0.059095144271850586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 16/132, Time:0.061154842376708984 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 17/132, Time:0.05923271179199219 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 18/132, Time:0.05985116958618164 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 19/132, Time:0.05703258514404297 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 20/132, Time:0.05824160575866699 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 21/132, Time:0.05746102333068848 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 22/132, Time:0.05698847770690918 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 23/132, Time:0.05864596366882324 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 24/132, Time:0.059159278869628906 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 25/132, Time:0.05725526809692383 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 26/132, Time:0.057569265365600586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 27/132, Time:0.05719757080078125 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 28/132, Time:0.05813193321228027 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 29/132, Time:0.057126760482788086 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 30/132, Time:0.05744743347167969 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 31/132, Time:0.057470083236694336 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 32/132, Time:0.05856728553771973 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 33/132, Time:0.05687451362609863 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 34/132, Time:0.05934405326843262 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 35/132, Time:0.059046030044555664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 36/132, Time:0.058136701583862305 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 37/132, Time:0.05689263343811035 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 38/132, Time:0.05709576606750488 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 39/132, Time:0.0617833137512207 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 40/132, Time:0.05998730659484863 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 41/132, Time:0.05882453918457031 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 42/132, Time:0.060573577880859375 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 43/132, Time:0.06005382537841797 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 44/132, Time:0.05939936637878418 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 45/132, Time:0.058325767517089844 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 46/132, Time:0.05845308303833008 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 47/132, Time:0.05803084373474121 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 48/132, Time:0.05755209922790527 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 49/132, Time:0.05735206604003906 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 50/132, Time:0.05921530723571777 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 51/132, Time:0.0590670108795166 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 52/132, Time:0.05744171142578125 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 53/132, Time:0.05805158615112305 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 54/132, Time:0.05924344062805176 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 55/132, Time:0.05904078483581543 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 56/132, Time:0.058853864669799805 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 57/132, Time:0.05920147895812988 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 58/132, Time:0.0588376522064209 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 59/132, Time:0.05873894691467285 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 60/132, Time:0.05836653709411621 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 61/132, Time:0.058440446853637695 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 62/132, Time:0.05920743942260742 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 63/132, Time:0.05906343460083008 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 64/132, Time:0.05920267105102539 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 65/132, Time:0.058719635009765625 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 66/132, Time:0.058084964752197266 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 67/132, Time:0.05782127380371094 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 68/132, Time:0.057172298431396484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 69/132, Time:0.05692625045776367 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 70/132, Time:0.0581357479095459 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 71/132, Time:0.057564496994018555 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 72/132, Time:0.05824780464172363 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 73/132, Time:0.058374643325805664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 74/132, Time:0.05721116065979004 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 75/132, Time:0.057151079177856445 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 76/132, Time:0.05824565887451172 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 77/132, Time:0.05846834182739258 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 78/132, Time:0.05846762657165527 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 79/132, Time:0.058322906494140625 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 80/132, Time:0.056630611419677734 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 81/132, Time:0.05687117576599121 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 82/132, Time:0.05889558792114258 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 83/132, Time:0.05903482437133789 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 84/132, Time:0.05767369270324707 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 85/132, Time:0.05881643295288086 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 86/132, Time:0.05852794647216797 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 87/132, Time:0.05870509147644043 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 88/132, Time:0.05848240852355957 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 89/132, Time:0.05808591842651367 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 90/132, Time:0.05904579162597656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 91/132, Time:0.057924747467041016 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 92/132, Time:0.05771470069885254 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 93/132, Time:0.05703878402709961 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 94/132, Time:0.05891585350036621 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 95/132, Time:0.05940532684326172 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 96/132, Time:0.059618473052978516 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 97/132, Time:0.06531596183776855 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 98/132, Time:0.057842254638671875 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 99/132, Time:0.05858469009399414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 100/132, Time:0.05682826042175293 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 101/132, Time:0.05840873718261719 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 102/132, Time:0.05903768539428711 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 103/132, Time:0.05700230598449707 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 104/132, Time:0.05894184112548828 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 105/132, Time:0.05756497383117676 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 106/132, Time:0.05939054489135742 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 107/132, Time:0.057611703872680664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 108/132, Time:0.05958199501037598 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 109/132, Time:0.05733680725097656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 110/132, Time:0.05904269218444824 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 111/132, Time:0.05669760704040527 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 112/132, Time:0.05712270736694336 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 113/132, Time:0.05796480178833008 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 114/132, Time:0.05977129936218262 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 115/132, Time:0.05781960487365723 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 116/132, Time:0.07558703422546387 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 117/132, Time:0.06148529052734375 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 118/132, Time:0.0600128173828125 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 119/132, Time:0.05844593048095703 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 120/132, Time:0.059090614318847656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 121/132, Time:0.05782961845397949 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 122/132, Time:0.05882430076599121 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 123/132, Time:0.057874441146850586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 124/132, Time:0.059743404388427734 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 125/132, Time:0.05803847312927246 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 126/132, Time:0.05952572822570801 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 127/132, Time:0.06316804885864258 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 128/132, Time:0.059211015701293945 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 129/132, Time:0.05720400810241699 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 130/132, Time:0.0530085563659668 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 131/132, Time:0.05254077911376953 Res:(3, 576, 768)
+(3, 576, 768)
+avg_time 0.20994091033935547
+processing /root/arm_ab_ep15, ref-view00, photo/geo/final-mask:0.9498245804398148/0.7974333586516203/0.7811663592303241
+valid_points 0.7811663592303241
+processing /root/arm_ab_ep15, ref-view01, photo/geo/final-mask:0.9410355179398148/0.6748996310763888/0.6673651801215278
+valid_points 0.6673651801215278
+processing /root/arm_ab_ep15, ref-view02, photo/geo/final-mask:0.9719871238425926/0.9042064525462963/0.8938101309317129
+valid_points 0.8938101309317129
+processing /root/arm_ab_ep15, ref-view03, photo/geo/final-mask:0.9496166087962963/0.8561785662615741/0.8390728985821759
+valid_points 0.8390728985821759
+processing /root/arm_ab_ep15, ref-view04, photo/geo/final-mask:0.9573658130787037/0.8627839265046297/0.8418194806134259
+valid_points 0.8418194806134259
+processing /root/arm_ab_ep15, ref-view05, photo/geo/final-mask:0.9451135706018519/0.8915382667824074/0.8673977322048612
+valid_points 0.8673977322048612
+processing /root/arm_ab_ep15, ref-view06, photo/geo/final-mask:0.9462800202546297/0.8705466941550926/0.853515625
+valid_points 0.853515625
+processing /root/arm_ab_ep15, ref-view07, photo/geo/final-mask:0.9417950665509259/0.7566663953993056/0.737548828125
+valid_points 0.737548828125
+processing /root/arm_ab_ep15, ref-view08, photo/geo/final-mask:0.9318938078703703/0.8708902994791666/0.8405241789641203
+valid_points 0.8405241789641203
+processing /root/arm_ab_ep15, ref-view09, photo/geo/final-mask:0.9207175925925926/0.8650467484085648/0.8402009186921297
+valid_points 0.8402009186921297
+processing /root/arm_ab_ep15, ref-view10, photo/geo/final-mask:0.9408727575231481/0.8884390371817129/0.8644703052662037
+valid_points 0.8644703052662037
+processing /root/arm_ab_ep15, ref-view11, photo/geo/final-mask:0.9204282407407407/0.8737951208043981/0.8486689814814815
+valid_points 0.8486689814814815
+processing /root/arm_ab_ep15, ref-view12, photo/geo/final-mask:0.9309443721064815/0.8464739764178241/0.8217592592592593
+valid_points 0.8217592592592593
+processing /root/arm_ab_ep15, ref-view13, photo/geo/final-mask:0.9390462239583334/0.7933394820601852/0.7793036566840278
+valid_points 0.7793036566840278
+processing /root/arm_ab_ep15, ref-view14, photo/geo/final-mask:0.9242350260416666/0.7848985460069444/0.7699811017071759
+valid_points 0.7699811017071759
+processing /root/arm_ab_ep15, ref-view15, photo/geo/final-mask:0.9409631799768519/0.8056776258680556/0.7884182400173612
+valid_points 0.7884182400173612
+processing /root/arm_ab_ep15, ref-view16, photo/geo/final-mask:0.9427987557870371/0.8977276837384259/0.8690999348958334
+valid_points 0.8690999348958334
+processing /root/arm_ab_ep15, ref-view17, photo/geo/final-mask:0.9265769675925926/0.7800632052951388/0.7591620551215278
+valid_points 0.7591620551215278
+processing /root/arm_ab_ep15, ref-view18, photo/geo/final-mask:0.9484501591435185/0.8380669487847222/0.8267392758969907
+valid_points 0.8267392758969907
+processing /root/arm_ab_ep15, ref-view19, photo/geo/final-mask:0.9199580439814815/0.8082637080439815/0.7844034830729166
+valid_points 0.7844034830729166
+processing /root/arm_ab_ep15, ref-view20, photo/geo/final-mask:0.9146140769675926/0.8686839916087963/0.8423416702835648
+valid_points 0.8423416702835648
+processing /root/arm_ab_ep15, ref-view21, photo/geo/final-mask:0.9271647135416666/0.8766343858506944/0.8553127712673612
+valid_points 0.8553127712673612
+processing /root/arm_ab_ep15, ref-view22, photo/geo/final-mask:0.9145326967592593/0.8648636429398148/0.84185791015625
+valid_points 0.84185791015625
+processing /root/arm_ab_ep15, ref-view23, photo/geo/final-mask:0.9268482349537037/0.8503598813657407/0.8247635452835648
+valid_points 0.8247635452835648
+processing /root/arm_ab_ep15, ref-view24, photo/geo/final-mask:0.8409107349537037/0.8415685583043981/0.7889969437210648
+valid_points 0.7889969437210648
+processing /root/arm_ab_ep15, ref-view25, photo/geo/final-mask:0.8982656973379629/0.8125881618923612/0.7908686885127315
+valid_points 0.7908686885127315
+processing /root/arm_ab_ep15, ref-view26, photo/geo/final-mask:0.8435962818287037/0.7783270941840278/0.7434195059317129
+valid_points 0.7434195059317129
+processing /root/arm_ab_ep15, ref-view27, photo/geo/final-mask:0.8290020978009259/0.7875773111979166/0.7517451533564815
+valid_points 0.7517451533564815
+processing /root/arm_ab_ep15, ref-view28, photo/geo/final-mask:0.8678114149305556/0.8194873951099537/0.7910879629629629
+valid_points 0.7910879629629629
+processing /root/arm_ab_ep15, ref-view29, photo/geo/final-mask:0.8803801359953703/0.7549822771990741/0.7296300817418981
+valid_points 0.7296300817418981
+processing /root/arm_ab_ep15, ref-view30, photo/geo/final-mask:0.8997486255787037/0.8880615234375/0.8376758716724537
+valid_points 0.8376758716724537
+processing /root/arm_ab_ep15, ref-view31, photo/geo/final-mask:0.9623209635416666/0.9065890842013888/0.8879417136863426
+valid_points 0.8879417136863426
+processing /root/arm_ab_ep15, ref-view32, photo/geo/final-mask:0.9437843605324074/0.9030490451388888/0.8734537760416666
+valid_points 0.8734537760416666
+processing /root/arm_ab_ep15, ref-view33, photo/geo/final-mask:0.8536422164351852/0.8318187572337963/0.7547494393807871
+valid_points 0.7547494393807871
+processing /root/arm_ab_ep15, ref-view34, photo/geo/final-mask:0.9564615885416666/0.8086050528067129/0.7946641710069444
+valid_points 0.7946641710069444
+processing /root/arm_ab_ep15, ref-view35, photo/geo/final-mask:0.9713360821759259/0.7671870478877315/0.7602245189525463
+valid_points 0.7602245189525463
+processing /root/arm_ab_ep15, ref-view36, photo/geo/final-mask:0.9495985243055556/0.8927137586805556/0.8804592556423612
+valid_points 0.8804592556423612
+processing /root/arm_ab_ep15, ref-view37, photo/geo/final-mask:0.9133662471064815/0.8582741066261574/0.8377843786168981
+valid_points 0.8377843786168981
+processing /root/arm_ab_ep15, ref-view38, photo/geo/final-mask:0.9267306857638888/0.8622572157118056/0.84869384765625
+valid_points 0.84869384765625

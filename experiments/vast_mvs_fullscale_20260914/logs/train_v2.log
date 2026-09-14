@@ -1,0 +1,137 @@
+xFormers not available
+xFormers not available
+current time 20260909_065314
+creating new summary file
+argv: ['--logdir', './checkpoints/indoor_v2', '--dataset=blendedmvs', '--batch_size=2', '--accum_steps', '8', '--training_views', '9', '--trainpath=/root/monotrain', '--summary_freq', '200', '--loadckpt', 'checkpoints/bld_ft/bld_best.ckpt', '--ndepths', '8,8,4,4', '--depth_inter_r', '0.5,0.5,0.5,0.5', '--lr', '0.001', '--wd', '0.0001', '--lr_scheduler', 'cos', '--epochs', '2', '--attn_temp', '2', '--trainlist', 'lists/ours/train.txt', '--testlist', 'lists/ours/val.txt']
+################################  args  ################################
+mode      	train                         	<class 'str'>       
+device    	cuda                          	<class 'str'>       
+local_rank	0                             	<class 'int'>       
+seed      	0                             	<class 'int'>       
+dataset   	blendedmvs                    	<class 'str'>       
+trainpath 	/root/monotrain               	<class 'str'>       
+testpath  	/root/monotrain               	<class 'str'>       
+trainlist 	lists/ours/train.txt          	<class 'str'>       
+testlist  	lists/ours/val.txt            	<class 'str'>       
+rt        	True                          	<class 'bool'>      
+max_h     	864                           	<class 'int'>       
+max_w     	1152                          	<class 'int'>       
+interval_scale	1.06                          	<class 'float'>     
+pin_m     	False                         	<class 'bool'>      
+epochs    	2                             	<class 'int'>       
+lr        	0.001                         	<class 'float'>     
+lrepochs  	6,8,10,12:2                   	<class 'str'>       
+wd        	0.0001                        	<class 'float'>     
+batch_size	2                             	<class 'int'>       
+accum_steps	8                             	<class 'int'>       
+training_views	9                             	<class 'int'>       
+loadckpt  	checkpoints/bld_ft/bld_best.ckpt	<class 'str'>       
+logdir    	./checkpoints/indoor_v2       	<class 'str'>       
+resume    	False                         	<class 'bool'>      
+summary_freq	200                           	<class 'int'>       
+save_freq 	1                             	<class 'int'>       
+eval_freq 	1                             	<class 'int'>       
+dlossw    	1,1,1,1                       	<class 'str'>       
+use_raw_train	False                         	<class 'bool'>      
+lr_scheduler	cos                           	<class 'str'>       
+ndepths   	8,8,4,4                       	<class 'str'>       
+depth_inter_r	0.5,0.5,0.5,0.5               	<class 'str'>       
+fpn_base_channel	8                             	<class 'int'>       
+reg_channel	8                             	<class 'int'>       
+reg_mode  	reg2d                         	<class 'str'>       
+group_cor 	True                          	<class 'bool'>      
+group_cor_dim	8,8,4,4                       	<class 'str'>       
+inverse_depth	True                          	<class 'bool'>      
+agg_type  	ConvBnReLU3D                  	<class 'str'>       
+arch_mode 	fpn                           	<class 'str'>       
+attn_temp 	2.0                           	<class 'float'>     
+mono_sampling	True                          	<class 'bool'>      
+edge_guide	True                          	<class 'bool'>      
+attention 	True                          	<class 'bool'>      
+########################################################################
+loading model checkpoints/bld_ft/bld_best.ckpt
+start at epoch 0
+Number of model parameters: 27.68M
+Number of model trainable parameters: 2.89M
+Let's use 1 GPUs!
+Epoch 0:
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Epoch 0/2, Iter 0/128189, lr 0.001000, train loss = 3.158, ce_loss = 0.342, 1.003, 0.869, 0.943, range_err = 0.000, 0.057, 0.287, 0.466, epe:5.529188, err3:0.682855, err1:0.473638,time = 36.034
+Epoch 0/2, Iter 200/128189, lr 0.001000, train loss = 2.516, ce_loss = 0.253, 0.602, 0.711, 0.949, range_err = 0.000, 0.024, 0.116, 0.207, epe:2.289900, err3:0.870508, err1:0.726857,time = 1.644
+Epoch 0/2, Iter 400/128189, lr 0.001000, train loss = 2.779, ce_loss = 0.219, 0.763, 0.789, 1.009, range_err = 0.000, 0.040, 0.192, 0.323, epe:3.367036, err3:0.770530, err1:0.607650,time = 0.565
+Epoch 0/2, Iter 600/128189, lr 0.001000, train loss = 2.900, ce_loss = 0.406, 0.754, 0.821, 0.919, range_err = 0.000, 0.081, 0.221, 0.382, epe:5.526657, err3:0.757600, err1:0.550110,time = 1.012
+Epoch 0/2, Iter 800/128189, lr 0.001000, train loss = 2.904, ce_loss = 0.396, 0.749, 0.820, 0.940, range_err = 0.001, 0.097, 0.224, 0.369, epe:8.373637, err3:0.752391, err1:0.567018,time = 0.545
+Epoch 0/2, Iter 1000/128189, lr 0.001000, train loss = 2.763, ce_loss = 0.313, 0.693, 0.811, 0.946, range_err = 0.000, 0.047, 0.148, 0.281, epe:4.521273, err3:0.821241, err1:0.645805,time = 0.554
+Epoch 0/2, Iter 1200/128189, lr 0.001000, train loss = 2.803, ce_loss = 0.459, 0.758, 0.723, 0.864, range_err = 0.001, 0.102, 0.222, 0.338, epe:9.726653, err3:0.751973, err1:0.610202,time = 0.428
+Epoch 0/2, Iter 1400/128189, lr 0.001000, train loss = 2.229, ce_loss = 0.145, 0.531, 0.664, 0.888, range_err = 0.000, 0.012, 0.085, 0.197, epe:1.650585, err3:0.899300, err1:0.759082,time = 0.592
+Epoch 0/2, Iter 1600/128189, lr 0.001000, train loss = 3.725, ce_loss = 0.602, 1.025, 0.985, 1.112, range_err = 0.000, 0.200, 0.389, 0.564, epe:13.370271, err3:0.574076, err1:0.325482,time = 1.136
+Epoch 0/2, Iter 1800/128189, lr 0.001000, train loss = 2.657, ce_loss = 0.278, 0.646, 0.798, 0.936, range_err = 0.000, 0.043, 0.146, 0.318, epe:4.090109, err3:0.808498, err1:0.595789,time = 0.565
+Epoch 0/2, Iter 2000/128189, lr 0.001000, train loss = 3.531, ce_loss = 0.674, 1.048, 0.886, 0.922, range_err = 0.000, 0.136, 0.302, 0.434, epe:20.855742, err3:0.681275, err1:0.517290,time = 1.405
+Traceback (most recent call last):
+  File "/root/MonoMVSNet/train_bld.py", line 426, in <module>
+    train(model, model_loss, optimizer, TrainImgLoader, TestImgLoader, start_epoch, args)
+  File "/root/MonoMVSNet/train_bld.py", line 100, in train
+    for batch_idx, sample in enumerate(TrainImgLoader):
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/utils/data/dataloader.py", line 741, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/utils/data/dataloader.py", line 1548, in _next_data
+    return self._process_data(data, worker_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/utils/data/dataloader.py", line 1586, in _process_data
+    data.reraise()
+  File "/venv/main/lib/python3.12/site-packages/torch/_utils.py", line 785, in reraise
+    raise exception
+AssertionError: Caught AssertionError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/venv/main/lib/python3.12/site-packages/torch/utils/data/_utils/worker.py", line 358, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/utils/data/_utils/fetch.py", line 54, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "/root/MonoMVSNet/datasets/blendedmvs.py", line 219, in __getitem__
+    depth, mask = self.read_depth_mask(scan, depth_filename, depth_min, depth_max, scale)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/MonoMVSNet/datasets/blendedmvs.py", line 93, in read_depth_mask
+    assert mask.sum() > 0
+           ^^^^^^^^^^^^^^
+AssertionError
+
+E0909 07:07:12.592000 1284685 site-packages/torch/distributed/elastic/multiprocessing/api.py:986] failed (exitcode: 1) local_rank: 0 (pid: 1284719) of binary: /venv/main/bin/python
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/run.py", line 994, in <module>
+    main()
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/run.py", line 990, in main
+    run(args)
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/run.py", line 981, in run
+    elastic_launch(
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+train_bld.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-09-09_07:07:12
+  host      : 6d3d5524fde5
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 1284719)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+TRAIN_V2_DONE

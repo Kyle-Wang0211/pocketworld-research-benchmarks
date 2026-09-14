@@ -1,0 +1,567 @@
+argv: ['--dataset=general', '--batch_size=1', '--num_view=10', '--method=casdiffmvs', '--save_depth', '--testpath=/root/mvs_P16k', '--testlist=/root/sp_testlist.txt', '--numdepth_initial=96', '--numdepth=384', '--max_h=576', '--max_w=768', '--loadckpt=/root/ckpt_src/casdiffmvs_mvgZeroDTU.ckpt', '--outdir=/root/out_B_before', '--scale', '0.0', '0.125', '0.025', '--sampling_timesteps', '0', '1', '1', '--ddim_eta', '0', '1', '1', '--stage_iters', '1', '3', '3', '--cost_dim_stage', '4', '4', '4', '--CostNum', '0', '4', '4', '--hidden_dim', '0', '32', '20', '--context_dim', '32', '32', '16', '--unet_dim', '0', '16', '8', '--min_radius', '0.125', '--max_radius', '8']
+################################  args  ################################
+method    	casdiffmvs                    	<class 'str'>       
+batch_size	1                             	<class 'int'>       
+loadckpt  	/root/ckpt_src/casdiffmvs_mvgZeroDTU.ckpt	<class 'str'>       
+outdir    	/root/out_B_before            	<class 'str'>       
+seed      	123                           	<class 'int'>       
+save_depth	True                          	<class 'bool'>      
+dataset   	general                       	<class 'str'>       
+testpath  	/root/mvs_P16k                	<class 'str'>       
+testlist  	/root/sp_testlist.txt         	<class 'str'>       
+num_view  	10                            	<class 'int'>       
+max_h     	576                           	<class 'int'>       
+max_w     	768                           	<class 'int'>       
+numdepth_initial	96                            	<class 'int'>       
+numdepth  	384                           	<class 'int'>       
+ddim_eta  	[0.0, 1.0, 1.0]               	<class 'list'>      
+scale     	[0.0, 0.125, 0.025]           	<class 'list'>      
+timesteps 	[1000, 1000, 1000]            	<class 'list'>      
+sampling_timesteps	[0, 1, 1]                     	<class 'list'>      
+hidden_dim	[0, 32, 20]                   	<class 'list'>      
+context_dim	[32, 32, 16]                  	<class 'list'>      
+stage_iters	[1, 3, 3]                     	<class 'list'>      
+cost_dim_stage	[4, 4, 4]                     	<class 'list'>      
+CostNum   	[0, 4, 4]                     	<class 'list'>      
+unet_dim  	[0, 16, 8]                    	<class 'list'>      
+min_radius	0.125                         	<class 'float'>     
+max_radius	8.0                           	<class 'float'>     
+geo_mask_thres	2                             	<class 'int'>       
+geo_pixel_thres	1                             	<class 'int'>       
+geo_depth_thres	0.01                          	<class 'float'>     
+photo_thres	[0.3, 0, 0]                   	<class 'list'>      
+########################################################################
+dataset general scans ['']
+loading model /root/ckpt_src/casdiffmvs_mvgZeroDTU.ckpt
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Iter 0/132, Time:99.24969625473022 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 1/132, Time:0.8145740032196045 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 2/132, Time:0.41295480728149414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 3/132, Time:0.647376537322998 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 4/132, Time:0.3686082363128662 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 5/132, Time:0.7804825305938721 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 6/132, Time:0.5270891189575195 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 7/132, Time:0.36621880531311035 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 8/132, Time:0.3745889663696289 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 9/132, Time:0.6423096656799316 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 10/132, Time:0.782036542892456 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 11/132, Time:1.0050814151763916 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 12/132, Time:0.5760459899902344 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 13/132, Time:0.3714172840118408 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 14/132, Time:0.8306806087493896 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 15/132, Time:0.43662118911743164 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 16/132, Time:0.4237377643585205 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 17/132, Time:0.2989542484283447 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 18/132, Time:0.3815879821777344 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 19/132, Time:0.35688185691833496 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 20/132, Time:0.408618688583374 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 21/132, Time:0.6669652462005615 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 22/132, Time:0.4359724521636963 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 23/132, Time:0.3750462532043457 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 24/132, Time:0.4943816661834717 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 25/132, Time:0.5976619720458984 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 26/132, Time:0.7339022159576416 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 27/132, Time:0.4408104419708252 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 28/132, Time:0.4049367904663086 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 29/132, Time:0.42426514625549316 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 30/132, Time:0.45029234886169434 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 31/132, Time:0.4087982177734375 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 32/132, Time:0.5331711769104004 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 33/132, Time:0.40285563468933105 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 34/132, Time:0.42757320404052734 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 35/132, Time:0.4141721725463867 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 36/132, Time:0.42298030853271484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 37/132, Time:0.530693531036377 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 38/132, Time:0.33478665351867676 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 39/132, Time:0.4320852756500244 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 40/132, Time:0.45224857330322266 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 41/132, Time:0.38404154777526855 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 42/132, Time:0.521256685256958 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 43/132, Time:0.41820311546325684 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 44/132, Time:0.4495849609375 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 45/132, Time:0.4111177921295166 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 46/132, Time:0.3970623016357422 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 47/132, Time:0.24317502975463867 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 48/132, Time:1.178898811340332 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 49/132, Time:0.43605899810791016 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 50/132, Time:0.3855869770050049 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 51/132, Time:0.2841637134552002 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 52/132, Time:0.5222868919372559 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 53/132, Time:0.6228792667388916 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 54/132, Time:0.43255114555358887 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 55/132, Time:0.3654136657714844 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 56/132, Time:0.6062664985656738 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 57/132, Time:0.43030357360839844 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 58/132, Time:0.5706663131713867 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 59/132, Time:0.4438285827636719 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 60/132, Time:0.4335627555847168 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 61/132, Time:0.5219719409942627 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 62/132, Time:0.31166577339172363 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 63/132, Time:0.3997001647949219 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 64/132, Time:0.9906556606292725 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 65/132, Time:0.7153587341308594 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 66/132, Time:0.4131944179534912 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 67/132, Time:0.41124582290649414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 68/132, Time:0.47503042221069336 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 69/132, Time:0.30153489112854004 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 70/132, Time:0.5641477108001709 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 71/132, Time:0.4548001289367676 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 72/132, Time:0.5747759342193604 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 73/132, Time:0.437732458114624 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 74/132, Time:1.111783742904663 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 75/132, Time:0.3081979751586914 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 76/132, Time:0.3408942222595215 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 77/132, Time:0.5883519649505615 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 78/132, Time:0.5310194492340088 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 79/132, Time:0.4526100158691406 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 80/132, Time:0.38550591468811035 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 81/132, Time:1.054938554763794 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 82/132, Time:0.9075486660003662 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 83/132, Time:0.44065141677856445 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 84/132, Time:0.4589371681213379 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 85/132, Time:1.1816918849945068 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 86/132, Time:0.3159170150756836 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 87/132, Time:0.7109684944152832 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 88/132, Time:0.47736263275146484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 89/132, Time:0.5533661842346191 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 90/132, Time:0.4558379650115967 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 91/132, Time:0.3331739902496338 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 92/132, Time:0.33077192306518555 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 93/132, Time:0.4809854030609131 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 94/132, Time:0.40680694580078125 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 95/132, Time:0.8554320335388184 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 96/132, Time:0.7563786506652832 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 97/132, Time:0.6654977798461914 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 98/132, Time:0.4375886917114258 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 99/132, Time:0.42769312858581543 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 100/132, Time:0.4888784885406494 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 101/132, Time:0.8445842266082764 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 102/132, Time:0.41521620750427246 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 103/132, Time:0.38877344131469727 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 104/132, Time:0.4122281074523926 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 105/132, Time:0.6125352382659912 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 106/132, Time:0.4710805416107178 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 107/132, Time:0.5114953517913818 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 108/132, Time:0.4538259506225586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 109/132, Time:0.514782190322876 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 110/132, Time:1.2078664302825928 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 111/132, Time:0.513939380645752 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 112/132, Time:0.6501398086547852 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 113/132, Time:0.3466618061065674 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 114/132, Time:0.3756899833679199 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 115/132, Time:0.4016563892364502 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 116/132, Time:0.5158908367156982 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 117/132, Time:0.4744429588317871 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 118/132, Time:0.4518015384674072 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 119/132, Time:0.8033769130706787 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 120/132, Time:0.3569965362548828 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 121/132, Time:0.39855456352233887 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 122/132, Time:0.4018857479095459 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 123/132, Time:0.45923686027526855 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 124/132, Time:0.6175057888031006 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 125/132, Time:0.35907769203186035 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 126/132, Time:0.5716490745544434 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 127/132, Time:0.4105081558227539 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 128/132, Time:0.41892504692077637 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 129/132, Time:0.30001091957092285 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 130/132, Time:0.47437191009521484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 131/132, Time:0.43677401542663574 Res:(3, 576, 768)
+(3, 576, 768)
+avg_time 1.2619557452924324
+processing /root/out_B_before, ref-view00, photo/geo/final-mask:0.9845196759259259/0.7804475007233797/0.7774816442418981
+valid_points 0.7774816442418981
+processing /root/out_B_before, ref-view01, photo/geo/final-mask:0.9741030092592593/0.6667390046296297/0.6622111002604166
+valid_points 0.6622111002604166
+processing /root/out_B_before, ref-view02, photo/geo/final-mask:0.9917534722222222/0.9102692780671297/0.9066749855324074
+valid_points 0.9066749855324074
+processing /root/out_B_before, ref-view03, photo/geo/final-mask:0.9895833333333334/0.8696673357928241/0.8666359230324074
+valid_points 0.8666359230324074
+processing /root/out_B_before, ref-view04, photo/geo/final-mask:0.9868344907407407/0.85882568359375/0.8523966471354166
+valid_points 0.8523966471354166
+processing /root/out_B_before, ref-view05, photo/geo/final-mask:0.9864004629629629/0.8851227936921297/0.8793402777777778
+valid_points 0.8793402777777778
+processing /root/out_B_before, ref-view06, photo/geo/final-mask:0.9806134259259259/0.8606657805266203/0.8565945095486112
+valid_points 0.8565945095486112
+processing /root/out_B_before, ref-view07, photo/geo/final-mask:0.9366319444444444/0.7419410988136574/0.7360681604456019
+valid_points 0.7360681604456019
+processing /root/out_B_before, ref-view08, photo/geo/final-mask:0.9725115740740741/0.8567075376157407/0.8465237087673612
+valid_points 0.8465237087673612
+processing /root/out_B_before, ref-view09, photo/geo/final-mask:0.9622395833333334/0.8576275860821759/0.8494217484085648
+valid_points 0.8494217484085648
+processing /root/out_B_before, ref-view10, photo/geo/final-mask:0.9875578703703703/0.8893636067708334/0.8833731192129629
+valid_points 0.8833731192129629
+processing /root/out_B_before, ref-view11, photo/geo/final-mask:0.9840856481481481/0.8694751880787037/0.8623250325520834
+valid_points 0.8623250325520834
+processing /root/out_B_before, ref-view12, photo/geo/final-mask:0.9632523148148148/0.8150951244212963/0.8052096896701388
+valid_points 0.8052096896701388
+processing /root/out_B_before, ref-view13, photo/geo/final-mask:0.9777199074074074/0.7733900282118056/0.7660273799189815
+valid_points 0.7660273799189815
+processing /root/out_B_before, ref-view14, photo/geo/final-mask:0.9603587962962963/0.7565104166666666/0.7511528862847222
+valid_points 0.7511528862847222
+processing /root/out_B_before, ref-view15, photo/geo/final-mask:0.9816261574074074/0.8096901222511574/0.8063580548321759
+valid_points 0.8063580548321759
+processing /root/out_B_before, ref-view16, photo/geo/final-mask:0.9810474537037037/0.8772402162905093/0.8694186740451388
+valid_points 0.8694186740451388
+processing /root/out_B_before, ref-view17, photo/geo/final-mask:0.9629629629629629/0.7668750904224537/0.7575344509548612
+valid_points 0.7575344509548612
+processing /root/out_B_before, ref-view18, photo/geo/final-mask:0.9819155092592593/0.8241351092303241/0.8176744249131944
+valid_points 0.8176744249131944
+processing /root/out_B_before, ref-view19, photo/geo/final-mask:0.9743923611111112/0.8299922236689815/0.8212393301504629
+valid_points 0.8212393301504629
+processing /root/out_B_before, ref-view20, photo/geo/final-mask:0.9758391203703703/0.8613100405092593/0.8544379340277778
+valid_points 0.8544379340277778
+processing /root/out_B_before, ref-view21, photo/geo/final-mask:0.9868344907407407/0.8959825303819444/0.8892392758969907
+valid_points 0.8892392758969907
+processing /root/out_B_before, ref-view22, photo/geo/final-mask:0.9780092592592593/0.8498241283275463/0.8415821216724537
+valid_points 0.8415821216724537
+processing /root/out_B_before, ref-view23, photo/geo/final-mask:0.9797453703703703/0.8467836733217593/0.8370203088831019
+valid_points 0.8370203088831019
+processing /root/out_B_before, ref-view24, photo/geo/final-mask:0.9641203703703703/0.8310298213252315/0.8226634837962963
+valid_points 0.8226634837962963
+processing /root/out_B_before, ref-view25, photo/geo/final-mask:0.9668692129629629/0.7887460214120371/0.7839694552951388
+valid_points 0.7839694552951388
+processing /root/out_B_before, ref-view26, photo/geo/final-mask:0.9518229166666666/0.7699991861979166/0.7620126229745371
+valid_points 0.7620126229745371
+processing /root/out_B_before, ref-view27, photo/geo/final-mask:0.9476273148148148/0.7691469545717593/0.7635226779513888
+valid_points 0.7635226779513888
+processing /root/out_B_before, ref-view28, photo/geo/final-mask:0.9565972222222222/0.8270670572916666/0.8187391493055556
+valid_points 0.8187391493055556
+processing /root/out_B_before, ref-view29, photo/geo/final-mask:0.9768518518518519/0.7434511537905093/0.7387763129340278
+valid_points 0.7387763129340278
+processing /root/out_B_before, ref-view30, photo/geo/final-mask:0.9667245370370371/0.8639684606481481/0.8554845739293981
+valid_points 0.8554845739293981
+processing /root/out_B_before, ref-view31, photo/geo/final-mask:0.9872685185185185/0.8923023365162037/0.8873471860532407
+valid_points 0.8873471860532407
+processing /root/out_B_before, ref-view32, photo/geo/final-mask:0.9845196759259259/0.8854347511574074/0.8785581235532407
+valid_points 0.8785581235532407
+processing /root/out_B_before, ref-view33, photo/geo/final-mask:0.9688946759259259/0.8442518446180556/0.8314276801215278
+valid_points 0.8314276801215278
+processing /root/out_B_before, ref-view34, photo/geo/final-mask:0.9836516203703703/0.7956859447337963/0.7914813006365741
+valid_points 0.7914813006365741
+processing /root/out_B_before, ref-view35, photo/geo/final-mask:0.9701967592592593/0.7504430700231481/0.7471652560763888
+valid_points 0.7471652560763888
+processing /root/out_B_before, ref-view36, photo/geo/final-mask:0.9811921296296297/0.8799461082175926/0.8751446759259259
+valid_points 0.8751446759259259
+processing /root/out_B_before, ref-view37, photo/geo/final-mask:0.9712094907407407/0.8465508355034722/0.8399477358217593
+valid_points 0.8399477358217593
+processing /root/out_B_before, ref-view38, photo/geo/final-mask:0.9645543981481481/0.8392288773148148/0.8300939489293981
+valid_points 0.8300939489293981
+processing /root/out_B_before, ref-view39, photo/geo/final-mask:0.9898726851851852/0.7831669560185185/0.7803887261284722
+valid_points 0.7803887261284722
+processing /root/out_B_before, ref-view40, photo/geo/final-mask:0.9820601851851852/0.7360432942708334/0.7316125940393519
+valid_points 0.7316125940393519
+processing /root/out_B_before, ref-view41, photo/geo/final-mask:0.9445891203703703/0.7772736725983797/0.7741450557002315
+valid_points 0.7741450557002315
+processing /root/out_B_before, ref-view42, photo/geo/final-mask:0.9814814814814815/0.8180790653935185/0.8063897026909722
+valid_points 0.8063897026909722
+processing /root/out_B_before, ref-view43, photo/geo/final-mask:0.9593460648148148/0.7077885380497685/0.7026050708912037
+valid_points 0.7026050708912037
+processing /root/out_B_before, ref-view44, photo/geo/final-mask:0.96875/0.7922272858796297/0.7808679651331019
+valid_points 0.7808679651331019
+processing /root/out_B_before, ref-view45, photo/geo/final-mask:0.8666087962962963/0.6315488462094907/0.6261189778645834
+valid_points 0.6261189778645834
+processing /root/out_B_before, ref-view46, photo/geo/final-mask:0.9670138888888888/0.7794053819444444/0.7710887767650463
+valid_points 0.7710887767650463
+processing /root/out_B_before, ref-view47, photo/geo/final-mask:0.9806134259259259/0.79669189453125/0.7902040834780093
+valid_points 0.7902040834780093
+processing /root/out_B_before, ref-view48, photo/geo/final-mask:0.9743923611111112/0.8521299008969907/0.8411277488425926
+valid_points 0.8411277488425926
+processing /root/out_B_before, ref-view49, photo/geo/final-mask:0.9599247685185185/0.7667032877604166/0.7561306423611112
+valid_points 0.7561306423611112
+processing /root/out_B_before, ref-view50, photo/geo/final-mask:0.9707754629629629/0.8057951750578703/0.7959300853587963
+valid_points 0.7959300853587963
+processing /root/out_B_before, ref-view51, photo/geo/final-mask:0.9636863425925926/0.8601594147858797/0.8430808738425926
+valid_points 0.8430808738425926
+processing /root/out_B_before, ref-view52, photo/geo/final-mask:0.9625289351851852/0.8492883752893519/0.8352028175636574
+valid_points 0.8352028175636574
+processing /root/out_B_before, ref-view53, photo/geo/final-mask:0.9720775462962963/0.8872816297743056/0.8731689453125
+valid_points 0.8731689453125
+processing /root/out_B_before, ref-view54, photo/geo/final-mask:0.9600694444444444/0.8188453956886574/0.8039211697048612
+valid_points 0.8039211697048612
+processing /root/out_B_before, ref-view55, photo/geo/final-mask:0.9401041666666666/0.7944064670138888/0.7742286964699074
+valid_points 0.7742286964699074
+processing /root/out_B_before, ref-view56, photo/geo/final-mask:0.9725115740740741/0.8097692418981481/0.8032407407407407
+valid_points 0.8032407407407407
+processing /root/out_B_before, ref-view57, photo/geo/final-mask:0.9448784722222222/0.7634616427951388/0.7519802517361112
+valid_points 0.7519802517361112
+processing /root/out_B_before, ref-view58, photo/geo/final-mask:0.9538483796296297/0.6590011031539352/0.6582076461226852
+valid_points 0.6582076461226852
+processing /root/out_B_before, ref-view59, photo/geo/final-mask:0.9599247685185185/0.8318820529513888/0.8130696614583334
+valid_points 0.8130696614583334
+processing /root/out_B_before, ref-view60, photo/geo/final-mask:0.9578993055555556/0.8167362919560185/0.7907940899884259
+valid_points 0.7907940899884259
+processing /root/out_B_before, ref-view61, photo/geo/final-mask:0.9571759259259259/0.7587461118344907/0.7450968424479166
+valid_points 0.7450968424479166
+processing /root/out_B_before, ref-view62, photo/geo/final-mask:0.9412615740740741/0.7646868670428241/0.7576904296875
+valid_points 0.7576904296875
+processing /root/out_B_before, ref-view63, photo/geo/final-mask:0.8751446759259259/0.5777407045717593/0.5670120804398148
+valid_points 0.5670120804398148
+processing /root/out_B_before, ref-view64, photo/geo/final-mask:0.9480613425925926/0.7999561451099537/0.7818987811053241
+valid_points 0.7818987811053241
+processing /root/out_B_before, ref-view65, photo/geo/final-mask:0.9207175925925926/0.7620872214988426/0.7321980794270834
+valid_points 0.7321980794270834
+processing /root/out_B_before, ref-view66, photo/geo/final-mask:0.9338831018518519/0.7686225043402778/0.7486346209490741
+valid_points 0.7486346209490741
+processing /root/out_B_before, ref-view67, photo/geo/final-mask:0.9176793981481481/0.7534134476273148/0.7282579210069444
+valid_points 0.7282579210069444
+processing /root/out_B_before, ref-view68, photo/geo/final-mask:0.9267939814814815/0.7351413302951388/0.7037692599826388
+valid_points 0.7037692599826388
+processing /root/out_B_before, ref-view69, photo/geo/final-mask:0.9084201388888888/0.7036291051793981/0.6865347403067129
+valid_points 0.6865347403067129
+processing /root/out_B_before, ref-view70, photo/geo/final-mask:0.8899016203703703/0.6085679796006944/0.6005791558159722
+valid_points 0.6005791558159722
+processing /root/out_B_before, ref-view71, photo/geo/final-mask:0.9444444444444444/0.6867562753182871/0.6807906539351852
+valid_points 0.6807906539351852
+processing /root/out_B_before, ref-view72, photo/geo/final-mask:0.9477719907407407/0.6063413266782407/0.60076904296875
+valid_points 0.60076904296875
+processing /root/out_B_before, ref-view73, photo/geo/final-mask:0.9412615740740741/0.71319580078125/0.7013730649594907
+valid_points 0.7013730649594907
+processing /root/out_B_before, ref-view74, photo/geo/final-mask:0.8887442129629629/0.6180058232060185/0.6059886791087963
+valid_points 0.6059886791087963
+processing /root/out_B_before, ref-view75, photo/geo/final-mask:0.9641203703703703/0.7350124782986112/0.72552490234375
+valid_points 0.72552490234375
+processing /root/out_B_before, ref-view76, photo/geo/final-mask:0.9448784722222222/0.5904088903356481/0.5866337528935185
+valid_points 0.5866337528935185
+processing /root/out_B_before, ref-view77, photo/geo/final-mask:0.9532696759259259/0.8436166268807871/0.8294813368055556
+valid_points 0.8294813368055556
+processing /root/out_B_before, ref-view78, photo/geo/final-mask:0.9457465277777778/0.7409487123842593/0.7339500144675926
+valid_points 0.7339500144675926
+processing /root/out_B_before, ref-view79, photo/geo/final-mask:0.9822048611111112/0.8594066478587963/0.8500547055844907
+valid_points 0.8500547055844907
+processing /root/out_B_before, ref-view80, photo/geo/final-mask:0.9677372685185185/0.8722466362847222/0.8612964771412037
+valid_points 0.8612964771412037
+processing /root/out_B_before, ref-view81, photo/geo/final-mask:0.9671585648148148/0.8299718786168981/0.8208211263020834
+valid_points 0.8208211263020834
+processing /root/out_B_before, ref-view82, photo/geo/final-mask:0.9262152777777778/0.6728945131655093/0.6651159215856481
+valid_points 0.6651159215856481
+processing /root/out_B_before, ref-view83, photo/geo/final-mask:0.9704861111111112/0.8389010959201388/0.8236852575231481
+valid_points 0.8236852575231481
+processing /root/out_B_before, ref-view84, photo/geo/final-mask:0.9411168981481481/0.7974627459490741/0.7795500578703703
+valid_points 0.7795500578703703
+processing /root/out_B_before, ref-view85, photo/geo/final-mask:0.9447337962962963/0.7931608977141203/0.7832234700520834
+valid_points 0.7832234700520834
+processing /root/out_B_before, ref-view86, photo/geo/final-mask:0.9696180555555556/0.8831922743055556/0.8699566876446759
+valid_points 0.8699566876446759
+processing /root/out_B_before, ref-view87, photo/geo/final-mask:0.9658564814814815/0.8224442093460648/0.8106960720486112
+valid_points 0.8106960720486112
+processing /root/out_B_before, ref-view88, photo/geo/final-mask:0.9670138888888888/0.8207307038483797/0.8098687065972222
+valid_points 0.8098687065972222
+processing /root/out_B_before, ref-view89, photo/geo/final-mask:0.9677372685185185/0.8226747866030093/0.8074657298900463
+valid_points 0.8074657298900463
+processing /root/out_B_before, ref-view90, photo/geo/final-mask:0.9558738425925926/0.6444950810185185/0.6352019133391203
+valid_points 0.6352019133391203
+processing /root/out_B_before, ref-view91, photo/geo/final-mask:0.9631076388888888/0.7856942635995371/0.7714888961226852
+valid_points 0.7714888961226852
+processing /root/out_B_before, ref-view92, photo/geo/final-mask:0.9409722222222222/0.7803593388310185/0.7613864474826388
+valid_points 0.7613864474826388
+processing /root/out_B_before, ref-view93, photo/geo/final-mask:0.9499421296296297/0.8049429434317129/0.7819304289641203
+valid_points 0.7819304289641203
+processing /root/out_B_before, ref-view94, photo/geo/final-mask:0.9571759259259259/0.7845911096643519/0.7644155996817129
+valid_points 0.7644155996817129
+processing /root/out_B_before, ref-view95, photo/geo/final-mask:0.9487847222222222/0.73443603515625/0.7203821252893519
+valid_points 0.7203821252893519
+processing /root/out_B_before, ref-view96, photo/geo/final-mask:0.9273726851851852/0.7367711950231481/0.7170342339409722
+valid_points 0.7170342339409722
+processing /root/out_B_before, ref-view97, photo/geo/final-mask:0.8682002314814815/0.7137066876446759/0.6913859049479166
+valid_points 0.6913859049479166
+processing /root/out_B_before, ref-view98, photo/geo/final-mask:0.9539930555555556/0.8710734049479166/0.8493516710069444
+valid_points 0.8493516710069444
+processing /root/out_B_before, ref-view99, photo/geo/final-mask:0.8624131944444444/0.5425505461516203/0.5276896158854166
+valid_points 0.5276896158854166
+processing /root/out_B_before, ref-view100, photo/geo/final-mask:0.9139178240740741/0.5175532588252315/0.5143703884548612
+valid_points 0.5143703884548612
+processing /root/out_B_before, ref-view101, photo/geo/final-mask:0.9160879629629629/0.7890964084201388/0.7633305302372685
+valid_points 0.7633305302372685
+processing /root/out_B_before, ref-view102, photo/geo/final-mask:0.9655671296296297/0.8557807074652778/0.8421608253761574
+valid_points 0.8421608253761574
+processing /root/out_B_before, ref-view103, photo/geo/final-mask:0.9331597222222222/0.5487241391782407/0.5437893337673612
+valid_points 0.5437893337673612
+processing /root/out_B_before, ref-view104, photo/geo/final-mask:0.9066840277777778/0.5923190646701388/0.5866111472800926
+valid_points 0.5866111472800926
+processing /root/out_B_before, ref-view105, photo/geo/final-mask:0.8252314814814815/0.5868100766782407/0.5752653899016203
+valid_points 0.5752653899016203
+processing /root/out_B_before, ref-view106, photo/geo/final-mask:0.9379340277777778/0.6501962167245371/0.6390652126736112
+valid_points 0.6390652126736112
+processing /root/out_B_before, ref-view107, photo/geo/final-mask:0.9110243055555556/0.6824725115740741/0.6617838541666666
+valid_points 0.6617838541666666
+processing /root/out_B_before, ref-view108, photo/geo/final-mask:0.8353587962962963/0.5052128544560185/0.5000655562789352
+valid_points 0.5000655562789352
+processing /root/out_B_before, ref-view109, photo/geo/final-mask:0.8693576388888888/0.5214640299479166/0.5169926396122685
+valid_points 0.5169926396122685
+processing /root/out_B_before, ref-view110, photo/geo/final-mask:0.9104456018518519/0.6570864076967593/0.6395896629050926
+valid_points 0.6395896629050926
+processing /root/out_B_before, ref-view111, photo/geo/final-mask:0.9357638888888888/0.7905770760995371/0.7708740234375
+valid_points 0.7708740234375
+processing /root/out_B_before, ref-view112, photo/geo/final-mask:0.9123263888888888/0.7164939597800926/0.6970395688657407
+valid_points 0.6970395688657407
+processing /root/out_B_before, ref-view113, photo/geo/final-mask:0.8909143518518519/0.3837076822916667/0.3808729383680556
+valid_points 0.3808729383680556
+processing /root/out_B_before, ref-view114, photo/geo/final-mask:0.9289641203703703/0.6096236617476852/0.5976494683159722
+valid_points 0.5976494683159722
+processing /root/out_B_before, ref-view115, photo/geo/final-mask:0.8506944444444444/0.5702107747395834/0.5542444299768519
+valid_points 0.5542444299768519
+processing /root/out_B_before, ref-view116, photo/geo/final-mask:0.8967013888888888/0.35273347077546297/0.3511759440104167
+valid_points 0.3511759440104167
+processing /root/out_B_before, ref-view117, photo/geo/final-mask:0.5538194444444444/0.27849211516203703/0.2780490451388889
+valid_points 0.2780490451388889
+processing /root/out_B_before, ref-view118, photo/geo/final-mask:0.8667534722222222/0.5726114908854166/0.5589079680266203
+valid_points 0.5589079680266203
+processing /root/out_B_before, ref-view119, photo/geo/final-mask:0.9182581018518519/0.364990234375/0.36491111472800924
+valid_points 0.36491111472800924
+processing /root/out_B_before, ref-view120, photo/geo/final-mask:0.9223090277777778/0.3095725730613426/0.30702944155092593
+valid_points 0.30702944155092593
+processing /root/out_B_before, ref-view121, photo/geo/final-mask:0.7902199074074074/0.4692179361979167/0.4542982313368056
+valid_points 0.4542982313368056
+processing /root/out_B_before, ref-view122, photo/geo/final-mask:0.6623263888888888/0.29398148148148145/0.2925008138020833
+valid_points 0.2925008138020833
+processing /root/out_B_before, ref-view123, photo/geo/final-mask:0.6616030092592593/0.4756876627604167/0.4718153211805556
+valid_points 0.4718153211805556
+processing /root/out_B_before, ref-view124, photo/geo/final-mask:0.8395543981481481/0.5230645073784722/0.5079232675057871
+valid_points 0.5079232675057871
+processing /root/out_B_before, ref-view125, photo/geo/final-mask:0.8025173611111112/0.41350414134837965/0.4024793836805556
+valid_points 0.4024793836805556
+processing /root/out_B_before, ref-view126, photo/geo/final-mask:0.9225983796296297/0.5980880172164352/0.5936821831597222
+valid_points 0.5936821831597222
+processing /root/out_B_before, ref-view127, photo/geo/final-mask:0.9693287037037037/0.6806414568865741/0.6745899341724537
+valid_points 0.6745899341724537
+processing /root/out_B_before, ref-view128, photo/geo/final-mask:0.9448784722222222/0.6692956995081019/0.6647451895254629
+valid_points 0.6647451895254629
+processing /root/out_B_before, ref-view129, photo/geo/final-mask:0.9490740740740741/0.6057083695023148/0.6015466760706019
+valid_points 0.6015466760706019
+processing /root/out_B_before, ref-view130, photo/geo/final-mask:0.7459490740740741/0.22115297670717593/0.22026005497685186
+valid_points 0.22026005497685186
+processing /root/out_B_before, ref-view131, photo/geo/final-mask:0.6760706018518519/0.2781078197337963/0.2690723560474537
+valid_points 0.2690723560474537
+saving the final model to /root/out_B_before/pc.ply

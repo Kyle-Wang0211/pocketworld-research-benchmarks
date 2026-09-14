@@ -1,0 +1,51 @@
+xFormers not available
+xFormers not available
+argv: ['--testpath', '/root/mono_dypcd', '--testlist', '/dev/null', '--outdir', '/root/mono_dypcd_out', '--loadckpt', '/dev/null']
+################################  args  ################################
+model     	mvsnet                        	<class 'str'>       
+dataset   	tanks                         	<class 'str'>       
+testpath  	/root/mono_dypcd              	<class 'str'>       
+testlist  	/dev/null                     	<class 'str'>       
+batch_size	1                             	<class 'int'>       
+loadckpt  	/dev/null                     	<class 'str'>       
+outdir    	/root/mono_dypcd_out          	<class 'str'>       
+share_cr  	False                         	<class 'bool'>      
+ndepths   	16,8,4,4                      	<class 'str'>       
+depth_inter_r	0.5,0.5,0.5,0.5               	<class 'str'>       
+interval_scale	1.06                          	<class 'float'>     
+num_view  	11                            	<class 'int'>       
+fusion_views	16                            	<class 'int'>       
+max_h     	864                           	<class 'int'>       
+max_w     	1152                          	<class 'int'>       
+fix_res   	False                         	<class 'bool'>      
+num_worker	1                             	<class 'int'>       
+save_freq 	20                            	<class 'int'>       
+fpn_base_channel	8                             	<class 'int'>       
+reg_channel	8                             	<class 'int'>       
+reg_mode  	reg2d                         	<class 'str'>       
+dlossw    	1,1,1,1                       	<class 'str'>       
+resume    	False                         	<class 'bool'>      
+group_cor 	False                         	<class 'bool'>      
+group_cor_dim	8,8,4,4                       	<class 'str'>       
+inverse_depth	False                         	<class 'bool'>      
+agg_type  	ConvBnReLU3D                  	<class 'str'>       
+dcn       	False                         	<class 'bool'>      
+arch_mode 	fpn                           	<class 'str'>       
+rt        	False                         	<class 'bool'>      
+use_raw_train	False                         	<class 'bool'>      
+split     	intermediate                  	<class 'str'>       
+attn_temp 	2                             	<class 'int'>       
+mono_sampling	True                          	<class 'bool'>      
+edge_guide	True                          	<class 'bool'>      
+attention 	True                          	<class 'bool'>      
+########################################################################
+***********Interval_Scale**********
+ 1.06
+接入常数: {'s_all': 1, 'conf_all': 0.25, 'dist_all': 0.25, 'rel_diff_all': 0.0006666666666666666, 'fusion_view': 11}
+Traceback (most recent call last):
+  File "/root/mono_dypcd.py", line 40, in <module>
+    dyp.filter_depth(PAIR, PAIR, SRC, out_ply)
+  File "/root/MonoMVSNet/test_dypcd_tnt_adv.py", line 229, in filter_depth
+    s = s_all[scan]
+        ~~~~~^^^^^^
+KeyError: 'mono_dypcd_v4ep0'

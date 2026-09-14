@@ -1,0 +1,106 @@
+xFormers not available
+xFormers not available
+current time 20260909_040611
+creating new summary file
+argv: ['--logdir', './checkpoints/indoor_v1', '--dataset=blendedmvs', '--batch_size=2', '--accum_steps', '8', '--training_views', '9', '--trainpath=/root/monotrain', '--summary_freq', '200', '--loadckpt', 'checkpoints/bld_ft/bld_best.ckpt', '--ndepths', '8,8,4,4', '--depth_inter_r', '0.5,0.5,0.5,0.5', '--lr', '0.001', '--wd', '0.0001', '--lr_scheduler', 'cos', '--epochs', '2', '--attn_temp', '2', '--trainlist', 'lists/ours/train.txt', '--testlist', 'lists/ours/val.txt']
+################################  args  ################################
+mode      	train                         	<class 'str'>       
+device    	cuda                          	<class 'str'>       
+local_rank	0                             	<class 'int'>       
+seed      	0                             	<class 'int'>       
+dataset   	blendedmvs                    	<class 'str'>       
+trainpath 	/root/monotrain               	<class 'str'>       
+testpath  	/root/monotrain               	<class 'str'>       
+trainlist 	lists/ours/train.txt          	<class 'str'>       
+testlist  	lists/ours/val.txt            	<class 'str'>       
+rt        	True                          	<class 'bool'>      
+max_h     	864                           	<class 'int'>       
+max_w     	1152                          	<class 'int'>       
+interval_scale	1.06                          	<class 'float'>     
+pin_m     	False                         	<class 'bool'>      
+epochs    	2                             	<class 'int'>       
+lr        	0.001                         	<class 'float'>     
+lrepochs  	6,8,10,12:2                   	<class 'str'>       
+wd        	0.0001                        	<class 'float'>     
+batch_size	2                             	<class 'int'>       
+accum_steps	8                             	<class 'int'>       
+training_views	9                             	<class 'int'>       
+loadckpt  	checkpoints/bld_ft/bld_best.ckpt	<class 'str'>       
+logdir    	./checkpoints/indoor_v1       	<class 'str'>       
+resume    	False                         	<class 'bool'>      
+summary_freq	200                           	<class 'int'>       
+save_freq 	1                             	<class 'int'>       
+eval_freq 	1                             	<class 'int'>       
+dlossw    	1,1,1,1                       	<class 'str'>       
+use_raw_train	False                         	<class 'bool'>      
+lr_scheduler	cos                           	<class 'str'>       
+ndepths   	8,8,4,4                       	<class 'str'>       
+depth_inter_r	0.5,0.5,0.5,0.5               	<class 'str'>       
+fpn_base_channel	8                             	<class 'int'>       
+reg_channel	8                             	<class 'int'>       
+reg_mode  	reg2d                         	<class 'str'>       
+group_cor 	True                          	<class 'bool'>      
+group_cor_dim	8,8,4,4                       	<class 'str'>       
+inverse_depth	True                          	<class 'bool'>      
+agg_type  	ConvBnReLU3D                  	<class 'str'>       
+arch_mode 	fpn                           	<class 'str'>       
+attn_temp 	2.0                           	<class 'float'>     
+mono_sampling	True                          	<class 'bool'>      
+edge_guide	True                          	<class 'bool'>      
+attention 	True                          	<class 'bool'>      
+########################################################################
+loading model checkpoints/bld_ft/bld_best.ckpt
+start at epoch 0
+Number of model parameters: 27.68M
+Number of model trainable parameters: 2.89M
+Let's use 1 GPUs!
+Epoch 0:
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Epoch 0/2, Iter 0/79552, lr 0.001000, train loss = 5.423, ce_loss = 1.554, 1.515, 1.133, 1.220, range_err = 0.001, 0.286, 0.519, 0.655, epe:30637.835938, err3:0.431133, err1:0.276091,time = 33.025
+Epoch 0/2, Iter 200/79552, lr 0.001000, train loss = 3.783, ce_loss = 0.783, 1.162, 0.881, 0.958, range_err = 0.000, 0.227, 0.408, 0.526, epe:13.341809, err3:0.549778, err1:0.431994,time = 0.514
+Epoch 0/2, Iter 400/79552, lr 0.001000, train loss = 3.273, ce_loss = 0.422, 0.844, 0.966, 1.041, range_err = 0.000, 0.099, 0.247, 0.502, epe:742.510681, err3:0.560294, err1:0.348271,time = 0.622
+Epoch 0/2, Iter 600/79552, lr 0.001000, train loss = 3.194, ce_loss = 0.387, 0.998, 0.861, 0.948, range_err = 0.000, 0.094, 0.311, 0.466, epe:90.472656, err3:0.630103, err1:0.481595,time = 0.427
+Epoch 0/2, Iter 800/79552, lr 0.001000, train loss = 2.352, ce_loss = 0.189, 0.499, 0.715, 0.950, range_err = 0.000, 0.014, 0.080, 0.199, epe:1.506282, err3:0.899141, err1:0.724885,time = 0.507
+Epoch 0/2, Iter 1000/79552, lr 0.001000, train loss = 3.689, ce_loss = 0.462, 1.087, 1.060, 1.080, range_err = 0.001, 0.070, 0.278, 0.464, epe:5.931781, err3:0.667326, err1:0.447599,time = 1.651
+Epoch 0/2, Iter 1200/79552, lr 0.001000, train loss = 2.094, ce_loss = 0.145, 0.403, 0.587, 0.959, range_err = 0.000, 0.003, 0.044, 0.123, epe:1.114588, err3:0.938933, err1:0.803535,time = 0.485
+Epoch 0/2, Iter 1400/79552, lr 0.001000, train loss = 3.356, ce_loss = 0.311, 1.041, 1.014, 0.991, range_err = 0.000, 0.064, 0.268, 0.536, epe:111.364624, err3:0.614065, err1:0.310439,time = 0.400
+Epoch 0/2, Iter 1600/79552, lr 0.001000, train loss = 1.606, ce_loss = 0.262, 0.361, 0.395, 0.587, range_err = 0.000, 0.055, 0.118, 0.156, epe:5.521782, err3:0.881467, err1:0.838710,time = 0.506
+Epoch 0/2, Iter 1800/79552, lr 0.001000, train loss = 2.960, ce_loss = 0.271, 0.735, 0.860, 1.094, range_err = 0.000, 0.038, 0.148, 0.309, epe:3.976905, err3:0.831012, err1:0.580497,time = 1.439
+Epoch 0/2, Iter 2000/79552, lr 0.001000, train loss = 3.907, ce_loss = 0.520, 1.263, 1.134, 0.990, range_err = 0.000, 0.117, 0.392, 0.652, epe:23.368811, err3:0.515423, err1:0.258020,time = 0.491
+Epoch 0/2, Iter 2200/79552, lr 0.001000, train loss = 3.259, ce_loss = 0.642, 0.916, 0.817, 0.884, range_err = 0.001, 0.243, 0.402, 0.519, epe:2066.688965, err3:0.579381, err1:0.440487,time = 0.545
+Epoch 0/2, Iter 2400/79552, lr 0.001000, train loss = 3.323, ce_loss = 0.381, 0.897, 0.997, 1.048, range_err = 0.000, 0.119, 0.264, 0.502, epe:80.799736, err3:0.558029, err1:0.328486,time = 0.413
+Epoch 0/2, Iter 2600/79552, lr 0.001000, train loss = 2.864, ce_loss = 0.334, 0.777, 0.834, 0.919, range_err = 0.000, 0.046, 0.209, 0.361, epe:3.942738, err3:0.759809, err1:0.567334,time = 1.293
+Epoch 0/2, Iter 2800/79552, lr 0.001000, train loss = 2.231, ce_loss = 0.311, 0.523, 0.599, 0.798, range_err = 0.000, 0.029, 0.112, 0.208, epe:2.074881, err3:0.882364, err1:0.769891,time = 1.593
+Epoch 0/2, Iter 3000/79552, lr 0.001000, train loss = 3.996, ce_loss = 0.499, 1.351, 1.131, 1.015, range_err = 0.000, 0.151, 0.455, 0.715, epe:311.791321, err3:0.433621, err1:0.198414,time = 0.480
+Epoch 0/2, Iter 3200/79552, lr 0.001000, train loss = 2.861, ce_loss = 0.294, 0.826, 0.814, 0.926, range_err = 0.000, 0.041, 0.200, 0.358, epe:5.341235, err3:0.773289, err1:0.579299,time = 0.596
+Epoch 0/2, Iter 3400/79552, lr 0.001000, train loss = 4.097, ce_loss = 0.586, 1.479, 1.082, 0.949, range_err = 0.000, 0.158, 0.499, 0.732, epe:12.193985, err3:0.437585, err1:0.199349,time = 0.636
+Epoch 0/2, Iter 3600/79552, lr 0.001000, train loss = 4.113, ce_loss = 0.778, 1.263, 1.040, 1.033, range_err = 0.000, 0.289, 0.565, 0.726, epe:3451.447510, err3:0.359775, err1:0.193605,time = 0.474
+Epoch 0/2, Iter 3800/79552, lr 0.001000, train loss = 3.676, ce_loss = 0.537, 1.140, 1.006, 0.993, range_err = 0.000, 0.128, 0.393, 0.589, epe:13.970930, err3:0.534890, err1:0.335214,time = 0.466
+Epoch 0/2, Iter 4000/79552, lr 0.001000, train loss = 3.286, ce_loss = 0.615, 0.927, 0.835, 0.909, range_err = 0.000, 0.248, 0.395, 0.501, epe:162.124146, err3:0.571904, err1:0.459395,time = 0.580
+Epoch 0/2, Iter 4200/79552, lr 0.001000, train loss = 3.025, ce_loss = 0.353, 0.671, 0.798, 1.202, range_err = 0.000, 0.113, 0.236, 0.371, epe:15.546261, err3:0.744403, err1:0.525804,time = 0.481
+Epoch 0/2, Iter 4400/79552, lr 0.001000, train loss = 2.870, ce_loss = 0.328, 0.727, 0.812, 1.003, range_err = 0.001, 0.053, 0.192, 0.308, epe:5.863505, err3:0.774505, err1:0.620725,time = 0.512
+Epoch 0/2, Iter 4600/79552, lr 0.001000, train loss = 3.411, ce_loss = 0.471, 0.997, 0.941, 1.001, range_err = 0.000, 0.096, 0.303, 0.489, epe:6.363515, err3:0.646560, err1:0.419502,time = 0.560
+Epoch 0/2, Iter 4800/79552, lr 0.001000, train loss = 3.645, ce_loss = 0.485, 1.292, 0.943, 0.925, range_err = 0.000, 0.097, 0.458, 0.643, epe:6.908137, err3:0.496524, err1:0.271956,time = 0.479
+Epoch 0/2, Iter 5000/79552, lr 0.001000, train loss = 3.101, ce_loss = 0.445, 0.916, 0.799, 0.942, range_err = 0.001, 0.132, 0.333, 0.450, epe:18.529974, err3:0.648559, err1:0.479448,time = 0.550
+Epoch 0/2, Iter 5200/79552, lr 0.001000, train loss = 3.691, ce_loss = 0.597, 1.190, 0.941, 0.962, range_err = 0.000, 0.163, 0.398, 0.589, epe:3461.611084, err3:0.335523, err1:0.162360,time = 0.433
+Epoch 0/2, Iter 5400/79552, lr 0.001000, train loss = 2.708, ce_loss = 0.360, 0.738, 0.700, 0.909, range_err = 0.000, 0.081, 0.222, 0.338, epe:665.079712, err3:0.667831, err1:0.564789,time = 0.536
+Epoch 0/2, Iter 5600/79552, lr 0.001000, train loss = 2.571, ce_loss = 0.184, 0.644, 0.796, 0.948, range_err = 0.000, 0.011, 0.105, 0.268, epe:1.634475, err3:0.895077, err1:0.668927,time = 0.523
+Epoch 0/2, Iter 5800/79552, lr 0.001000, train loss = 2.826, ce_loss = 0.269, 0.727, 0.810, 1.020, range_err = 0.001, 0.109, 0.233, 0.377, epe:7.034517, err3:0.737703, err1:0.557050,time = 0.494
+Epoch 0/2, Iter 6000/79552, lr 0.001000, train loss = 2.169, ce_loss = 0.295, 0.527, 0.548, 0.800, range_err = 0.001, 0.048, 0.114, 0.178, epe:4.016043, err3:0.888136, err1:0.798542,time = 0.550
+Epoch 0/2, Iter 6200/79552, lr 0.001000, train loss = 2.890, ce_loss = 0.462, 0.806, 0.774, 0.848, range_err = 0.000, 0.135, 0.313, 0.448, epe:5.054264, err3:0.657049, err1:0.510284,time = 0.529
+Epoch 0/2, Iter 6400/79552, lr 0.001000, train loss = 2.727, ce_loss = 0.375, 0.712, 0.759, 0.881, range_err = 0.000, 0.172, 0.297, 0.416, epe:117.810211, err3:0.617201, err1:0.502312,time = 0.437
+Epoch 0/2, Iter 6600/79552, lr 0.001000, train loss = 3.116, ce_loss = 0.380, 0.750, 0.922, 1.064, range_err = 0.000, 0.119, 0.242, 0.423, epe:261.518250, err3:0.717317, err1:0.427530,time = 0.581
+Epoch 0/2, Iter 6800/79552, lr 0.001000, train loss = 2.271, ce_loss = 0.273, 0.556, 0.623, 0.819, range_err = 0.000, 0.038, 0.140, 0.234, epe:2.916773, err3:0.851236, err1:0.732214,time = 0.498
+Epoch 0/2, Iter 7000/79552, lr 0.001000, train loss = 3.819, ce_loss = 0.884, 1.230, 0.853, 0.852, range_err = 0.001, 0.272, 0.494, 0.606, epe:18823.302734, err3:0.432120, err1:0.120044,time = 0.393
+Epoch 0/2, Iter 7200/79552, lr 0.001000, train loss = 3.385, ce_loss = 0.521, 1.087, 0.912, 0.865, range_err = 0.000, 0.114, 0.365, 0.554, epe:10.527798, err3:0.571307, err1:0.400485,time = 0.544
+Epoch 0/2, Iter 7400/79552, lr 0.001000, train loss = 3.459, ce_loss = 0.452, 0.917, 1.060, 1.029, range_err = 0.000, 0.091, 0.279, 0.538, epe:8.297952, err3:0.632662, err1:0.356163,time = 0.546
+Epoch 0/2, Iter 7600/79552, lr 0.001000, train loss = 2.328, ce_loss = 0.300, 0.558, 0.622, 0.849, range_err = 0.000, 0.093, 0.179, 0.261, epe:5.185225, err3:0.818740, err1:0.697055,time = 1.113
+Epoch 0/2, Iter 7800/79552, lr 0.001000, train loss = 3.405, ce_loss = 0.414, 1.002, 0.991, 0.998, range_err = 0.000, 0.084, 0.304, 0.519, epe:6.012034, err3:0.632761, err1:0.396826,time = 0.575
+Epoch 0/2, Iter 8000/79552, lr 0.001000, train loss = 3.514, ce_loss = 0.414, 1.059, 1.059, 0.981, range_err = 0.001, 0.114, 0.330, 0.581, epe:117.465111, err3:0.580056, err1:0.281084,time = 0.467
+Epoch 0/2, Iter 8200/79552, lr 0.001000, train loss = 4.687, ce_loss = 0.942, 1.717, 1.109, 0.918, range_err = 0.002, 0.269, 0.641, 0.829, epe:22.201799, err3:0.283516, err1:0.115629,time = 0.517
+Epoch 0/2, Iter 8400/79552, lr 0.001000, train loss = 2.896, ce_loss = 0.256, 0.854, 0.846, 0.940, range_err = 0.001, 0.033, 0.211, 0.394, epe:3.381420, err3:0.746002, err1:0.544960,time = 0.549
+Epoch 0/2, Iter 8600/79552, lr 0.001000, train loss = 3.697, ce_loss = 0.428, 1.332, 1.004, 0.933, range_err = 0.001, 0.066, 0.381, 0.615, epe:7.709672, err3:0.573389, err1:0.302113,time = 0.546
+Epoch 0/2, Iter 8800/79552, lr 0.001000, train loss = 2.621, ce_loss = 0.451, 0.765, 0.650, 0.755, range_err = 0.000, 0.144, 0.299, 0.397, epe:21.964191, err3:0.478487, err1:0.372426,time = 0.407
+Epoch 0/2, Iter 9000/79552, lr 0.001000, train loss = 3.417, ce_loss = 0.624, 0.971, 0.908, 0.914, range_err = 0.000, 0.136, 0.291, 0.500, epe:9.001159, err3:0.688615, err1:0.443837,time = 0.584
+Epoch 0/2, Iter 9200/79552, lr 0.001000, train loss = 2.685, ce_loss = 0.338, 0.639, 0.812, 0.896, range_err = 0.000, 0.056, 0.163, 0.370, epe:3.998006, err3:0.799699, err1:0.545469,time = 0.537

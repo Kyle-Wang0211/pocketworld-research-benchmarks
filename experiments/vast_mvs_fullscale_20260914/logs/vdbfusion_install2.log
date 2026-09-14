@@ -1,0 +1,950 @@
+Processing ./.
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: numpy in /root/venv_vdb/lib/python3.12/site-packages (from vdbfusion==0.1.6) (2.5.3)
+Building wheels for collected packages: vdbfusion
+  Building wheel for vdbfusion (pyproject.toml): started
+  Building wheel for vdbfusion (pyproject.toml): still running...
+  Building wheel for vdbfusion (pyproject.toml): finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Building wheel for vdbfusion (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [921 lines of output]
+      /tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/config/expand.py:126: SetuptoolsWarning: File '/root/vdbfusion_src/' cannot be found
+        return '\n'.join(
+      /tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/dist.py:765: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+      !!
+      
+              ********************************************************************************
+              Please consider removing the following classifiers in favor of a SPDX license expression:
+      
+              License :: OSI Approved :: MIT License
+      
+              See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+              ********************************************************************************
+      
+      !!
+        self._finalize_license_expression()
+      /tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/dist.py:483: SetuptoolsDeprecationWarning: Cannot find any files for the given pattern.
+      !!
+      
+              ********************************************************************************
+              Pattern 'LICENSE.txt' did not match any files.
+      
+              By 2027-Feb-18, you need to update your project and remove deprecated calls
+              or your builds will no longer be supported.
+              ********************************************************************************
+      
+      !!
+        for path in sorted(cls._find_pattern(pattern, enforce_match))
+      running bdist_wheel
+      running build
+      running build_py
+      running build_ext
+      -- pybind11 v3.1.0
+      -- Found Python: /usr/bin/python3 (found suitable version "3.12.3", minimum required is "3.9") found components: Interpreter Development.Module Development.Embed
+      Using compatibility mode for Python, set PYBIND11_FINDPYTHON to NEW/OLD to silence this message
+      CMake Warning (dev) at /usr/share/cmake-3.28/Modules/ExternalProject.cmake:3195 (message):
+        The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+        not set.  The policy's OLD behavior will be used.  When using a URL
+        download, the timestamps of extracted files should preferably be that of
+        the time of extraction, otherwise code that depends on the extracted
+        contents might not be rebuilt if the URL changes.  The OLD behavior
+        preserves the timestamps from the archive instead, but this is usually not
+        what you want.  Update your project to the NEW behavior or specify the
+        DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+        robustness issue.
+      Call Stack (most recent call first):
+        /usr/share/cmake-3.28/Modules/ExternalProject.cmake:4418 (_ep_add_download_command)
+        3rdparty/tbb/tbb.cmake:24 (ExternalProject_Add)
+        3rdparty/OpenVDB/OpenVDB.cmake:24 (include)
+        3rdparty/find_dependencies.cmake:66 (include)
+        CMakeLists.txt:59 (include)
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      CMake Warning (dev) at /usr/share/cmake-3.28/Modules/ExternalProject.cmake:3195 (message):
+        The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+        not set.  The policy's OLD behavior will be used.  When using a URL
+        download, the timestamps of extracted files should preferably be that of
+        the time of extraction, otherwise code that depends on the extracted
+        contents might not be rebuilt if the URL changes.  The OLD behavior
+        preserves the timestamps from the archive instead, but this is usually not
+        what you want.  Update your project to the NEW behavior or specify the
+        DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+        robustness issue.
+      Call Stack (most recent call first):
+        /usr/share/cmake-3.28/Modules/ExternalProject.cmake:4418 (_ep_add_download_command)
+        3rdparty/blosc/blosc.cmake:24 (ExternalProject_Add)
+        3rdparty/OpenVDB/OpenVDB.cmake:25 (include)
+        3rdparty/find_dependencies.cmake:66 (include)
+        CMakeLists.txt:59 (include)
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      CMake Warning (dev) at /usr/share/cmake-3.28/Modules/ExternalProject.cmake:3195 (message):
+        The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+        not set.  The policy's OLD behavior will be used.  When using a URL
+        download, the timestamps of extracted files should preferably be that of
+        the time of extraction, otherwise code that depends on the extracted
+        contents might not be rebuilt if the URL changes.  The OLD behavior
+        preserves the timestamps from the archive instead, but this is usually not
+        what you want.  Update your project to the NEW behavior or specify the
+        DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+        robustness issue.
+      Call Stack (most recent call first):
+        /usr/share/cmake-3.28/Modules/ExternalProject.cmake:4418 (_ep_add_download_command)
+        3rdparty/boost/boost.cmake:36 (ExternalProject_Add)
+        3rdparty/OpenVDB/OpenVDB.cmake:26 (include)
+        3rdparty/find_dependencies.cmake:66 (include)
+        CMakeLists.txt:59 (include)
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      -- Found Python: /usr/bin/python3 (found version "3.12.3") found components: Interpreter
+      -- Configuring done (0.8s)
+      -- Generating done (0.0s)
+      -- Build files have been written to: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312
+      [  2%] Performing configure step for 'external_blosc'
+      [  5%] Performing configure step for 'external_tbb'
+      [ 27%] Built target external_boost
+      CMake Deprecation Warning at CMakeLists.txt:52 (cmake_minimum_required):
+        Compatibility with CMake < 3.5 will be removed from a future version of
+        CMake.
+      
+        Update the VERSION argument <min> value or use a ...<max> suffix to tell
+        CMake that the project does not need compatibility with older versions.
+      
+      
+      CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+        Compatibility with CMake < 3.5 will be removed from a future version of
+        CMake.
+      
+        Update the VERSION argument <min> value or use a ...<max> suffix to tell
+        CMake that the project does not need compatibility with older versions.
+      
+      
+      Configuring for Blosc version: 1.5.0
+      -- Finding external libraries disabled.  Using internal sources.
+      CMake Warning (dev) at cmake/FindSSE.cmake:5 (EXEC_PROGRAM):
+        Policy CMP0153 is not set: The exec_program command should not be called.
+        Run "cmake --help-policy CMP0153" for policy details.  Use the cmake_policy
+        command to set the policy and suppress this warning.
+      
+        Use execute_process() instead.
+      Call Stack (most recent call first):
+        CMakeLists.txt:144 (find_package)
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      -- Configuring done (0.0s)
+      -- Configuring done (0.0s)
+      -- Generating done (0.0s)
+      -- Generating done (0.0s)
+      -- Build files have been written to: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/src/external_tbb-build
+      -- Build files have been written to: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc-build
+      [ 29%] Performing build step for 'external_tbb'
+      [ 32%] Performing build step for 'external_blosc'
+      [  2%] Building CXX object CMakeFiles/tbbmalloc_proxy.dir/src/tbbmalloc/proxy.cpp.o
+      [  4%] Building CXX object CMakeFiles/tbbmalloc_proxy.dir/src/tbbmalloc/tbb_function_replacement.cpp.o
+      [  6%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbbmalloc/large_objects.cpp.o
+      [ 10%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbbmalloc/backref.cpp.o
+      [  4%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/lz4-r123/lz4hc.c.o
+      [  4%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/lz4-r123/lz4.c.o
+      [ 10%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbbmalloc/frontend.cpp.o
+      [ 12%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbb/itt_notify.cpp.o
+      [ 14%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbbmalloc/backend.cpp.o
+      [  6%] Building C object blosc/CMakeFiles/blosc_shared.dir/blosc.c.o
+      [  8%] Building C object blosc/CMakeFiles/blosc_shared.dir/blosclz.c.o
+      [ 10%] Building C object blosc/CMakeFiles/blosc_shared.dir/shuffle.c.o
+      [ 12%] Building CXX object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/snappy-1.1.1/snappy.cc.o
+      [ 16%] Building CXX object CMakeFiles/tbbmalloc.dir/src/tbbmalloc/tbbmalloc.cpp.o
+      [ 14%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/compress.c.o
+      [ 16%] Building CXX object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/snappy-1.1.1/snappy-c.cc.o
+      [ 18%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/deflate.c.o
+      [ 20%] Building CXX object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/snappy-1.1.1/snappy-sinksource.cc.o
+      [ 22%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/gzclose.c.o
+      [ 26%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/gzlib.c.o
+      [ 26%] Building CXX object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/snappy-1.1.1/snappy-stubs-internal.cc.o
+      [ 28%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/gzread.c.o
+      [ 34%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/infback.c.o
+      [ 34%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/adler32.c.o
+      [ 34%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/crc32.c.o
+      [ 36%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/inflate.c.o
+      [ 38%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/inffast.c.o
+      [ 40%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/inftrees.c.o
+      [ 42%] Building C object blosc/CMakeFiles/blosc_static.dir/blosc.c.o
+      [ 44%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/gzwrite.c.o
+      [ 46%] Building C object blosc/CMakeFiles/blosc_static.dir/blosclz.c.o
+      [ 48%] Building C object blosc/CMakeFiles/blosc_static.dir/shuffle.c.o
+      [ 18%] Building CXX object CMakeFiles/tbb.dir/src/old/concurrent_queue_v2.cpp.o
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c: In function ‘gz_open’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c:14:17: warning: implicit declaration of function ‘lseek’; did you mean ‘fseek’? [-Wimplicit-function-declaration]
+         14 | #  define LSEEK lseek
+            |                 ^~~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c:256:24: note: in expansion of macro ‘LSEEK’
+        256 |         state->start = LSEEK(state->fd, 0, SEEK_CUR);
+            |                        ^~~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c: In function ‘gz_load’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c:30:15: warning: implicit declaration of function ‘read’; did you mean ‘fread’? [-Wimplicit-function-declaration]
+         30 |         ret = read(state->fd, buf + *have, len - *have);
+            |               ^~~~
+            |               fread
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c: In function ‘gzclose_r’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c:591:11: warning: implicit declaration of function ‘close’; did you mean ‘pclose’? [-Wimplicit-function-declaration]
+        591 |     ret = close(state->fd);
+            |           ^~~~~
+            |           pclose
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c: In function ‘gz_comp’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c:84:15: warning: implicit declaration of function ‘write’; did you mean ‘fwrite’? [-Wimplicit-function-declaration]
+         84 |         got = write(state->fd, strm->next_in, strm->avail_in);
+            |               ^~~~~
+            |               fwrite
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c: In function ‘gzclose_w’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c:573:9: warning: implicit declaration of function ‘close’; did you mean ‘pclose’? [-Wimplicit-function-declaration]
+        573 |     if (close(state->fd) == -1)
+            |         ^~~~~
+            |         pclose
+      [ 52%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/uncompr.c.o
+      [ 52%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/trees.c.o
+      [ 54%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/lz4-r123/lz4.c.o
+      [ 56%] Building C object blosc/CMakeFiles/blosc_shared.dir/__/internal-complibs/zlib-1.2.8/zutil.c.o
+      [ 58%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/lz4-r123/lz4hc.c.o
+      [ 60%] Building CXX object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/snappy-1.1.1/snappy-sinksource.cc.o
+      [ 62%] Building CXX object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/snappy-1.1.1/snappy-c.cc.o
+      [ 22%] Building CXX object CMakeFiles/tbb.dir/src/old/spin_rw_mutex_v2.cpp.o
+      [ 20%] Building CXX object CMakeFiles/tbb.dir/src/old/concurrent_vector_v2.cpp.o
+      [ 25%] Building CXX object CMakeFiles/tbb.dir/src/old/task_v2.cpp.o
+      [ 27%] Building CXX object CMakeFiles/tbb.dir/src/tbb/arena.cpp.o
+      [ 29%] Building CXX object CMakeFiles/tbb.dir/src/tbb/cache_aligned_allocator.cpp.o
+      [ 64%] Building CXX object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/snappy-1.1.1/snappy-stubs-internal.cc.o
+      [ 66%] Building CXX object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/snappy-1.1.1/snappy.cc.o
+      [ 68%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/adler32.c.o
+      [ 70%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/compress.c.o
+      [ 31%] Building CXX object CMakeFiles/tbb.dir/src/tbb/concurrent_hash_map.cpp.o
+      [ 33%] Building CXX object CMakeFiles/tbb.dir/src/tbb/concurrent_monitor.cpp.o
+      [ 35%] Building CXX object CMakeFiles/tbb.dir/src/tbb/concurrent_queue.cpp.o
+      [ 72%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/crc32.c.o
+      [ 37%] Building CXX object CMakeFiles/tbb.dir/src/tbb/concurrent_vector.cpp.o
+      [ 74%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/deflate.c.o
+      [ 76%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/gzclose.c.o
+      [ 39%] Building CXX object CMakeFiles/tbb.dir/src/tbb/condition_variable.cpp.o
+      [ 78%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/gzlib.c.o
+      [ 80%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/gzread.c.o
+      [ 41%] Building CXX object CMakeFiles/tbb.dir/src/tbb/critical_section.cpp.o
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c: In function ‘gz_open’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c:14:17: warning: implicit declaration of function ‘lseek’; did you mean ‘fseek’? [-Wimplicit-function-declaration]
+         14 | #  define LSEEK lseek
+            |                 ^~~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzlib.c:256:24: note: in expansion of macro ‘LSEEK’
+        256 |         state->start = LSEEK(state->fd, 0, SEEK_CUR);
+            |                        ^~~~~
+      [ 82%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/gzwrite.c.o
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c: In function ‘gz_load’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c:30:15: warning: implicit declaration of function ‘read’; did you mean ‘fread’? [-Wimplicit-function-declaration]
+         30 |         ret = read(state->fd, buf + *have, len - *have);
+            |               ^~~~
+            |               fread
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c: In function ‘gzclose_r’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzread.c:591:11: warning: implicit declaration of function ‘close’; did you mean ‘pclose’? [-Wimplicit-function-declaration]
+        591 |     ret = close(state->fd);
+            |           ^~~~~
+            |           pclose
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c: In function ‘gz_comp’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c:84:15: warning: implicit declaration of function ‘write’; did you mean ‘fwrite’? [-Wimplicit-function-declaration]
+         84 |         got = write(state->fd, strm->next_in, strm->avail_in);
+            |               ^~~~~
+            |               fwrite
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c: In function ‘gzclose_w’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/src/external_blosc/internal-complibs/zlib-1.2.8/gzwrite.c:573:9: warning: implicit declaration of function ‘close’; did you mean ‘pclose’? [-Wimplicit-function-declaration]
+        573 |     if (close(state->fd) == -1)
+            |         ^~~~~
+            |         pclose
+      [ 84%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/inffast.c.o
+      [ 86%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/infback.c.o
+      [ 43%] Building CXX object CMakeFiles/tbb.dir/src/tbb/dynamic_link.cpp.o
+      [ 88%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/inflate.c.o
+      [ 90%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/inftrees.c.o
+      [ 45%] Building CXX object CMakeFiles/tbb.dir/src/tbb/governor.cpp.o
+      [ 92%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/trees.c.o
+      [ 94%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/uncompr.c.o
+      [ 47%] Building CXX object CMakeFiles/tbb.dir/src/tbb/itt_notify.cpp.o
+      [ 96%] Building C object blosc/CMakeFiles/blosc_static.dir/__/internal-complibs/zlib-1.2.8/zutil.c.o
+      [ 50%] Linking CXX static library libtbbmalloc_proxy.a
+      [ 52%] Building CXX object CMakeFiles/tbb.dir/src/tbb/market.cpp.o
+      [ 54%] Building CXX object CMakeFiles/tbb.dir/src/tbb/mutex.cpp.o
+      [ 56%] Building CXX object CMakeFiles/tbb.dir/src/tbb/observer_proxy.cpp.o
+      [ 58%] Building CXX object CMakeFiles/tbb.dir/src/tbb/pipeline.cpp.o
+      [ 58%] Built target tbbmalloc_proxy
+      [ 60%] Building CXX object CMakeFiles/tbb.dir/src/tbb/private_server.cpp.o
+      [ 62%] Building CXX object CMakeFiles/tbb.dir/src/tbb/queuing_mutex.cpp.o
+      [ 64%] Building CXX object CMakeFiles/tbb.dir/src/tbb/queuing_rw_mutex.cpp.o
+      [ 66%] Building CXX object CMakeFiles/tbb.dir/src/tbb/reader_writer_lock.cpp.o
+      [ 68%] Building CXX object CMakeFiles/tbb.dir/src/tbb/recursive_mutex.cpp.o
+      [ 70%] Building CXX object CMakeFiles/tbb.dir/src/tbb/scheduler.cpp.o
+      [ 72%] Building CXX object CMakeFiles/tbb.dir/src/tbb/semaphore.cpp.o
+      [ 75%] Building CXX object CMakeFiles/tbb.dir/src/tbb/spin_mutex.cpp.o
+      [ 77%] Building CXX object CMakeFiles/tbb.dir/src/tbb/spin_rw_mutex.cpp.o
+      [ 79%] Building CXX object CMakeFiles/tbb.dir/src/tbb/task.cpp.o
+      [ 81%] Building CXX object CMakeFiles/tbb.dir/src/tbb/task_group_context.cpp.o
+      [ 83%] Building CXX object CMakeFiles/tbb.dir/src/tbb/tbb_main.cpp.o
+      [ 85%] Building CXX object CMakeFiles/tbb.dir/src/tbb/tbb_misc.cpp.o
+      [ 87%] Building CXX object CMakeFiles/tbb.dir/src/tbb/tbb_misc_ex.cpp.o
+      [ 89%] Building CXX object CMakeFiles/tbb.dir/src/tbb/tbb_statistics.cpp.o
+      [ 98%] Linking CXX static library libblosc.a
+      [ 98%] Built target blosc_static
+      [100%] Linking CXX shared library libblosc.so
+      [ 91%] Building CXX object CMakeFiles/tbb.dir/src/tbb/tbb_thread.cpp.o
+      [ 93%] Building CXX object CMakeFiles/tbb.dir/src/tbb/x86_rtm_rw_mutex.cpp.o
+      [ 95%] Building CXX object CMakeFiles/tbb.dir/src/rml/client/rml_tbb.cpp.o
+      [100%] Built target blosc_shared
+      [ 35%] Performing install step for 'external_blosc'
+      [100%] Built target blosc_shared
+      [100%] Built target blosc_static
+      Install the project...
+      -- Install configuration: "Release"
+      -- Up-to-date: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/include/blosc.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/lib/libblosc.so.1.5.0
+      -- Up-to-date: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/lib/libblosc.so.1
+      -- Up-to-date: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/lib/libblosc.so
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc/lib/libblosc.a
+      [ 37%] Completed 'external_blosc'
+      [ 48%] Built target external_blosc
+      [ 97%] Linking CXX static library libtbbmalloc.a
+      [ 97%] Built target tbbmalloc
+      [100%] Linking CXX static library libtbb.a
+      [100%] Built target tbb
+      [ 51%] Performing install step for 'external_tbb'
+      [  6%] Built target tbbmalloc_proxy
+      [ 20%] Built target tbbmalloc
+      [100%] Built target tbb
+      Install the project...
+      -- Install configuration: "Release"
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/lib/libtbb.a
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/lib/libtbbmalloc.a
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/lib/libtbbmalloc_proxy.a
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/aggregator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/aligned_space.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/atomic.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/blocked_range.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/blocked_range2d.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/blocked_range3d.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/blocked_rangeNd.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/cache_aligned_allocator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/combinable.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/compat
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/compat/condition_variable
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/compat/ppl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/compat/thread
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/compat/tuple
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_lru_cache.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_map.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_priority_queue.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_queue.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_set.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_unordered_map.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_unordered_set.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_vector.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/critical_section.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/enumerable_thread_specific.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/flow_graph.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/flow_graph_abstractions.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/flow_graph_opencl_node.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/global_control.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/index.html
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/info.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_aggregator_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_allocator_traits.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_concurrent_queue_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_concurrent_skip_list_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_concurrent_unordered_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_deprecated_header_message_guard.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_async_msg_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_body_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_cache_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_indexer_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_item_buffer_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_join_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_node_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_node_set_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_nodes_deduction.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_streaming_node.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_tagged_buffer_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_trace_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_flow_graph_types_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_mutex_padding.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_node_handle_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_range_iterator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_tbb_hash_compare_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_tbb_strings.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_tbb_trace_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_tbb_windef.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_template_helpers.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_warning_suppress_disable_notice.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_warning_suppress_enable_notice.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_x86_eliding_mutex_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/internal/_x86_rtm_rw_mutex_impl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/iterators.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/gcc_arm.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/gcc_generic.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/gcc_ia32_common.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/gcc_itsx.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/ibm_aix51.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/icc_generic.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/linux_common.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/linux_ia32.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/linux_ia64.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/linux_intel64.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/mac_ppc.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/macos_common.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/mic_common.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/msvc_armv7.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/msvc_ia32_common.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/sunos_sparc.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/windows_api.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/windows_ia32.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/machine/windows_intel64.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/memory_pool.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/null_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/null_rw_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_do.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_for.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_for_each.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_invoke.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_reduce.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_scan.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_sort.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_while.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/partitioner.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/pipeline.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/queuing_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/queuing_rw_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/reader_writer_lock.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/recursive_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/runtime_loader.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/scalable_allocator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/spin_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/spin_rw_mutex.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task_arena.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task_group.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task_scheduler_init.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task_scheduler_observer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_allocator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_config.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_disable_exceptions.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_exception.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_machine.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_profiling.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_stddef.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_thread.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbbmalloc_proxy.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tick_count.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/lib/cmake/tbb/TBBConfigVersion.cmake
+      [ 54%] Completed 'external_tbb'
+      [ 64%] Built target external_tbb
+      [ 67%] Creating directories for 'external_openvdb'
+      [ 70%] Performing download step (git clone) for 'external_openvdb'
+      Cloning into 'external_openvdb'...
+      Switched to a new branch 'nacho/vdbfusion'
+      branch 'nacho/vdbfusion' set up to track 'origin/nacho/vdbfusion'.
+      [ 72%] No update step for 'external_openvdb'
+      [ 75%] No patch step for 'external_openvdb'
+      [ 78%] Performing configure step for 'external_openvdb'
+      -- The CXX compiler identification is GNU 13.3.0
+      -- Detecting CXX compiler ABI info
+      -- Detecting CXX compiler ABI info - done
+      -- Check for working CXX compiler: /usr/bin/c++ - skipped
+      -- Detecting CXX compile features
+      -- Detecting CXX compile features - done
+      CMake Deprecation Warning at cmake/config/OpenVDBCXX.cmake:32 (message):
+        C++ < 17 is deprecated and will be removed.
+      Call Stack (most recent call first):
+        CMakeLists.txt:351 (include)
+      
+      
+      -- CMake Build Type: Release
+      -- Found PkgConfig: /usr/bin/pkg-config (found version "1.8.1")
+      CMake Warning at CMakeLists.txt:370 (message):
+        Unable to find Jemalloc, attempting to fall back to TBB malloc.
+      
+                It is recommended to use Jemalloc for optimum performance.
+      
+      
+      -- Configuring for OpenVDB Version 9.1.1
+      -- Configuring for OpenVDB ABI Version 9
+      -- ----------------------------------------------------
+      -- ------------- Configuring OpenVDBCore --------------
+      -- ----------------------------------------------------
+      CMake Warning (dev) at openvdb/openvdb/CMakeLists.txt:120 (find_package):
+        Policy CMP0144 is not set: find_package uses upper-case <PACKAGENAME>_ROOT
+        variables.  Run "cmake --help-policy CMP0144" for policy details.  Use the
+        cmake_policy command to set the policy and suppress this warning.
+      
+        CMake variable BOOST_ROOT is set to:
+      
+          /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/boost
+      
+        For compatibility, find_package is ignoring the variable, but code in a
+        .cmake module might still use it.
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      -- Found Boost: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/boost/lib/cmake/Boost-1.71.0/BoostConfig.cmake (found suitable version "1.71.0", minimum required is "1.70") found components: iostreams
+      CMake Deprecation Warning at openvdb/openvdb/CMakeLists.txt:125 (message):
+        Support for Boost versions < 1.73 is deprecated and will be removed.
+      
+      
+      CMake Warning at cmake/FindTBB.cmake:189 (message):
+      
+      
+              FindTBB located both an old and new tbb installation.
+                  old: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_stddef.h
+                  new: /usr/include/oneapi/tbb/version.h
+              The NEWER versioned installation will be used. You can set TBB_INCLUDEDIR
+              to control FindTBB.cmake search, or explicitly set Tbb_INCLUDE_DIR to the
+              desired location.
+      
+      Call Stack (most recent call first):
+        openvdb/openvdb/CMakeLists.txt:130 (find_package)
+      
+      
+      -- Found TBB: /usr/include (found suitable version "2021.11", minimum required is "2019.0") found components: tbb
+      CMake Warning (dev) at openvdb/openvdb/CMakeLists.txt:160 (find_package):
+        Policy CMP0144 is not set: find_package uses upper-case <PACKAGENAME>_ROOT
+        variables.  Run "cmake --help-policy CMP0144" for policy details.  Use the
+        cmake_policy command to set the policy and suppress this warning.
+      
+        CMake variable BLOSC_ROOT is set to:
+      
+          /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/blosc
+      
+        For compatibility, find_package is ignoring the variable, but code in a
+        .cmake module might still use it.
+      This warning is for project developers.  Use -Wno-dev to suppress it.
+      
+      -- Found Blosc: /usr/lib/x86_64-linux-gnu/libblosc.a (found suitable version "1.21.5", minimum required is "1.5.0")
+      -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+      -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+      -- Found Threads: TRUE
+      -- ----------------------------------------------------
+      -- ----------- Configuring OpenVDBBinaries ------------
+      -- ----------------------------------------------------
+      CMake Warning at cmake/FindTBB.cmake:189 (message):
+      
+      
+              FindTBB located both an old and new tbb installation.
+                  old: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/tbb_stddef.h
+                  new: /usr/include/oneapi/tbb/version.h
+              The NEWER versioned installation will be used. You can set TBB_INCLUDEDIR
+              to control FindTBB.cmake search, or explicitly set Tbb_INCLUDE_DIR to the
+              desired location.
+      
+      Call Stack (most recent call first):
+        openvdb_cmd/CMakeLists.txt:50 (find_package)
+      
+      
+      -- Found TBB: /usr/include (found suitable version "2021.11", minimum required is "2019.0") found components: tbbmalloc
+      -- Configuring done (0.3s)
+      -- Generating done (0.0s)
+      -- Build files have been written to: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/src/external_openvdb-build
+      [ 81%] Performing build step for 'external_openvdb'
+      [  1%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/VolumeToSpheres.cc.o
+      [  2%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/VelocityFields.cc.o
+      [  3%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/TopologyToLevelSet.cc.o
+      [  5%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/ValueTransformer.cc.o
+      [  6%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Prune.cc.o
+      [  8%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PotentialFlow.cc.o
+      [  8%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/VolumeToMesh.cc.o
+      [ 10%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/VolumeAdvect.cc.o
+      [ 12%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PointsToMask.cc.o
+      [ 12%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/VectorTransformer.cc.o
+      [ 14%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PointPartitioner.cc.o
+      [ 17%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/RayTracer.cc.o
+      [ 20%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/ParticlesToLevelSet.cc.o
+      [ 20%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PointAdvect.cc.o
+      [ 20%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/SignedFloodFill.cc.o
+      [ 20%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Statistics.cc.o
+      [ 21%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/RayIntersector.cc.o
+      [ 25%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/MultiResGrid.cc.o
+      [ 25%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/NodeVisitor.cc.o
+      [ 25%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PoissonSolver.cc.o
+      [ 26%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PointScatter.cc.o
+      [ 28%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/PointIndexGrid.cc.o
+      [ 29%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/ParticleAtlas.cc.o
+      [ 30%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/MeshToVolume.cc.o
+      [ 32%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetRebuild.cc.o
+      [ 33%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Morphology.cc.o
+      [ 34%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetTracker.cc.o
+      [ 35%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Merge.cc.o
+      [ 37%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Mask.cc.o
+      [ 38%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetUtil.cc.o
+      [ 39%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetSphere.cc.o
+      [ 41%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetPlatonic.cc.o
+      [ 42%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetMorph.cc.o
+      [ 43%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetMeasure.cc.o
+      [ 44%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetFracture.cc.o
+      [ 46%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetFilter.cc.o
+      [ 47%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/LevelSetAdvect.cc.o
+      [ 48%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Interpolation.cc.o
+      [ 50%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/GridTransformer.cc.o
+      [ 51%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/GridOperators.cc.o
+      [ 52%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/FindActiveValues.cc.o
+      [ 53%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Filter.cc.o
+      [ 55%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/FastSweeping.cc.o
+      [ 56%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Diagnostics.cc.o
+      [ 57%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/DenseSparseTools.cc.o
+      [ 58%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Dense.cc.o
+      [ 60%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Count.cc.o
+      [ 61%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Composite.cc.o
+      [ 62%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Clip.cc.o
+      [ 64%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/ChangeBackground.cc.o
+      [ 65%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/instantiations/Activate.cc.o
+      [ 66%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/Grid.cc.o
+      [ 67%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/Archive.cc.o
+      [ 69%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/Compression.cc.o
+      [ 70%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/DelayedLoadMetadata.cc.o
+      [ 71%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/File.cc.o
+      [ 73%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/GridDescriptor.cc.o
+      [ 74%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/Queue.cc.o
+      [ 75%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/Stream.cc.o
+      [ 76%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/io/TempFile.cc.o
+      [ 78%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/math/Half.cc.o
+      [ 79%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/math/Maps.cc.o
+      [ 80%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/math/Proximity.cc.o
+      [ 82%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/math/QuantizedUnitVec.cc.o
+      [ 83%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/math/Transform.cc.o
+      [ 84%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/Metadata.cc.o
+      [ 85%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/MetaMap.cc.o
+      [ 87%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/openvdb.cc.o
+      [ 88%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/Platform.cc.o
+      [ 89%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/AttributeArray.cc.o
+      [ 91%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/AttributeArrayString.cc.o
+      [ 92%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/AttributeGroup.cc.o
+      [ 93%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/AttributeSet.cc.o
+      [ 94%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/StreamCompression.cc.o
+      [ 96%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/points/points.cc.o
+      [ 97%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/util/Formats.cc.o
+      [ 98%] Building CXX object openvdb/openvdb/CMakeFiles/openvdb_static.dir/util/Util.cc.o
+      [100%] Linking CXX static library libopenvdb.a
+      [100%] Built target openvdb_static
+      [ 83%] Performing install step for 'external_openvdb'
+      [100%] Built target openvdb_static
+      Install the project...
+      -- Install configuration: "Release"
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindBlosc.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindJemalloc.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindIlmBase.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindLog4cplus.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindOpenEXR.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindOpenVDB.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/FindTBB.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/OpenVDBGLFW3Setup.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/OpenVDBHoudiniSetup.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/OpenVDBMayaSetup.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/cmake/OpenVDB/OpenVDBUtils.cmake
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/lib/libopenvdb.a
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Exceptions.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Grid.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Metadata.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/MetaMap.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/openvdb.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Platform.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/PlatformConfig.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Types.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/TypeList.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/version.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/Archive.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/Compression.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/DelayedLoadMetadata.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/File.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/GridDescriptor.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/io.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/Queue.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/Stream.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/io/TempFile.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/BBox.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/ConjGradient.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Coord.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/DDA.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/FiniteDifference.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Half.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/HalfLimits.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/LegacyFrustum.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Maps.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Mat.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Mat3.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Mat4.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Math.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Operators.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Proximity.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/QuantizedUnitVec.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Quat.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Ray.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Stats.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Stencils.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Transform.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Tuple.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Vec2.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Vec3.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/math/Vec4.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/AttributeArray.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/AttributeArrayString.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/AttributeGroup.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/AttributeSet.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/IndexFilter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/IndexIterator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointAdvect.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointAttribute.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointConversion.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointCount.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointDataGrid.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointDelete.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointGroup.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointMask.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointMove.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointRasterizeFrustum.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointRasterizeSDF.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointRasterizeTrilinear.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointSample.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointScatter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointStatistics.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointTransfer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/StreamCompression.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/impl/PointRasterizeFrustumImpl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/impl/PointRasterizeSDFImpl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/impl/PointRasterizeTrilinearImpl.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Activate.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/ChangeBackground.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Clip.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Composite.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Count.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Dense.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/DenseSparseTools.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Diagnostics.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/FastSweeping.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Filter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/FindActiveValues.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/GridOperators.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/GridTransformer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Interpolation.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetAdvect.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetFilter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetFracture.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetMeasure.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetMorph.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetPlatonic.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetRebuild.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetSphere.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetTracker.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/LevelSetUtil.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Mask.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Merge.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/MeshToVolume.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Morphology.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/MultiResGrid.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/NodeVisitor.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/ParticleAtlas.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/ParticlesToLevelSet.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointAdvect.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointIndexGrid.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointPartitioner.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointScatter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointsToMask.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PoissonSolver.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PotentialFlow.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Prune.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/RayIntersector.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/RayTracer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/SignedFloodFill.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Statistics.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/TopologyToLevelSet.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/ValueTransformer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/VectorTransformer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/VelocityFields.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/VolumeAdvect.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/VolumeToMesh.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/VolumeToSpheres.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/InternalNode.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Iterator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafBuffer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafManager.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafNode.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafNodeBool.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafNodeMask.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/NodeManager.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/NodeUnion.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/RootNode.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Tree.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/TreeIterator.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/ValueAccessor.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/CpuTimer.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/ExplicitInstantiation.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/Formats.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/logging.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/MapsUtil.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/Name.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/NodeMasks.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/NullInterrupter.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/PagedArray.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/util/Util.h
+      -- Installing: /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/thread/Threading.h
+      [ 86%] Completed 'external_openvdb'
+      [ 86%] Built target external_openvdb
+      [ 89%] Building CXX object src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/MarchingCubes.cpp.o
+      [ 91%] Building CXX object src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/VDBVolume.cpp.o
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_for.h:24,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/RootNode.h:18,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafManager.h:19,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Count.h:16,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Tree.h:13,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Grid.h:12,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/openvdb.h:13,
+                       from /root/vdbfusion_src/src/vdbfusion/vdbfusion/VDBVolume.h:27,
+                       from /root/vdbfusion_src/src/vdbfusion/vdbfusion/VDBVolume.cpp:23:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:300:20: error: declaration of ‘tbb::task& tbb::internal::task_prefix::task()’ changes meaning of ‘task’ [-Wchanges-meaning]
+        300 |         tbb::task& task() {return *reinterpret_cast<tbb::task*>(this+1);}
+            |                    ^~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:252:9: note: used here to mean ‘class tbb::task’
+        252 |         task* next_offloaded;
+            |         ^~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:43:7: note: declared here
+         43 | class task;
+            |       ^~~~
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Tree.h:22:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h: In constructor ‘tbb::interface5::internal::hash_map_base::hash_map_base()’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h:131:24: warning: ‘void* memset(void*, int, size_t)’ clearing an object of type ‘struct tbb::interface5::internal::hash_map_base::bucket’ with no trivial copy-assignment; use value-initialization instead [-Wclass-memaccess]
+        131 |             std::memset(my_embedded_segment, 0, sizeof(my_embedded_segment));
+            |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h:93:16: note: ‘struct tbb::interface5::internal::hash_map_base::bucket’ declared here
+         93 |         struct bucket : tbb::internal::no_copy {
+            |                ^~~~~~
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointDataGrid.h:19,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/openvdb.h:15:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointIndexGrid.h: In member function ‘void openvdb::v9_1::tools::PointIndexLeafNode<T, Log2Dim>::merge(const openvdb::v9_1::tools::PointIndexLeafNode<T, Log2Dim>&)’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointIndexGrid.h:1430:19: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+       1430 |         BaseLeaf::merge<Policy>(rhs);
+            |                   ^~~~~
+            |                   template
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/parallel_for.h:24,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/RootNode.h:18,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/LeafManager.h:19,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/Count.h:16,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Tree.h:13,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/Grid.h:12,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/openvdb.h:13,
+                       from /root/vdbfusion_src/src/vdbfusion/vdbfusion/VDBVolume.h:27,
+                       from /root/vdbfusion_src/src/vdbfusion/vdbfusion/MarchingCubes.cpp:29:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:300:20: error: declaration of ‘tbb::task& tbb::internal::task_prefix::task()’ changes meaning of ‘task’ [-Wchanges-meaning]
+        300 |         tbb::task& task() {return *reinterpret_cast<tbb::task*>(this+1);}
+            |                    ^~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:252:9: note: used here to mean ‘class tbb::task’
+        252 |         task* next_offloaded;
+            |         ^~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/task.h:43:7: note: declared here
+         43 | class task;
+            |       ^~~~
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tree/Tree.h:22:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h: In constructor ‘tbb::interface5::internal::hash_map_base::hash_map_base()’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h:131:24: warning: ‘void* memset(void*, int, size_t)’ clearing an object of type ‘struct tbb::interface5::internal::hash_map_base::bucket’ with no trivial copy-assignment; use value-initialization instead [-Wclass-memaccess]
+        131 |             std::memset(my_embedded_segment, 0, sizeof(my_embedded_segment));
+            |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/tbb/include/tbb/concurrent_hash_map.h:93:16: note: ‘struct tbb::interface5::internal::hash_map_base::bucket’ declared here
+         93 |         struct bucket : tbb::internal::no_copy {
+            |                ^~~~~~
+      In file included from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/points/PointDataGrid.h:19,
+                       from /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/openvdb.h:15:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointIndexGrid.h: In member function ‘void openvdb::v9_1::tools::PointIndexLeafNode<T, Log2Dim>::merge(const openvdb::v9_1::tools::PointIndexLeafNode<T, Log2Dim>&)’:
+      /root/vdbfusion_src/build/temp.linux-x86_64-cpython-312/openvdb/include/openvdb/tools/PointIndexGrid.h:1430:19: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+       1430 |         BaseLeaf::merge<Policy>(rhs);
+            |                   ^~~~~
+            |                   template
+      gmake[2]: *** [src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/build.make:76: src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/MarchingCubes.cpp.o] Error 1
+      gmake[2]: *** Waiting for unfinished jobs....
+      gmake[2]: *** [src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/build.make:90: src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/VDBVolume.cpp.o] Error 1
+      gmake[1]: *** [CMakeFiles/Makefile2:280: src/vdbfusion/vdbfusion/CMakeFiles/vdbfusion.dir/all] Error 2
+      gmake: *** [Makefile:91: all] Error 2
+      Traceback (most recent call last):
+        File "/root/venv_vdb/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/root/venv_vdb/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/root/venv_vdb/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 280, in build_wheel
+          return _build_backend().build_wheel(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 441, in build_wheel
+          return _build(['bdist_wheel', '--dist-info-dir', str(metadata_directory)])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 429, in _build
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 410, in _build_with_temp_dir
+          self.run_setup()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 520, in run_setup
+          super().run_setup(setup_script=setup_script)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())  # noqa: S102 # exec is intentional here
+          ^^^^^^^^^^^^^^^^^^^^
+        File "<string>", line 92, in <module>
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/__init__.py", line 117, in setup
+          return distutils.core.setup(**attrs)  # type: ignore[return-value]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 168, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 184, in run_commands
+          dist.run_commands()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1028, in run_commands
+          self.run_command(cmd)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/command/bdist_wheel.py", line 385, in run
+          self.run_command("build")
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 342, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build.py", line 137, in run
+          self.run_command(cmd_name)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 342, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/command/build_ext.py", line 95, in run
+          _build_ext.run(self)
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 382, in run
+          self.build_extensions()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 498, in build_extensions
+          self._build_extensions_serial()
+        File "/tmp/pip-build-env-bgskcy01/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 524, in _build_extensions_serial
+          self.build_extension(ext)
+        File "<string>", line 89, in build_extension
+        File "/usr/lib/python3.12/subprocess.py", line 413, in check_call
+          raise CalledProcessError(retcode, cmd)
+      subprocess.CalledProcessError: Command '['cmake', '--build', '.', '--config', 'Release', '-j32']' returned non-zero exit status 2.
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed building wheel for vdbfusion
+Failed to build vdbfusion
+error: failed-wheel-build-for-install
+
+× Failed to build installable wheels for some pyproject.toml based projects
+╰─> vdbfusion
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'vdbfusion'

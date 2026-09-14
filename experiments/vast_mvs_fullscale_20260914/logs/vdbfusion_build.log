@@ -1,0 +1,62 @@
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ apt-get update -qq
+W: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
++ apt-get install -y -qq libopenvdb-dev libtbb-dev libblosc-dev libeigen3-dev libboost-iostreams-dev cmake build-essential
+debconf: delaying package configuration, since apt-utils is not installed
+Selecting previously unselected package libblosc-dev:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 92084 files and directories currently installed.)
+Preparing to unpack .../libblosc-dev_1.21.5+ds-1build1_amd64.deb ...
+Unpacking libblosc-dev:amd64 (1.21.5+ds-1build1) ...
+Selecting previously unselected package libopenvdb-dev.
+Preparing to unpack .../libopenvdb-dev_10.0.1-2.1build5_amd64.deb ...
+Unpacking libopenvdb-dev (10.0.1-2.1build5) ...
+Setting up libblosc-dev:amd64 (1.21.5+ds-1build1) ...
+Setting up libopenvdb-dev (10.0.1-2.1build5) ...
++ cd /root
++ rm -rf vdbfusion_src
++ git clone --depth 1 https://github.com/PRBonn/vdbfusion.git vdbfusion_src
+Cloning into 'vdbfusion_src'...
++ cd /root/vdbfusion_src
++ head -3 LICENSE
+MIT License
+
+# Copyright (c) 2022 Ignacio Vizzo, Cyrill Stachniss, University of Bonn
++ tail -30
++ /venv/main/bin/pip install -v .
+    File "/tmp/pip-build-env-xwzh51fi/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+      cmd_obj.run()
+    File "/tmp/pip-build-env-xwzh51fi/overlay/lib/python3.12/site-packages/setuptools/command/build_ext.py", line 95, in run
+      _build_ext.run(self)
+    File "/tmp/pip-build-env-xwzh51fi/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 382, in run
+      self.build_extensions()
+    File "/tmp/pip-build-env-xwzh51fi/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 498, in build_extensions
+      self._build_extensions_serial()
+    File "/tmp/pip-build-env-xwzh51fi/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 524, in _build_extensions_serial
+      self.build_extension(ext)
+    File "<string>", line 88, in build_extension
+    File "/venv/main/lib/python3.12/subprocess.py", line 413, in check_call
+      raise CalledProcessError(retcode, cmd)
+  subprocess.CalledProcessError: Command '['cmake', '/root/vdbfusion_src', '-DBUILD_PYTHON_BINDINGS=ON', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/root/vdbfusion_src/build/lib.linux-x86_64-cpython-312/vdbfusion/pybind/', '-DPYTHON_EXECUTABLE=/venv/main/bin/python3.12', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=/root/vdbfusion_src/build/lib.linux-x86_64-cpython-312/vdbfusion/pybind/']' returned non-zero exit status 1.
+  error: subprocess-exited-with-error
+  
+  × Building wheel for vdbfusion (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> No available output.
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  full command: /venv/main/bin/python3.12 /venv/main/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py build_wheel /tmp/tmpamnxarwv
+  cwd: /root/vdbfusion_src
+  Building wheel for vdbfusion (pyproject.toml): finished with status 'error'
+  ERROR: Failed building wheel for vdbfusion
+Failed to build vdbfusion
+error: failed-wheel-build-for-install
+
+× Failed to build installable wheels for some pyproject.toml based projects
+╰─> vdbfusion
++ /venv/main/bin/python -c 'import vdbfusion,inspect;print(VDBFUSION_OK);print(inspect.signature(vdbfusion.VDBVolume.__init__));print([m for m in dir(vdbfusion.VDBVolume) if not m.startswith(_)])'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'vdbfusion'
++ echo BUILD_DONE
+BUILD_DONE

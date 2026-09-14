@@ -1,0 +1,863 @@
+[wait] 等 /root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt ...
+[wait] 到了: -rw-rw-r-- 1 root root 11766857 Sep 12 01:29 /root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt
+[run] 推理(与训前臂同一脚本,只换 ckpt)
+[arm] VAR_GATE=0 TEX_GATE=0 (0=官方原逻辑)
+[arm] ckpt=/root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt  md5=1c95e17a870360  out=/root/arm_after
+argv: ['--dataset=general', '--batch_size=1', '--num_view=10', '--method=casdiffmvs', '--save_depth', '--testpath=/root/mvs_P16k', '--testlist=/root/sp_testlist.txt', '--numdepth_initial=48', '--numdepth=384', '--max_h=576', '--max_w=768', '--loadckpt=/root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt', '--outdir=/root/arm_after', '--scale', '0.0', '0.125', '0.025', '--sampling_timesteps', '0', '1', '1', '--ddim_eta', '0', '1', '1', '--stage_iters', '1', '3', '3', '--cost_dim_stage', '4', '4', '4', '--CostNum', '0', '4', '4', '--hidden_dim', '0', '32', '20', '--context_dim', '32', '32', '16', '--unet_dim', '0', '16', '8', '--min_radius', '0.125', '--max_radius', '8', '--photo_thres', '0.3', '0.5', '0.5', '--geo_mask_thres', '2', '--geo_pixel_thres', '1.0', '--geo_depth_thres', '0.01']
+################################  args  ################################
+method    	casdiffmvs                    	<class 'str'>       
+batch_size	1                             	<class 'int'>       
+loadckpt  	/root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt	<class 'str'>       
+outdir    	/root/arm_after               	<class 'str'>       
+seed      	123                           	<class 'int'>       
+save_depth	True                          	<class 'bool'>      
+dataset   	general                       	<class 'str'>       
+testpath  	/root/mvs_P16k                	<class 'str'>       
+testlist  	/root/sp_testlist.txt         	<class 'str'>       
+num_view  	10                            	<class 'int'>       
+max_h     	576                           	<class 'int'>       
+max_w     	768                           	<class 'int'>       
+numdepth_initial	48                            	<class 'int'>       
+numdepth  	384                           	<class 'int'>       
+ddim_eta  	[0.0, 1.0, 1.0]               	<class 'list'>      
+scale     	[0.0, 0.125, 0.025]           	<class 'list'>      
+timesteps 	[1000, 1000, 1000]            	<class 'list'>      
+sampling_timesteps	[0, 1, 1]                     	<class 'list'>      
+hidden_dim	[0, 32, 20]                   	<class 'list'>      
+context_dim	[32, 32, 16]                  	<class 'list'>      
+stage_iters	[1, 3, 3]                     	<class 'list'>      
+cost_dim_stage	[4, 4, 4]                     	<class 'list'>      
+CostNum   	[0, 4, 4]                     	<class 'list'>      
+unet_dim  	[0, 16, 8]                    	<class 'list'>      
+min_radius	0.125                         	<class 'float'>     
+max_radius	8.0                           	<class 'float'>     
+geo_mask_thres	2                             	<class 'int'>       
+geo_pixel_thres	1.0                           	<class 'float'>     
+geo_depth_thres	0.01                          	<class 'float'>     
+photo_thres	[0.3, 0.5, 0.5]               	<class 'list'>      
+########################################################################
+dataset general scans ['']
+loading model /root/diffmvs/checkpoints/casdiff_B_simpleproc/model_000015.ckpt
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Iter 0/132, Time:68.28312158584595 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 1/132, Time:0.2922811508178711 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 2/132, Time:0.2769162654876709 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 3/132, Time:0.21216845512390137 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 4/132, Time:0.3041074275970459 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 5/132, Time:0.7879400253295898 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 6/132, Time:0.21288442611694336 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 7/132, Time:0.40738987922668457 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 8/132, Time:0.3112905025482178 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 9/132, Time:0.4344797134399414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 10/132, Time:0.4042792320251465 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 11/132, Time:0.5156826972961426 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 12/132, Time:0.27459216117858887 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 13/132, Time:0.23438644409179688 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 14/132, Time:0.23955440521240234 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 15/132, Time:0.3541069030761719 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 16/132, Time:0.3283693790435791 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 17/132, Time:0.3750178813934326 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 18/132, Time:0.3738572597503662 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 19/132, Time:0.3488752841949463 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 20/132, Time:0.3362119197845459 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 21/132, Time:0.2591075897216797 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 22/132, Time:0.27226972579956055 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 23/132, Time:0.21219515800476074 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 24/132, Time:0.22807025909423828 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 25/132, Time:0.2322399616241455 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 26/132, Time:0.23983263969421387 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 27/132, Time:0.2376267910003662 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 28/132, Time:0.2583298683166504 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 29/132, Time:0.4623417854309082 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 30/132, Time:0.3963937759399414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 31/132, Time:0.4005281925201416 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 32/132, Time:0.30179643630981445 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 33/132, Time:0.2601356506347656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 34/132, Time:0.27834630012512207 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 35/132, Time:0.376511812210083 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 36/132, Time:0.37393617630004883 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 37/132, Time:0.23812007904052734 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 38/132, Time:0.25673604011535645 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 39/132, Time:0.2054440975189209 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 40/132, Time:0.2530970573425293 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 41/132, Time:0.6533973217010498 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 42/132, Time:0.43259525299072266 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 43/132, Time:1.1773531436920166 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 44/132, Time:0.3588082790374756 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 45/132, Time:0.3290526866912842 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 46/132, Time:0.3007035255432129 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 47/132, Time:0.5056674480438232 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 48/132, Time:0.41905999183654785 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 49/132, Time:0.37496066093444824 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 50/132, Time:0.23010921478271484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 51/132, Time:0.33362722396850586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 52/132, Time:0.3421142101287842 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 53/132, Time:0.36568474769592285 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 54/132, Time:0.36638355255126953 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 55/132, Time:0.3691225051879883 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 56/132, Time:0.39943885803222656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 57/132, Time:0.43594884872436523 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 58/132, Time:0.15404558181762695 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 59/132, Time:0.35686564445495605 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 60/132, Time:0.1577739715576172 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 61/132, Time:0.37262558937072754 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 62/132, Time:0.20759320259094238 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 63/132, Time:0.23554635047912598 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 64/132, Time:0.248063325881958 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 65/132, Time:0.3923490047454834 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 66/132, Time:0.2174358367919922 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 67/132, Time:0.39584779739379883 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 68/132, Time:0.3889634609222412 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 69/132, Time:0.3748631477355957 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 70/132, Time:0.37476015090942383 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 71/132, Time:0.3676130771636963 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 72/132, Time:0.40401649475097656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 73/132, Time:0.41666507720947266 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 74/132, Time:0.42740845680236816 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 75/132, Time:0.42558836936950684 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 76/132, Time:0.5149626731872559 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 77/132, Time:0.24607324600219727 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 78/132, Time:0.3561222553253174 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 79/132, Time:0.45385193824768066 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 80/132, Time:0.39662766456604004 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 81/132, Time:0.3923461437225342 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 82/132, Time:0.22524404525756836 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 83/132, Time:0.2284257411956787 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 84/132, Time:0.3848865032196045 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 85/132, Time:0.3379814624786377 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 86/132, Time:0.35408830642700195 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 87/132, Time:0.544719934463501 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 88/132, Time:0.3342478275299072 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 89/132, Time:0.37459349632263184 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 90/132, Time:0.42760324478149414 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 91/132, Time:0.42043018341064453 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 92/132, Time:0.40607595443725586 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 93/132, Time:0.3927624225616455 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 94/132, Time:0.4100353717803955 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 95/132, Time:0.2472364902496338 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 96/132, Time:0.2700998783111572 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 97/132, Time:0.3047974109649658 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 98/132, Time:0.38372087478637695 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 99/132, Time:0.43665146827697754 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 100/132, Time:0.43294382095336914 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 101/132, Time:0.4194908142089844 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 102/132, Time:0.4005119800567627 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 103/132, Time:0.2927243709564209 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 104/132, Time:0.18807506561279297 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 105/132, Time:0.19165587425231934 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 106/132, Time:0.1952652931213379 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 107/132, Time:0.22098135948181152 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 108/132, Time:0.2517051696777344 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 109/132, Time:0.40311646461486816 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 110/132, Time:0.3769063949584961 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 111/132, Time:0.43823933601379395 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 112/132, Time:0.38790059089660645 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 113/132, Time:0.5134129524230957 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 114/132, Time:0.5005247592926025 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 115/132, Time:0.42996764183044434 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 116/132, Time:0.37799692153930664 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 117/132, Time:0.37078237533569336 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 118/132, Time:0.5432572364807129 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 119/132, Time:0.2462296485900879 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 120/132, Time:0.30213069915771484 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 121/132, Time:0.3414318561553955 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 122/132, Time:0.34450316429138184 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 123/132, Time:0.3355576992034912 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 124/132, Time:0.3888373374938965 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 125/132, Time:0.31316351890563965 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 126/132, Time:0.34363508224487305 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 127/132, Time:0.39266395568847656 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 128/132, Time:0.35001420974731445 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 129/132, Time:0.30667901039123535 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 130/132, Time:0.1780412197113037 Res:(3, 576, 768)
+(3, 576, 768)
+Iter 131/132, Time:0.16189146041870117 Res:(3, 576, 768)
+(3, 576, 768)
+avg_time 0.864745804757783
+processing /root/arm_after, ref-view00, photo/geo/final-mask:0.9509819878472222/0.7895281756365741/0.7744095413773148
+valid_points 0.7744095413773148
+processing /root/arm_after, ref-view01, photo/geo/final-mask:0.9389286747685185/0.6659048574942129/0.6567744502314815
+valid_points 0.6567744502314815
+processing /root/arm_after, ref-view02, photo/geo/final-mask:0.9722764756944444/0.9100387008101852/0.8969523111979166
+valid_points 0.8969523111979166
+processing /root/arm_after, ref-view03, photo/geo/final-mask:0.9686053240740741/0.8730988679108797/0.8556880244502315
+valid_points 0.8556880244502315
+processing /root/arm_after, ref-view04, photo/geo/final-mask:0.9560094762731481/0.8594134295428241/0.8388807508680556
+valid_points 0.8388807508680556
+processing /root/arm_after, ref-view05, photo/geo/final-mask:0.9452311197916666/0.8859546802662037/0.86151123046875
+valid_points 0.86151123046875
+processing /root/arm_after, ref-view06, photo/geo/final-mask:0.9514612268518519/0.8707795319733797/0.8504977756076388
+valid_points 0.8504977756076388
+processing /root/arm_after, ref-view07, photo/geo/final-mask:0.9437120225694444/0.7498756691261574/0.7310881438078703
+valid_points 0.7310881438078703
+processing /root/arm_after, ref-view08, photo/geo/final-mask:0.9192889178240741/0.8670699508101852/0.8328766999421297
+valid_points 0.8328766999421297
+processing /root/arm_after, ref-view09, photo/geo/final-mask:0.9232313368055556/0.8656503182870371/0.8398550528067129
+valid_points 0.8398550528067129
+processing /root/arm_after, ref-view10, photo/geo/final-mask:0.9352575231481481/0.8959644458912037/0.8688625759548612
+valid_points 0.8688625759548612
+processing /root/arm_after, ref-view11, photo/geo/final-mask:0.9298683449074074/0.8742404513888888/0.8455019350405093
+valid_points 0.8455019350405093
+processing /root/arm_after, ref-view12, photo/geo/final-mask:0.9315230758101852/0.8462705258969907/0.8176405164930556
+valid_points 0.8176405164930556
+processing /root/arm_after, ref-view13, photo/geo/final-mask:0.9457826967592593/0.7806441695601852/0.7649581344039352
+valid_points 0.7649581344039352
+processing /root/arm_after, ref-view14, photo/geo/final-mask:0.9347149884259259/0.7921639901620371/0.7780942563657407
+valid_points 0.7780942563657407
+processing /root/arm_after, ref-view15, photo/geo/final-mask:0.9560998987268519/0.8041449652777778/0.7873557761863426
+valid_points 0.7873557761863426
+processing /root/arm_after, ref-view16, photo/geo/final-mask:0.9407280815972222/0.8974903247974537/0.8652275933159722
+valid_points 0.8652275933159722
+processing /root/arm_after, ref-view17, photo/geo/final-mask:0.9228063512731481/0.7643862123842593/0.7413262261284722
+valid_points 0.7413262261284722
+processing /root/arm_after, ref-view18, photo/geo/final-mask:0.9568775318287037/0.8283487955729166/0.8167001229745371
+valid_points 0.8167001229745371
+processing /root/arm_after, ref-view19, photo/geo/final-mask:0.9101200810185185/0.8115686487268519/0.7875320999710648
+valid_points 0.7875320999710648
+processing /root/arm_after, ref-view20, photo/geo/final-mask:0.9207175925925926/0.8668122468171297/0.8422580295138888
+valid_points 0.8422580295138888
+processing /root/arm_after, ref-view21, photo/geo/final-mask:0.9450864438657407/0.8875212492766203/0.8631659613715278
+valid_points 0.8631659613715278
+processing /root/arm_after, ref-view22, photo/geo/final-mask:0.9345251012731481/0.8636316370081019/0.8417494032118056
+valid_points 0.8417494032118056
+processing /root/arm_after, ref-view23, photo/geo/final-mask:0.9174442997685185/0.8476630316840278/0.8177241572627315
+valid_points 0.8177241572627315
+processing /root/arm_after, ref-view24, photo/geo/final-mask:0.8843768084490741/0.84454345703125/0.7939995659722222
+valid_points 0.7939995659722222
+processing /root/arm_after, ref-view25, photo/geo/final-mask:0.9072898582175926/0.8150951244212963/0.7954485857928241
+valid_points 0.7954485857928241
+processing /root/arm_after, ref-view26, photo/geo/final-mask:0.841552734375/0.7677883572048612/0.7389119466145834
+valid_points 0.7389119466145834
+processing /root/arm_after, ref-view27, photo/geo/final-mask:0.8545283564814815/0.7769843207465278/0.7512003580729166
+valid_points 0.7512003580729166
+processing /root/arm_after, ref-view28, photo/geo/final-mask:0.8720883969907407/0.8133951822916666/0.7837795681423612
+valid_points 0.7837795681423612
+processing /root/arm_after, ref-view29, photo/geo/final-mask:0.8809769241898148/0.7614000108506944/0.7347525137442129
+valid_points 0.7347525137442129
+processing /root/arm_after, ref-view30, photo/geo/final-mask:0.9022894965277778/0.8893590856481481/0.8391497576678241
+valid_points 0.8391497576678241
+processing /root/arm_after, ref-view31, photo/geo/final-mask:0.9619592737268519/0.9033632631655093/0.8818495008680556
+valid_points 0.8818495008680556
+processing /root/arm_after, ref-view32, photo/geo/final-mask:0.9433865017361112/0.8958536783854166/0.8671626338252315
+valid_points 0.8671626338252315
+processing /root/arm_after, ref-view33, photo/geo/final-mask:0.8794126157407407/0.8380918149594907/0.7738444010416666
+valid_points 0.7738444010416666
+processing /root/arm_after, ref-view34, photo/geo/final-mask:0.9593098958333334/0.8115709092881944/0.8001415111400463
+valid_points 0.8001415111400463
+processing /root/arm_after, ref-view35, photo/geo/final-mask:0.9702600549768519/0.7663212528935185/0.7586895978009259
+valid_points 0.7586895978009259
+processing /root/arm_after, ref-view36, photo/geo/final-mask:0.9721950954861112/0.8881564670138888/0.8756239149305556
+valid_points 0.8756239149305556
+processing /root/arm_after, ref-view37, photo/geo/final-mask:0.9354745370370371/0.8634620949074074/0.8447446469907407
+valid_points 0.8447446469907407
+processing /root/arm_after, ref-view38, photo/geo/final-mask:0.9358271846064815/0.8701759620949074/0.8558168764467593
+valid_points 0.8558168764467593
+processing /root/arm_after, ref-view39, photo/geo/final-mask:0.9575737847222222/0.8059601960358797/0.7944539388020834
+valid_points 0.7944539388020834
+processing /root/arm_after, ref-view40, photo/geo/final-mask:0.9419849537037037/0.7622025101273148/0.7475992838541666
+valid_points 0.7475992838541666
+processing /root/arm_after, ref-view41, photo/geo/final-mask:0.9035915798611112/0.8090074327256944/0.7970626265914352
+valid_points 0.7970626265914352
+processing /root/arm_after, ref-view42, photo/geo/final-mask:0.9636773003472222/0.8466774269386574/0.8270376699942129
+valid_points 0.8270376699942129
+processing /root/arm_after, ref-view43, photo/geo/final-mask:0.9559552228009259/0.7085300021701388/0.6959431966145834
+valid_points 0.6959431966145834
+processing /root/arm_after, ref-view44, photo/geo/final-mask:0.9196596498842593/0.798828125/0.7684755678530093
+valid_points 0.7684755678530093
+processing /root/arm_after, ref-view45, photo/geo/final-mask:0.8193540219907407/0.6546223958333334/0.6352719907407407
+valid_points 0.6352719907407407
+processing /root/arm_after, ref-view46, photo/geo/final-mask:0.9484049479166666/0.7765887225115741/0.7543561017071759
+valid_points 0.7543561017071759
+processing /root/arm_after, ref-view47, photo/geo/final-mask:0.8986183449074074/0.7845526801215278/0.7547110098379629
+valid_points 0.7547110098379629
+processing /root/arm_after, ref-view48, photo/geo/final-mask:0.8909324363425926/0.8480134186921297/0.8133974428530093
+valid_points 0.8133974428530093
+processing /root/arm_after, ref-view49, photo/geo/final-mask:0.9055266203703703/0.7850002712673612/0.7547064887152778
+valid_points 0.7547064887152778
+processing /root/arm_after, ref-view50, photo/geo/final-mask:0.8907877604166666/0.8052842881944444/0.75634765625
+valid_points 0.75634765625
+processing /root/arm_after, ref-view51, photo/geo/final-mask:0.8458839699074074/0.8505045572916666/0.7718686704282407
+valid_points 0.7718686704282407
+processing /root/arm_after, ref-view52, photo/geo/final-mask:0.8514811197916666/0.8293547453703703/0.7674221462673612
+valid_points 0.7674221462673612
+processing /root/arm_after, ref-view53, photo/geo/final-mask:0.8467791521990741/0.8650309244791666/0.7837094907407407
+valid_points 0.7837094907407407
+processing /root/arm_after, ref-view54, photo/geo/final-mask:0.8298068576388888/0.8138405128761574/0.7244285300925926
+valid_points 0.7244285300925926
+processing /root/arm_after, ref-view55, photo/geo/final-mask:0.8145616319444444/0.7845978913483797/0.7089911566840278
+valid_points 0.7089911566840278
+processing /root/arm_after, ref-view56, photo/geo/final-mask:0.9153103298611112/0.8265945999710648/0.8055849428530093
+valid_points 0.8055849428530093
+processing /root/arm_after, ref-view57, photo/geo/final-mask:0.8643753616898148/0.7712537977430556/0.7346214011863426
+valid_points 0.7346214011863426
+processing /root/arm_after, ref-view58, photo/geo/final-mask:0.9178873697916666/0.6748702437789352/0.6675121166087963
+valid_points 0.6675121166087963
+processing /root/arm_after, ref-view59, photo/geo/final-mask:0.8743580005787037/0.8367716471354166/0.7529477719907407
+valid_points 0.7529477719907407
+processing /root/arm_after, ref-view60, photo/geo/final-mask:0.8986545138888888/0.8245442708333334/0.7581719292534722
+valid_points 0.7581719292534722
+processing /root/arm_after, ref-view61, photo/geo/final-mask:0.8258734809027778/0.7463243272569444/0.6823210539641203
+valid_points 0.6823210539641203
+processing /root/arm_after, ref-view62, photo/geo/final-mask:0.8489854600694444/0.767822265625/0.7256153247974537
+valid_points 0.7256153247974537
+processing /root/arm_after, ref-view63, photo/geo/final-mask:0.7498281973379629/0.5885348849826388/0.5341570818865741
+valid_points 0.5341570818865741
+processing /root/arm_after, ref-view64, photo/geo/final-mask:0.8297616464120371/0.81854248046875/0.7331271701388888
+valid_points 0.7331271701388888
+processing /root/arm_after, ref-view65, photo/geo/final-mask:0.7613661024305556/0.7715273256655093/0.648681640625
+valid_points 0.648681640625
+processing /root/arm_after, ref-view66, photo/geo/final-mask:0.8459834346064815/0.7691695601851852/0.7159875940393519
+valid_points 0.7159875940393519
+processing /root/arm_after, ref-view67, photo/geo/final-mask:0.7831579137731481/0.7829002097800926/0.6848822699652778
+valid_points 0.6848822699652778
+processing /root/arm_after, ref-view68, photo/geo/final-mask:0.8741500289351852/0.7691266095196759/0.6929163049768519
+valid_points 0.6929163049768519
+processing /root/arm_after, ref-view69, photo/geo/final-mask:0.7385163483796297/0.6952039930555556/0.6098271122685185
+valid_points 0.6098271122685185
+processing /root/arm_after, ref-view70, photo/geo/final-mask:0.8457845052083334/0.6229428891782407/0.6119203920717593
+valid_points 0.6119203920717593
+processing /root/arm_after, ref-view71, photo/geo/final-mask:0.8260543258101852/0.6852213541666666/0.6576651114004629
+valid_points 0.6576651114004629
+processing /root/arm_after, ref-view72, photo/geo/final-mask:0.8543294270833334/0.6341914424189815/0.6153858326099537
+valid_points 0.6153858326099537
+processing /root/arm_after, ref-view73, photo/geo/final-mask:0.8723325376157407/0.7229659469039352/0.6943834092881944
+valid_points 0.6943834092881944
+processing /root/arm_after, ref-view74, photo/geo/final-mask:0.7767921730324074/0.6179741753472222/0.5852095992476852
+valid_points 0.5852095992476852
+processing /root/arm_after, ref-view75, photo/geo/final-mask:0.8659125434027778/0.7265059859664352/0.6945167824074074
+valid_points 0.6945167824074074
+processing /root/arm_after, ref-view76, photo/geo/final-mask:0.9455295138888888/0.6196673357928241/0.6102091471354166
+valid_points 0.6102091471354166
+processing /root/arm_after, ref-view77, photo/geo/final-mask:0.9102105034722222/0.8528329354745371/0.8019680447048612
+valid_points 0.8019680447048612
+processing /root/arm_after, ref-view78, photo/geo/final-mask:0.9071813512731481/0.7722054940682871/0.7449476453993056
+valid_points 0.7449476453993056
+processing /root/arm_after, ref-view79, photo/geo/final-mask:0.937255859375/0.8596440067997685/0.8360889576099537
+valid_points 0.8360889576099537
+processing /root/arm_after, ref-view80, photo/geo/final-mask:0.9528718171296297/0.8967239945023148/0.8712926793981481
+valid_points 0.8712926793981481
+processing /root/arm_after, ref-view81, photo/geo/final-mask:0.9434950086805556/0.8420704029224537/0.8136619285300926
+valid_points 0.8136619285300926
+processing /root/arm_after, ref-view82, photo/geo/final-mask:0.8204119646990741/0.6748883282696759/0.6544845015914352
+valid_points 0.6544845015914352
+processing /root/arm_after, ref-view83, photo/geo/final-mask:0.9285843460648148/0.8469826027199074/0.8152171947337963
+valid_points 0.8152171947337963
+processing /root/arm_after, ref-view84, photo/geo/final-mask:0.8381799768518519/0.8046129014756944/0.7391040943287037
+valid_points 0.7391040943287037
+processing /root/arm_after, ref-view85, photo/geo/final-mask:0.8657136140046297/0.8090164749710648/0.7725671838831019
+valid_points 0.7725671838831019
+processing /root/arm_after, ref-view86, photo/geo/final-mask:0.9284487123842593/0.8948680736400463/0.8616016529224537
+valid_points 0.8616016529224537
+processing /root/arm_after, ref-view87, photo/geo/final-mask:0.8948025173611112/0.8291693793402778/0.7968908239293981
+valid_points 0.7968908239293981
+processing /root/arm_after, ref-view88, photo/geo/final-mask:0.9065031828703703/0.8345133463541666/0.8051011827256944
+valid_points 0.8051011827256944
+processing /root/arm_after, ref-view89, photo/geo/final-mask:0.9214409722222222/0.8533777307581019/0.8179276077835648
+valid_points 0.8179276077835648
+processing /root/arm_after, ref-view90, photo/geo/final-mask:0.8176540798611112/0.6811817310474537/0.6399332682291666
+valid_points 0.6399332682291666
+processing /root/arm_after, ref-view91, photo/geo/final-mask:0.9155454282407407/0.8067649558738426/0.7767966941550926
+valid_points 0.7767966941550926
+processing /root/arm_after, ref-view92, photo/geo/final-mask:0.81982421875/0.80169677734375/0.7283641673900463
+valid_points 0.7283641673900463
+processing /root/arm_after, ref-view93, photo/geo/final-mask:0.8942418981481481/0.8177015516493056/0.7713419596354166
+valid_points 0.7713419596354166
+processing /root/arm_after, ref-view94, photo/geo/final-mask:0.8747106481481481/0.8018301504629629/0.7493263527199074
+valid_points 0.7493263527199074
+processing /root/arm_after, ref-view95, photo/geo/final-mask:0.8943594473379629/0.7877717194733797/0.7533546730324074
+valid_points 0.7533546730324074
+processing /root/arm_after, ref-view96, photo/geo/final-mask:0.8351598668981481/0.7635588469328703/0.7202939633969907
+valid_points 0.7202939633969907
+processing /root/arm_after, ref-view97, photo/geo/final-mask:0.6902398003472222/0.7285540545428241/0.6288067853009259
+valid_points 0.6288067853009259
+processing /root/arm_after, ref-view98, photo/geo/final-mask:0.8516257957175926/0.8594902886284722/0.8029333043981481
+valid_points 0.8029333043981481
+processing /root/arm_after, ref-view99, photo/geo/final-mask:0.7580475983796297/0.5461357964409722/0.5096548574942129
+valid_points 0.5096548574942129
+processing /root/arm_after, ref-view100, photo/geo/final-mask:0.8066587094907407/0.5472864221643519/0.5291861074942129
+valid_points 0.5291861074942129
+processing /root/arm_after, ref-view101, photo/geo/final-mask:0.7696397569444444/0.7917796947337963/0.7115365487557871
+valid_points 0.7115365487557871
+processing /root/arm_after, ref-view102, photo/geo/final-mask:0.884765625/0.8821365921585648/0.8148984555844907
+valid_points 0.8148984555844907
+processing /root/arm_after, ref-view103, photo/geo/final-mask:0.8921983506944444/0.5576646592881944/0.5437124746817129
+valid_points 0.5437124746817129
+processing /root/arm_after, ref-view104, photo/geo/final-mask:0.8470413773148148/0.6000117549189815/0.5936708803530093
+valid_points 0.5936708803530093
+processing /root/arm_after, ref-view105, photo/geo/final-mask:0.6993272569444444/0.6098090277777778/0.5721638997395834
+valid_points 0.5721638997395834
+processing /root/arm_after, ref-view106, photo/geo/final-mask:0.7856264467592593/0.6494050202546297/0.6006130642361112
+valid_points 0.6006130642361112
+processing /root/arm_after, ref-view107, photo/geo/final-mask:0.8147696035879629/0.7168669524016203/0.6713528103298612
+valid_points 0.6713528103298612
+processing /root/arm_after, ref-view108, photo/geo/final-mask:0.6869212962962963/0.5021136248553241/0.4817188404224537
+valid_points 0.4817188404224537
+processing /root/arm_after, ref-view109, photo/geo/final-mask:0.7841887297453703/0.5122635452835648/0.4941609700520833
+valid_points 0.4941609700520833
+processing /root/arm_after, ref-view110, photo/geo/final-mask:0.7843514901620371/0.6890168366608797/0.6471693250868056
+valid_points 0.6471693250868056
+processing /root/arm_after, ref-view111, photo/geo/final-mask:0.8437047887731481/0.8094934534143519/0.7552196361400463
+valid_points 0.7552196361400463
+processing /root/arm_after, ref-view112, photo/geo/final-mask:0.7951027199074074/0.7365360966435185/0.6747798213252315
+valid_points 0.6747798213252315
+processing /root/arm_after, ref-view113, photo/geo/final-mask:0.7116518373842593/0.37728090639467593/0.3682838722511574
+valid_points 0.3682838722511574
+processing /root/arm_after, ref-view114, photo/geo/final-mask:0.7423412181712963/0.6197622793692129/0.5849021629050926
+valid_points 0.5849021629050926
+processing /root/arm_after, ref-view115, photo/geo/final-mask:0.6725983796296297/0.6050618489583334/0.5625
+valid_points 0.5625
+processing /root/arm_after, ref-view116, photo/geo/final-mask:0.7991807725694444/0.36238832826967593/0.3585340711805556
+valid_points 0.3585340711805556
+processing /root/arm_after, ref-view117, photo/geo/final-mask:0.41210033275462965/0.2750447591145833/0.26967140480324076
+valid_points 0.26967140480324076
+processing /root/arm_after, ref-view118, photo/geo/final-mask:0.6768301504629629/0.5482449001736112/0.5055722837094907
+valid_points 0.5055722837094907
+processing /root/arm_after, ref-view119, photo/geo/final-mask:0.8915111400462963/0.36118344907407407/0.36044876663773145
+valid_points 0.36044876663773145
+processing /root/arm_after, ref-view120, photo/geo/final-mask:0.8795482494212963/0.30701813874421297/0.3045654296875
+valid_points 0.3045654296875
+processing /root/arm_after, ref-view121, photo/geo/final-mask:0.5225875289351852/0.4792616102430556/0.43629738136574076
+valid_points 0.43629738136574076
+processing /root/arm_after, ref-view122, photo/geo/final-mask:0.5463776765046297/0.2967936197916667/0.2918407298900463
+valid_points 0.2918407298900463
+processing /root/arm_after, ref-view123, photo/geo/final-mask:0.6194571035879629/0.4626781322337963/0.44803421585648145
+valid_points 0.44803421585648145
+processing /root/arm_after, ref-view124, photo/geo/final-mask:0.6751121238425926/0.5061057761863426/0.4611748589409722
+valid_points 0.4611748589409722
+processing /root/arm_after, ref-view125, photo/geo/final-mask:0.5412235966435185/0.40924976490162035/0.3770277235243056
+valid_points 0.3770277235243056
+processing /root/arm_after, ref-view126, photo/geo/final-mask:0.7855721932870371/0.6050867151331019/0.5917629665798612
+valid_points 0.5917629665798612
+processing /root/arm_after, ref-view127, photo/geo/final-mask:0.9069914641203703/0.6841701931423612/0.6654527452256944
+valid_points 0.6654527452256944
+processing /root/arm_after, ref-view128, photo/geo/final-mask:0.8771430121527778/0.6618448893229166/0.6424085828993056
+valid_points 0.6424085828993056
+processing /root/arm_after, ref-view129, photo/geo/final-mask:0.8862756799768519/0.6075936776620371/0.5953414351851852
+valid_points 0.5953414351851852
+processing /root/arm_after, ref-view130, photo/geo/final-mask:0.5168637876157407/0.22093822337962962/0.2167652271412037
+valid_points 0.2167652271412037
+processing /root/arm_after, ref-view131, photo/geo/final-mask:0.3809136284722222/0.2687174479166667/0.24178285951967593
+valid_points 0.24178285951967593
+saving the final model to /root/arm_after/pc.ply
+[run] thres=3 融合
+[fuse] out=/root/arm_after  geo_mask_thres=3  ply=/root/arm_after/pc_t3.ply
+[fuse] VAR_GATE=0 TEX_GATE=0
+processing /root/arm_after, ref-view00, photo/geo/final-mask:0.9509819878472222/0.7086498119212963/0.6978036385995371
+valid_points 0.6978036385995371
+processing /root/arm_after, ref-view01, photo/geo/final-mask:0.9389286747685185/0.5066053602430556/0.49893979673032407
+valid_points 0.49893979673032407
+processing /root/arm_after, ref-view02, photo/geo/final-mask:0.9722764756944444/0.8717221860532407/0.8611608434606481
+valid_points 0.8611608434606481
+processing /root/arm_after, ref-view03, photo/geo/final-mask:0.9686053240740741/0.8082727502893519/0.7941103334780093
+valid_points 0.7941103334780093
+processing /root/arm_after, ref-view04, photo/geo/final-mask:0.9560094762731481/0.8181988751446759/0.8035572193287037
+valid_points 0.8035572193287037
+processing /root/arm_after, ref-view05, photo/geo/final-mask:0.9452311197916666/0.8321307146990741/0.8146091037326388
+valid_points 0.8146091037326388
+processing /root/arm_after, ref-view06, photo/geo/final-mask:0.9514612268518519/0.8300080475983797/0.8150657371238426
+valid_points 0.8150657371238426
+processing /root/arm_after, ref-view07, photo/geo/final-mask:0.9437120225694444/0.6893197518807871/0.6749606662326388
+valid_points 0.6749606662326388
+processing /root/arm_after, ref-view08, photo/geo/final-mask:0.9192889178240741/0.8109718605324074/0.7849799262152778
+valid_points 0.7849799262152778
+processing /root/arm_after, ref-view09, photo/geo/final-mask:0.9232313368055556/0.7576067889178241/0.7373272931134259
+valid_points 0.7373272931134259
+processing /root/arm_after, ref-view10, photo/geo/final-mask:0.9352575231481481/0.8623544198495371/0.8426762333622685
+valid_points 0.8426762333622685
+processing /root/arm_after, ref-view11, photo/geo/final-mask:0.9298683449074074/0.8392198350694444/0.8166888201678241
+valid_points 0.8166888201678241
+processing /root/arm_after, ref-view12, photo/geo/final-mask:0.9315230758101852/0.8056866681134259/0.7851743344907407
+valid_points 0.7851743344907407
+processing /root/arm_after, ref-view13, photo/geo/final-mask:0.9457826967592593/0.7330661349826388/0.7210693359375
+valid_points 0.7210693359375
+processing /root/arm_after, ref-view14, photo/geo/final-mask:0.9347149884259259/0.7507030345775463/0.7399811921296297
+valid_points 0.7399811921296297
+processing /root/arm_after, ref-view15, photo/geo/final-mask:0.9560998987268519/0.7662150065104166/0.7533591941550926
+valid_points 0.7533591941550926
+processing /root/arm_after, ref-view16, photo/geo/final-mask:0.9407280815972222/0.8656797055844907/0.8404495804398148
+valid_points 0.8404495804398148
+processing /root/arm_after, ref-view17, photo/geo/final-mask:0.9228063512731481/0.7219057436342593/0.7040631329571759
+valid_points 0.7040631329571759
+processing /root/arm_after, ref-view18, photo/geo/final-mask:0.9568775318287037/0.7837388780381944/0.7754426179108797
+valid_points 0.7754426179108797
+processing /root/arm_after, ref-view19, photo/geo/final-mask:0.9101200810185185/0.7622499819155093/0.7436907732928241
+valid_points 0.7436907732928241
+processing /root/arm_after, ref-view20, photo/geo/final-mask:0.9207175925925926/0.8208776403356481/0.8024992766203703
+valid_points 0.8024992766203703
+processing /root/arm_after, ref-view21, photo/geo/final-mask:0.9450864438657407/0.8377866391782407/0.8203893590856481
+valid_points 0.8203893590856481
+processing /root/arm_after, ref-view22, photo/geo/final-mask:0.9345251012731481/0.8035843460648148/0.7880565502025463
+valid_points 0.7880565502025463
+processing /root/arm_after, ref-view23, photo/geo/final-mask:0.9174442997685185/0.8057522243923612/0.7810714156539352
+valid_points 0.7810714156539352
+processing /root/arm_after, ref-view24, photo/geo/final-mask:0.8843768084490741/0.8049723307291666/0.7692305953414352
+valid_points 0.7692305953414352
+processing /root/arm_after, ref-view25, photo/geo/final-mask:0.9072898582175926/0.7480649594907407/0.7328875506365741
+valid_points 0.7328875506365741
+processing /root/arm_after, ref-view26, photo/geo/final-mask:0.841552734375/0.7260312680844907/0.7050125687210648
+valid_points 0.7050125687210648
+processing /root/arm_after, ref-view27, photo/geo/final-mask:0.8545283564814815/0.7255655924479166/0.7082429108796297
+valid_points 0.7082429108796297
+processing /root/arm_after, ref-view28, photo/geo/final-mask:0.8720883969907407/0.76898193359375/0.7476060655381944
+valid_points 0.7476060655381944
+processing /root/arm_after, ref-view29, photo/geo/final-mask:0.8809769241898148/0.6859311704282407/0.6703106915509259
+valid_points 0.6703106915509259
+processing /root/arm_after, ref-view30, photo/geo/final-mask:0.9022894965277778/0.8430831344039352/0.8083518699363426
+valid_points 0.8083518699363426
+processing /root/arm_after, ref-view31, photo/geo/final-mask:0.9619592737268519/0.8467881944444444/0.8308286313657407
+valid_points 0.8308286313657407
+processing /root/arm_after, ref-view32, photo/geo/final-mask:0.9433865017361112/0.8457053855613426/0.8244108977141203
+valid_points 0.8244108977141203
+processing /root/arm_after, ref-view33, photo/geo/final-mask:0.8794126157407407/0.7684597439236112/0.7211100260416666
+valid_points 0.7211100260416666
+processing /root/arm_after, ref-view34, photo/geo/final-mask:0.9593098958333334/0.7461570457175926/0.7381026656539352
+valid_points 0.7381026656539352
+processing /root/arm_after, ref-view35, photo/geo/final-mask:0.9702600549768519/0.6667209201388888/0.6610220449942129
+valid_points 0.6610220449942129
+processing /root/arm_after, ref-view36, photo/geo/final-mask:0.9721950954861112/0.8464332863136574/0.8368213794849537
+valid_points 0.8368213794849537
+processing /root/arm_after, ref-view37, photo/geo/final-mask:0.9354745370370371/0.8043936270254629/0.7895756474247685
+valid_points 0.7895756474247685
+processing /root/arm_after, ref-view38, photo/geo/final-mask:0.9358271846064815/0.8107548466435185/0.8012401439525463
+valid_points 0.8012401439525463
+processing /root/arm_after, ref-view39, photo/geo/final-mask:0.9575737847222222/0.6943630642361112/0.6849139178240741
+valid_points 0.6849139178240741
+processing /root/arm_after, ref-view40, photo/geo/final-mask:0.9419849537037037/0.6969491464120371/0.6852959526909722
+valid_points 0.6852959526909722
+processing /root/arm_after, ref-view41, photo/geo/final-mask:0.9035915798611112/0.7612123842592593/0.7527330186631944
+valid_points 0.7527330186631944
+processing /root/arm_after, ref-view42, photo/geo/final-mask:0.9636773003472222/0.8228036385995371/0.8065004701967593
+valid_points 0.8065004701967593
+processing /root/arm_after, ref-view43, photo/geo/final-mask:0.9559552228009259/0.6165907118055556/0.6082673249421297
+valid_points 0.6082673249421297
+processing /root/arm_after, ref-view44, photo/geo/final-mask:0.9196596498842593/0.7209743923611112/0.7009910300925926
+valid_points 0.7009910300925926
+processing /root/arm_after, ref-view45, photo/geo/final-mask:0.8193540219907407/0.5732964409722222/0.5584400318287037
+valid_points 0.5584400318287037
+processing /root/arm_after, ref-view46, photo/geo/final-mask:0.9484049479166666/0.7224844473379629/0.7059959129050926
+valid_points 0.7059959129050926
+processing /root/arm_after, ref-view47, photo/geo/final-mask:0.8986183449074074/0.7456235532407407/0.7232937282986112
+valid_points 0.7232937282986112
+processing /root/arm_after, ref-view48, photo/geo/final-mask:0.8909324363425926/0.8096471715856481/0.7834020543981481
+valid_points 0.7834020543981481
+processing /root/arm_after, ref-view49, photo/geo/final-mask:0.9055266203703703/0.7615198206018519/0.7364547164351852
+valid_points 0.7364547164351852
+processing /root/arm_after, ref-view50, photo/geo/final-mask:0.8907877604166666/0.7451533564814815/0.7080778899016203
+valid_points 0.7080778899016203
+processing /root/arm_after, ref-view51, photo/geo/final-mask:0.8458839699074074/0.7702930591724537/0.7080078125
+valid_points 0.7080078125
+processing /root/arm_after, ref-view52, photo/geo/final-mask:0.8514811197916666/0.7847470883969907/0.7406299732349537
+valid_points 0.7406299732349537
+processing /root/arm_after, ref-view53, photo/geo/final-mask:0.8467791521990741/0.8286268446180556/0.7632921006944444
+valid_points 0.7632921006944444
+processing /root/arm_after, ref-view54, photo/geo/final-mask:0.8298068576388888/0.768798828125/0.6964473017939815
+valid_points 0.6964473017939815
+processing /root/arm_after, ref-view55, photo/geo/final-mask:0.8145616319444444/0.7029125072337963/0.6447098343460648
+valid_points 0.6447098343460648
+processing /root/arm_after, ref-view56, photo/geo/final-mask:0.9153103298611112/0.7552919741030093/0.7414256908275463
+valid_points 0.7414256908275463
+processing /root/arm_after, ref-view57, photo/geo/final-mask:0.8643753616898148/0.6954368308738426/0.6702609592013888
+valid_points 0.6702609592013888
+processing /root/arm_after, ref-view58, photo/geo/final-mask:0.9178873697916666/0.5439385308159722/0.5382170500578703
+valid_points 0.5382170500578703
+processing /root/arm_after, ref-view59, photo/geo/final-mask:0.8743580005787037/0.7837750470196759/0.7120293511284722
+valid_points 0.7120293511284722
+processing /root/arm_after, ref-view60, photo/geo/final-mask:0.8986545138888888/0.7656001338252315/0.7143464265046297
+valid_points 0.7143464265046297
+processing /root/arm_after, ref-view61, photo/geo/final-mask:0.8258734809027778/0.6267835828993056/0.5870655201099537
+valid_points 0.5870655201099537
+processing /root/arm_after, ref-view62, photo/geo/final-mask:0.8489854600694444/0.6958369502314815/0.6647090205439815
+valid_points 0.6647090205439815
+processing /root/arm_after, ref-view63, photo/geo/final-mask:0.7498281973379629/0.5081809714988426/0.46802888093171297
+valid_points 0.46802888093171297
+processing /root/arm_after, ref-view64, photo/geo/final-mask:0.8297616464120371/0.7547901294849537/0.6903415256076388
+valid_points 0.6903415256076388
+processing /root/arm_after, ref-view65, photo/geo/final-mask:0.7613661024305556/0.7026932327835648/0.6092890986689815
+valid_points 0.6092890986689815
+processing /root/arm_after, ref-view66, photo/geo/final-mask:0.8459834346064815/0.6976363570601852/0.6597470883969907
+valid_points 0.6597470883969907
+processing /root/arm_after, ref-view67, photo/geo/final-mask:0.7831579137731481/0.7149793836805556/0.6493778935185185
+valid_points 0.6493778935185185
+processing /root/arm_after, ref-view68, photo/geo/final-mask:0.8741500289351852/0.7030300564236112/0.6417484989872685
+valid_points 0.6417484989872685
+processing /root/arm_after, ref-view69, photo/geo/final-mask:0.7385163483796297/0.6442238136574074/0.5771597403067129
+valid_points 0.5771597403067129
+processing /root/arm_after, ref-view70, photo/geo/final-mask:0.8457845052083334/0.5401769567418981/0.5327713577835648
+valid_points 0.5327713577835648
+processing /root/arm_after, ref-view71, photo/geo/final-mask:0.8260543258101852/0.6042005750868056/0.5872712311921297
+valid_points 0.5872712311921297
+processing /root/arm_after, ref-view72, photo/geo/final-mask:0.8543294270833334/0.5579314055266203/0.5452948676215278
+valid_points 0.5452948676215278
+processing /root/arm_after, ref-view73, photo/geo/final-mask:0.8723325376157407/0.6364633065682871/0.6196650752314815
+valid_points 0.6196650752314815
+processing /root/arm_after, ref-view74, photo/geo/final-mask:0.7767921730324074/0.5396931966145834/0.5182924623842593
+valid_points 0.5182924623842593
+processing /root/arm_after, ref-view75, photo/geo/final-mask:0.8659125434027778/0.5803087022569444/0.5591566297743056
+valid_points 0.5591566297743056
+processing /root/arm_after, ref-view76, photo/geo/final-mask:0.9455295138888888/0.5074643735532407/0.5022289134837963
+valid_points 0.5022289134837963
+processing /root/arm_after, ref-view77, photo/geo/final-mask:0.9102105034722222/0.8216665762442129/0.7812703450520834
+valid_points 0.7812703450520834
+processing /root/arm_after, ref-view78, photo/geo/final-mask:0.9071813512731481/0.7250094943576388/0.7033962673611112
+valid_points 0.7033962673611112
+processing /root/arm_after, ref-view79, photo/geo/final-mask:0.937255859375/0.8116681134259259/0.7940402560763888
+valid_points 0.7940402560763888
+processing /root/arm_after, ref-view80, photo/geo/final-mask:0.9528718171296297/0.8510516131365741/0.8313056098090278
+valid_points 0.8313056098090278
+processing /root/arm_after, ref-view81, photo/geo/final-mask:0.9434950086805556/0.7919379340277778/0.7695244683159722
+valid_points 0.7695244683159722
+processing /root/arm_after, ref-view82, photo/geo/final-mask:0.8204119646990741/0.6161702473958334/0.6011962890625
+valid_points 0.6011962890625
+processing /root/arm_after, ref-view83, photo/geo/final-mask:0.9285843460648148/0.7908144350405093/0.7677906177662037
+valid_points 0.7677906177662037
+processing /root/arm_after, ref-view84, photo/geo/final-mask:0.8381799768518519/0.7475698965567129/0.7001568829571759
+valid_points 0.7001568829571759
+processing /root/arm_after, ref-view85, photo/geo/final-mask:0.8657136140046297/0.7411634657118056/0.7153682002314815
+valid_points 0.7153682002314815
+processing /root/arm_after, ref-view86, photo/geo/final-mask:0.9284487123842593/0.8348140010127315/0.8104135018807871
+valid_points 0.8104135018807871
+processing /root/arm_after, ref-view87, photo/geo/final-mask:0.8948025173611112/0.7738624855324074/0.7507482458043981
+valid_points 0.7507482458043981
+processing /root/arm_after, ref-view88, photo/geo/final-mask:0.9065031828703703/0.7838270399305556/0.7638188114872685
+valid_points 0.7638188114872685
+processing /root/arm_after, ref-view89, photo/geo/final-mask:0.9214409722222222/0.8101761429398148/0.7839084201388888
+valid_points 0.7839084201388888
+processing /root/arm_after, ref-view90, photo/geo/final-mask:0.8176540798611112/0.6018993236400463/0.5750732421875
+valid_points 0.5750732421875
+processing /root/arm_after, ref-view91, photo/geo/final-mask:0.9155454282407407/0.7491115993923612/0.7278871889467593
+valid_points 0.7278871889467593
+processing /root/arm_after, ref-view92, photo/geo/final-mask:0.81982421875/0.7267546477141203/0.6790070710358797
+valid_points 0.6790070710358797
+processing /root/arm_after, ref-view93, photo/geo/final-mask:0.8942418981481481/0.7387220594618056/0.7053629557291666
+valid_points 0.7053629557291666
+processing /root/arm_after, ref-view94, photo/geo/final-mask:0.8747106481481481/0.7229116934317129/0.6826601381655093
+valid_points 0.6826601381655093
+processing /root/arm_after, ref-view95, photo/geo/final-mask:0.8943594473379629/0.7191840277777778/0.6957804361979166
+valid_points 0.6957804361979166
+processing /root/arm_after, ref-view96, photo/geo/final-mask:0.8351598668981481/0.6934543185763888/0.6655409071180556
+valid_points 0.6655409071180556
+processing /root/arm_after, ref-view97, photo/geo/final-mask:0.6902398003472222/0.6683982566550926/0.5987729673032407
+valid_points 0.5987729673032407
+processing /root/arm_after, ref-view98, photo/geo/final-mask:0.8516257957175926/0.8136822735821759/0.7710096571180556
+valid_points 0.7710096571180556
+processing /root/arm_after, ref-view99, photo/geo/final-mask:0.7580475983796297/0.4840901692708333/0.46119746455439814
+valid_points 0.46119746455439814
+processing /root/arm_after, ref-view100, photo/geo/final-mask:0.8066587094907407/0.49908447265625/0.4841014720775463
+valid_points 0.4841014720775463
+processing /root/arm_after, ref-view101, photo/geo/final-mask:0.7696397569444444/0.7073522497106481/0.6558182327835648
+valid_points 0.6558182327835648
+processing /root/arm_after, ref-view102, photo/geo/final-mask:0.884765625/0.8151832863136574/0.7746288158275463
+valid_points 0.7746288158275463
+processing /root/arm_after, ref-view103, photo/geo/final-mask:0.8921983506944444/0.5058729383680556/0.4962022569444444
+valid_points 0.4962022569444444
+processing /root/arm_after, ref-view104, photo/geo/final-mask:0.8470413773148148/0.5229627821180556/0.5183670609085648
+valid_points 0.5183670609085648
+processing /root/arm_after, ref-view105, photo/geo/final-mask:0.6993272569444444/0.5648283781828703/0.5362955729166666
+valid_points 0.5362955729166666
+processing /root/arm_after, ref-view106, photo/geo/final-mask:0.7856264467592593/0.5662593135127315/0.5271222149884259
+valid_points 0.5271222149884259
+processing /root/arm_after, ref-view107, photo/geo/final-mask:0.8147696035879629/0.6461882414641203/0.6169275354456019
+valid_points 0.6169275354456019
+processing /root/arm_after, ref-view108, photo/geo/final-mask:0.6869212962962963/0.4540699146412037/0.4404342086226852
+valid_points 0.4404342086226852
+processing /root/arm_after, ref-view109, photo/geo/final-mask:0.7841887297453703/0.44754593460648145/0.4349704318576389
+valid_points 0.4349704318576389
+processing /root/arm_after, ref-view110, photo/geo/final-mask:0.7843514901620371/0.6174180772569444/0.5904541015625
+valid_points 0.5904541015625
+processing /root/arm_after, ref-view111, photo/geo/final-mask:0.8437047887731481/0.69451904296875/0.657470703125
+valid_points 0.657470703125
+processing /root/arm_after, ref-view112, photo/geo/final-mask:0.7951027199074074/0.6477774160879629/0.6081294307002315
+valid_points 0.6081294307002315
+processing /root/arm_after, ref-view113, photo/geo/final-mask:0.7116518373842593/0.3138292100694444/0.30941207320601855
+valid_points 0.30941207320601855
+processing /root/arm_after, ref-view114, photo/geo/final-mask:0.7423412181712963/0.5509372287326388/0.5304248951099537
+valid_points 0.5304248951099537
+processing /root/arm_after, ref-view115, photo/geo/final-mask:0.6725983796296297/0.5468162254050926/0.5184213143807871
+valid_points 0.5184213143807871
+processing /root/arm_after, ref-view116, photo/geo/final-mask:0.7991807725694444/0.2791680230034722/0.27718551070601855
+valid_points 0.27718551070601855
+processing /root/arm_after, ref-view117, photo/geo/final-mask:0.41210033275462965/0.22809742115162038/0.22570348668981483
+valid_points 0.22570348668981483
+processing /root/arm_after, ref-view118, photo/geo/final-mask:0.6768301504629629/0.41049759476273145/0.3797313548900463
+valid_points 0.3797313548900463
+processing /root/arm_after, ref-view119, photo/geo/final-mask:0.8915111400462963/0.31535734953703703/0.3148396809895833
+valid_points 0.3148396809895833
+processing /root/arm_after, ref-view120, photo/geo/final-mask:0.8795482494212963/0.24650969328703703/0.24480749059606483
+valid_points 0.24480749059606483
+processing /root/arm_after, ref-view121, photo/geo/final-mask:0.5225875289351852/0.4256275318287037/0.3999837239583333
+valid_points 0.3999837239583333
+processing /root/arm_after, ref-view122, photo/geo/final-mask:0.5463776765046297/0.23134132667824073/0.2290920681423611
+valid_points 0.2290920681423611
+processing /root/arm_after, ref-view123, photo/geo/final-mask:0.6194571035879629/0.39736373336226855/0.38779251663773145
+valid_points 0.38779251663773145
+processing /root/arm_after, ref-view124, photo/geo/final-mask:0.6751121238425926/0.3740189163773148/0.34160472728587965
+valid_points 0.34160472728587965
+processing /root/arm_after, ref-view125, photo/geo/final-mask:0.5412235966435185/0.3549601236979167/0.3377052589699074
+valid_points 0.3377052589699074
+processing /root/arm_after, ref-view126, photo/geo/final-mask:0.7855721932870371/0.49662724247685186/0.4884078414351852
+valid_points 0.4884078414351852
+processing /root/arm_after, ref-view127, photo/geo/final-mask:0.9069914641203703/0.3534229419849537/0.34587718822337965
+valid_points 0.34587718822337965
+processing /root/arm_after, ref-view128, photo/geo/final-mask:0.8771430121527778/0.38803891782407407/0.3787977430555556
+valid_points 0.3787977430555556
+processing /root/arm_after, ref-view129, photo/geo/final-mask:0.8862756799768519/0.33183684172453703/0.32669632523148145
+valid_points 0.32669632523148145
+processing /root/arm_after, ref-view130, photo/geo/final-mask:0.5168637876157407/0.1839599609375/0.1826510959201389
+valid_points 0.1826510959201389
+processing /root/arm_after, ref-view131, photo/geo/final-mask:0.3809136284722222/0.22862187138310186/0.21148681640625
+valid_points 0.21148681640625
+saving the final model to /root/arm_after/pc_t3.ply
+[fuse] done
+[run] 转 bins
+40,931,153 点  COLMAP帧中位 [0.4000000059604645, 1.1349999904632568, 3.48799991607666]
+[FRAME-SELFCHECK] 本云中位 [0.4000000059604645, -1.1349999904632568, -3.48799991607666]  参照 [0.5899999737739563, -1.0429999828338623, -3.503999948501587]
+[FRAME-SELFCHECK] 距参照 0.21 m;若再翻一次则 7.33 m
+展示帧中位 [0.4000000059604645, -1.1349999904632568, -3.48799991607666]   写出 /root/bins_B/after_t2
+37,444,033 点  COLMAP帧中位 [0.47600001096725464, 1.093999981880188, 3.5179998874664307]
+[FRAME-SELFCHECK] 本云中位 [0.47600001096725464, -1.093999981880188, -3.5179998874664307]  参照 [0.5899999737739563, -1.0429999828338623, -3.503999948501587]
+[FRAME-SELFCHECK] 距参照 0.13 m;若再翻一次则 7.34 m
+展示帧中位 [0.47600001096725464, -1.093999981880188, -3.5179998874664307]   写出 /root/bins_B/after_t3
+[done] 训后臂完成
+total 2259336
+drwxrwxr-x 2 root root      4096 Sep 12 01:54 .
+drwx------ 1 root root     16384 Sep 12 01:33 ..
+-rw-rw-r-- 1 root root 122793459 Sep 12 01:54 after_t2.col
+-rw-rw-r-- 1 root root 491173836 Sep 12 01:54 after_t2.pos
+-rw-rw-r-- 1 root root 112332099 Sep 12 01:54 after_t3.col
+-rw-rw-r-- 1 root root 449328396 Sep 12 01:54 after_t3.pos
+-rw-rw-r-- 1 root root 118760172 Sep 11 18:32 before_t2.col
+-rw-rw-r-- 1 root root 475040688 Sep 11 18:32 before_t2.pos
+-rw-rw-r-- 1 root root 108814842 Sep 11 18:33 before_t3.col
+-rw-rw-r-- 1 root root 435259368 Sep 11 18:33 before_t3.pos
+-rw-rw-r-- 1 root root       650 Sep 11 23:34 meta.json

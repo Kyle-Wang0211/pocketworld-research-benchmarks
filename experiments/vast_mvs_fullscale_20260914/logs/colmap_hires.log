@@ -1,0 +1,32 @@
+sparse written: 132 images 4032 x 3024
+patch-match.cfg refs 132
+[14:47:46] patch_match_stereo @2000px
+  rc=0 geometric=132 graphs=264
+Writing geometric output for 00000129.jpg
+Writing geometric output for 00000130.jpg
+Writing geometric output for 00000131.jpg
+[15:37:03] stereo_fusion (COLMAP defaults)
+  rc=0
+element vertex 0
+[1;33m[Open3D WARNING] Read PLY failed: number of vertex <= 0.[0;m
+Traceback (most recent call last):
+  File "/root/ply2bin_local.py", line 10, in <module>
+    lo, hi = np.percentile(pos, 1, 0), np.percentile(pos, 99, 0); med = np.median(pos, 0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py", line 4258, in percentile
+    return _quantile_unchecked(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py", line 4522, in _quantile_unchecked
+    return _ureduce(a,
+           ^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py", line 3892, in _ureduce
+    r = func(a, **kwargs)
+        ^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py", line 4681, in _quantile_ureduce_func
+    result = _quantile(arr,
+             ^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py", line 4805, in _quantile
+    slices_having_nans = np.isnan(arr[-1, ...])
+                                  ~~~^^^^^^^^^
+IndexError: index -1 is out of bounds for axis 0 with size 0
+[15:38:09] DONE_hires

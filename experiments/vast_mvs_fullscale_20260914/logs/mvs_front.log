@@ -1,0 +1,14 @@
+sparse written: 132 images 4032 x 3024
+[16:48:34] feature_extractor (native 4032)
+  rc=0
+[16:48:51] exhaustive_matcher
+  rc=0
+[16:49:04] point_triangulator
+/root/colmap_front_hires.sh: line 19: 288838 Aborted                 $C point_triangulator --database_path $W/db.db --image_path $W/images --input_path $W/sparse_in --output_path $W/sparse > $W/pt.log 2>&1
+  rc=134
+ls: cannot access '/root/mvs_hires/sparse/points3D.bin': No such file or directory
+[16:49:04] image_undistorter (official dense workspace)
+/root/colmap_front_hires.sh: line 23: 288877 Aborted                 $C image_undistorter --image_path $W/images --input_path $W/sparse --output_path $W/dense --output_type COLMAP --max_image_size 2000 > $W/iu.log 2>&1
+  rc=134
+
+[16:49:04] FRONT_DONE

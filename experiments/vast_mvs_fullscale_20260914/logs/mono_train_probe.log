@@ -1,0 +1,74 @@
+xFormers not available
+xFormers not available
+current time 20260909_032854
+creating new summary file
+argv: ['--logdir', './checkpoints/probe', '--dataset=blendedmvs', '--batch_size=2', '--training_views', '9', '--trainpath=/root/monotrain', '--summary_freq', '100', '--loadckpt', 'checkpoints/bld_ft/bld_best.ckpt', '--ndepths', '8,8,4,4', '--depth_inter_r', '0.5,0.5,0.5,0.5', '--lr', '0.001', '--wd', '0.0001', '--lrepochs', '6,8,10,12:2', '--attn_temp', '2', '--trainlist', 'lists/ours/train.txt', '--testlist', 'lists/ours/val.txt']
+################################  args  ################################
+mode      	train                         	<class 'str'>       
+device    	cuda                          	<class 'str'>       
+local_rank	0                             	<class 'int'>       
+seed      	0                             	<class 'int'>       
+dataset   	blendedmvs                    	<class 'str'>       
+trainpath 	/root/monotrain               	<class 'str'>       
+testpath  	/root/monotrain               	<class 'str'>       
+trainlist 	lists/ours/train.txt          	<class 'str'>       
+testlist  	lists/ours/val.txt            	<class 'str'>       
+rt        	True                          	<class 'bool'>      
+max_h     	864                           	<class 'int'>       
+max_w     	1152                          	<class 'int'>       
+interval_scale	1.06                          	<class 'float'>     
+pin_m     	False                         	<class 'bool'>      
+epochs    	16                            	<class 'int'>       
+lr        	0.001                         	<class 'float'>     
+lrepochs  	6,8,10,12:2                   	<class 'str'>       
+wd        	0.0001                        	<class 'float'>     
+batch_size	2                             	<class 'int'>       
+training_views	9                             	<class 'int'>       
+loadckpt  	checkpoints/bld_ft/bld_best.ckpt	<class 'str'>       
+logdir    	./checkpoints/probe           	<class 'str'>       
+resume    	False                         	<class 'bool'>      
+summary_freq	100                           	<class 'int'>       
+save_freq 	1                             	<class 'int'>       
+eval_freq 	1                             	<class 'int'>       
+dlossw    	1,1,1,1                       	<class 'str'>       
+use_raw_train	False                         	<class 'bool'>      
+lr_scheduler	MS                            	<class 'str'>       
+ndepths   	8,8,4,4                       	<class 'str'>       
+depth_inter_r	0.5,0.5,0.5,0.5               	<class 'str'>       
+fpn_base_channel	8                             	<class 'int'>       
+reg_channel	8                             	<class 'int'>       
+reg_mode  	reg2d                         	<class 'str'>       
+group_cor 	True                          	<class 'bool'>      
+group_cor_dim	8,8,4,4                       	<class 'str'>       
+inverse_depth	True                          	<class 'bool'>      
+agg_type  	ConvBnReLU3D                  	<class 'str'>       
+arch_mode 	fpn                           	<class 'str'>       
+attn_temp 	2.0                           	<class 'float'>     
+mono_sampling	True                          	<class 'bool'>      
+edge_guide	True                          	<class 'bool'>      
+attention 	True                          	<class 'bool'>      
+########################################################################
+loading model checkpoints/bld_ft/bld_best.ckpt
+start at epoch 0
+Number of model parameters: 27.68M
+Number of model trainable parameters: 2.89M
+Let's use 1 GPUs!
+Epoch 0:
+/venv/main/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Epoch 0/16, Iter 0/37849, lr 0.000335, train loss = 3.263, ce_loss = 0.265, 1.010, 1.029, 0.959, range_err = 0.000, 0.034, 0.249, 0.457, epe:4.807409, err3:0.678095, err1:0.476431,time = 33.378
+Epoch 0/16, Iter 100/37849, lr 0.000468, train loss = 3.579, ce_loss = 0.480, 1.010, 1.044, 1.046, range_err = 0.000, 0.114, 0.313, 0.551, epe:29.238865, err3:0.617260, err1:0.355623,time = 0.566
+Epoch 0/16, Iter 200/37849, lr 0.000601, train loss = 4.298, ce_loss = 0.793, 1.416, 1.111, 0.978, range_err = 0.001, 0.232, 0.545, 0.732, epe:24.429970, err3:0.377890, err1:0.197692,time = 0.545
+Epoch 0/16, Iter 300/37849, lr 0.000735, train loss = 4.442, ce_loss = 0.803, 1.597, 1.091, 0.951, range_err = 0.000, 0.221, 0.545, 0.699, epe:21.733770, err3:0.390875, err1:0.242727,time = 0.419
+Epoch 0/16, Iter 400/37849, lr 0.000868, train loss = 4.080, ce_loss = 0.891, 1.164, 1.027, 0.999, range_err = 0.000, 0.370, 0.574, 0.719, epe:417.122620, err3:0.380526, err1:0.203393,time = 0.511
+Epoch 0/16, Iter 500/37849, lr 0.001000, train loss = 6.366, ce_loss = 0.418, 2.949, 1.644, 1.355, range_err = 0.000, 0.107, 0.573, 0.698, epe:10.502235, err3:0.640289, err1:0.457400,time = 0.569
+Epoch 0/16, Iter 600/37849, lr 0.001000, train loss = 2.970, ce_loss = 0.378, 0.808, 0.832, 0.952, range_err = 0.001, 0.075, 0.232, 0.381, epe:5.727098, err3:0.729915, err1:0.544465,time = 0.505
+Epoch 0/16, Iter 700/37849, lr 0.001000, train loss = 3.162, ce_loss = 0.449, 0.737, 0.886, 1.090, range_err = 0.000, 0.098, 0.193, 0.341, epe:5.274919, err3:0.787402, err1:0.546266,time = 0.510
+Epoch 0/16, Iter 800/37849, lr 0.001000, train loss = 3.328, ce_loss = 0.401, 0.920, 1.009, 0.999, range_err = 0.001, 0.065, 0.238, 0.443, epe:5.191222, err3:0.706497, err1:0.475916,time = 0.447
+Epoch 0/16, Iter 900/37849, lr 0.001000, train loss = 3.974, ce_loss = 0.632, 1.358, 1.076, 0.908, range_err = 0.000, 0.128, 0.443, 0.664, epe:11.444716, err3:0.483729, err1:0.268053,time = 0.539
+Epoch 0/16, Iter 1000/37849, lr 0.001000, train loss = 2.921, ce_loss = 0.493, 0.669, 0.803, 0.956, range_err = 0.000, 0.092, 0.157, 0.291, epe:5.872822, err3:0.812465, err1:0.631016,time = 0.576
+Epoch 0/16, Iter 1100/37849, lr 0.001000, train loss = 3.521, ce_loss = 0.521, 1.015, 0.948, 1.037, range_err = 0.000, 0.097, 0.353, 0.522, epe:7.852529, err3:0.607882, err1:0.360413,time = 0.551
+Epoch 0/16, Iter 1200/37849, lr 0.001000, train loss = 3.560, ce_loss = 0.319, 1.074, 1.170, 0.997, range_err = 0.000, 0.065, 0.293, 0.616, epe:8.380902, err3:0.575862, err1:0.283778,time = 0.480
+Epoch 0/16, Iter 1300/37849, lr 0.001000, train loss = 3.499, ce_loss = 0.609, 1.080, 0.906, 0.903, range_err = 0.000, 0.224, 0.451, 0.609, epe:9.834077, err3:0.513020, err1:0.320283,time = 0.462
+Epoch 0/16, Iter 1400/37849, lr 0.001000, train loss = 3.741, ce_loss = 0.587, 1.175, 1.012, 0.968, range_err = 0.000, 0.144, 0.412, 0.614, epe:26.675825, err3:0.491031, err1:0.308295,time = 0.583
+Epoch 0/16, Iter 1500/37849, lr 0.001000, train loss = 4.385, ce_loss = 0.591, 1.660, 1.206, 0.928, range_err = 0.001, 0.120, 0.544, 0.797, epe:12.495561, err3:0.337413, err1:0.134607,time = 0.580

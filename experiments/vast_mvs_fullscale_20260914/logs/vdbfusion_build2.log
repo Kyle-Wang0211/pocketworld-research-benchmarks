@@ -1,0 +1,142 @@
+Processing ./.
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: numpy in /venv/main/lib/python3.12/site-packages (from vdbfusion==0.1.6) (2.5.2)
+Building wheels for collected packages: vdbfusion
+  Building wheel for vdbfusion (pyproject.toml): started
+  Building wheel for vdbfusion (pyproject.toml): finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Building wheel for vdbfusion (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [114 lines of output]
+      /tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/config/expand.py:128: SetuptoolsWarning: File '/root/vdbfusion_src/' cannot be found
+        for path in _filter_existing_files(_filepaths)
+      /tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/dist.py:765: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+      !!
+      
+              ********************************************************************************
+              Please consider removing the following classifiers in favor of a SPDX license expression:
+      
+              License :: OSI Approved :: MIT License
+      
+              See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+              ********************************************************************************
+      
+      !!
+        self._finalize_license_expression()
+      /tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/dist.py:483: SetuptoolsDeprecationWarning: Cannot find any files for the given pattern.
+      !!
+      
+              ********************************************************************************
+              Pattern 'LICENSE.txt' did not match any files.
+      
+              By 2027-Feb-18, you need to update your project and remove deprecated calls
+              or your builds will no longer be supported.
+              ********************************************************************************
+      
+      !!
+        for path in sorted(cls._find_pattern(pattern, enforce_match))
+      running bdist_wheel
+      running build
+      running build_py
+      running build_ext
+      -- pybind11 v3.1.0
+      CMake Error at /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:230 (message):
+        Could NOT find Python (missing: Python_EXECUTABLE Interpreter) (found
+        suitable version "3.12.3", minimum required is "3.9")
+      
+            Reason given by package:
+                Interpreter: Cannot use the interpreter "/bin/python3.12"
+      
+      Call Stack (most recent call first):
+        /usr/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake:600 (_FPHSA_FAILURE_MESSAGE)
+        /usr/share/cmake-3.28/Modules/FindPython/Support.cmake:3862 (find_package_handle_standard_args)
+        /usr/share/cmake-3.28/Modules/FindPython.cmake:574 (include)
+        build/temp.linux-x86_64-cpython-312/_deps/ext_pybind11-src/tools/pybind11NewTools.cmake:54 (find_package)
+        build/temp.linux-x86_64-cpython-312/_deps/ext_pybind11-src/tools/pybind11Common.cmake:221 (include)
+        build/temp.linux-x86_64-cpython-312/_deps/ext_pybind11-src/CMakeLists.txt:315 (include)
+      
+      
+      -- Configuring incomplete, errors occurred!
+      Traceback (most recent call last):
+        File "/venv/main/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/venv/main/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/venv/main/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 280, in build_wheel
+          return _build_backend().build_wheel(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 441, in build_wheel
+          return _build(['bdist_wheel', '--dist-info-dir', str(metadata_directory)])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 429, in _build
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 410, in _build_with_temp_dir
+          self.run_setup()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 520, in run_setup
+          super().run_setup(setup_script=setup_script)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())  # noqa: S102 # exec is intentional here
+          ^^^^^^^^^^^^^^^^^^^^
+        File "<string>", line 92, in <module>
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/__init__.py", line 117, in setup
+          return distutils.core.setup(**attrs)  # type: ignore[return-value]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 168, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 184, in run_commands
+          dist.run_commands()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1028, in run_commands
+          self.run_command(cmd)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/command/bdist_wheel.py", line 385, in run
+          self.run_command("build")
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 342, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build.py", line 137, in run
+          self.run_command(cmd_name)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 342, in run_command
+          self.distribution.run_command(command)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/dist.py", line 1106, in run_command
+          super().run_command(command)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+          cmd_obj.run()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/command/build_ext.py", line 95, in run
+          _build_ext.run(self)
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 382, in run
+          self.build_extensions()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 498, in build_extensions
+          self._build_extensions_serial()
+        File "/tmp/pip-build-env-1k2qjy8v/overlay/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 524, in _build_extensions_serial
+          self.build_extension(ext)
+        File "<string>", line 88, in build_extension
+        File "/venv/main/lib/python3.12/subprocess.py", line 413, in check_call
+          raise CalledProcessError(retcode, cmd)
+      subprocess.CalledProcessError: Command '['cmake', '/root/vdbfusion_src', '-DBUILD_PYTHON_BINDINGS=ON', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/root/vdbfusion_src/build/lib.linux-x86_64-cpython-312/vdbfusion/pybind/', '-DPYTHON_EXECUTABLE=/venv/main/bin/python3.12', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=/root/vdbfusion_src/build/lib.linux-x86_64-cpython-312/vdbfusion/pybind/']' returned non-zero exit status 1.
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed building wheel for vdbfusion
+Failed to build vdbfusion
+error: failed-wheel-build-for-install
+
+× Failed to build installable wheels for some pyproject.toml based projects
+╰─> vdbfusion
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'vdbfusion'

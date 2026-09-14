@@ -1,0 +1,31 @@
+diff --git a/train.py b/train.py
+index dfb6756..c3ed235 100644
+--- a/train.py
++++ b/train.py
+@@ -25,6 +25,8 @@ parser.add_argument('--testpath', help='test datapath')
+ parser.add_argument('--trainlist', help='train list')
+ parser.add_argument('--testlist', help='test list')
+ parser.add_argument('--trainviews', type=int, default=3,  help='trainviews')
++parser.add_argument('--domain_balance', type=int, default=0,
++                    help='>0: per epoch sample N tuples from EACH dataset (DUSt3R arXiv 2312.14132 Sec.4); 0 = official concat')
+ parser.add_argument('--testviews', type=int, default=3,  help='testviews')
+ 
+ # --------------Parameters for training---------------------
+@@ -354,8 +356,15 @@ if __name__ == '__main__':
+                                args.trainviews, args.numdepth)
+     test_dataset = MVSDataset(args.testpath, args.testlist, "test",
+                               args.testviews, args.numdepth)
+-    TrainImgLoader = DataLoader(train_dataset, args.batch_size,
+-                                shuffle=True, num_workers=8, drop_last=True)
++    if args.domain_balance > 0:
++        from datasets.domain_sampler import EqualDomainSampler
++        domain_sampler = EqualDomainSampler(train_dataset.metas, args.domain_balance, args.seed)
++        print('domain_balance: sizes', domain_sampler.sizes(), '-> per epoch', args.domain_balance, 'each')
++        TrainImgLoader = DataLoader(train_dataset, args.batch_size,
++                                    sampler=domain_sampler, num_workers=8, drop_last=True)
++    else:
++        TrainImgLoader = DataLoader(train_dataset, args.batch_size,
++                                    shuffle=True, num_workers=8, drop_last=True)
+     TestImgLoader = DataLoader(test_dataset, args.batch_size,
+                                 shuffle=False, num_workers=8, drop_last=False)
+ 
