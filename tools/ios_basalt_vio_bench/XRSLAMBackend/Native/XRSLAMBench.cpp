@@ -125,6 +125,29 @@ XRSLAMGetIngestCounts(unsigned long long *imu, unsigned long long *camera) {
   if (camera)
     *camera = 0;
 }
+// [pw] 2026-09-15 这两个此前漏掉了,于是台架**只能**链 gpufe 那一个归档
+// (它是唯一导出这两个符号的):generic / thrbp / thrnogate / official 全都链接失败。
+// 上面那段注释说的 "A/B between the two archives" 因此一直做不成,而生产出货的正是
+// generic ⇒ 09-09~09-14 的全部测量都在一个生产不出货的引擎档上。补齐兜底后,
+// 台架可直接链**生产那份逐字节相同的** libxrslam_generic_4beb1a9.a,引擎一个字节不改。
+//
+// 缺席必须可观测,不能伪装成正常值(静默出口是本项目头号复发缺陷):
+//  · 位姿:清零 ⇒ timestamp 0 ⇒ 调用点既有的 `pose.timestamp <= 0.0` 判据会返回
+//    XRSLAM_BENCH_NONFINITE_OUTPUT,**失败关闭,不伪造位姿**。
+//  · 计数器:**不填 0**。0 与"真的一次都没失败"无法区分,会把"读不到"读成"很健康"。
+//    填 UINT64_MAX —— 单调递增的计数器不可能自然到达该值,产物里一眼可辨。
+extern "C" __attribute__((weak)) void
+XRSLAMGetPropagatedPose(XRSLAMPose *pose) {
+  if (pose)
+    *pose = XRSLAMPose{};
+}
+extern "C" __attribute__((weak)) void
+XRSLAMGetInitCounters(unsigned long long *out, int count) {
+  if (!out || count <= 0)
+    return;
+  for (int i = 0; i < count; ++i)
+    out[i] = ~0ULL;
+}
 
 namespace {
 
