@@ -1,0 +1,30 @@
+job: NF=97 points=49253 BOX c=(0.343 -0.146 -0.279) s=(0.400 0.400 0.400)
+[    0.0s] session 0/1
+[    5.7s] session 1/1
+[    5.7s] images 0/14
+[    6.0s] images 5/14
+[    6.3s] images 10/14
+2026-09-15 13:56:23.625 CasDiffDenseBench[20980:3061663] 2026-09-15 13:56:23.625377 [W:onnxruntime:, session_state.cc:1398 VerifyEachNodeIsAssignedToAnEp] Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.
+2026-09-15 13:56:23.625 CasDiffDenseBench[20980:3061663] 2026-09-15 13:56:23.625580 [W:onnxruntime:, session_state.cc:1400 VerifyEachNodeIsAssignedToAnEp] Rerunning with verbose output on a non-minimal build will show node assignments.
+[    7.8s] infer 0/14
+[   18.2s] infer 5/14
+[   28.5s] infer 10/14
+[   36.8s] infer 14/14
+[   36.9s] fuse 0/14
+[   37.4s] fuse 5/14
+[   38.0s] fuse 10/14
+[   38.4s] done 1/1
+
+══ dense_run rc=0  ══
+  frames 97 selected 14 | session 5676 ms | images 14 in 915 ms | ORT session 537 ms | inferred 14 views: median 2003.8 ms, total 28.1 s | fuse 1617 ms
+  peak memory 1331 MB [phys_footprint]
+  fusion: frames 14 points 81327 photo 78.59% geo 36.57% final 36.24%  HALL e7e415dc14400c69
+  PLY read-back: 81327 points, outside box 0  ⇒ ✅
+  H 0000 40b49d2c0f57257f
+  H 0001 8c5a8cc430f81e81
+  H 0002 3cd8072b19f0b71f
+  H 0003 e66a0723dded6d42
+  H 0004 553e61b253d915e6
+  H 0005 da31dc5a4f83559c
+  H 0006 565eb47d3fe645a3
+  H 0007 4a37a271f618d7b0
