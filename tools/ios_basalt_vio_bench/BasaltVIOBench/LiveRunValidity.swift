@@ -17,6 +17,14 @@ struct LiveRunLossCounters: Equatable {
     let nativeCameraTimestampRejections: UInt64
     let poseBridgeDrops: UInt64
     let nonfinitePoses: UInt64
+    /// Degenerate (zero-norm) quaternions seen *after* the estimator had already
+    /// produced a pose. The engine returns TRACKING_SUCCESS with a zero-norm
+    /// quaternion on its very first result and never again -- measured on the
+    /// deterministic replay as `first_at_pose == 0` with 804 good poses after it.
+    /// Folding that boundary case into `nonfinitePoses` failed every live run
+    /// that ever produced poses, so it is separate; one in a running estimator
+    /// is still a fault and still fails the run.
+    let degenerateQuaternionsAfterFirstPose: UInt64
 
     static let zero = LiveRunLossCounters(
         motionErrors: 0,
@@ -34,7 +42,8 @@ struct LiveRunLossCounters: Equatable {
         nativeCameraTransportLoss: 0,
         nativeCameraTimestampRejections: 0,
         poseBridgeDrops: 0,
-        nonfinitePoses: 0
+        nonfinitePoses: 0,
+        degenerateQuaternionsAfterFirstPose: 0
     )
 
     func replacing(
@@ -53,7 +62,8 @@ struct LiveRunLossCounters: Equatable {
         nativeCameraTransportLoss: UInt64? = nil,
         nativeCameraTimestampRejections: UInt64? = nil,
         poseBridgeDrops: UInt64? = nil,
-        nonfinitePoses: UInt64? = nil
+        nonfinitePoses: UInt64? = nil,
+        degenerateQuaternionsAfterFirstPose: UInt64? = nil
     ) -> LiveRunLossCounters {
         LiveRunLossCounters(
             motionErrors: motionErrors ?? self.motionErrors,
@@ -74,7 +84,9 @@ struct LiveRunLossCounters: Equatable {
                 nativeCameraTransportLoss ?? self.nativeCameraTransportLoss,
             nativeCameraTimestampRejections: nativeCameraTimestampRejections ?? self.nativeCameraTimestampRejections,
             poseBridgeDrops: poseBridgeDrops ?? self.poseBridgeDrops,
-            nonfinitePoses: nonfinitePoses ?? self.nonfinitePoses
+            nonfinitePoses: nonfinitePoses ?? self.nonfinitePoses,
+            degenerateQuaternionsAfterFirstPose: degenerateQuaternionsAfterFirstPose
+                ?? self.degenerateQuaternionsAfterFirstPose
         )
     }
 }
@@ -110,6 +122,9 @@ enum LiveRunValidity {
         }
         if counters.poseBridgeDrops > 0 { return "pose_bridge_loss" }
         if counters.nonfinitePoses > 0 { return "non_finite_pose" }
+        if counters.degenerateQuaternionsAfterFirstPose > 0 {
+            return "degenerate_quaternion"
+        }
         return nil
     }
 }

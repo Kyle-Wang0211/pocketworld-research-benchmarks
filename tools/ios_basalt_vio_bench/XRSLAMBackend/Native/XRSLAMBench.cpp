@@ -472,11 +472,21 @@ xrslam_bench_status_t run_next_frame_locked(xrslam_bench *bench) {
     }
 
     int64_t pose_timestamp_ns = 0;
-    if (state < XRSLAM_STATE_INITIALIZING ||
-        state > XRSLAM_STATE_TRACKING_FAIL || !pose_is_finite(pose) ||
-        !seconds_to_nanoseconds(pose.timestamp, &pose_timestamp_ns)) {
-      ++bench->counters.nonfinite_results_rejected;
-      return XRSLAM_BENCH_NONFINITE_OUTPUT;
+    {
+      // Same predicate as before, but each cause is counted on its own; the
+      // composite stays for the existing gate and receipts.
+      const bool state_bad = state < XRSLAM_STATE_INITIALIZING ||
+                             state > XRSLAM_STATE_TRACKING_FAIL;
+      const bool pose_bad = !pose_is_finite(pose);
+      const bool ts_bad =
+          !seconds_to_nanoseconds(pose.timestamp, &pose_timestamp_ns);
+      if (state_bad || pose_bad || ts_bad) {
+        if (state_bad) ++bench->counters.result_state_out_of_range;
+        if (pose_bad) ++bench->counters.result_pose_nonfinite;
+        if (ts_bad) ++bench->counters.result_timestamp_unconvertible;
+        ++bench->counters.nonfinite_results_rejected;
+        return XRSLAM_BENCH_NONFINITE_OUTPUT;
+      }
     }
 
     // A pose whose estimator has diverged is still finite and still reports
@@ -950,6 +960,11 @@ xrslam_bench_get_snapshot(xrslam_bench_t *bench,
     out_snapshot->init_fail_triangulation = ic[5];
     out_snapshot->init_fail_imu = ic[6];
     out_snapshot->init_success = ic[7];
+    out_snapshot->result_state_out_of_range =
+        bench->counters.result_state_out_of_range;
+    out_snapshot->result_pose_nonfinite = bench->counters.result_pose_nonfinite;
+    out_snapshot->result_timestamp_unconvertible =
+        bench->counters.result_timestamp_unconvertible;
     out_snapshot->init_mirror_us = ic[8];
   }
   out_snapshot->pending_event_count =

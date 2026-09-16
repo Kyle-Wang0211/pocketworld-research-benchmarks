@@ -123,6 +123,15 @@ typedef struct xrslam_bench_counters {
   uint64_t results_polled;
   uint64_t results_rejected_queue_full;
   uint64_t nonfinite_results_rejected;
+  /// [2026-09-16] `nonfinite_results_rejected` folds three unrelated causes into
+  /// one number, and the live validity gate fails a run on it. Every live run to
+  /// date has been marked invalid by exactly one of these, and the count is 1 in
+  /// every run that produced poses and 0 in every run that produced none -- which
+  /// says it is a once-per-initialization event, not a numerical failure. These
+  /// three separate the causes so the gate can be argued about on evidence.
+  uint64_t result_state_out_of_range;
+  uint64_t result_pose_nonfinite;
+  uint64_t result_timestamp_unconvertible;
   uint64_t divergence_frames;
   uint64_t divergence_flags_seen;
   /// Longest unbroken stretch the divergence condition held, and how many
@@ -163,6 +172,11 @@ typedef struct xrslam_bench_snapshot {
   uint64_t init_fail_triangulation;
   uint64_t init_fail_imu;
   uint64_t init_success;
+  /// [2026-09-16] The three causes folded into `nonfinite_results_rejected`,
+  /// mirrored out so the live validity gate can be argued about on evidence.
+  uint64_t result_state_out_of_range;
+  uint64_t result_pose_nonfinite;
+  uint64_t result_timestamp_unconvertible;
   /// Microseconds spent cloning keyframes for initialisation attempts.
   uint64_t init_mirror_us;
   /// Frames whose estimator met one of VINS-Mono's published divergence

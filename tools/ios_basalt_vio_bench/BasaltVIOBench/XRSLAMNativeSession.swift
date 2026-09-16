@@ -34,6 +34,20 @@ final class XRSLAMNativeSession {
     private var initializingResults: UInt64 = 0
     private var trackingFailureResults: UInt64 = 0
     private var degenerateQuaternionResults: UInt64 = 0
+    /// How many poses had already been accepted when the first degenerate
+    /// quaternion arrived. 0 means it was the very first TRACKING_SUCCESS
+    /// result -- an initialization-boundary artifact rather than a fault in a
+    /// running estimator. UInt64.max means it never happened.
+    private var degenerateQuaternionFirstAtPose: UInt64 = .max
+    /// Which path saw it first: 1 = polled pose, 2 = per-frame result, 0 = never.
+    private var degenerateQuaternionFirstPath: UInt64 = 0
+    /// Degenerate quaternions that arrived *after* the estimator had already
+    /// produced a pose. Measured: the engine returns TRACKING_SUCCESS with a
+    /// zero-norm quaternion on its very first result and never again
+    /// (`first_at_pose == 0`, 804 good poses after it, deterministic replay).
+    /// That boundary case is not an estimator fault; one in a running estimator
+    /// would be, so only this counter fails a run.
+    private var degenerateQuaternionAfterFirstPose: UInt64 = 0
     private let stopRequestLock = NSLock()
     private var stopWasRequested = false
     /// Cross-stream ordering of the live accelerometer and gyroscope events.
@@ -305,6 +319,11 @@ final class XRSLAMNativeSession {
             quaternionZ: output.quaternion_xyzw.2,
             quaternionW: output.quaternion_xyzw.3
         ) else {
+            if degenerateQuaternionResults == 0 {
+                degenerateQuaternionFirstAtPose = trackingPoseResults
+                degenerateQuaternionFirstPath = 1
+            }
+            if trackingPoseResults > 0 { degenerateQuaternionAfterFirstPose += 1 }
             degenerateQuaternionResults += 1
             return nil
         }
@@ -362,6 +381,14 @@ final class XRSLAMNativeSession {
                 quaternionZ: output.quaternion_xyzw.2,
                 quaternionW: output.quaternion_xyzw.3
             ) else {
+                // Second increment site: the per-frame result path. The polled
+                // path is instrumented the same way; without both, the ordinal
+                // reads "never" while the count reads 1.
+                if degenerateQuaternionResults == 0 {
+                    degenerateQuaternionFirstAtPose = trackingPoseResults
+                    degenerateQuaternionFirstPath = 2
+                }
+                if trackingPoseResults > 0 { degenerateQuaternionAfterFirstPose += 1 }
                 degenerateQuaternionResults += 1
                 continue
             }
@@ -401,8 +428,11 @@ final class XRSLAMNativeSession {
             posesProduced: trackingPoseResults,
             posesPolled: trackingPoseResults,
             posesDroppedBridgeQueue: value.results_rejected_queue_full,
-            nonfinitePoseRejected:
-                value.nonfinite_results_rejected + degenerateQuaternionResults
+            // [2026-09-16] The degenerate quaternion used to be folded in here,
+            // which failed every live run that ever produced poses on a
+            // once-per-initialization artifact. It is reported on its own now;
+            // `degenerateQuaternionAfterFirstPose` is the half that is a fault.
+            nonfinitePoseRejected: value.nonfinite_results_rejected
         )
         // [bench 2026-09-02] `-PWFeederGateOff` 让回放喂帧端不再按引擎 backlog 等待
         // (waitForReplayCapacity 见 capacity==0 立即返回)。用途只有一个:验证
@@ -434,6 +464,19 @@ final class XRSLAMNativeSession {
             // are silent, so before these a run could not separate "the user has not moved enough"
             // from "the geometry is degenerate" -- which is the whole question behind our 3.5 s
             // time-to-first-pose against ARKit's 1.5 s.
+            // [2026-09-16] The three causes the live validity gate collapses into
+            // `nonfinite_pose_rejected`, plus the Swift-side degenerate quaternion
+            // that is added to it. Every live run so far is invalid on a count of
+            // exactly 1, and that 1 appears in every run that produced poses and in
+            // none that produced zero -- so which cause it is decides whether the
+            // gate is catching a real fault or a once-per-initialization artifact.
+            "xrslam_result_state_out_of_range": native.result_state_out_of_range,
+            "xrslam_result_pose_nonfinite": native.result_pose_nonfinite,
+            "xrslam_result_timestamp_unconvertible": native.result_timestamp_unconvertible,
+            "xrslam_degenerate_quaternion": degenerateQuaternionResults,
+            "xrslam_degenerate_quaternion_first_at_pose": degenerateQuaternionFirstAtPose,
+            "xrslam_degenerate_quaternion_first_path": degenerateQuaternionFirstPath,
+            "xrslam_degenerate_quaternion_after_first_pose": degenerateQuaternionAfterFirstPose,
             "xrslam_init_too_few_frames": native.init_too_few_frames,
             "xrslam_init_attempts": native.init_attempts,
             "xrslam_init_fail_matches": native.init_fail_matches,

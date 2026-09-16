@@ -1578,7 +1578,12 @@ final class BenchmarkCoordinator {
                 + native.counters.cameraRejectedSealed,
             nativeCameraTimestampRejections: native.counters.cameraRejectedTimestamp,
             poseBridgeDrops: native.counters.posesDroppedBridgeQueue,
-            nonfinitePoses: native.counters.nonfinitePoseRejected
+            nonfinitePoses: native.counters.nonfinitePoseRejected,
+            // Only the degenerate quaternions that arrived after a pose already
+            // existed; the one on the engine's first TRACKING_SUCCESS result is
+            // an initialization boundary, not an estimator fault.
+            degenerateQuaternionsAfterFirstPose:
+                native.additionalCounters["xrslam_degenerate_quaternion_after_first_pose"] ?? 0
         )
     }
 
