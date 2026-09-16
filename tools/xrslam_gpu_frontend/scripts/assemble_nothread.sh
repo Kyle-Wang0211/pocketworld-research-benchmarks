@@ -1,7 +1,11 @@
 #!/bin/bash
 set -uo pipefail
 X=$HOME/Developer/xrslam-4beb1a9-thr; B=$X/build-gpufe-nothread
-SP=/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/a4f1b282-3935-42e4-b01e-3c7d57f1276e/scratchpad
+# [2026-09-16] 产物改放 ~/Developer:上一版写死了某个会话的 /tmp scratchpad,
+# 那个目录被清掉后归档成员变 0、ABI 自证全 ✗,而下游 build 脚本的 cp 失败
+# 却不报错 —— 会静默编出错引擎的包。
+SP=$HOME/Developer/viobench-build/engine
+mkdir -p "$SP"
 OUT=$SP/libxrslam_gpufe_nothread.a
 OBJS=()
 while IFS= read -r line; do OBJS+=("$line"); done < <(find "$B/xrslam-interface/CMakeFiles" "$B/xrslam-localization/CMakeFiles" -name "*.cpp.o" | sort)

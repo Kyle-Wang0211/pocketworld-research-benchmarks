@@ -4,10 +4,13 @@ T=$HOME/.config/superpowers/worktrees/pocketworld_research_benchmarks/basalt-vio
 V=$HOME/Developer/pocketworld/vendor/xrslam/libs/ios-arm64
 BD=$HOME/Developer/viobench-build
 A=$HOME/Developer/Aether3D-cross/aether_cpp
-SP=/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/a4f1b282-3935-42e4-b01e-3c7d57f1276e/scratchpad
+SP=$HOME/Developer/viobench-build/engine
 GPUFE=$BD/gpufe/libpw_gpu_frontend_ios.a
 DAWN=$A/build-ios-device-dawn/third_party/dawn/src/dawn/native/Debug-iphoneos/libwebgpu_dawn.a
-cp "$SP/libxrslam_gpufe_nothread.a" "$T/Vendor/xrslam/lib/libxrslam_generic_4beb1a9.a"
+# 缺了就停:cp 静默失败会让 vendor 里留着 generic 档,编出的包引擎是错的,
+# 而四道字节自证照样全绿(它们只证「装的是我想装的字节」)。
+[ -s "$SP/libxrslam_gpufe_nothread.a" ] || { echo "✗ 缺 $SP/libxrslam_gpufe_nothread.a,拒绝构建"; exit 1; }
+cp "$SP/libxrslam_gpufe_nothread.a" "$T/Vendor/xrslam/lib/libxrslam_generic_4beb1a9.a" || { echo "✗ cp 失败"; exit 1; }
 DD="$BD/bench-dd-nothread"; rm -rf "$DD"
 EXTRA="-force_load $GPUFE $DAWN -framework Metal -framework IOSurface -framework QuartzCore -framework CoreVideo"
 cd "$T" && LANG=en_US.UTF-8 xcodebuild -project VIOReplacementBench.xcodeproj -scheme VIOReplacementBench \
