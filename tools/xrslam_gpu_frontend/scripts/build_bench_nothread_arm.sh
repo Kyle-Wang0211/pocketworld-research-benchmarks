@@ -6,7 +6,13 @@ BD=$HOME/Developer/viobench-build
 A=$HOME/Developer/Aether3D-cross/aether_cpp
 SP=$HOME/Developer/viobench-build/engine
 GPUFE=$BD/gpufe/libpw_gpu_frontend_ios.a
-DAWN=$A/build-ios-device-dawn/third_party/dawn/src/dawn/native/Debug-iphoneos/libwebgpu_dawn.a
+# [2026-09-16] Dawn 档位。Debug 版带完整 WebGPU 校验(库内 "Validation" 字样 17070 处,
+# Release 只有 76),而我们每帧都提交 GPU 工作 —— 台架实测空提交 6.0-13.2 ms,
+# 原生量级不该是这个数。PW_DAWN_FLAVOR=Debug 可切回对照。
+DAWN_FLAVOR=${PW_DAWN_FLAVOR:-Release}
+DAWN=$A/build-ios-device-dawn/third_party/dawn/src/dawn/native/$DAWN_FLAVOR-iphoneos/libwebgpu_dawn.a
+[ -s "$DAWN" ] || { echo "✗ 缺 $DAWN"; exit 1; }
+echo "Dawn 档位: $DAWN_FLAVOR ($(stat -f%z "$DAWN") bytes)"
 # 缺了就停:cp 静默失败会让 vendor 里留着 generic 档,编出的包引擎是错的,
 # 而四道字节自证照样全绿(它们只证「装的是我想装的字节」)。
 [ -s "$SP/libxrslam_gpufe_nothread.a" ] || { echo "✗ 缺 $SP/libxrslam_gpufe_nothread.a,拒绝构建"; exit 1; }
