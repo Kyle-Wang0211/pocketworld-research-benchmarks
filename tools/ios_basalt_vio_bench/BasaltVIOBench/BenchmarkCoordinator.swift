@@ -724,6 +724,11 @@ final class BenchmarkCoordinator {
         try writeSystemSamples(measuredSystem, to: context.directoryURL)
         let arkitReferenceFirstUsablePoseLatencyMS = Self.arkitReferenceFirstUsablePoseLatencyMS()
         metrics["arkit_reference_first_usable_pose_latency_ms"] = arkitReferenceFirstUsablePoseLatencyMS ?? -1
+        // Which reference run that number came from, so the choice is auditable
+        // rather than implicit. -1 means no reference was found.
+        let arkitRef = Self.arkitReference()
+        metrics["arkit_reference_started_at_epoch_s"] = arkitRef?.startedAtEpochSeconds ?? -1
+        metrics["arkit_reference_measurement_duration_seconds"] = arkitRef?.measurementDurationSeconds ?? -1
         let verdict = BenchGateEvaluator.live(
             firstUsablePoseLatencyMilliseconds: firstUsablePoseLatencyMS,
             processedFPS: metrics["processed_fps"]!,
@@ -1083,6 +1088,11 @@ final class BenchmarkCoordinator {
         try writeSystemSamples(measuredSystem, to: context.directoryURL)
         let arkitReferenceFirstUsablePoseLatencyMS = Self.arkitReferenceFirstUsablePoseLatencyMS()
         metrics["arkit_reference_first_usable_pose_latency_ms"] = arkitReferenceFirstUsablePoseLatencyMS ?? -1
+        // Which reference run that number came from, so the choice is auditable
+        // rather than implicit. -1 means no reference was found.
+        let arkitRef = Self.arkitReference()
+        metrics["arkit_reference_started_at_epoch_s"] = arkitRef?.startedAtEpochSeconds ?? -1
+        metrics["arkit_reference_measurement_duration_seconds"] = arkitRef?.measurementDurationSeconds ?? -1
         let verdict = BenchGateEvaluator.live(
             firstUsablePoseLatencyMilliseconds: metrics["first_usable_pose_latency_ms"]!,
             processedFPS: metrics["processed_fps"]!,
@@ -1479,12 +1489,36 @@ final class BenchmarkCoordinator {
         return best?.ref
     }
 
-    static func arkitReferenceFirstUsablePoseLatencyMS() -> Double? {
-        let root = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+    /// The ARKit reference a live run is judged against, and enough of its
+    /// identity to audit the choice.
+    ///
+    /// [2026-09-16] This used to pick by directory modification time, which is
+    /// not the run's own clock: a directory re-copied off the device outranks a
+    /// later run. On this device it selected a 30 s run from 08-31 (first pose
+    /// 2874.9 ms) over the 300 s baseline from 09-15 (1762.1 ms) and the 600 s
+    /// one from 09-03 (1480.7 ms) -- so a candidate was compared against the
+    /// worst and shortest ARKit run on the device, and the receipt recorded only
+    /// the number, never which run it came from. Now it orders by the receipt's
+    /// own `started_at_utc` and carries the reference's identity out with it.
+    struct ARKitReference {
+        let firstUsablePoseLatencyMS: Double
+        let runID: String
+        let startedAtEpochSeconds: Double
+        let measurementDurationSeconds: Double
+    }
+
+    static func arkitReference(
+        runsRoot: URL = URL.documentsDirectory.appendingPathComponent("VIOBenchRuns")
+    ) -> ARKitReference? {
+        let root = runsRoot
         let runs = (try? FileManager.default.contentsOfDirectory(
-            at: root, includingPropertiesForKeys: [.contentModificationDateKey]
+            at: root, includingPropertiesForKeys: nil
         )) ?? []
-        var best: (date: Date, value: Double)?
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let plain = ISO8601DateFormatter()
+        var best: ARKitReference?
+        var bestStart = -Double.greatestFiniteMagnitude
         for run in runs {
             let receiptURL = run.appendingPathComponent("receipt.json")
             guard let data = try? Data(contentsOf: receiptURL),
@@ -1493,12 +1527,26 @@ final class BenchmarkCoordinator {
                   app["engine_id"] as? String == "arkit_reference",
                   let metrics = json["metrics"] as? [String: Any],
                   let value = metrics["first_usable_pose_latency_ms"] as? Double,
-                  value > 0 else { continue }
-            let date = (try? run.resourceValues(forKeys: [.contentModificationDateKey]))?
-                .contentModificationDate ?? .distantPast
-            if best == nil || date > best!.date { best = (date, value) }
+                  value > 0,
+                  let startedAt = json["started_at_utc"] as? String,
+                  let date = formatter.date(from: startedAt) ?? plain.date(from: startedAt)
+            else { continue }
+            let start = date.timeIntervalSince1970
+            guard start > bestStart else { continue }
+            bestStart = start
+            best = ARKitReference(
+                firstUsablePoseLatencyMS: value,
+                runID: (json["run_id"] as? String) ?? run.lastPathComponent,
+                startedAtEpochSeconds: start,
+                measurementDurationSeconds:
+                    (metrics["measurement_duration_seconds"] as? Double) ?? -1
+            )
         }
-        return best?.value
+        return best
+    }
+
+    static func arkitReferenceFirstUsablePoseLatencyMS() -> Double? {
+        arkitReference()?.firstUsablePoseLatencyMS
     }
 
     private func liveMetrics(
