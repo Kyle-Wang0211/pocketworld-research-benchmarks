@@ -165,7 +165,14 @@ enum BenchmarkRunPreparation {
                     let section = String(args[i + 1][..<dot])
                     let key = String(args[i + 1][args[i + 1].index(after: dot)..<eq])
                     let value = String(args[i + 1][args[i + 1].index(after: eq)...])
-                    if ["feature_tracker", "sliding_window"].contains(section) {
+                    // [2026-09-16] `solver` joins the list. Upstream ships two iPhone profiles
+                    // whose solver budgets differ by four orders of magnitude --
+                    // configs/iphone_slam.yaml is 1.0e6 s / 30 iterations (offline), while
+                    // xrslam-ios/visualizer/configs/slam_params.yaml, the one the on-device
+                    // app and production both use, is 0.1 s / 10. The bench runs the offline
+                    // profile on every channel, so the budget has to be sweepable to price
+                    // what that costs.
+                    if ["feature_tracker", "sliding_window", "solver"].contains(section) {
                         var lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
                         var inSection = false; var replaced = false
                         for (n, line) in lines.enumerated() {
