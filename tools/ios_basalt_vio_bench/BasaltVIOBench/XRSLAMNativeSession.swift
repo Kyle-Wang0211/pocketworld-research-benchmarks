@@ -87,6 +87,18 @@ final class XRSLAMNativeSession {
                     if ProcessInfo.processInfo.arguments.contains("-PWInitFastReject") { setenv("PW_INIT_FAST_REJECT", "1", 1) }
                     // `-PWXrslamGpuLK`: optical flow on the GPU too — the pre-hybrid path, audited bit-exact
                     if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuLK") { setenv("PW_XRSLAM_GPUFE_LK", "1", 1) }
+                    // `-PWXrslamGpuTimestamps`: per-kernel GPU ns, attributed in dispatch order and reported as
+                    // `gpu_kernel_ms` in xrslam_gpufe_stats.json. Measurement only: the timestamp writes and the
+                    // resolve after every batch inflate the frame totals, so read the split, never the absolutes.
+                    // The key is OFFICIAL_AETHER_GPU_TIMESTAMPS, not the
+                    // AETHER_GPU_TIMESTAMPS the frontend's own comment names:
+                    // official_gpu_timestamp_diagnostics_v1.h switches the
+                    // literal on AETHER_GPU_TIMESTAMPS_ENV_OFFICIAL, and this
+                    // build defines it. Verified against the shipped binary --
+                    // `strings` finds OFFICIAL_AETHER_GPU_TIMESTAMPS and does
+                    // not find the other spelling. Setting the wrong one is
+                    // silent: gpu_kernel_ms just stays {}.
+                    if ProcessInfo.processInfo.arguments.contains("-PWXrslamGpuTimestamps") { setenv("OFFICIAL_AETHER_GPU_TIMESTAMPS", "1", 1) }
                 }
                 var options = xrslam_bench_create_options_t()
                 options.struct_size = MemoryLayout<xrslam_bench_create_options_t>.size
@@ -197,26 +209,19 @@ final class XRSLAMNativeSession {
                 actual: "\(frame.width)x\(frame.height)"
             )
         }
-        CVPixelBufferLockBaseAddress(frame.pixelBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(frame.pixelBuffer, .readOnly) }
-        guard CVPixelBufferGetPlaneCount(frame.pixelBuffer) > frame.lumaPlaneIndex,
-              let pixels = CVPixelBufferGetBaseAddressOfPlane(
-                frame.pixelBuffer,
-                frame.lumaPlaneIndex
-              )?.assumingMemoryBound(to: UInt8.self) else {
-            throw XRSLAMNativeSessionError.missingLumaPlane
+        // The plane is the bench's own copy; the camera buffer it came from was
+        // released inside the capture callback (Apple TN2445). Nothing here
+        // locks or retains a CVPixelBuffer any more.
+        try frame.withLumaPlane { pixels, bytesPerRow in
+            try submitCamera(
+                pixels: pixels,
+                width: frame.width,
+                height: frame.height,
+                bytesPerRow: bytesPerRow,
+                timestampNanoseconds: Int64(frame.timestampNanoseconds),
+                acceptedNanoseconds: acceptedNanoseconds
+            )
         }
-        try submitCamera(
-            pixels: pixels,
-            width: frame.width,
-            height: frame.height,
-            bytesPerRow: CVPixelBufferGetBytesPerRowOfPlane(
-                frame.pixelBuffer,
-                frame.lumaPlaneIndex
-            ),
-            timestampNanoseconds: Int64(frame.timestampNanoseconds),
-            acceptedNanoseconds: acceptedNanoseconds
-        )
     }
 
     func submitCamera(

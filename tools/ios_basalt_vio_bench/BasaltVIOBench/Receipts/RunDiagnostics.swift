@@ -272,6 +272,16 @@ enum RunDiagnosticsWriter {
             native.additionalCounters,
             uniquingKeysWith: { _, new in new }
         )
+        // Hoisted and explicitly typed: inlining these three into the literal
+        // below pushed it past the type checker's budget.
+        let lumaPoolPlanes: UInt64 = UInt64(transport?.lumaPoolPlanes ?? 0)
+        let lumaPoolPeakHeld: UInt64 = UInt64(transport?.lumaPoolPeakHeld ?? 0)
+        let lumaPoolExhausted: UInt64 = transport?.lumaPoolExhaustedDrops ?? 0
+        // This map is [String: UInt64]; both probes use 0 for "never sampled",
+        // which is also the reading that would condemn the copy, so a 0 here is
+        // read together with camera_inputs.
+        let lumaPoolMean: UInt64 = UInt64(max(0, transport?.lumaPoolSampleMeanLuma ?? 0))
+        let lumaPoolStride: UInt64 = UInt64(max(0, transport?.lumaPoolSourceStride ?? 0))
         try write(
             RunDiagnostics(
                 schemaVersion: 1,
@@ -294,6 +304,14 @@ enum RunDiagnosticsWriter {
                     "xrslam_sensor_handoff_peak": UInt64(
                         transport?.xrslamSensorHandoff.highWatermark ?? 0
                     ),
+                    // Bench-owned luma planes (TN2445 fix). A refusal here is
+                    // our bounded queue saying no; it is deliberately not
+                    // counted in any camera_drops_* so the two stay separable.
+                    "luma_pool_planes": lumaPoolPlanes,
+                    "luma_pool_peak_held": lumaPoolPeakHeld,
+                    "luma_pool_exhausted_drops": lumaPoolExhausted,
+                    "luma_pool_sample_mean_luma": lumaPoolMean,
+                    "luma_pool_source_stride": lumaPoolStride,
                 ],
                 transportCounters: transportCounters,
                 effectiveConfiguration: effectiveConfiguration

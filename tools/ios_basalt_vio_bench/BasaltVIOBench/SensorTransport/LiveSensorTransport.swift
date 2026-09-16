@@ -53,6 +53,19 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     private let imuAssemblerLock = NSLock()
     private var lifecycle = SensorTransportLifecycle()
     private var notificationTokens: [NSObjectProtocol] = []
+    /// Pooled luma planes; see `LumaPlanePool` for the TN2445 / ImageReader /
+    /// V4L2 contract it implements.
+    public let lumaPool: LumaPlanePool
+
+    /// `-PWLumaPlanes N`: depth of the luma pool, default 3. Reported in the
+    /// diagnostics as `luma_pool_planes`, so a run always states the depth it
+    /// actually parsed rather than the one the command line asked for.
+    static let lumaPlaneCount: Int = {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-PWLumaPlanes"), i + 1 < args.count,
+              let n = Int(args[i + 1]), n >= 1, n <= 64 else { return 3 }
+        return n
+    }()
     private var cameraTimestamps = TimestampSequenceValidator()
     private var imuAssembler: GyroDrivenIMUAssembler
     private var captureFormatReceipt: LiveCaptureFormatReceipt?
@@ -74,6 +87,33 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         xrslamSensorHandoff = BoundedSensorHandoff(
             capacity: configuration.cameraQueueCapacity
                 + configuration.imuQueueCapacity * 2
+        )
+        // The real bound on camera frames in flight. The handoff above is sized
+        // for camera + IMU events together, so it never bounded camera buffers
+        // on its own; the pool does, and it bounds the bytes the bench owns
+        // rather than the camera buffers it borrows.
+        //
+        // Depth is the whole point. TN2445 describes the shape AVFoundation
+        // itself uses -- `alwaysDiscardsLateVideoFrames` "enforces a buffer
+        // queue size of 1 ... it will throw out the current frame, and append
+        // the new one. In effect, it is always giving you the latest frame."
+        // Three is that plus the two planes a non-stalling producer/consumer
+        // needs: one the engine is reading, one queued, one being filled.
+        //
+        // With a pool this shallow, "refuse while full" *is* Android's
+        // `acquireLatestImage` policy in effect: no stale frame can sit in the
+        // queue, so whichever frame arrives the instant a plane frees up is the
+        // freshest one available. Staleness is bounded by the depth, not by the
+        // choice of which frame to discard -- which is why this needs no
+        // eviction machinery and no race with a consumer mid-read.
+        //
+        // Measured at depth 8: p95 capture-to-pose 836 ms (a frame waits up to
+        // 8 / 20 fps = 400 ms). Overridable so 2 / 3 / 8 can be settled by
+        // measurement in one install rather than by argument.
+        lumaPool = LumaPlanePool(
+            planeCount: Self.lumaPlaneCount,
+            planeCapacityBytes: Int(configuration.cameraWidth)
+                * Int(configuration.cameraHeight)
         )
         imuAssembler = GyroDrivenIMUAssembler(
             pendingGyroscopeCapacity: configuration.pendingGyroscopeCapacity
@@ -200,7 +240,12 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             cameraHandoff: cameraHandoff.snapshot(),
             imuHandoff: imuHandoff.snapshot(),
             xrslamSensorHandoff: xrslamSensorHandoff.snapshot(),
-            captureFormat: lifecycleLock.withLock { captureFormatReceipt }
+            captureFormat: lifecycleLock.withLock { captureFormatReceipt },
+            lumaPoolPlanes: lumaPool.planeCount,
+            lumaPoolPeakHeld: lumaPool.peakHeld,
+            lumaPoolExhaustedDrops: lumaPool.exhaustedCount,
+            lumaPoolSampleMeanLuma: lumaPool.sampleMeanLuma,
+            lumaPoolSourceStride: lumaPool.observedSourceStride
         )
     }
 
@@ -647,9 +692,26 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
             return
         }
 
+        // Copy the luma plane into a plane the bench owns and let the camera
+        // buffer go at the end of this callback. Holding it instead is what
+        // TN2445 names as the cause of `OutOfBuffers`, and it cost 15% of frames
+        // measured live at 1920x1440.
+        guard let lease = lumaPool.lease(
+            from: pixelBuffer,
+            planeIndex: 0,
+            width: Int(configuration.cameraWidth),
+            height: Int(configuration.cameraHeight)
+        ) else {
+            // Every pooled plane is still in flight: refuse this frame instead
+            // of retaining one more camera buffer. Counted by the pool, never in
+            // `camera_drops_*`, so our own backpressure stays distinguishable
+            // from AVFoundation's.
+            previewTap?.offer(pixelBuffer: pixelBuffer, monotonicNanoseconds: timestamp)
+            return
+        }
         let frame = MonochromeCameraFrame(
             timestampNanoseconds: timestamp,
-            pixelBuffer: pixelBuffer,
+            lease: lease,
             width: Int(configuration.cameraWidth),
             height: Int(configuration.cameraHeight)
         )

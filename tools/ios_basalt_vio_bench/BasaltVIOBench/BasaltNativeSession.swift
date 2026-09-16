@@ -88,30 +88,22 @@ final class BasaltNativeSession {
         guard frame.timestampNanoseconds <= UInt64(Int64.max) else {
             throw BasaltNativeSessionError.invalidTimestamp
         }
-        CVPixelBufferLockBaseAddress(frame.pixelBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(frame.pixelBuffer, .readOnly) }
-        guard CVPixelBufferGetPlaneCount(frame.pixelBuffer) > frame.lumaPlaneIndex,
-              let pixels = CVPixelBufferGetBaseAddressOfPlane(
-                frame.pixelBuffer,
-                frame.lumaPlaneIndex
-              )?.assumingMemoryBound(to: UInt8.self) else {
-            throw BasaltNativeSessionError.missingLumaPlane
-        }
-        try submitCamera(
-            planes: [
-                NativeImagePlane(
-                    pixels: pixels,
-                    width: frame.width,
-                    height: frame.height,
-                    bytesPerRow: CVPixelBufferGetBytesPerRowOfPlane(
-                        frame.pixelBuffer,
-                        frame.lumaPlaneIndex
+        // Same contract as the XRSLAM arm: the plane is the bench's own copy and
+        // the camera buffer was already returned to AVFoundation.
+        try frame.withLumaPlane { pixels, bytesPerRow in
+            try submitCamera(
+                planes: [
+                    NativeImagePlane(
+                        pixels: pixels,
+                        width: frame.width,
+                        height: frame.height,
+                        bytesPerRow: bytesPerRow
                     )
-                )
-            ],
-            timestampNanoseconds: Int64(frame.timestampNanoseconds),
-            acceptedNanoseconds: acceptedNanoseconds
-        )
+                ],
+                timestampNanoseconds: Int64(frame.timestampNanoseconds),
+                acceptedNanoseconds: acceptedNanoseconds
+            )
+        }
     }
 
     func submitCamera(
