@@ -33,3 +33,31 @@ Info.plist 原先**没有** `UISupportedInterfaceOrientations` ⇒ iOS 默认允
 
 ## 复现
 `pw_run_arm.sh <label> live-soak -PWLiveFullResolution -PWAutoRunSeconds 70 -PWXrslamGpuFrontend -PWYamlOverride solver.time_limit=0.1 -PWYamlOverride solver.iteration_limit=10`
+
+---
+
+## 追加：split 在直播通道的实测（2026-09-16）
+
+| 场次 | split | fps | 首位姿 | 初始化尝试 | p95 |
+|---|---|---|---|---|---|
+| liveB | 关 | 24.7 | 3535 ms | 4 | 168 ms |
+| **liveBsplit** | **开** | **27.0** | 3528 ms | 4 | **141 ms** |
+
+**+9.3%**，远小于回放通道的 +19~26%。原因在 GPU 账里：
+
+```
+空提交 13.24 ms | pre_gpu 5.13 | det_gpu 8.16 | 等待 3.26 | 金字塔 2.26
+```
+
+**空提交延迟从回放的 6.0–6.7 ms 涨到 13.24 ms**，正落在 `pw_gpu_frontend.cpp:109` 注释所记的
+09-04/05 直播降频区间（11–19 ms）——但净值仍为正，未出现该注释所说的 "tipped the pipeline into collapse"。
+
+两场**首位姿几乎相同（3528 vs 3535 ms）、初始化尝试均为 4** ⇒ split 不影响初始化，且两次拍摄的运动相近，
+这让跨场的 fps 对比更可信。
+
+直播 1920×1440 现状：**27.0 fps / 相机供 29.9 fps ⇒ 吃下 90.3%**。历次直播帧率：10.5 → 14.1 → 20.1 → 24.7 → **27.0**。
+
+🔴 **但这些 GPU 数字都建立在一个待查的前提上**：台架链接的是 **Debug 版 Dawn**
+（`build_bench_nothread_arm.sh:9` 指向 `Debug-iphoneos/libwebgpu_dawn.a`，680 MB，断言与 WebGPU 校验层活着），
+而同目录下有一个从未被使用的 **Release 版（20 MB）**。一次空 dispatch 13 ms 在原生 Metal 上不可能，
+高度怀疑测到的是校验层开销而非 GPU。见 09-11 已记录但未执行的「下一刀=改 Release」。
