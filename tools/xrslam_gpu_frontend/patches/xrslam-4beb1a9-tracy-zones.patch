@@ -1,0 +1,199 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0082308..6f076ea 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,6 +31,36 @@ if(NOT IOS)
+   set(XRSLAM_PC ON)
+ endif()
+ 
++# [PW 2026-09-16] Tracy (BSD-3, https://github.com/wolfpld/tracy, pinned v0.14.1).
++# Replaces hand-rolled host-side timers: those were written twice and read wrong
++# twice (a composite counter that folded three causes, and an empty-submit probe
++# read as an additive per-frame cost). Tracy is the same instrumentation on every
++# end we ship to -- its own capability table lists CPU zones on Windows/Linux/
++# Android/OSX/iOS, and GPU zones over WebGPU on all of them, which is our Dawn
++# stack. Default OFF so a normal build is unchanged.
++option(XRSLAM_TRACY "Instrument with the Tracy profiler (BSD-3)" OFF)
++set(TRACY_ROOT "" CACHE PATH "Tracy checkout containing public/TracyClient.cpp")
++add_library(xrslam-tracy INTERFACE)
++if(XRSLAM_TRACY)
++  if(NOT EXISTS "${TRACY_ROOT}/public/TracyClient.cpp")
++    message(FATAL_ERROR "XRSLAM_TRACY=ON but TRACY_ROOT/public/TracyClient.cpp not found: ${TRACY_ROOT}")
++  endif()
++  target_include_directories(xrslam-tracy INTERFACE "${TRACY_ROOT}/public")
++  # TRACY_DELAYED_INIT is required on Apple platforms (Tracy manual: no linker
++  # support for init-time profiling on OSX/iOS); TRACY_ON_DEMAND keeps the client
++  # quiet until a profiler actually connects, so an uninstrumented run costs
++  # nothing and a scripted capture can attach mid-run.
++  target_compile_definitions(xrslam-tracy INTERFACE TRACY_ENABLE TRACY_ON_DEMAND)
++  if(APPLE)
++    # TRACY_DELAYED_INIT only: the manual says OSX/iOS have no linker support for
++    # init-time profiling, so the profiler initialises on first use. Do NOT add
++    # TRACY_MANUAL_LIFETIME here -- under it "the profiler does not exist until
++    # StartupProfiler() is called", so nothing listens and a capture just hangs
++    # on "Connecting to ...".
++    target_compile_definitions(xrslam-tracy INTERFACE TRACY_DELAYED_INIT)
++  endif()
++endif()
++
+ add_subdirectory(xrslam)
+ add_subdirectory(xrslam-extra)
+ add_subdirectory(xrslam-interface)
+diff --git a/xrslam-extra/CMakeLists.txt b/xrslam-extra/CMakeLists.txt
+index 28781bc..2762d2f 100644
+--- a/xrslam-extra/CMakeLists.txt
++++ b/xrslam-extra/CMakeLists.txt
+@@ -32,7 +32,21 @@ if(TARGET depends::opencv)
+     PUBLIC
+       xrslam-extra-common
+       depends::opencv
++      xrslam-tracy
+   )
++  if(XRSLAM_TRACY)
++    # Compiled exactly once; everything is libtool'd into one archive afterwards.
++    target_sources(xrslam-extra-opencv-image PRIVATE "${TRACY_ROOT}/public/TracyClient.cpp")
++  endif()
++  option(XRSLAM_GPU_FRONTEND "GPU front end (pw_gpu_frontend on Dawn): CLAHE/pyramid/GFTT/LK on the GPU" OFF)
++  if(XRSLAM_GPU_FRONTEND)
++    set(PW_GPU_FRONTEND_INCLUDE_DIR "" CACHE PATH "dir containing pw_gpu_frontend.h (aether_cpp/tools)")
++    target_sources(xrslam-extra-opencv-image PRIVATE
++      ${XRSLAM_EXTRA_INCLUDE_DIR}/xrslam/extra/gpu_image.h
++      ${XRSLAM_EXTRA_SOURCE_DIR}/xrslam/extra/gpu_image.cpp)
++    target_include_directories(xrslam-extra-opencv-image PRIVATE ${PW_GPU_FRONTEND_INCLUDE_DIR})
++    target_compile_definitions(xrslam-extra-opencv-image PUBLIC XRSLAM_GPU_FRONTEND=1)
++  endif()
+ endif()
+ 
+ if(TARGET depends::yaml-cpp)
+diff --git a/xrslam-extra/src/xrslam/extra/opencv_image.cpp b/xrslam-extra/src/xrslam/extra/opencv_image.cpp
+index 03a3236..59231bf 100644
+--- a/xrslam-extra/src/xrslam/extra/opencv_image.cpp
++++ b/xrslam-extra/src/xrslam/extra/opencv_image.cpp
+@@ -1,4 +1,5 @@
+ #include <xrslam/extra/opencv_image.h>
++#include "../../../../xrslam/src/xrslam/utility/pw_trace.h"
+ #include <xrslam/extra/poisson_disk_filter.h>
+ 
+ using namespace cv;
+@@ -39,6 +40,7 @@ void OpenCvImage::detect_keypoints(std::vector<vector<2>> &keypoints,
+                                    size_t max_points,
+                                    double keypoint_distance) const {
+ 
++    PW_ZONE("frontend.cpu.detect_gftt");
+     std::vector<KeyPoint> cvkeypoints;
+ 
+     gftt(max_points)->detect(image, cvkeypoints);
+@@ -154,6 +156,7 @@ void OpenCvImage::track_keypoints(const Image *next_image,
+ }
+ 
+ void OpenCvImage::preprocess(double clipLimit, int width, int height) {
++    PW_ZONE("frontend.cpu.clahe_and_pyramid");
+     clahe(clipLimit, width, height)->apply(image, image);
+     image_pyramid.clear();
+     buildOpticalFlowPyramid(image, image_pyramid, Size(21, 21),
+diff --git a/xrslam/CMakeLists.txt b/xrslam/CMakeLists.txt
+index b79dda5..0da343c 100644
+--- a/xrslam/CMakeLists.txt
++++ b/xrslam/CMakeLists.txt
+@@ -139,6 +139,7 @@ PUBLIC
+   depends::spdlog
+   depends::ceres-solver
+   depends::opencv
+-)
++
++    xrslam-tracy)
+ 
+ set(XRSLAM_LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "")
+diff --git a/xrslam/src/xrslam/core/frontend_worker.cpp b/xrslam/src/xrslam/core/frontend_worker.cpp
+index 2526961..5800668 100644
+--- a/xrslam/src/xrslam/core/frontend_worker.cpp
++++ b/xrslam/src/xrslam/core/frontend_worker.cpp
+@@ -1,4 +1,6 @@
++#include <chrono>
+ #include <iostream>
++#include "../utility/pw_trace.h"
+ #include <xrslam/common.h>
+ #include <xrslam/core/detail.h>
+ #include <xrslam/core/feature_tracker.h>
+@@ -11,6 +13,43 @@
+ #include <xrslam/map/map.h>
+ #include <xrslam/map/track.h>
+ 
++// [PW 2026-09-16] 后端记账。XRSLAM 自带的计时通道只有 feature_tracker_time
++// (feature_tracker.cpp:25),包住整个前端;后端一处都没有。而 1920×1440 的整帧
++// 预算 51.67 ms 里前端只占 20.22 ms(39%),剩下 61% 究竟是后端滑窗优化还是台架
++// 回放 I/O,没有这组计数就分不开——而那正是决定下一刀砍哪里的数。
++// 主机侧计时:这几段都是粗粒度调用(每帧一次),不是常量偏移紧循环,所以不适用
++// 「加法式探针会被 CSE 吃掉或被去优化」那条教训。
++extern "C" {
++double pw_bk_work_ms = 0.0;
++double pw_bk_init_ms = 0.0;
++double pw_bk_mirror_ms = 0.0;
++double pw_bk_track_ms = 0.0;
++unsigned long long pw_bk_work_n = 0;
++unsigned long long pw_bk_init_n = 0;
++unsigned long long pw_bk_track_n = 0;
++}
++
++namespace {
++inline double pw_now_ms() {
++    return std::chrono::duration<double, std::milli>(
++               std::chrono::steady_clock::now().time_since_epoch())
++        .count();
++}
++// RAII 而不是在函数尾部加一行:work() 里有多条分支,只有作用域退出才保证每个
++// 出口都记上。
++struct PwScope {
++    double t0;
++    double *acc;
++    unsigned long long *n;
++    explicit PwScope(double *a, unsigned long long *c = nullptr)
++        : t0(pw_now_ms()), acc(a), n(c) {}
++    ~PwScope() {
++        *acc += pw_now_ms() - t0;
++        if (n) ++*n;
++    }
++};
++} // namespace
++
+ namespace xrslam {
+ 
+ FrontendWorker::FrontendWorker(XRSLAM::Detail *detail,
+@@ -26,7 +65,11 @@ FrontendWorker::~FrontendWorker() = default;
+ bool FrontendWorker::empty() const { return pending_frame_ids.empty(); }
+ 
+ void FrontendWorker::work(std::unique_lock<std::mutex> &l) {
++    PW_ZONE("backend.work");
++    PwScope pw_work(&pw_bk_work_ms, &pw_bk_work_n);
+     if (initializer) {
++        PW_ZONE("backend.initializer");
++        PwScope pw_init(&pw_bk_init_ms, &pw_bk_init_n);
+         size_t pending_frame_id = pending_frame_ids.front();
+         pending_frame_ids.clear();
+         notify_space();
+@@ -63,11 +106,21 @@ void FrontendWorker::work(std::unique_lock<std::mutex> &l) {
+         pending_count_.store(pending_frame_ids.size(), std::memory_order_relaxed);
+         notify_space();
+         l.unlock();
+-        synchronized(detail->feature_tracker->map) {
+-            sliding_window_tracker->mirror_frame(
+-                detail->feature_tracker->map.get(), pending_frame_id);
++        {
++            PW_ZONE("backend.mirror_frame");
++            PwScope pw_mirror(&pw_bk_mirror_ms);
++            synchronized(detail->feature_tracker->map) {
++                sliding_window_tracker->mirror_frame(
++                    detail->feature_tracker->map.get(), pending_frame_id);
++            }
++        }
++        bool pw_tracked;
++        {
++            PW_ZONE("backend.sliding_window_track");
++            PwScope pw_track(&pw_bk_track_ms, &pw_bk_track_n);
++            pw_tracked = sliding_window_tracker->track();
+         }
+-        if (sliding_window_tracker->track()) {
++        if (pw_tracked) {
+ #if defined(XRSLAM_IOS)
+             synchronized(detail->feature_tracker->keymap) {
+                 detail->feature_tracker->synchronize_keymap(
