@@ -7,6 +7,17 @@ enum BenchMode: String, CaseIterable, Identifiable, Codable {
     /// session, so recording from ARKit's own frames is what makes one capture
     /// serve all three arms.
     case record = "record"
+    /// One hand-held capture through the bench's OWN `AVCaptureSession`, in the
+    /// shape upstream's iOS app captures in: 640x480, 32BGRA, reduced to gray by
+    /// upstream's `cvtColor(BGRA2GRAY)`. `record` cannot produce this -- it owns
+    /// the camera through ARKit, which delivers 420f at the production capture
+    /// size, and iOS grants the rear camera to one session.
+    ///
+    /// 🔴 Never scoreable. 640x480 is not a verdict resolution, so
+    /// `DeviceRecordingLoader` accepts it only for `.replication`. Its purpose
+    /// is to feed an engine the input upstream's own pipeline produces, which is
+    /// the one thing our ARKit-sourced recordings cannot do.
+    case recordNative = "record-native"
     case liveSoak = "live-soak"
     /// Replays the device recording. This is where candidates are scored.
     case replayDeviceRecording = "replay-device-recording"
@@ -18,6 +29,7 @@ enum BenchMode: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .record: return "录制一次(ARKit 直播 + 存帧)"
+        case .recordNative: return "录制一次(自建相机 640×480 官方档,不计分)"
         case .liveSoak: return "真机短诊断"
         case .replayDeviceRecording: return "回放本机录制(计分)"
         case .replayPaced: return "EuRoC 实时精度回放"
@@ -31,7 +43,17 @@ extension BenchMode {
     var isReplay: Bool {
         switch self {
         case .replayDeviceRecording, .replayPaced, .replayMax: return true
-        case .record, .liveSoak: return false
+        case .record, .recordNative, .liveSoak: return false
+        }
+    }
+
+    /// True when the run persists a capture other runs will be fed from. Such a
+    /// run's output is never scratch: it cannot be reproduced without the
+    /// operator repeating the physical trajectory.
+    var producesRecording: Bool {
+        switch self {
+        case .record, .recordNative: return true
+        case .liveSoak, .replayDeviceRecording, .replayPaced, .replayMax: return false
         }
     }
 
@@ -40,7 +62,7 @@ extension BenchMode {
     var hasExternalGroundTruth: Bool {
         switch self {
         case .replayPaced, .replayMax: return true
-        case .record, .liveSoak, .replayDeviceRecording: return false
+        case .record, .recordNative, .liveSoak, .replayDeviceRecording: return false
         }
     }
 }

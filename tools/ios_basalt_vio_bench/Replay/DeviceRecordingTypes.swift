@@ -61,6 +61,30 @@ struct DeviceRecordingCameraFormat: Codable, Equatable, Sendable {
         nominalFPS: BenchResolution.scoringFramesPerSecond
     )
 
+    /// The capture upstream's own iOS app performs: `AVCaptureSession` at
+    /// 640x480 delivering 32BGRA, reduced to gray by
+    /// `cvtColor(..., COLOR_BGRA2GRAY)`.
+    ///
+    /// The `pixel_format` string is not decoration. This gray and `scoring`'s
+    /// gray are different images of the same scene -- BT.601 weights over the
+    /// ISP's RGB against the ISP's own Y -- so a reader must be able to tell
+    /// which one a file holds without rerunning the capture.
+    ///
+    /// 🔴 Not a scoring format, by construction:
+    /// `BenchResolution.participatesInVerdict(640, 480)` is false, so
+    /// `DeviceRecordingLoader` refuses it for anything but
+    /// `.replication`. That is deliberate and must stay -- 1920x1440 is the
+    /// floor every verdict is made at, and this recording exists to replicate
+    /// upstream's input, never to score against it.
+    static func nativeUpstream(fps: Double) -> DeviceRecordingCameraFormat {
+        DeviceRecordingCameraFormat(
+            width: BenchResolution.diagnostic.width,
+            height: BenchResolution.diagnostic.height,
+            pixelFormat: "luma8_from_32bgra_opencv_bgra2gray_upstream",
+            nominalFPS: fps
+        )
+    }
+
     var bytesPerFrame: Int { width * height }
 }
 

@@ -165,6 +165,17 @@ enum RawLumaFrameLoader {
 /// Loads a device recording into the same `[ReplayEvent]` stream `ReplayScheduler`
 /// already drives for EuRoC, so pacing, ordering and delivery are shared code
 /// rather than a second implementation that can drift.
+/// Why a recording is being loaded. It decides one thing only: whether the
+/// 1920x1440 verdict-resolution rule applies.
+enum DeviceRecordingPurpose {
+    /// Scoring, comparison, anything a verdict rests on. The default, so a
+    /// caller gets the strict rule unless it deliberately asks not to.
+    case verdict
+    /// Replicating an upstream pipeline on the input shape that pipeline
+    /// expects. The run that uses it must mark itself unscoreable.
+    case replication
+}
+
 struct DeviceRecordingLoader {
 
     /// Re-streaming 23 GiB to verify the frames digest costs real time, so it is
@@ -178,7 +189,10 @@ struct DeviceRecordingLoader {
         self.verifyFramesDigest = verifyFramesDigest
     }
 
-    func load(manifestURL: URL) throws -> DeviceRecordingDataset {
+    func load(
+        manifestURL: URL,
+        purpose: DeviceRecordingPurpose = .verdict
+    ) throws -> DeviceRecordingDataset {
         let root = manifestURL.deletingLastPathComponent()
         let manifest = try JSONDecoder().decode(
             DeviceRecordingManifest.self,
@@ -191,16 +205,23 @@ struct DeviceRecordingLoader {
         guard !manifest.recordingID.isEmpty else {
             throw DeviceRecordingError.invalidRecordingID
         }
-        // A recording at any other resolution cannot be scored, so it is refused
-        // here rather than silently producing numbers nobody may use.
-        guard BenchResolution.participatesInVerdict(
-            width: manifest.camera.width,
-            height: manifest.camera.height
-        ) else {
-            throw DeviceRecordingError.resolutionIsNotScoring(
+        // 1920x1440 is the floor every verdict is made at, and this is where
+        // that rule is enforced for replay. `.replication` is the one exception
+        // and it is not a relaxation of the rule: a native 640x480 recording
+        // exists to feed an engine the input upstream's own app produces, and
+        // the caller that passes `.replication` is responsible for marking its
+        // run unscoreable. Every other check below -- zero loss, intrinsics
+        // cross-check, per-file hashes, frame count -- still applies to it.
+        if purpose == .verdict {
+            guard BenchResolution.participatesInVerdict(
                 width: manifest.camera.width,
                 height: manifest.camera.height
-            )
+            ) else {
+                throw DeviceRecordingError.resolutionIsNotScoring(
+                    width: manifest.camera.width,
+                    height: manifest.camera.height
+                )
+            }
         }
         guard manifest.lossCount == 0 else {
             throw DeviceRecordingError.lossyRecording(lossCount: manifest.lossCount)

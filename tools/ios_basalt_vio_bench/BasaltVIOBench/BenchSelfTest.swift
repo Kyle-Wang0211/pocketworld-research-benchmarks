@@ -77,8 +77,16 @@ enum BenchSelfTest {
 
     /// Writes the marker that makes a run eligible for purging. Only self-test
     /// launches leave it, so an operator's capture is never eligible.
-    static func markSelfTestRunIfNeeded(directoryURL: URL) {
-        guard isSelfTestLaunch else { return }
+    ///
+    /// A capture is never eligible either, whatever launched it. The marker
+    /// means "this output is scratch", and a recording is the opposite: it is
+    /// the artifact every later replay is fed from, it costs the operator a
+    /// physical trajectory that cannot be reproduced, and it is minutes of
+    /// someone's time. `-PWAutoRun record-native` is exactly how a recording is
+    /// started unattended, so without this the next launch would delete the
+    /// thing the run existed to produce.
+    static func markSelfTestRunIfNeeded(directoryURL: URL, mode: BenchMode) {
+        guard isSelfTestLaunch, !mode.producesRecording else { return }
         try? Data().write(to: directoryURL.appendingPathComponent(selfTestMarkerName))
     }
 

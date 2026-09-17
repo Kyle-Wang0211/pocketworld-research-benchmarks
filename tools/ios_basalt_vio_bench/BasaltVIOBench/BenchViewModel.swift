@@ -51,6 +51,10 @@ final class BenchViewModel: ObservableObject {
         switch mode {
         case .record:
             return "将录制一次:ARKit 实时跑 + 存下它看到的帧,\(measurementSeconds) 秒后自动停止"
+        case .recordNative:
+            return "将录制一次:自建相机 640×480 官方档(32BGRA→OpenCV 灰度),"
+                + "\(selectedBackend.displayName) 同时实时跑,\(measurementSeconds) 秒后自动停止。"
+                + "⚠ 不计分:640×480 不是判决分辨率"
         case .liveSoak:
             return "将用 \(selectedBackend.displayName) 实时采集,\(measurementSeconds) 秒或手动中止"
         case .replayDeviceRecording:
@@ -109,6 +113,10 @@ final class BenchViewModel: ObservableObject {
         case .record:
             // ARKit owns the camera and the recording is of its frames.
             return selectedBackend == .arkit
+        case .recordNative:
+            // The bench's own AVCaptureSession owns the camera, so ARKit cannot
+            // be the arm -- the two cannot hold the rear camera at once.
+            return selectedBackend != .arkit
         case .liveSoak:
             return true
         case .replayDeviceRecording, .replayPaced, .replayMax:

@@ -276,6 +276,7 @@ final class BenchmarkCoordinator {
             if !mode.isReplay {
                 try runLive(
                     context,
+                    mode: mode,
                     initialHeartbeatNS: initialHeartbeatNS,
                     liveRunStartNS: liveRunStartNS,
                     runLease: runLease
@@ -754,6 +755,7 @@ final class BenchmarkCoordinator {
 
     private func runLive(
         _ context: PreparedBenchmarkRun,
+        mode: BenchMode,
         initialHeartbeatNS: UInt64,
         liveRunStartNS: UInt64,
         runLease: BenchRunLease.Token
@@ -785,6 +787,32 @@ final class BenchmarkCoordinator {
             imuDeliveryMode: IMUDeliveryMode.forBackend(backend)
         )
         lock.withLock { activeTransport = transport }
+
+        // `record-native` persists this capture through the bench's own
+        // AVCaptureSession, in upstream's shape. Space is checked before the
+        // operator spends the time, not after.
+        var recorder: DeviceRecordingWriter?
+        if mode == .recordNative {
+            let configured = SensorTransportConfiguration.live
+            let format = DeviceRecordingCameraFormat.nativeUpstream(
+                fps: Double(configured.cameraRateHz)
+            )
+            try DeviceRecordingWriter.checkFreeSpace(
+                at: context.directoryURL,
+                requiredBytes: DeviceRecordingWriter.projectedByteCount(
+                    seconds: Double(LiveBenchmarkDuration.measurementNanoseconds)
+                        / 1_000_000_000,
+                    format: format
+                )
+            )
+            let writer = try DeviceRecordingWriter(
+                directory: context.directoryURL,
+                recordingID: context.runID,
+                format: format
+            )
+            transport.recorder = writer
+            recorder = writer
+        }
         transport.previewTap = PreviewFrameTap { [onPreviewFrame] in onPreviewFrame($0) }
         onPreview(.liveFrames(label: backend.displayName))
         defer { onPreview(.none) }
@@ -929,6 +957,22 @@ final class BenchmarkCoordinator {
             let drained = try drainLiveTransport(transport, into: session)
             if drained { break }
             Thread.sleep(forTimeInterval: 0.001)
+        }
+        // Seal after the transport has stopped and before anything is scored:
+        // a loss is a failed run, never a shorter recording. Same rule and same
+        // breakdown as the ARKit recorder above.
+        if let recorder {
+            let manifest = try recorder.finish()
+            guard manifest.lossCount == 0 else {
+                throw CoordinatorError.invalidRun(
+                    "device_recording_lossy_\(manifest.lossCount)"
+                        + "_format\(manifest.lossFormatMismatch)"
+                        + "_queue\(manifest.lossWriteQueueFull)"
+                        + "_werr\(manifest.lossWriteError)"
+                        + "_peak\(manifest.peakInFlight)"
+                        + String(format: "_slow%.0fms", manifest.slowestWriteMilliseconds)
+                )
+            }
         }
         try session.sealDrainStop()
         for pose in try drainPoses(session) {

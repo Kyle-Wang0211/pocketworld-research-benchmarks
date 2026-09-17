@@ -37,7 +37,7 @@ struct EngineResourcePlan: Equatable {
         }
         if backend == .xrslam {
             switch mode {
-            case .record, .liveSoak, .replayDeviceRecording:
+            case .record, .recordNative, .liveSoak, .replayDeviceRecording:
             return EngineResourcePlan(
                 config: "xrslam_ios_vio.yaml",
                 calibration: "xrslam_iphone_14_pro.yaml"
@@ -50,7 +50,7 @@ struct EngineResourcePlan: Equatable {
             }
         }
         switch mode {
-        case .record, .liveSoak, .replayDeviceRecording:
+        case .record, .recordNative, .liveSoak, .replayDeviceRecording:
             return EngineResourcePlan(
                 config: "euroc_config.json",
                 calibration: "iphone_14_pro_640x480_calib.json"
@@ -108,7 +108,7 @@ enum BenchmarkRunPreparation {
         // Only a self-test launch marks its run disposable. Without the marker
         // the purge leaves the directory alone, which is what protects a capture
         // the operator shot by hand.
-        BenchSelfTest.markSelfTestRunIfNeeded(directoryURL: directory)
+        BenchSelfTest.markSelfTestRunIfNeeded(directoryURL: directory, mode: mode)
         // [2026-09-03] A throw anywhere in the rest of preparation used to leave a
         // run directory holding only the self-test marker and no statement of what
         // failed (the ARKit live-soak arm did exactly that, and the catch in the
@@ -318,7 +318,7 @@ enum BenchmarkRunPreparation {
             // ground truth, so this channel may never state absolute accuracy.
             accuracy = RunAccuracyEvidence(status: .notEvaluable, groundTruth: .none)
 
-        case .record, .liveSoak:
+        case .record, .recordNative, .liveSoak:
             // Declare what the capture is actually configured to deliver, never
             // the resolution the contract aspires to. Writing the scoring
             // constant here produced a receipt claiming 1920x1440 while
@@ -453,7 +453,7 @@ enum BenchmarkRunPreparation {
         try inputDefinitionData.write(to: inputDefinitionURL, options: .atomic)
 
         switch mode {
-        case .record, .liveSoak:
+        case .record, .recordNative, .liveSoak:
             try Data().write(to: directory.appendingPathComponent("telemetry.jsonl"), options: .atomic)
         case .replayDeviceRecording, .replayPaced, .replayMax:
             try Data().write(to: directory.appendingPathComponent("poses.tum"), options: .atomic)

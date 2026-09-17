@@ -38,6 +38,30 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     /// into the receipt so a format refusal is readable after the fact.
     private var availablePixelFormats: String = ""
 
+    /// Set to persist this capture. Frames are recorded from the pooled gray
+    /// plane the engine is handed, not from a second conversion of the camera
+    /// buffer, so the file holds exactly the bytes the engine consumed.
+    ///
+    /// `record` (the ARKit arm) owns the camera through `ARSession`; this is
+    /// the AVFoundation equivalent, and it is what makes a native 640x480
+    /// upstream-shaped recording possible at all. iOS grants the rear camera
+    /// to one session, so the two can never both be recording.
+    var recorder: DeviceRecordingWriter?
+
+    /// Pairs gyroscope and acceleration for `imu.csv` only.
+    ///
+    /// In `xrslamRawSeparateEvents` the engine receives the two streams
+    /// separately, exactly as upstream's own `Motion.swift` pushes them, and
+    /// the main `imuAssembler` is not used at all. But `imu.csv` is a paired
+    /// schema, so recording needs pairs. Rather than invent a pairing rule,
+    /// this runs the same `GyroDrivenIMUAssembler` the Basalt arm already
+    /// ships, on a separate instance, fed only when a recorder is attached --
+    /// so the engine's input is untouched and no counter shifts on runs that
+    /// are not recording. The run receipt names the representation, because
+    /// pairs are not what the engine saw.
+    private let recordingIMUAssemblerLock = NSLock()
+    private var recordingIMUAssembler: GyroDrivenIMUAssembler?
+
     /// `-PWOfficialBGRA` captures 32BGRA and reaches gray through upstream's
     /// own conversion instead of taking the ISP's luma plane. It is the last of
     /// the three places this transport still differs from
@@ -561,19 +585,42 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     private var reportedIntrinsics = false
 
     fileprivate func reportIntrinsicsIfNeeded(_ sampleBuffer: CMSampleBuffer) {
-        guard !reportedIntrinsics else { return }
+        // The log line is once; the recording keeps every frame's, because the
+        // ARKit recorder does and production's per-photo sidecar does. Autofocus
+        // moves fx within a session, so a single sample cannot describe a file.
+        guard !reportedIntrinsics || recorder != nil else { return }
         guard let raw = CMGetAttachment(
             sampleBuffer,
             key: kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix,
             attachmentModeOut: nil
         ) as? Data, raw.count >= MemoryLayout<Float>.size * 9 else { return }
+        let firstReport = !reportedIntrinsics
         reportedIntrinsics = true
         // The attachment is a matrix_float3x3 in column-major order:
         // columns are (fx,0,0), (0,fy,0), (cx,cy,1).
         let matrix = raw.withUnsafeBytes { $0.load(as: matrix_float3x3.self) }
-        NSLog("[VIOBench] camera-reported intrinsics fx=%.3f fy=%.3f cx=%.3f cy=%.3f",
-              Double(matrix.columns.0.x), Double(matrix.columns.1.y),
-              Double(matrix.columns.2.x), Double(matrix.columns.2.y))
+        let reported = CameraIntrinsics(
+            fx: Double(matrix.columns.0.x),
+            fy: Double(matrix.columns.1.y),
+            cx: Double(matrix.columns.2.x),
+            cy: Double(matrix.columns.2.y)
+        )
+        if firstReport {
+            NSLog("[VIOBench] camera-reported intrinsics fx=%.3f fy=%.3f cx=%.3f cy=%.3f",
+                  reported.fx, reported.fy, reported.cx, reported.cy)
+        }
+        guard let recorder else { return }
+        // Compared against upstream's own 640x480 config, unscaled. The default
+        // comparison is that config multiplied by 3 for the 1920x1440 scoring
+        // format, which says nothing about a frame that is natively 640x480.
+        try? recorder.recordIntrinsics(
+            reported,
+            timestampSeconds: CMTimeGetSeconds(
+                CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            ),
+            source: "AVCaptureConnection.cameraIntrinsicMatrixDelivery",
+            expected: ARKitIntrinsicsCrossCheck.frozenUpstream640x480
+        )
     }
 
     private func handleGyroscope(_ data: CMGyroData?, error: Error?) {
@@ -599,6 +646,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         )
         if imuDeliveryMode == .xrslamRawSeparateEvents {
             xrslamSensorHandoff.offer(.imu(.gyroscope(sample)))
+            recordPairedIMU { $0.ingestGyroscope(sample) }
             return
         }
         let batch = imuAssemblerLock.withLock { imuAssembler.ingestGyroscope(sample) }
@@ -633,6 +681,17 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                     )
                 )
             )
+            // The recorder's copy is in m/s^2, the unit `imu.csv` documents and
+            // every replay consumer expects. The engine gets the raw event
+            // above, unchanged -- these are two representations of one sample,
+            // not two samples.
+            let converted = CoreMotionIMUConversion.accelerationMetersPerSecondSquared(
+                timestampNanoseconds: timestamp,
+                xInG: data.acceleration.x,
+                yInG: data.acceleration.y,
+                zInG: data.acceleration.z
+            )
+            recordPairedIMU { $0.ingestAcceleration(converted) }
             return
         }
         let sample = CoreMotionIMUConversion.accelerationMetersPerSecondSquared(
@@ -643,6 +702,32 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         )
         let batch = imuAssemblerLock.withLock { imuAssembler.ingestAcceleration(sample) }
         processIMUAssemblyBatch(batch)
+    }
+
+    /// Feeds the recording-only assembler and writes whatever pairs come out.
+    /// A no-op when nothing is recording, so the non-recording path keeps the
+    /// exact behaviour it had.
+    private func recordPairedIMU(
+        _ ingest: (inout GyroDrivenIMUAssembler) -> IMUAssemblyBatch
+    ) {
+        guard let recorder else { return }
+        let batch: IMUAssemblyBatch = recordingIMUAssemblerLock.withLock {
+            if recordingIMUAssembler == nil {
+                recordingIMUAssembler = GyroDrivenIMUAssembler(
+                    pendingGyroscopeCapacity: configuration.pendingGyroscopeCapacity
+                )
+            }
+            return ingest(&recordingIMUAssembler!)
+        }
+        for sample in batch.samples {
+            recorder.appendIMU(
+                timestampNanoseconds: Int64(sample.timestampNanoseconds),
+                gyroscope: (sample.gyroscope.x, sample.gyroscope.y, sample.gyroscope.z),
+                acceleration: (
+                    sample.acceleration.x, sample.acceleration.y, sample.acceleration.z
+                )
+            )
+        }
     }
 
     private func processIMUAssemblyBatch(_ batch: IMUAssemblyBatch) {
@@ -836,6 +921,18 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
             // from AVFoundation's.
             previewTap?.offer(pixelBuffer: pixelBuffer, monotonicNanoseconds: timestamp)
             return
+        }
+        // Strictly before the handoff. The lease is released by whoever
+        // consumes the frame -- `deinit` returns the plane to the pool -- so
+        // reading its storage after `offer` is a use-after-free. One memcpy of
+        // 307200 bytes at 30 Hz, on the same callback thread that already
+        // copied the frame once, and then the writer's own queue takes it.
+        if let recorder {
+            let bytes = Data(
+                bytes: lease.base,
+                count: Int(configuration.cameraWidth) * Int(configuration.cameraHeight)
+            )
+            recorder.appendLuma(bytes, timestampNanoseconds: Int64(timestamp))
         }
         let frame = MonochromeCameraFrame(
             timestampNanoseconds: timestamp,

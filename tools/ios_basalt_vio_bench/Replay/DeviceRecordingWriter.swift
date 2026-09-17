@@ -196,9 +196,19 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     /// Records this frame's intrinsics, then cross-checks the first frame's.
     /// Every frame is kept because production keeps every frame's: its per-photo
     /// sidecar pins `intrinsics_fxfycxcy` to the snapshot the pose came from.
+    /// `source` names where the numbers came from, because a reader must never
+    /// have to infer it: the ARKit arm reports `ARFrame.camera.intrinsics`, the
+    /// AVFoundation transport reports the camera's own
+    /// `kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix`. `expected` is what
+    /// the observation is compared against in `intrinsics_observed.json`;
+    /// the default is upstream's 640x480 config scaled to the 1920x1440
+    /// scoring format, which is meaningless for a frame that is natively
+    /// 640x480, so the native path passes the unscaled values instead.
     func recordIntrinsics(
         _ reported: CameraIntrinsics,
-        timestampSeconds: Double
+        timestampSeconds: Double,
+        source: String = "ARFrame.camera.intrinsics",
+        expected: CameraIntrinsics = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
     ) throws {
         stateLock.lock()
         defer { stateLock.unlock() }
@@ -226,8 +236,8 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             frameWidth: format.width,
             frameHeight: format.height
         )
-        let expected = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
         let observed: [String: Any] = [
+            "intrinsics_source": source,
             "arkit_reported": ["fx": reported.fx, "fy": reported.fy,
                                "cx": reported.cx, "cy": reported.cy],
             "expected_from_upstream_x3": ["fx": expected.fx, "fy": expected.fy,
@@ -267,7 +277,7 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             fy: scoring.fy,
             cx: scoring.cx,
             cy: scoring.cy,
-            source: "ARFrame.camera.intrinsics",
+            source: source,
             crossCheckPassed: true
         )
     }
@@ -290,7 +300,34 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             stateLock.unlock()
             return
         }
+        enqueue(luma: luma, timestampNanoseconds: timestampNanoseconds)
+    }
 
+    /// Records a grayscale plane the caller already holds.
+    ///
+    /// The AVFoundation transport reaches gray before the recorder does: it
+    /// captures 32BGRA and converts through upstream's own
+    /// `cvtColor(BGRA2GRAY)` into a pooled plane, and that plane -- not a
+    /// pixel buffer -- is what the engine is handed. Recording from it is the
+    /// point: the file then holds the exact bytes the engine consumed, rather
+    /// than a second conversion of the same frame that could differ from it.
+    ///
+    /// The caller must copy before handing the lease to the engine. A lease is
+    /// released by whoever consumes the frame, so reading its storage after
+    /// handoff is a use-after-free; this takes `Data` so that copy is explicit
+    /// at the call site rather than implied here.
+    func appendLuma(_ luma: Data, timestampNanoseconds: Int64) {
+        guard luma.count == format.bytesPerFrame else {
+            stateLock.lock()
+            lossCount += 1
+            lossFormatMismatch += 1
+            stateLock.unlock()
+            return
+        }
+        enqueue(luma: luma, timestampNanoseconds: timestampNanoseconds)
+    }
+
+    private func enqueue(luma: Data, timestampNanoseconds: Int64) {
         stateLock.lock()
         guard !sealed else {
             lateAfterSeal += 1
