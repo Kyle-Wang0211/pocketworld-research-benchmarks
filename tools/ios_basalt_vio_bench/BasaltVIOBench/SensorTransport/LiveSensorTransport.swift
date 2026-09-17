@@ -373,12 +373,6 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 rateHz: configuration.cameraRateHz
             )
         }
-        videoOutput.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: outputPixelFormat,
-            kCVPixelBufferWidthKey as String: Int(configuration.cameraWidth),
-            kCVPixelBufferHeightKey as String: Int(configuration.cameraHeight),
-        ]
-
         guard let connection = videoOutput.connection(with: .video),
               connection.isVideoRotationAngleSupported(0) else {
             throw TransportError.cameraFormatUnavailable(
@@ -448,6 +442,24 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             let dimensions = CMVideoFormatDescriptionGetDimensions(
                 format.formatDescription
             )
+            // Only now, and this ordering is load-bearing. AVFoundation
+            // validates `videoSettings` against the SOURCE DEVICE's
+            // activeFormat and raises
+            //   NSInvalidArgumentException "Video settings dimensions must
+            //   maintain the source device activeFormat's aspect ratio"
+            // -- an Objective-C exception, so it is not catchable from Swift
+            // and it kills the process with SIGABRT rather than throwing.
+            // Setting it before `addOutput` skipped the check (an output with
+            // no source has nothing to validate against); setting it after
+            // `addOutput` but before `activeFormat` validated 640x480 (4:3)
+            // against whatever format the device happened to boot with (16:9)
+            // and aborted. Set it once the device is on the format these
+            // dimensions came from, where the ratio matches by construction.
+            videoOutput.videoSettings = [
+                kCVPixelBufferPixelFormatTypeKey as String: outputPixelFormat,
+                kCVPixelBufferWidthKey as String: Int(dimensions.width),
+                kCVPixelBufferHeightKey as String: Int(dimensions.height),
+            ]
             guard dimensions.width == configuration.cameraWidth,
                   dimensions.height == configuration.cameraHeight,
                   let range = format.videoSupportedFrameRateRanges.first(where: {
