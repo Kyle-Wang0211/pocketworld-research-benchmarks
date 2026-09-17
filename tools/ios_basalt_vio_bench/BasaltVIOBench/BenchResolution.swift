@@ -76,6 +76,19 @@ public enum BenchResolution: Equatable {
         ProcessInfo.processInfo.arguments.contains("-PWLiveFullResolution")
     }
 
+    /// `-PWReplicationReplay` lets a replay consume a recording whose
+    /// resolution is not a verdict resolution -- today, the native 640x480
+    /// upstream-shaped capture `record-native` produces.
+    ///
+    /// It is an explicit opt-in and it is deliberately awkward, because the
+    /// rule it steps around is the one that keeps verdicts comparable:
+    /// 1920x1440 is the floor. A run started with it is forced unscoreable, so
+    /// the flag buys the ability to observe an engine on upstream's input and
+    /// nothing else. It can never make a number that a verdict may cite.
+    public static var replicationReplayRequested: Bool {
+        ProcessInfo.processInfo.arguments.contains("-PWReplicationReplay")
+    }
+
     public static func participatesInVerdict(width: Int, height: Int) -> Bool {
         width == scoring.width && height == scoring.height
     }

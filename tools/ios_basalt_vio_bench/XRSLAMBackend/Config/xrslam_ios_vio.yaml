@@ -32,6 +32,13 @@ solver:
 
 sliding_window:
   size: 10               # 原 5,上游与代码默认均为 10
+  # [bench 2026-09-17] Upstream's on-device profile
+  # (xrslam-ios/visualizer/configs/slam_params.yaml) sets this to 3; this file
+  # omitted it and got config.cpp's default. Writing the effective value in
+  # makes the knob sweepable with -PWYamlOverride, which requires the key to
+  # already exist. Semantically a no-op -- the engine printed
+  # `Config::sliding_window_tracker_frequent: 1` before this line existed.
+  tracker_frequent: 1
   subframe_size: 3
   force_keyframe_landmarks: 35
 

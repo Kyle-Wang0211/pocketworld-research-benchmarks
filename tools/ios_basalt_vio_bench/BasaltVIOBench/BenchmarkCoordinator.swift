@@ -1897,7 +1897,12 @@ final class BenchmarkCoordinator {
         // receipt, where it was false because a started receipt has no metrics.
         // Carrying that stale false into a passing result made the receipt fail
         // its own validation and discarded a complete, zero-loss recording.
-        terminal.metricsValidForScoring = state == .validPass || state == .validFail
+        // `-PWReplicationReplay` consumed a recording below the verdict
+        // resolution. Whatever the gates said, these metrics may never be cited
+        // by a verdict -- that is the price of the flag, paid here rather than
+        // left to whoever reads the receipt later.
+        terminal.metricsValidForScoring = (state == .validPass || state == .validFail)
+            && !BenchResolution.replicationReplayRequested
         terminal.termination = RunTermination(
             reasonCode: reason,
             detail: detail,

@@ -136,7 +136,7 @@ require_sha256 "${XR_VENDOR_ROOT}/include/XRSLAM.h" \
 require_sha256 "${XR_BACKEND_ROOT}/Native/Frozen/XRSLAM.h" \
   505556e153861d07b820bb50293186fcfb5546f57385cd070320d119a31e62e7
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_ios_vio.yaml" \
-  2de486a404e32bfbcee461247dc284b1b9cef8a6bb0d37b296ed12d33038c6e2
+  b70b256ef7678f4229dcac12aa44072e499c82913166fccaa0db6d7b25acd068
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_iphone_14_pro.yaml" \
   0d8fafcdafd7ab4f49e8b555dbd8b74a4fbb07324224a38afb8087003373c157
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_euroc_vio.yaml" \

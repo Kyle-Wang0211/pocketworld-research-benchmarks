@@ -246,7 +246,10 @@ enum BenchmarkRunPreparation {
                 throw BenchmarkRunPreparationError.replayDatasetRequired
             }
             let recording = try DeviceRecordingLoader().load(
-                manifestURL: datasetURL.appendingPathComponent("recording_manifest.json")
+                manifestURL: datasetURL.appendingPathComponent("recording_manifest.json"),
+                purpose: BenchResolution.replicationReplayRequested
+                    ? .replication
+                    : .verdict
             )
             // The calibration comes from the recording's measured intrinsics, not
             // from the frozen 640x480 file, which is why this channel can score

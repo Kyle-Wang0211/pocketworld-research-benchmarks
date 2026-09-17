@@ -276,9 +276,28 @@ struct DeviceRecordingLoader {
             try verifyDigest(frames: frames, expected: manifest.framesDigestSHA256)
         }
 
-        let arkitReference = try TUMTrajectoryLoader().load(
-            url: root.appendingPathComponent(poseRecord.relativePath)
-        )
+        // A `.verdict` recording always carries ARKit's trajectory over the same
+        // frames: `record` runs the ARKit arm live while it writes them, so an
+        // empty file means a broken capture and must halt.
+        //
+        // A `.replication` recording cannot carry one and never will. It is
+        // captured through the bench's own AVCaptureSession, and iOS grants the
+        // rear camera to a single session -- ARKit is not running, by
+        // construction, which is the whole reason the recording exists. So the
+        // reference is empty here, and the consumer gets an empty trajectory
+        // rather than a failure. Nothing downstream may compute an
+        // agreement metric from it, which is already true: this run is forced
+        // unscoreable by the flag that loaded it.
+        let arkitReference: [TimedPose]
+        if purpose == .replication {
+            arkitReference = (try? TUMTrajectoryLoader().load(
+                url: root.appendingPathComponent(poseRecord.relativePath)
+            )) ?? []
+        } else {
+            arkitReference = try TUMTrajectoryLoader().load(
+                url: root.appendingPathComponent(poseRecord.relativePath)
+            )
+        }
 
         // IMU first at an equal timestamp: the estimator must have integrated
         // motion up to the shutter before the image arrives, which is the same
