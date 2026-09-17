@@ -31,6 +31,35 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
 
     private let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
+    /// Lens position actually locked, or nil when focus was left untouched.
+    /// The format receipt carries it either way, so a run says which it was.
+    private var lockedLensPosition: Float?
+
+    /// `-PWOfficialBGRA` captures 32BGRA and reaches gray through upstream's
+    /// own conversion instead of taking the ISP's luma plane. It is the last of
+    /// the three places this transport still differs from
+    /// xrslam-ios/visualizer's capture; the other two -- resolution/rate and the
+    /// raw CoreMotion feeds -- already match. Default off, so an unflagged run
+    /// is the 420f path this bench has always used.
+    static func wantsOfficialBGRA() -> Bool {
+        ProcessInfo.processInfo.arguments.contains("-PWOfficialBGRA")
+    }
+
+    /// `-PWLockLens [position]`. Bare flag means 1.0 -- the far end, where a
+    /// room-scale scan spends its time. Out-of-range or unparseable values are
+    /// refused rather than clamped: a typo has to be visible, not silently
+    /// become a different experiment.
+    static func requestedLensPosition() -> Float? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-PWLockLens") else { return nil }
+        guard i + 1 < args.count, !args[i + 1].hasPrefix("-") else { return 1.0 }
+        guard let value = Float(args[i + 1]) else {
+            preconditionFailure("-PWLockLens: \(args[i + 1]) is not a number")
+        }
+        precondition(value >= 0 && value <= 1,
+                     "-PWLockLens: \(value) outside [0,1]")
+        return value
+    }
     private let motionManager = CMMotionManager()
     private let cameraCallbackQueue = DispatchQueue(
         label: "com.kyle.viobench.sensor.camera",
@@ -269,7 +298,10 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         }
 
         let supportedPixelFormats = videoOutput.availableVideoPixelFormatTypes
-        let fullRange = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        let officialBGRA = LiveSensorTransport.wantsOfficialBGRA()
+        let fullRange = officialBGRA
+            ? kCVPixelFormatType_32BGRA
+            : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
         guard supportedPixelFormats.contains(fullRange) else {
             throw TransportError.cameraFormatUnavailable(
                 width: configuration.cameraWidth,
@@ -397,6 +429,33 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             let duration = CMTime(value: 1, timescale: configuration.cameraRateHz)
             device.activeVideoMinFrameDuration = duration
             device.activeVideoMaxFrameDuration = duration
+
+            // Upstream's own capture class locks the lens on request --
+            // xrslam-ios/visualizer/src/Camera.swift exposes setFocus(_:) as
+            //     device.setFocusModeLocked(lensPosition: value)
+            // and its per-device calibration is a single frozen focal length,
+            // which only describes every frame if the lens does not move. This
+            // transport never touched focus, so it ran whatever the system
+            // defaulted to, and the engine was handed one focal length for the
+            // whole session regardless: across the shared recording ARKit
+            // reported fx from 1280.37 to 1385.30, a 7.87% spread.
+            //
+            // `-PWLockLens <p>` locks at lens position p in [0,1]; bare
+            // `-PWLockLens` uses 1.0, the far end, which is where a room-scale
+            // scan spends its time. Absent the flag nothing is touched, so a
+            // run without it is the transport as it has always been.
+            if let requested = LiveSensorTransport.requestedLensPosition() {
+                guard device.isFocusModeSupported(.locked) else {
+                    throw TransportError.cameraFormatUnavailable(
+                        width: configuration.cameraWidth,
+                        height: configuration.cameraHeight,
+                        rateHz: configuration.cameraRateHz
+                    )
+                }
+                device.setFocusModeLocked(lensPosition: requested,
+                                          completionHandler: nil)
+                lockedLensPosition = requested
+            }
             let receipt = LiveCaptureFormatReceipt(
                 cameraDeviceType: device.deviceType.rawValue,
                 activeFormatIndex: device.formats.firstIndex(where: { $0 === format }) ?? -1,
@@ -409,13 +468,16 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 selectedFramesPerSecond: configuration.cameraRateHz,
                 supportedFrameRateRange: "\(range.minFrameRate)...\(range.maxFrameRate)",
                 fieldOfViewDegrees: Double(format.videoFieldOfView),
+                lockedLensPosition: lockedLensPosition.map(Double.init) ?? -1,
                 zoomFactor: Double(device.videoZoomFactor),
                 rotationDegrees: connection.videoRotationAngle,
                 preferredStabilizationMode: Int(connection.preferredVideoStabilizationMode.rawValue),
                 activeStabilizationMode: Int(connection.activeVideoStabilizationMode.rawValue),
                 sessionPreset: AVCaptureSession.Preset.inputPriority.rawValue,
                 matchingFormatCount: candidates.count,
-                grayscaleConversion: "nv12_full_range_luma_plane_direct",
+                grayscaleConversion: officialBGRA
+                    ? "bgra32_opencv_cvtcolor_bgra2gray_upstream"
+                    : "nv12_full_range_luma_plane_direct",
                 xrslamPixelPipelineDivergence: "pinned_xrslam_sample_requests_32bgra_then_opencv_bgra2gray"
             )
             lifecycleLock.withLock { captureFormatReceipt = receipt }
@@ -654,15 +716,29 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
     ) {
         reportIntrinsicsIfNeeded(sampleBuffer)
         accounting.recordCameraInput()
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
-              CVPixelBufferGetPixelFormatType(pixelBuffer)
-                == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
-              CVPixelBufferIsPlanar(pixelBuffer),
-              CVPixelBufferGetPlaneCount(pixelBuffer) > 0,
-              CVPixelBufferGetWidthOfPlane(pixelBuffer, 0) == Int(configuration.cameraWidth),
-              CVPixelBufferGetHeightOfPlane(pixelBuffer, 0) == Int(configuration.cameraHeight) else {
+        let officialBGRA = LiveSensorTransport.wantsOfficialBGRA()
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             accounting.recordCameraDrop(.invalidFormat)
             return
+        }
+        if officialBGRA {
+            guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA,
+                  !CVPixelBufferIsPlanar(pixelBuffer),
+                  CVPixelBufferGetWidth(pixelBuffer) == Int(configuration.cameraWidth),
+                  CVPixelBufferGetHeight(pixelBuffer) == Int(configuration.cameraHeight) else {
+                accounting.recordCameraDrop(.invalidFormat)
+                return
+            }
+        } else {
+            guard CVPixelBufferGetPixelFormatType(pixelBuffer)
+                    == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                  CVPixelBufferIsPlanar(pixelBuffer),
+                  CVPixelBufferGetPlaneCount(pixelBuffer) > 0,
+                  CVPixelBufferGetWidthOfPlane(pixelBuffer, 0) == Int(configuration.cameraWidth),
+                  CVPixelBufferGetHeightOfPlane(pixelBuffer, 0) == Int(configuration.cameraHeight) else {
+                accounting.recordCameraDrop(.invalidFormat)
+                return
+            }
         }
 
         // AVCapture timestamps are expressed on the session synchronization
@@ -696,12 +772,17 @@ extension LiveSensorTransport: AVCaptureVideoDataOutputSampleBufferDelegate {
         // buffer go at the end of this callback. Holding it instead is what
         // TN2445 names as the cause of `OutOfBuffers`, and it cost 15% of frames
         // measured live at 1920x1440.
-        guard let lease = lumaPool.lease(
-            from: pixelBuffer,
-            planeIndex: 0,
-            width: Int(configuration.cameraWidth),
-            height: Int(configuration.cameraHeight)
-        ) else {
+        let leaseOrNil = officialBGRA
+            ? lumaPool.leaseConvertingBGRA(
+                from: pixelBuffer,
+                width: Int(configuration.cameraWidth),
+                height: Int(configuration.cameraHeight))
+            : lumaPool.lease(
+                from: pixelBuffer,
+                planeIndex: 0,
+                width: Int(configuration.cameraWidth),
+                height: Int(configuration.cameraHeight))
+        guard let lease = leaseOrNil else {
             // Every pooled plane is still in flight: refuse this frame instead
             // of retaining one more camera buffer. Counted by the pool, never in
             // `camera_drops_*`, so our own backpressure stays distinguishable

@@ -274,6 +274,24 @@ xrslam_bench_status_t
 xrslam_bench_push_image(xrslam_bench_t *bench, int64_t timestamp_ns,
                         const xrslam_bench_image_t *image);
 
+/* Upstream's own live conversion, transcribed from
+   xrslam-ios/visualizer/src/XRSLAM_iOS.mm processBuffer:
+
+       cv::Mat raw_image = cv::Mat(h, w, CV_8UC4, baseAddress, pixelPerRow);
+       cv::cvtColor(raw_image, cvimage, cv::COLOR_BGRA2GRAY);
+
+   The official iOS app captures 32BGRA and reaches gray this way. This bench's
+   live transport captures 420f and takes the ISP's luma plane directly, which
+   is a different grayscale: one is OpenCV's BT.601 weights over the ISP's RGB,
+   the other is the ISP's own Y. Wiring the official path needs upstream's two
+   lines rather than a second implementation of them, so they live here.
+
+   `gray_out` must hold height*gray_bytes_per_row bytes. Returns
+   XRSLAM_BENCH_INVALID_ARGUMENT on a null pointer or non-positive geometry. */
+xrslam_bench_status_t xrslam_bench_bgra_to_gray(
+    const unsigned char *bgra, int width, int height, int bgra_bytes_per_row,
+    unsigned char *gray_out, int gray_bytes_per_row);
+
 /* Exact pinned official EuRoC PC-reader image path. OpenCV 4.0.1 decodes the
    source PNG with IMREAD_UNCHANGED, applies cv::undistort using the frozen
    MH_01 cam0 float K/D values, and converts to gray only if still multichannel.

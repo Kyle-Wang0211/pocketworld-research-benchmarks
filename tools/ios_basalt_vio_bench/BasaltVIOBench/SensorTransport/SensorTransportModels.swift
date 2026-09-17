@@ -178,6 +178,57 @@ public final class LumaPlanePool: @unchecked Sendable {
         )
     }
 
+    /// The official iOS app's path to gray. It captures 32BGRA and reaches
+    /// grayscale through OpenCV (XRSLAM_iOS.mm processBuffer), where this
+    /// transport captures 420f and takes the ISP's luma plane. Those are two
+    /// different grayscales -- BT.601 weights applied to the ISP's RGB against
+    /// the ISP's own Y -- so replicating upstream's input means replicating its
+    /// conversion, not approximating it. `xrslam_bench_bgra_to_gray` holds
+    /// upstream's two lines; nothing here reimplements them.
+    func leaseConvertingBGRA(
+        from pixelBuffer: CVPixelBuffer,
+        width: Int,
+        height: Int
+    ) -> LumaPlaneLease? {
+        guard width > 0, height > 0, width * height <= planeCapacityBytes else { return nil }
+        lock.lock()
+        guard let base = free.popLast() else {
+            exhausted &+= 1
+            lock.unlock()
+            return nil
+        }
+        peakInFlight = max(peakInFlight, planeCount - free.count)
+        lock.unlock()
+
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        guard !CVPixelBufferIsPlanar(pixelBuffer),
+              let src = CVPixelBufferGetBaseAddress(pixelBuffer)?
+                .assumingMemoryBound(to: UInt8.self) else {
+            give(base)
+            return nil
+        }
+        let srcStride = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let status = xrslam_bench_bgra_to_gray(
+            src, Int32(width), Int32(height), Int32(srcStride),
+            base, Int32(width)
+        )
+        guard status == XRSLAM_BENCH_OK else {
+            give(base)
+            return nil
+        }
+        var probe: UInt64 = 0
+        var probeN: UInt64 = 0
+        var i = 0
+        while i < width * height { probe &+= UInt64(base[i]); probeN &+= 1; i += 1024 }
+        lock.lock()
+        sampleSum &+= probe; sampleCount &+= probeN; lastSrcStride = srcStride
+        lock.unlock()
+        return LumaPlaneLease(
+            base: base, width: width, height: height, bytesPerRow: width, pool: self
+        )
+    }
+
     fileprivate func give(_ plane: UnsafeMutablePointer<UInt8>) {
         lock.lock(); free.append(plane); lock.unlock()
     }
@@ -391,6 +442,12 @@ public struct LiveCaptureFormatReceipt: Equatable, Sendable {
     public let selectedFramesPerSecond: Int32
     public let supportedFrameRateRange: String
     public let fieldOfViewDegrees: Double
+    /// Lens position this run locked the focus at, or -1 when focus was left
+    /// to the system. Upstream's capture class locks on request
+    /// (Camera.swift setFocus -> setFocusModeLocked) and pairs that with one
+    /// frozen focal length per device; a moving lens makes that calibration
+    /// describe only the frame it was measured on.
+    public let lockedLensPosition: Double
     public let zoomFactor: Double
     public let rotationDegrees: Double
     public let preferredStabilizationMode: Int

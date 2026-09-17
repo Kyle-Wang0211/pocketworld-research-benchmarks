@@ -62,6 +62,26 @@ static_assert(sizeof(XRSLAMBias) == 24);
 static_assert(sizeof(XRSLAMIMUBias) == 48);
 static_assert(XRSLAM_SENSOR_CAMERA == 0);
 
+extern "C" xrslam_bench_status_t xrslam_bench_bgra_to_gray(
+    const unsigned char *bgra, int width, int height, int bgra_bytes_per_row,
+    unsigned char *gray_out, int gray_bytes_per_row) {
+  if (bgra == nullptr || gray_out == nullptr || width <= 0 || height <= 0 ||
+      bgra_bytes_per_row < width * 4 || gray_bytes_per_row < width) {
+    return XRSLAM_BENCH_INVALID_ARGUMENT;
+  }
+  /* Upstream, XRSLAM_iOS.mm processBuffer, verbatim apart from writing into a
+     caller-owned destination instead of a member Mat. */
+  cv::Mat raw_image(height, width, CV_8UC4, const_cast<unsigned char *>(bgra),
+                    static_cast<size_t>(bgra_bytes_per_row));
+  cv::Mat cvimage(height, width, CV_8UC1, gray_out,
+                  static_cast<size_t>(gray_bytes_per_row));
+  cv::cvtColor(raw_image, cvimage, cv::COLOR_BGRA2GRAY);
+  /* cvtColor reallocates when the destination does not already match; if it
+     did, the caller's buffer was not written and saying OK would be a lie. */
+  if (cvimage.data != gray_out) return XRSLAM_BENCH_INTERNAL_ERROR;
+  return XRSLAM_BENCH_OK;
+}
+
 /* Reads a whole config file. XRSLAMCreate takes the text, not the path. */
 static std::string read_file(const char *path) {
   if (path == nullptr || path[0] == '\0') return {};

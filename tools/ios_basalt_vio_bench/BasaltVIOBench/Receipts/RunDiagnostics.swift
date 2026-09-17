@@ -242,6 +242,7 @@ enum RunDiagnosticsWriter {
                     "session_preset": format.sessionPreset,
                     "matching_format_count": String(format.matchingFormatCount),
                     "grayscale_conversion": format.grayscaleConversion,
+                    "locked_lens_position": String(format.lockedLensPosition),
                     "xrslam_pixel_pipeline_divergence": format.xrslamPixelPipelineDivergence,
                 ], uniquingKeysWith: { _, new in new })
             }
