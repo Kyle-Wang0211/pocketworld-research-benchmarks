@@ -89,6 +89,9 @@ extern "C" int XRSLAMGetPendingWorkerFrames(void);
 extern "C" void XRSLAMGetPropagatedPose(XRSLAMPose *pose);
 /// [2026-09-09] Initialisation exit counts, read-only. See xrslam_bench_counters_t.
 extern "C" void XRSLAMGetInitCounters(unsigned long long *out, int count);
+extern "C" void XRSLAMGetSolverCounters(unsigned long long *out, int count);
+extern "C" void XRSLAMGetPropagatedPoseRelation(XRSLAMPose *pose, unsigned int *flags);
+extern "C" void XRSLAMGetBodyPoseRelation(XRSLAMPose *pose, unsigned int *flags);
 /// VINS-Mono's Estimator::failureDetection criteria, ported verbatim into the
 /// vendored XRSLAM and exposed read-only. Upstream XRSLAM reports no health at
 /// all -- SYS_CRASH is never assigned -- so a consumer had no way to tell a
@@ -148,6 +151,32 @@ XRSLAMGetInitCounters(unsigned long long *out, int count) {
   for (int i = 0; i < count; ++i)
     out[i] = ~0ULL;
 }
+/// [2026-09-17] Same weak fallback as the init counters: an engine built without the solver
+/// telemetry links, and every slot reads as ~0ULL so a run can tell "not instrumented" from "zero".
+/// [2026-09-17] Weak fallback: an engine without the relation contract links, and every query
+/// reports BITMASK_NONE. That is the conservative reading ("do not read this pose"), and it is
+/// distinguishable from a real answer because relation_samples stays 0 -- an engine that has the
+/// contract always sets a mask, even when the mask is zero.
+extern "C" __attribute__((weak)) void
+XRSLAMGetBodyPoseRelation(XRSLAMPose *pose, unsigned int *flags) {
+  if (flags) *flags = 0u;
+  (void)pose;
+}
+
+extern "C" __attribute__((weak)) void
+XRSLAMGetPropagatedPoseRelation(XRSLAMPose *pose, unsigned int *flags) {
+  if (flags) *flags = 0u;
+  if (pose) XRSLAMGetPropagatedPose(pose);
+}
+
+extern "C" __attribute__((weak)) void
+XRSLAMGetSolverCounters(unsigned long long *out, int count) {
+  if (!out || count <= 0)
+    return;
+  for (int i = 0; i < count; ++i)
+    out[i] = ~0ULL;
+}
+
 
 namespace {
 
@@ -250,6 +279,28 @@ struct xrslam_bench {
   uint64_t engine_backlog_peak = 0;
   xrslam_bench_counters_t counters{};
 };
+
+namespace {
+// [2026-09-17] One tally for both pose exits. The engine has two: `poll` hands back the optimised
+// body pose with the frame, `query` hands back the IMU-propagated pose without consuming one.
+// Production can take either, so the contract has to cover both or it silently misses whichever
+// path ships.
+inline void pw_tally_relation(xrslam_bench_t *bench, unsigned int relation_flags) {
+  constexpr unsigned int kOrientationValid = 1u << 0u;
+  constexpr unsigned int kPositionValid = 1u << 1u;
+  constexpr unsigned int kOrientationTracked = 1u << 4u;
+  constexpr unsigned int kPositionTracked = 1u << 5u;
+  ++bench->counters.relation_samples;
+  if (relation_flags == 0u) ++bench->counters.relation_none;
+  if (!(relation_flags & kOrientationValid))
+    ++bench->counters.relation_orientation_unreadable;
+  if (!(relation_flags & kPositionValid)) ++bench->counters.relation_position_unreadable;
+  if ((relation_flags & (kOrientationTracked | kPositionTracked)) != 0u)
+    ++bench->counters.relation_tracked;
+  else if (relation_flags != 0u)
+    ++bench->counters.relation_valid_untracked;
+}
+} // namespace
 
 namespace {
 
@@ -466,6 +517,14 @@ xrslam_bench_status_t run_next_frame_locked(xrslam_bench *bench) {
     if (trace) { fprintf(stderr, "[xrslam-trace] get_result enter\n"); fflush(stderr); }
     bench->api.get_result(XRSLAM_RESULT_STATE, &state);
     bench->api.get_result(XRSLAM_RESULT_BODY_POSE, &pose);
+    {
+      // Same pose, taken again through the relation accessor so the flags describe exactly what
+      // was just handed back. Read-only: the pose written above is not replaced.
+      XRSLAMPose relation_pose{};
+      unsigned int relation_flags = 0u;
+      XRSLAMGetBodyPoseRelation(&relation_pose, &relation_flags);
+      pw_tally_relation(bench, relation_flags);
+    }
     if (trace) {
       fprintf(stderr, "[xrslam-trace] get_result returned state=%d\n", (int)state);
       fflush(stderr);
@@ -848,7 +907,11 @@ xrslam_bench_query_pose(xrslam_bench_t *bench,
   /* Not get_result(BODY_POSE): that one is written in track_camera and so advances once per image.
      XRSLAMGetPropagatedPose returns what track_gyroscope/track_accelerometer already computed for
      the newest IMU sample. */
-  XRSLAMGetPropagatedPose(&pose);
+  // [2026-09-17] Take the pose together with its relation flags: they are filled under one lock
+  // engine-side, so a flag set always describes the pose returned beside it.
+  unsigned int relation_flags = 0u;
+  XRSLAMGetPropagatedPoseRelation(&pose, &relation_flags);
+  pw_tally_relation(bench, relation_flags);
   int64_t pose_timestamp_ns = 0;
   if (state < XRSLAM_STATE_INITIALIZING || state > XRSLAM_STATE_TRACKING_FAIL ||
       !pose_is_finite(pose) || pose.timestamp <= 0.0 ||
@@ -966,6 +1029,39 @@ xrslam_bench_get_snapshot(xrslam_bench_t *bench,
     out_snapshot->result_timestamp_unconvertible =
         bench->counters.result_timestamp_unconvertible;
     out_snapshot->init_mirror_us = ic[8];
+  }
+  {
+    unsigned long long sc[11] = {};
+    XRSLAMGetSolverCounters(sc, 11);
+    bench->counters.solve_calls = sc[0];
+    bench->counters.solve_unusable = sc[1];
+    bench->counters.track_evaluated = sc[2];
+    bench->counters.track_reject_depth = sc[3];
+    bench->counters.track_reject_rpe = sc[4];
+    bench->counters.track_rpe_samples = sc[5];
+    bench->counters.track_rpe_millipx = sc[6];
+    bench->counters.frames_rpe_calls = sc[7];
+    bench->counters.frames_rpe_reject = sc[8];
+    bench->counters.frames_rpe_samples = sc[9];
+    bench->counters.frames_rpe_millipx = sc[10];
+    out_snapshot->solve_calls = sc[0];
+    out_snapshot->solve_unusable = sc[1];
+    out_snapshot->track_evaluated = sc[2];
+    out_snapshot->track_reject_depth = sc[3];
+    out_snapshot->track_reject_rpe = sc[4];
+    out_snapshot->track_rpe_samples = sc[5];
+    out_snapshot->track_rpe_millipx = sc[6];
+    out_snapshot->frames_rpe_calls = sc[7];
+    out_snapshot->frames_rpe_reject = sc[8];
+    out_snapshot->frames_rpe_samples = sc[9];
+    out_snapshot->frames_rpe_millipx = sc[10];
+    out_snapshot->relation_samples = bench->counters.relation_samples;
+    out_snapshot->relation_none = bench->counters.relation_none;
+    out_snapshot->relation_orientation_unreadable =
+        bench->counters.relation_orientation_unreadable;
+    out_snapshot->relation_position_unreadable = bench->counters.relation_position_unreadable;
+    out_snapshot->relation_valid_untracked = bench->counters.relation_valid_untracked;
+    out_snapshot->relation_tracked = bench->counters.relation_tracked;
   }
   out_snapshot->pending_event_count =
       engine_backlog + (bench->has_pending_image ? 1 : 0);

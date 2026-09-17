@@ -89,6 +89,31 @@ typedef struct xrslam_bench_counters {
   uint64_t init_fail_triangulation;
   uint64_t init_fail_imu;
   uint64_t init_success;
+  /// [2026-09-17] "Should this frame be trusted" -- two quantities the sliding window already
+  /// computes and then drops. `Solver::solve()` returns Ceres' own IsSolutionUsable() and all four
+  /// call sites ignored it; the per-track mean reprojection error behind the TT_VALID gate was
+  /// compared against a bare 3.0 px and discarded. Read-only: the engine-side counters sit beside
+  /// existing statements and the EuRoC replay is byte-identical with them compiled in.
+  uint64_t solve_calls;
+  uint64_t solve_unusable;        ///< solve() returned !IsSolutionUsable()
+  uint64_t track_evaluated;       ///< triangulated tracks passing the TT_VALID gate
+  uint64_t track_reject_depth;    ///< rejected by the y.z() <= 1e-3 || > 50 window
+  uint64_t track_reject_rpe;      ///< rejected by mean rpe >= 3.0 px
+  uint64_t track_rpe_samples;
+  uint64_t track_rpe_millipx;     ///< sum of per-track mean rpe, in milli-pixels
+  uint64_t frames_rpe_calls;
+  uint64_t frames_rpe_reject;
+  uint64_t frames_rpe_samples;
+  uint64_t frames_rpe_millipx;
+  /// [2026-09-17] OpenXR/Monado relation-flag tallies for the pose handed to the consumer.
+  /// The contract separates "may I read this" (VALID) from "was this observed" (TRACKED); before it
+  /// existed, a frame that had merely not initialised yet was indistinguishable from a failure.
+  uint64_t relation_samples;
+  uint64_t relation_none;               ///< BITMASK_NONE: no component may be read
+  uint64_t relation_orientation_unreadable; ///< ORIENTATION_VALID clear (the zero-norm quaternion)
+  uint64_t relation_position_unreadable;    ///< POSITION_VALID clear
+  uint64_t relation_valid_untracked;    ///< readable but dead-reckoned (VALID set, TRACKED clear)
+  uint64_t relation_tracked;            ///< at least one TRACKED bit set
   uint64_t events_offered;
   uint64_t events_accepted;
   uint64_t events_processed;
@@ -172,6 +197,31 @@ typedef struct xrslam_bench_snapshot {
   uint64_t init_fail_triangulation;
   uint64_t init_fail_imu;
   uint64_t init_success;
+  /// [2026-09-17] "Should this frame be trusted" -- two quantities the sliding window already
+  /// computes and then drops. `Solver::solve()` returns Ceres' own IsSolutionUsable() and all four
+  /// call sites ignored it; the per-track mean reprojection error behind the TT_VALID gate was
+  /// compared against a bare 3.0 px and discarded. Read-only: the engine-side counters sit beside
+  /// existing statements and the EuRoC replay is byte-identical with them compiled in.
+  uint64_t solve_calls;
+  uint64_t solve_unusable;        ///< solve() returned !IsSolutionUsable()
+  uint64_t track_evaluated;       ///< triangulated tracks passing the TT_VALID gate
+  uint64_t track_reject_depth;    ///< rejected by the y.z() <= 1e-3 || > 50 window
+  uint64_t track_reject_rpe;      ///< rejected by mean rpe >= 3.0 px
+  uint64_t track_rpe_samples;
+  uint64_t track_rpe_millipx;     ///< sum of per-track mean rpe, in milli-pixels
+  uint64_t frames_rpe_calls;
+  uint64_t frames_rpe_reject;
+  uint64_t frames_rpe_samples;
+  uint64_t frames_rpe_millipx;
+  /// [2026-09-17] OpenXR/Monado relation-flag tallies for the pose handed to the consumer.
+  /// The contract separates "may I read this" (VALID) from "was this observed" (TRACKED); before it
+  /// existed, a frame that had merely not initialised yet was indistinguishable from a failure.
+  uint64_t relation_samples;
+  uint64_t relation_none;               ///< BITMASK_NONE: no component may be read
+  uint64_t relation_orientation_unreadable; ///< ORIENTATION_VALID clear (the zero-norm quaternion)
+  uint64_t relation_position_unreadable;    ///< POSITION_VALID clear
+  uint64_t relation_valid_untracked;    ///< readable but dead-reckoned (VALID set, TRACKED clear)
+  uint64_t relation_tracked;            ///< at least one TRACKED bit set
   /// [2026-09-16] The three causes folded into `nonfinite_results_rejected`,
   /// mirrored out so the live validity gate can be argued about on evidence.
   uint64_t result_state_out_of_range;

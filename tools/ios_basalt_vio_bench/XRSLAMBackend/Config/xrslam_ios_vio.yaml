@@ -38,6 +38,10 @@ sliding_window:
 # The pinned iOS sample enables a private-network visual-localization service.
 # This benchmark is VIO-only, so the service is explicitly disabled and the
 # deviation is frozen in the experiment contract and diagnostics.
+  # [bench 2026-09-17] TT_VALID reprojection gate, in real pixels, plus the focal length
+  # the number belongs to. 0 keeps the bare threshold (upstream). See pw_rpe_threshold().
+  rpe_threshold_px: 3.0
+  rpe_reference_focal: 0.0
 visual_localization:
   enable: false
   ip: "10.156.16.69"

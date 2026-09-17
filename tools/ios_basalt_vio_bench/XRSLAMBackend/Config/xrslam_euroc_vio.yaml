@@ -8,6 +8,10 @@ sliding_window:
   subframe_size: 3
   force_keyframe_landmarks: 35
 
+  # [bench 2026-09-17] TT_VALID reprojection gate, in real pixels, plus the focal length
+  # the number belongs to. 0 keeps the bare threshold (upstream). See pw_rpe_threshold().
+  rpe_threshold_px: 3.0
+  rpe_reference_focal: 0.0
 feature_tracker:
   min_keypoint_distance: 20.0
   max_keypoint_detection: 200

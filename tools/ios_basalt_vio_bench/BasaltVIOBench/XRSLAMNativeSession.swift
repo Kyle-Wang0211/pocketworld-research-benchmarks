@@ -485,6 +485,27 @@ final class XRSLAMNativeSession {
             "xrslam_init_fail_triangulation": native.init_fail_triangulation,
             "xrslam_init_fail_imu": native.init_fail_imu,
             "xrslam_init_success": native.init_success,
+            // [2026-09-17] Solver / reprojection telemetry: values the sliding window already
+            // computed and dropped. ~0 in every slot means the linked engine has no instrumentation.
+            "xrslam_solve_calls": native.solve_calls,
+            "xrslam_solve_unusable": native.solve_unusable,
+            "xrslam_track_evaluated": native.track_evaluated,
+            "xrslam_track_reject_depth": native.track_reject_depth,
+            "xrslam_track_reject_rpe": native.track_reject_rpe,
+            "xrslam_track_rpe_samples": native.track_rpe_samples,
+            "xrslam_track_rpe_millipx": native.track_rpe_millipx,
+            "xrslam_frames_rpe_calls": native.frames_rpe_calls,
+            "xrslam_frames_rpe_reject": native.frames_rpe_reject,
+            "xrslam_frames_rpe_samples": native.frames_rpe_samples,
+            "xrslam_frames_rpe_millipx": native.frames_rpe_millipx,
+            // [2026-09-17] OpenXR/Monado relation contract. relation_samples == 0 means the linked
+            // engine predates the contract; a zero mask from an engine that has it is a real answer.
+            "xrslam_relation_samples": native.relation_samples,
+            "xrslam_relation_none": native.relation_none,
+            "xrslam_relation_orientation_unreadable": native.relation_orientation_unreadable,
+            "xrslam_relation_position_unreadable": native.relation_position_unreadable,
+            "xrslam_relation_valid_untracked": native.relation_valid_untracked,
+            "xrslam_relation_tracked": native.relation_tracked,
             "xrslam_init_mirror_us": native.init_mirror_us,
             "xrslam_estimator_imu_ingested": native.estimator_imu_ingested,
             "xrslam_estimator_camera_ingested": native.estimator_camera_ingested,
