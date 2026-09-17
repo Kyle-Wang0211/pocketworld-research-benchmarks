@@ -8,6 +8,7 @@
 #include <opencv2/core.hpp>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 #include <fstream>
 #include "XRSLAMBench.h"
 #include "XRSLAMBenchTesting.hpp"
@@ -670,11 +671,25 @@ create_with_api(const xrslam_bench_create_options_t *options,
        macro. This bench links libxrslam_generic, built without it -- its own
        receipt records xrslam_ios: false -- so paths are what it wants. Passing
        contents here made create fail outright. */
-    fprintf(stderr, "[xrslam-trace] create() slam=%s device=%s\n",
+    /* [2026-09-17] An engine built WITH the macro wants contents, so the caller
+       has to follow the engine it was linked against. PW_XRSLAM_CONFIG_AS_TEXT
+       in the environment selects contents; unset keeps paths, which is what a
+       libxrslam_generic build needs. No sniffing and no fallback: a wrong choice
+       has to fail loudly at create() rather than half-work. Both branches print
+       which one ran, so a trace always says what it passed. */
+    const bool config_as_text =
+        std::getenv("PW_XRSLAM_CONFIG_AS_TEXT") != nullptr;
+    const std::string slam_text =
+        config_as_text ? read_file(options->slam_config_path) : std::string();
+    const std::string device_text =
+        config_as_text ? read_file(options->device_config_path) : std::string();
+    fprintf(stderr, "[xrslam-trace] create() mode=%s slam=%s device=%s\n",
+            config_as_text ? "contents" : "paths",
             options->slam_config_path, options->device_config_path);
     fflush(stderr);
     const int created = bench->api.create(
-        options->slam_config_path, options->device_config_path, "",
+        config_as_text ? slam_text.c_str() : options->slam_config_path,
+        config_as_text ? device_text.c_str() : options->device_config_path, "",
         "xrslam-vio-bench", &bench->upstream_config);
     fprintf(stderr, "[xrslam-trace] create() -> %d config=%p\n",
             created, bench->upstream_config);

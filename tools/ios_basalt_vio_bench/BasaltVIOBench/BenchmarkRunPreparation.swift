@@ -172,7 +172,23 @@ enum BenchmarkRunPreparation {
                     // app and production both use, is 0.1 s / 10. The bench runs the offline
                     // profile on every channel, so the budget has to be sweepable to price
                     // what that costs.
-                    if ["feature_tracker", "sliding_window", "solver"].contains(section) {
+                    // [2026-09-17] `initializer`, `rotation` and `parsac` join the
+                    // list. All three hold knobs where upstream's own two iPhone
+                    // profiles, or upstream and the paper's author, disagree:
+                    //   - initializer.min_triangulation: 20 in configs/iphone_slam.yaml,
+                    //     configs/euroc_slam.yaml and the author's own ADVIO config,
+                    //     but 50 from config.cpp when a profile omits it, which is
+                    //     what production ends up running.
+                    //   - rotation.misalignment_threshold: 0.02 offline against 0.1
+                    //     on device; it gates RD-VIO's pure-rotation frame handling.
+                    //   - parsac.parsac_flag: false in every shipped config including
+                    //     the author's, even though IMU-PARSAC is the paper's headline
+                    //     contribution -- so what it costs has never been measured.
+                    // Sweeping these needed a rebuild until now. The receipt's
+                    // config_sha256 still changes with every override, so a run
+                    // cannot hide which values it used.
+                    if ["feature_tracker", "sliding_window", "solver",
+                        "initializer", "rotation", "parsac"].contains(section) {
                         var lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)
                         var inSection = false; var replaced = false
                         for (n, line) in lines.enumerated() {

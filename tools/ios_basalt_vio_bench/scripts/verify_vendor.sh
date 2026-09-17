@@ -136,11 +136,11 @@ require_sha256 "${XR_VENDOR_ROOT}/include/XRSLAM.h" \
 require_sha256 "${XR_BACKEND_ROOT}/Native/Frozen/XRSLAM.h" \
   505556e153861d07b820bb50293186fcfb5546f57385cd070320d119a31e62e7
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_ios_vio.yaml" \
-  9d0e479ac202de0050a7ed389a54afe2984a67f491bdc9431f7230d0e9fc2098
+  2de486a404e32bfbcee461247dc284b1b9cef8a6bb0d37b296ed12d33038c6e2
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_iphone_14_pro.yaml" \
   0d8fafcdafd7ab4f49e8b555dbd8b74a4fbb07324224a38afb8087003373c157
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_euroc_vio.yaml" \
-  6fe7057b8dd71a93eb7843f5d305039f7a59ebdd69dd60fa841ec4bbd80d7fca
+  d80820dfdc316ad504a8bf7186d785ea807397d17069d50658bfa0f46d391502
 require_sha256 "${XR_BACKEND_ROOT}/Config/xrslam_euroc_sensor.yaml" \
   6ddfda8e53f6dd3c98a43b28e7b7b945133c651b298a4fc150acdaa635d69748
 require_sha256 "${XR_OPENCV_HEADERS}/MANIFEST.sha256" \

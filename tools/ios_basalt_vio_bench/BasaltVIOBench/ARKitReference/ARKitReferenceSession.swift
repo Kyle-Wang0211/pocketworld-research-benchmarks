@@ -90,7 +90,33 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
         }
         try onMainSync {
             let configuration = ARWorldTrackingConfiguration()
-            configuration.isAutoFocusEnabled = true
+            // Production ships continuous autofocus
+            // (OfficialAetherARKitPlugin.swift, isAutoFocusEnabled = true) and
+            // this arm exists to mirror production, so true stays the default.
+            //
+            // `-PWLockFocus` is a probe, not a new baseline. It exists because
+            // the focal length this arm freezes into the candidate engines'
+            // calibration is a single frame-0 snapshot, while ARKit keeps
+            // re-focusing for the rest of the session: across the 1702 frames of
+            // the shared recording ARKit reports fx from 1280.37 to 1385.30, a
+            // 7.87% spread that the recording's own manifest already stores in
+            // focal_length_min / focal_length_max and that nothing reads.
+            // XRSLAM cannot be told about it either -- XRSLAM.h has
+            // XRSLAMGetIntrinsics but no setter, so the calibration it is created
+            // with is the calibration it keeps.
+            //
+            // Upstream does not have this problem: xrslam-ios/visualizer's
+            // Camera.swift drives its own AVCaptureSession at .vga640x480 and
+            // offers setFocus(lensPosition:) to lock the lens, so its frozen
+            // per-device calibration describes every frame it captures. Locking
+            // the lens is the closest ARKit equivalent, and it is the only way to
+            // make "one focal length for the whole session" true rather than
+            // assumed.
+            //
+            // The receipt reports configuration.isAutoFocusEnabled either way, so
+            // a run always declares which of the two it actually ran.
+            let lockFocus = ProcessInfo.processInfo.arguments.contains("-PWLockFocus")
+            configuration.isAutoFocusEnabled = !lockFocus
             configuration.worldAlignment = .gravity
             configuration.isLightEstimationEnabled = false
             configuration.planeDetection = [.horizontal]
