@@ -271,17 +271,43 @@ enum BenchmarkRunPreparation {
                     source: recording.intrinsics.source,
                     crossCheckPassed: recording.intrinsics.crossCheckPassed
                 )
+            // [2026-09-17] `-PWCalibrationFocal <fx>` replaces fx and fy in the
+            // materialised calibration. It is a measuring instrument, not a
+            // design choice: this recording's own per-frame intrinsics span
+            // 426.842 to 476.037 over 120 s (3591 frames, 2951 distinct
+            // values, median 457.766), and the value the replay otherwise runs
+            // on is `recording.intrinsics` -- the FIRST frame that reported,
+            // captured while autofocus was still settling, which lands 4.5%
+            // below the median. Pricing that needs fx sweepable on one fixed
+            // recording, with nothing else moving. The receipt's
+            // calibration_sha256 changes with it, so a run cannot hide the
+            // value it used.
+            let focalOverride: Double? = {
+                let args = ProcessInfo.processInfo.arguments
+                guard let i = args.firstIndex(of: "-PWCalibrationFocal"),
+                      i + 1 < args.count, let v = Double(args[i + 1]), v > 0
+                else { return nil }
+                return v
+            }()
+            let effectiveIntrinsics = focalOverride.map {
+                DeviceRecordingIntrinsics(
+                    fx: $0, fy: $0,
+                    cx: calIntrinsics.cx, cy: calIntrinsics.cy,
+                    source: calIntrinsics.source + "+pw_focal_override",
+                    crossCheckPassed: calIntrinsics.crossCheckPassed
+                )
+            } ?? calIntrinsics
             let frozenCalibration = try Data(contentsOf: calibrationSource)
             calibrationData = calibrationSource.pathExtension == "yaml"
                 ? try CalibrationMaterializer.deviceRecordingYAML(
                     from: frozenCalibration,
-                    intrinsics: calIntrinsics,
+                    intrinsics: effectiveIntrinsics,
                     width: calWidth,
                     height: calHeight
                 )
                 : try CalibrationMaterializer.deviceRecording(
                 from: frozenCalibration,
-                intrinsics: calIntrinsics,
+                intrinsics: effectiveIntrinsics,
                 width: calWidth,
                 height: calHeight
             )
