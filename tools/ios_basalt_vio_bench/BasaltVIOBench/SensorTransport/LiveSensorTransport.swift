@@ -34,6 +34,9 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     /// Lens position actually locked, or nil when focus was left untouched.
     /// The format receipt carries it either way, so a run says which it was.
     private var lockedLensPosition: Float?
+    /// What the output actually offered, comma separated fourCCs. Carried
+    /// into the receipt so a format refusal is readable after the fact.
+    private var availablePixelFormats: String = ""
 
     /// `-PWOfficialBGRA` captures 32BGRA and reaches gray through upstream's
     /// own conversion instead of taking the ISP's luma plane. It is the last of
@@ -297,18 +300,32 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             throw TransportError.cannotCreateCameraInput
         }
 
-        let supportedPixelFormats = videoOutput.availableVideoPixelFormatTypes
         let officialBGRA = LiveSensorTransport.wantsOfficialBGRA()
-        let fullRange = officialBGRA
+        // Two different formats, and conflating them is what broke the first
+        // `-PWOfficialBGRA` build. `AVCaptureDevice.Format` describes what the
+        // SENSOR produces -- on iOS always a biplanar YpCbCr subtype ('420f',
+        // '420v', 'x420'). 32BGRA is a conversion `AVCaptureVideoDataOutput`
+        // performs on the way out; no device format ever carries that subtype,
+        // so filtering `device.formats` by it matched nothing and `start()`
+        // threw `cameraFormatUnavailable` before a single frame arrived.
+        //
+        // Upstream is the proof of the split: `xrslam-ios/visualizer/src/
+        // Camera.swift:46` sets `kCVPixelFormatType_32BGRA` on
+        // `output.videoSettings` and *never* touches `device.activeFormat` --
+        // it only sets a session preset. This keeps upstream's split and adds
+        // back the explicit device-format selection the bench needs for a
+        // frozen resolution identity, which a preset cannot give.
+        let deviceSubtype = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        let outputPixelFormat = officialBGRA
             ? kCVPixelFormatType_32BGRA
             : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
-        guard supportedPixelFormats.contains(fullRange) else {
-            throw TransportError.cameraFormatUnavailable(
-                width: configuration.cameraWidth,
-                height: configuration.cameraHeight,
-                rateHz: configuration.cameraRateHz
-            )
-        }
+        // `availableVideoPixelFormatTypes` is documented as the set this output
+        // can currently produce, and an output that is not in a session yet has
+        // no input to answer for. The 420f path happened to survive being asked
+        // early; 32BGRA did not, and the run failed at start with nothing in the
+        // receipt to say why. Ask after the output is connected instead, and
+        // print the list when the answer is no so the next reader is not left
+        // guessing the way this one was.
 
         captureSession.beginConfiguration()
         var configurationIsOpen = true
@@ -334,16 +351,33 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         captureSession.addInput(input)
 
         videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: fullRange,
-            kCVPixelBufferWidthKey as String: Int(configuration.cameraWidth),
-            kCVPixelBufferHeightKey as String: Int(configuration.cameraHeight),
-        ]
         videoOutput.setSampleBufferDelegate(self, queue: cameraCallbackQueue)
         guard captureSession.canAddOutput(videoOutput) else {
             throw TransportError.cannotAddCameraOutput
         }
         captureSession.addOutput(videoOutput)
+
+        // Only now. `availableVideoPixelFormatTypes` answers for an output in a
+        // session with an input; an output on its own has nothing to answer for.
+        // Asking early happened to work for 420f and did not for 32BGRA, and the
+        // run died at start with nothing in the receipt to say why -- the format
+        // list lands in the receipt below precisely so the next one does not.
+        let supportedPixelFormats = videoOutput.availableVideoPixelFormatTypes
+        availablePixelFormats = supportedPixelFormats.map {
+            LiveCaptureFormatReceipt.fourCC($0)
+        }.joined(separator: ",")
+        guard supportedPixelFormats.contains(outputPixelFormat) else {
+            throw TransportError.cameraFormatUnavailable(
+                width: configuration.cameraWidth,
+                height: configuration.cameraHeight,
+                rateHz: configuration.cameraRateHz
+            )
+        }
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: outputPixelFormat,
+            kCVPixelBufferWidthKey as String: Int(configuration.cameraWidth),
+            kCVPixelBufferHeightKey as String: Int(configuration.cameraHeight),
+        ]
 
         guard let connection = videoOutput.connection(with: .video),
               connection.isVideoRotationAngleSupported(0) else {
@@ -388,7 +422,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 )
                 return dimensions.width == configuration.cameraWidth
                     && dimensions.height == configuration.cameraHeight
-                    && subtype == fullRange
+                    && subtype == deviceSubtype
                     && candidate.videoSupportedFrameRateRanges.contains {
                         $0.minFrameRate <= Double(configuration.cameraRateHz)
                             && $0.maxFrameRate >= Double(configuration.cameraRateHz)
@@ -462,7 +496,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 activeFormatMediaSubtype: LiveCaptureFormatReceipt.fourCC(
                     CMFormatDescriptionGetMediaSubType(format.formatDescription)
                 ),
-                outputPixelFormat: LiveCaptureFormatReceipt.fourCC(fullRange),
+                outputPixelFormat: LiveCaptureFormatReceipt.fourCC(outputPixelFormat),
                 width: dimensions.width,
                 height: dimensions.height,
                 selectedFramesPerSecond: configuration.cameraRateHz,
@@ -475,6 +509,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
                 activeStabilizationMode: Int(connection.activeVideoStabilizationMode.rawValue),
                 sessionPreset: AVCaptureSession.Preset.inputPriority.rawValue,
                 matchingFormatCount: candidates.count,
+                availablePixelFormats: availablePixelFormats,
                 grayscaleConversion: officialBGRA
                     ? "bgra32_opencv_cvtcolor_bgra2gray_upstream"
                     : "nv12_full_range_luma_plane_direct",

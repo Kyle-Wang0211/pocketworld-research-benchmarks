@@ -99,25 +99,42 @@ final class PreviewFrameTap: @unchecked Sendable {
     }
 
     static func decimatedLuma(_ pixelBuffer: CVPixelBuffer) -> DecimatedLuma? {
-        let sourceWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 0)
-        let sourceHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 0)
+        // The `...OfPlane` accessors answer for planar buffers. `-PWOfficialBGRA`
+        // makes the transport deliver 32BGRA, which is not planar, and what these
+        // return for it is not something CoreVideo promises. Take the non-planar
+        // geometry explicitly and step 4 bytes per pixel; the preview only needs
+        // something recognisable on screen, so one channel is enough.
+        let planar = CVPixelBufferIsPlanar(pixelBuffer)
+        let bytesPerPixel = planar ? 1 : 4
+        let sourceWidth = planar
+            ? CVPixelBufferGetWidthOfPlane(pixelBuffer, 0)
+            : CVPixelBufferGetWidth(pixelBuffer)
+        let sourceHeight = planar
+            ? CVPixelBufferGetHeightOfPlane(pixelBuffer, 0)
+            : CVPixelBufferGetHeight(pixelBuffer)
         let width = sourceWidth / decimation
         let height = sourceHeight / decimation
         guard width > 0, height > 0 else { return nil }
 
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
-        guard let base = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0) else {
+        let baseOrNil = planar
+            ? CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0)
+            : CVPixelBufferGetBaseAddress(pixelBuffer)
+        guard let base = baseOrNil else {
             return nil
         }
-        let stride = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0)
+        let stride = planar
+            ? CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0)
+            : CVPixelBufferGetBytesPerRow(pixelBuffer)
+        guard stride >= sourceWidth * bytesPerPixel else { return nil }
         let source = base.assumingMemoryBound(to: UInt8.self)
 
         var pixels = [UInt8](repeating: 0, count: width * height)
         for y in 0..<height {
             let row = source.advanced(by: y * decimation * stride)
             for x in 0..<width {
-                pixels[y * width + x] = row[x * decimation]
+                pixels[y * width + x] = row[x * decimation * bytesPerPixel]
             }
         }
         return DecimatedLuma(width: width, height: height, pixels: pixels)

@@ -457,6 +457,9 @@ public struct LiveCaptureFormatReceipt: Equatable, Sendable {
     /// because selection among several is a weaker identity than a unique match,
     /// and a reader must be able to tell which one this run had.
     public let matchingFormatCount: Int
+    /// Comma separated fourCCs the output offered once it was in the session.
+    /// Present so a format refusal is diagnosable from the artifacts alone.
+    public let availablePixelFormats: String
     public let grayscaleConversion: String
     public let xrslamPixelPipelineDivergence: String
 

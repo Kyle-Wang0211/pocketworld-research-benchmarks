@@ -241,6 +241,7 @@ enum RunDiagnosticsWriter {
                     "active_stabilization_mode": String(format.activeStabilizationMode),
                     "session_preset": format.sessionPreset,
                     "matching_format_count": String(format.matchingFormatCount),
+                    "available_pixel_formats": format.availablePixelFormats,
                     "grayscale_conversion": format.grayscaleConversion,
                     "locked_lens_position": String(format.lockedLensPosition),
                     "xrslam_pixel_pipeline_divergence": format.xrslamPixelPipelineDivergence,
