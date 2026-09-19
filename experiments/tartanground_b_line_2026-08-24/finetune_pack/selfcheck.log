@@ -1,0 +1,120 @@
+[0/5] 输入复用 /Users/kaidongwang/Developer/ethd3d_a_line/run_20260824/mvs_office (26 帧)
+[1/5] 推理 -> /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/out_selfcheck
+[2/5] 融合 -> /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/dense_selfcheck.ply
+[3/5] 官方 ETH3D 评测(四档)
+Completenesses: 0.301531 0.386406 0.470881 0.547199
+Accuracies: 0.721109 0.861905 0.967122 0.994377
+F1-scores: 0.425246 0.533593 0.633378 0.70593
+[4/5] 官方 ETH3D 评测(三档 + viz 点云)
+[5/5] 分区域指标(TAGS=new,selfcheck)
+[info] TAGS 覆盖为 ['new', 'selfcheck'](TOLS 保持官方 ['0.01', '0.02', '0.05'])
+GT points: 38,571,933
+  [main] wall=16,949,696 (43.94%)  ceiling=9,908,182 (25.69%)  floor=524,615 (1.36%)  clutter=11,189,440 (29.01%)
+  [altwall] wall=17,974,272 (46.60%)  ceiling=9,908,182 (25.69%)  floor=524,615 (1.36%)  clutter=10,164,864 (26.35%)
+
+GT ordering check: max |my merge - tool output| = 4.768e-07 m (OK)
+GT cells: grid0=735,812 grid1=739,289
+
+=== completeness ===
+        new @0.01  ALL=0.302709  official=0.302709  diff=1.72e-07
+        new @0.02  ALL=0.382947  official=0.382947  diff=1.85e-08
+        new @0.05  ALL=0.463873  official=0.463873  diff=3.15e-08
+  selfcheck @0.01  ALL=0.301531  official=0.301531  diff=3.27e-08
+  selfcheck @0.02  ALL=0.386406  official=0.386406  diff=2.51e-07
+  selfcheck @0.05  ALL=0.470881  official=0.470881  diff=2.28e-07
+
+=== accuracy (recon points -> region of nearest GT point) ===
+building KD-tree over ground truth ...
+KD-tree ready
+  new: 3,086,361 recon points, median dist to nearest GT = 0.46 cm
+          wall:    902,306   29.24%
+       ceiling:    211,330    6.85%
+         floor:     33,325    1.08%
+       clutter:  1,939,400   62.84%
+        new @0.01  ALL=0.741918  official=0.741918  diff=3.81e-08
+        new @0.02  ALL=0.880684  official=0.880684  diff=1.86e-07
+        new @0.05  ALL=0.975125  official=0.975125  diff=3.77e-07
+  selfcheck: 3,057,694 recon points, median dist to nearest GT = 0.48 cm
+          wall:    860,175   28.13%
+       ceiling:    229,427    7.50%
+         floor:     64,508    2.11%
+       clutter:  1,903,584   62.26%
+  selfcheck @0.01  ALL=0.721109  official=0.721109  diff=4.39e-08
+  selfcheck @0.02  ALL=0.861905  official=0.861905  diff=2.01e-07
+  selfcheck @0.05  ALL=0.967122  official=0.967122  diff=1.97e-07
+
+=== SELF-CHECK: worst |mine - official| = 3.769e-07 over 12 comparisons ===
+SELF-CHECK PASSED
+wrote /Users/kaidongwang/Developer/ethd3d_a_line/region_metric_20260824/cache/region_results.json
+[info] 结果 -> /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/region_results_selfcheck.json
+SELF-CHECK passed=True worst=3.769e-07(12 次 ALL-vs-official 比对)
+
+## completeness(主口径)
+
+| 区域 | 容差 | new | selfcheck | selfcheck−new |
+|---|---|---|---|---|
+| 墙 | 1cm | 0.2089 | 0.2113 | +0.24pp |
+| 墙 | 2cm | 0.2527 | 0.2624 | +0.97pp |
+| 墙 | 5cm | 0.3081 | 0.3253 | +1.72pp |
+| 天花板 | 1cm | 0.2925 | 0.2309 | -6.16pp |
+| 天花板 | 2cm | 0.4338 | 0.3938 | -4.00pp |
+| 天花板 | 5cm | 0.5538 | 0.5345 | -1.93pp |
+| 地板 | 1cm | 0.2044 | 0.2422 | +3.78pp |
+| 地板 | 2cm | 0.2570 | 0.2853 | +2.83pp |
+| 地板 | 5cm | 0.3645 | 0.3979 | +3.34pp |
+| 杂物 | 1cm | 0.4264 | 0.4434 | +1.70pp |
+| 杂物 | 2cm | 0.5276 | 0.5400 | +1.24pp |
+| 杂物 | 5cm | 0.6227 | 0.6257 | +0.30pp |
+
+## accuracy(主口径)
+
+| 区域 | 容差 | new | selfcheck | selfcheck−new |
+|---|---|---|---|---|
+| 墙 | 1cm | 0.7088 | 0.6859 | -2.28pp |
+| 墙 | 2cm | 0.8690 | 0.8418 | -2.72pp |
+| 墙 | 5cm | 0.9810 | 0.9682 | -1.29pp |
+| 天花板 | 1cm | 0.8610 | 0.8174 | -4.36pp |
+| 天花板 | 2cm | 0.9380 | 0.9071 | -3.09pp |
+| 天花板 | 5cm | 0.9859 | 0.9834 | -0.25pp |
+| 地板 | 1cm | 0.9396 | 0.9713 | +3.17pp |
+| 地板 | 2cm | 0.9984 | 0.9985 | +0.01pp |
+| 地板 | 5cm | 1.0000 | 0.9996 | -0.04pp |
+| 杂物 | 1cm | 0.7231 | 0.7118 | -1.13pp |
+| 杂物 | 2cm | 0.8638 | 0.8554 | -0.84pp |
+| 杂物 | 5cm | 0.9667 | 0.9606 | -0.61pp |
+
+## ALL vs official(自证口径)
+
+| 指标 | 容差 | new | selfcheck |
+|---|---|---|---|
+| comp | 1cm | 0.302709 | 0.301531 |
+| comp | 2cm | 0.382947 | 0.386406 |
+| comp | 5cm | 0.463873 | 0.470881 |
+| acc | 1cm | 0.741918 | 0.721109 |
+| acc | 2cm | 0.880684 | 0.861905 |
+| acc | 5cm | 0.975125 | 0.967122 |
+
+## 墙 vs 杂物 completeness 比值(主口径)
+
+| 权重 | 容差 | 墙 | 杂物 | 杂物/墙 |
+|---|---|---|---|---|
+| new | 1cm | 0.2089 | 0.4264 | 2.04× |
+| new | 2cm | 0.2527 | 0.5276 | 2.09× |
+| new | 5cm | 0.3081 | 0.6227 | 2.02× |
+| selfcheck | 1cm | 0.2113 | 0.4434 | 2.10× |
+| selfcheck | 2cm | 0.2624 | 0.5400 | 2.06× |
+| selfcheck | 5cm | 0.3253 | 0.6257 | 1.92× |
+
+## 敏感性变体 altwall(墙区 completeness)
+
+| 容差 | new | selfcheck | selfcheck−new |
+|---|---|---|---|
+| 1cm | 0.2075 | 0.2150 | +0.75pp |
+| 2cm | 0.2548 | 0.2667 | +1.19pp |
+| 5cm | 0.3152 | 0.3327 | +1.76pp |
+
+[done] 产物:
+  点云       /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/dense_selfcheck.ply
+  官方指标   /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/logs/eval_selfcheck.log
+  分区域 json /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/region_results_selfcheck.json
+  分区域表   /Users/kaidongwang/Developer/ethd3d_a_line/eval_runs/selfcheck/REGION_TABLES_selfcheck.md
