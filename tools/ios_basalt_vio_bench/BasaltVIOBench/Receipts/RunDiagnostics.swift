@@ -95,6 +95,12 @@ enum RunDiagnosticsWriter {
                     "camera_fps": String(configuration.selectedFramesPerSecond),
                     "recommended_for_high_resolution_capture": String(configuration.selectedForHighResolutionCapture),
                     "official_aether_ar_30fps": String(configuration.thirtyFPSOverrideEnabled),
+                    // 🔴 Bench-only ruler, never a product input. Recorded so a
+                    // run without depth says which of the two it was: no
+                    // scanner on this device, or the arm never asked.
+                    "scene_depth_supported": String(configuration.sceneDepthSupported),
+                    "scene_depth_requested": String(configuration.sceneDepthRequested),
+                    "scene_depth_role": "bench_only_metric_ruler_not_a_product_input",
                     "delegate_queue": configuration.delegateQueue,
                     "start_options": configuration.startOptions,
                     "missed_frame_count_semantics": "estimated_from_arframe_timestamp_gaps_not_platform_drop_ground_truth",

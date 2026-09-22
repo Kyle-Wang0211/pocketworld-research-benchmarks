@@ -1,4 +1,5 @@
 import CoreVideo
+import CryptoKit
 import XCTest
 @testable import VIOReplacementBench
 
@@ -466,5 +467,201 @@ extension DeviceRecordingTests {
         )
         XCTAssertEqual(manifest.lossCount, 0)
         XCTAssertEqual(manifest.lossWriteError, 0)
+    }
+}
+
+// MARK: - 🔴 Bench-only LiDAR ruler
+
+/// The depth streams exist for one purpose: to let an offline tool put a
+/// *metric* number on a trajectory, because the only other reference this bench
+/// has is ARKit's own pose -- a relative comparison, not a metre.
+///
+/// 🔴 **Bench-only.** The product pipeline is monocular + IMU and stays that
+/// way; nothing verified here may be read as a product input or a device
+/// requirement.
+extension DeviceRecordingTests {
+
+    private static let depthWidth = 256
+    private static let depthHeight = 192
+
+    private func depthBuffer(value: Float) throws -> CVPixelBuffer {
+        var buffer: CVPixelBuffer?
+        CVPixelBufferCreate(
+            kCFAllocatorDefault, Self.depthWidth, Self.depthHeight,
+            kCVPixelFormatType_DepthFloat32, nil, &buffer
+        )
+        let pixelBuffer = try XCTUnwrap(buffer)
+        CVPixelBufferLockBaseAddress(pixelBuffer, [])
+        let stride = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let base = try XCTUnwrap(CVPixelBufferGetBaseAddress(pixelBuffer))
+        for row in 0..<Self.depthHeight {
+            let rowBase = base.advanced(by: row * stride)
+                .assumingMemoryBound(to: Float.self)
+            for column in 0..<Self.depthWidth {
+                // Row padding past the visible width is left as whatever the
+                // allocator had; the copy must not pick it up.
+                rowBase[column] = value + Float(row) * 0.001
+            }
+        }
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
+        return pixelBuffer
+    }
+
+    private func confidenceBuffer(value: UInt8) throws -> CVPixelBuffer {
+        var buffer: CVPixelBuffer?
+        CVPixelBufferCreate(
+            kCFAllocatorDefault, Self.depthWidth, Self.depthHeight,
+            kCVPixelFormatType_OneComponent8, nil, &buffer
+        )
+        let pixelBuffer = try XCTUnwrap(buffer)
+        CVPixelBufferLockBaseAddress(pixelBuffer, [])
+        let stride = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let base = try XCTUnwrap(CVPixelBufferGetBaseAddress(pixelBuffer))
+            .assumingMemoryBound(to: UInt8.self)
+        memset(base, Int32(value), stride * Self.depthHeight)
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
+        return pixelBuffer
+    }
+
+    /// Three files, one index row per frame, and every row naming bytes the two
+    /// streams actually hold. This is the property the offline ruler rests on:
+    /// it seeks by `offset`/`len` exactly as the camera reader does.
+    func testDepthStreamsAndIndexAgree() throws {
+        let writer = try DeviceRecordingWriter(directory: root, recordingID: "depth-1")
+        try writer.recordIntrinsics(plausibleIntrinsics, timestampSeconds: 0)
+        writer.appendFrame(
+            pixelBuffer: try filledBuffer(format: .scoring, value: 9),
+            timestampNanoseconds: 0
+        )
+        for index in 0..<3 {
+            writer.appendDepth(
+                depthMap: try depthBuffer(value: Float(index) + 1.0),
+                confidenceMap: try confidenceBuffer(value: 2),  // ARConfidenceLevelHigh
+                timestampNanoseconds: Int64(index) * 16_666_666
+            )
+        }
+        let manifest = try writer.finish()
+
+        XCTAssertEqual(manifest.depthPresent, true)
+        XCTAssertEqual(manifest.depthFrameCount, 3)
+        XCTAssertEqual(manifest.depthWidth, Self.depthWidth)
+        XCTAssertEqual(manifest.depthHeight, Self.depthHeight)
+        XCTAssertEqual(manifest.depthSource, "ARFrame.sceneDepth")
+        XCTAssertEqual(manifest.depthConfidencePresent, true)
+        XCTAssertEqual(manifest.depthDropped, 0)
+        // A depth loss must never be folded into the camera loss total: it
+        // costs the ruler, not the recording's validity.
+        XCTAssertEqual(manifest.lossCount, 0)
+
+        let depth = root.appendingPathComponent(DeviceRecordingManifest.depthStreamPath)
+        let confidence = root.appendingPathComponent(
+            DeviceRecordingManifest.depthConfidencePath
+        )
+        let index = root.appendingPathComponent(DeviceRecordingManifest.depthIndexPath)
+        for url in [depth, confidence, index] {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), url.path)
+        }
+
+        let pixels = Self.depthWidth * Self.depthHeight
+        let depthBytes = try Data(contentsOf: depth)
+        let confidenceBytes = try Data(contentsOf: confidence)
+        XCTAssertEqual(depthBytes.count, 3 * pixels * 4, "tightly packed float32, no row padding")
+        XCTAssertEqual(confidenceBytes.count, 3 * pixels)
+
+        let rows = try String(contentsOf: index).split(separator: "\n")
+        XCTAssertEqual(rows.count, 3)
+        for (n, row) in rows.enumerated() {
+            let fields = try XCTUnwrap(
+                try JSONSerialization.jsonObject(with: Data(row.utf8)) as? [String: Any]
+            )
+            XCTAssertEqual(fields["frame"] as? Int, n)
+            XCTAssertEqual(fields["offset"] as? Int, n * pixels * 4)
+            XCTAssertEqual(fields["len"] as? Int, pixels * 4)
+            XCTAssertEqual(fields["conf_offset"] as? Int, n * pixels)
+            XCTAssertEqual(fields["conf_len"] as? Int, pixels)
+            XCTAssertEqual(fields["w"] as? Int, Self.depthWidth)
+            XCTAssertEqual(fields["h"] as? Int, Self.depthHeight)
+            XCTAssertEqual(fields["t_ns"] as? Int, n * 16_666_666)
+        }
+
+        // The manifest must describe the files that are on disk, hashes
+        // included -- the depth streams are hashed while writing, like the
+        // frame stream, so a mismatch here would mean the incremental digest
+        // and the file had diverged.
+        for (role, url) in [
+            (DeviceRecordingFileRole.depthStream, depth),
+            (DeviceRecordingFileRole.depthConfidenceStream, confidence),
+            (DeviceRecordingFileRole.depthIndex, index),
+        ] {
+            let record = try XCTUnwrap(manifest.files.first { $0.role == role })
+            let onDisk = try Data(contentsOf: url)
+            XCTAssertEqual(record.byteCount, Int64(onDisk.count), role.rawValue)
+            XCTAssertEqual(
+                record.sha256,
+                DeviceRecordingWriter.hex(SHA256.hash(data: onDisk)),
+                role.rawValue
+            )
+        }
+
+        // And the first frame's pixels survived the stride-aware copy.
+        let firstPixel = depthBytes.prefix(4).withUnsafeBytes {
+            $0.loadUnaligned(as: Float.self)
+        }
+        XCTAssertEqual(firstPixel, 1.0, accuracy: 1e-6)
+    }
+
+    /// A phone without a LiDAR scanner records no depth. The manifest must say
+    /// so, and no empty files may be left behind to look like it did.
+    func testRecordingWithoutDepthDeclaresItAbsent() throws {
+        let writer = try DeviceRecordingWriter(directory: root, recordingID: "depth-absent")
+        try writer.recordIntrinsics(plausibleIntrinsics, timestampSeconds: 0)
+        writer.appendFrame(
+            pixelBuffer: try filledBuffer(format: .scoring, value: 4),
+            timestampNanoseconds: 0
+        )
+        let manifest = try writer.finish()
+
+        XCTAssertEqual(manifest.depthPresent, false)
+        XCTAssertEqual(manifest.depthFrameCount, 0)
+        XCTAssertNil(manifest.depthWidth)
+        XCTAssertNil(manifest.depthHeight)
+        XCTAssertNil(manifest.depthSource)
+        XCTAssertNil(manifest.depthConfidencePresent)
+        for path in [
+            DeviceRecordingManifest.depthStreamPath,
+            DeviceRecordingManifest.depthConfidencePath,
+            DeviceRecordingManifest.depthIndexPath,
+        ] {
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: root.appendingPathComponent(path).path
+                ),
+                "\(path) must not exist when the device delivered no depth"
+            )
+        }
+        for role in [
+            DeviceRecordingFileRole.depthStream,
+            .depthConfidenceStream,
+            .depthIndex,
+        ] {
+            XCTAssertFalse(manifest.files.contains { $0.role == role }, role.rawValue)
+        }
+        // The recording is still fully loadable: depth is a ruler, not a
+        // precondition.
+        XCTAssertNoThrow(try loadRecording())
+    }
+
+    /// The `record` arm's space preflight must price the depth streams. It was
+    /// pricing luma only, which is how a preflight passes and the capture still
+    /// runs the volume out partway through.
+    func testProjectedByteCountIncludesTheDepthStreams() {
+        let luma = DeviceRecordingWriter.projectedByteCount(seconds: 30)
+        let withDepth = DeviceRecordingWriter.projectedByteCount(
+            seconds: 30, includingDepth: true
+        )
+        // 60 fps x 30 s = 1800 frames; 256 x 192 x (4 + 1) = 245,760 B each.
+        XCTAssertEqual(DeviceRecordingWriter.depthBytesPerFrame, 245_760)
+        XCTAssertEqual(withDepth - luma, 1800 * 245_760)
+        XCTAssertEqual(luma, 1920 * 1440 * 60 * 30)
     }
 }

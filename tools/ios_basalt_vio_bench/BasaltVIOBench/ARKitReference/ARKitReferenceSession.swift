@@ -20,6 +20,11 @@ struct ARKitReferenceConfigurationReceipt: Equatable, Sendable {
     let thirtyFPSOverrideEnabled: Bool
     let delegateQueue: String
     let startOptions: String
+    /// 🔴 Bench-only ruler. Whether `ARWorldTrackingConfiguration` could take
+    /// `.sceneDepth` on this device, so a recording without depth says whether
+    /// the phone has no LiDAR scanner or the arm simply did not ask.
+    let sceneDepthSupported: Bool
+    let sceneDepthRequested: Bool
 }
 
 struct ARKitReferenceLifecycleReceipt: Equatable, Sendable {
@@ -165,6 +170,40 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                let fourK = ARWorldTrackingConfiguration.recommendedVideoFormatFor4KResolution {
                 configuration.videoFormat = fourK
             }
+            // 🔴 **Bench-only ruler, never a product input.**
+            //
+            // The LiDAR depth is recorded so an offline tool can put a *metric*
+            // number on a trajectory: today the only reference this bench has is
+            // ARKit's own pose, which is a relative comparison and not a metre.
+            // The shipping pipeline is monocular + IMU and stays that way -- this
+            // switch must not migrate into production, a product proposal, or a
+            // device requirement.
+            //
+            // The support check is mandatory, not defensive decoration. The SDK
+            // header is explicit: "Semantic frame understanding is not supported
+            // on all devices", and setting an unsupported semantic means "An
+            // exception is thrown if the option is not supported"
+            // (ARConfiguration.h, frameSemantics / supportsFrameSemantics), i.e.
+            // an ObjC exception Swift cannot catch -- the app would simply die on
+            // a phone with no scanner. Apple says the same in prose: "Call
+            // supportsFrameSemantics(_:) on your app's configuration to support
+            // scene depth on select devices and configurations."
+            // (https://developer.apple.com/documentation/arkit/arframe/scenedepth)
+            //
+            // `.smoothedSceneDepth` is deliberately not requested: it is ARKit's
+            // own temporally filtered estimate, and a ruler must not be another
+            // estimator's output.
+            let sceneDepthSupported = ARWorldTrackingConfiguration
+                .supportsFrameSemantics(.sceneDepth)
+            var sceneDepthRequested = false
+            if sceneDepthSupported {
+                configuration.frameSemantics.insert(.sceneDepth)
+                sceneDepthRequested = true
+            }
+            NSLog("[VIOBench] sceneDepth supported=%@ requested=%@ (bench-only ruler)",
+                  sceneDepthSupported ? "YES" : "NO",
+                  sceneDepthRequested ? "YES" : "NO")
+
             let thirtyFPSOverride = ProcessInfo.processInfo.environment[
                 "OFFICIAL_AETHER_AR_30FPS"
             ] == "1"
@@ -211,7 +250,9 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                 }(),
                 thirtyFPSOverrideEnabled: thirtyFPSOverride,
                 delegateQueue: "com.apple.main-thread",
-                startOptions: "resetTracking,removeExistingAnchors"
+                startOptions: "resetTracking,removeExistingAnchors",
+                sceneDepthSupported: sceneDepthSupported,
+                sceneDepthRequested: sceneDepthRequested
             )
             session.delegateQueue = .main
             session.delegate = self
@@ -314,6 +355,23 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                     timestampNanoseconds: timestampNS,
                     tumRow: Self.tumRow(timestampNanoseconds: timestampNS, pose: pose)
                 )
+                // 🔴 Bench-only ruler. Same frame, same `frame.timestamp` as the
+                // intrinsics row and the luma plane above, so the depth map and
+                // the image it describes can never be paired across frames.
+                //
+                // `sceneDepth` is nil unless the semantic was requested and the
+                // device has a scanner -- "This property is nil by default"
+                // (https://developer.apple.com/documentation/arkit/arframe/scenedepth)
+                // -- so a phone without one simply records no depth and the
+                // manifest reports depth_present: false. Nothing here can fail
+                // the capture.
+                if let sceneDepth = frame.sceneDepth {
+                    recorder.appendDepth(
+                        depthMap: sceneDepth.depthMap,
+                        confidenceMap: sceneDepth.confidenceMap,
+                        timestampNanoseconds: timestampNS
+                    )
+                }
             } catch {
                 // A failed cross-check must stop the capture immediately rather
                 // than let the operator spend five minutes producing frames no

@@ -26,6 +26,22 @@ enum DeviceRecordingFileRole: String, Codable, CaseIterable, Sendable {
     case framesIndex = "frames_index"
     case imuIndex = "imu_index"
     case arkitPoses = "arkit_poses"
+    /// 🔴 **Bench-only ruler.** The LiDAR `ARFrame.sceneDepth` for the same
+    /// frames, stored so an offline tool can put a *metric* number on a
+    /// trajectory whose scale is otherwise only knowable relative to ARKit.
+    ///
+    /// It never leaves the bench. The product pipeline is monocular + IMU and
+    /// stays that way: nothing here may be proposed as a product input, a
+    /// product fallback, or a shipping requirement. It exists for the same
+    /// reason a reference weight exists in a lab -- to check an instrument, not
+    /// to be carried around by the instrument.
+    ///
+    /// Three files, in the same append-only shape `frames.bin` / `frames.pwvi`
+    /// already use: a float32 stream in metres, a uint8 stream of
+    /// `ARConfidenceLevel`, and one JSONL index row per depth frame.
+    case depthStream = "depth_stream"
+    case depthConfidenceStream = "depth_confidence_stream"
+    case depthIndex = "depth_index"
 }
 
 struct DeviceRecordingFile: Codable, Equatable, Sendable {
@@ -147,6 +163,37 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     /// recording -- they arrived once it was closed -- but recorded rather than
     /// dropped in silence.
     var lateFramesAfterSeal: Int = 0
+    /// 🔴 Bench-only ruler, see `DeviceRecordingFileRole.depthStream`.
+    ///
+    /// Optional, not defaulted-non-optional, because every recording made
+    /// before this existed has no such key and must still decode: Swift's
+    /// synthesised `init(from:)` ignores a property's default value and calls
+    /// `decode(_:forKey:)`, which throws on a missing key, while an `Optional`
+    /// goes through `decodeIfPresent`. `nil` therefore reads as "this recorder
+    /// did not know about depth", which is different from
+    /// `depthPresent == false` ("it knew, and the device had none").
+    var depthPresent: Bool?
+    var depthWidth: Int?
+    var depthHeight: Int?
+    var depthFrameCount: Int?
+    /// Always `ARFrame.sceneDepth` when present -- named so a reader never has
+    /// to guess whether the numbers came from LiDAR, from
+    /// `smoothedSceneDepth` (a filtered estimate, deliberately not used), or
+    /// from a monocular network.
+    var depthSource: String?
+    /// `ARDepthData.confidenceMap` is `nullable` in the SDK header, so a
+    /// recording can hold depth with no confidence beside it. A consumer that
+    /// filters on `high` must refuse such a recording rather than assume.
+    var depthConfidencePresent: Bool?
+    /// Depth frames the recorder could not keep (wrong geometry, write error,
+    /// or its own backpressure cap).
+    ///
+    /// 🔴 Deliberately **not** added to `loss_count`: a camera-frame loss
+    /// invalidates the recording, because every arm is scored on those frames.
+    /// Depth is a bench-only ruler read offline over hundreds of frame pairs,
+    /// so a gap in it costs measurements, not validity. Counted rather than
+    /// dropped in silence, which is the same rule the camera losses follow.
+    var depthDropped: Int?
     var files: [DeviceRecordingFile]
 
     enum CodingKeys: String, CodingKey {
@@ -166,6 +213,13 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
         case focalLengthMinimum = "focal_length_min"
         case focalLengthMaximum = "focal_length_max"
         case lateFramesAfterSeal = "late_frames_after_seal"
+        case depthPresent = "depth_present"
+        case depthWidth = "depth_width"
+        case depthHeight = "depth_height"
+        case depthFrameCount = "depth_frame_count"
+        case depthSource = "depth_source"
+        case depthConfidencePresent = "depth_confidence_present"
+        case depthDropped = "depth_dropped"
     }
 
     static let supportedSchemaVersion = 1
@@ -180,6 +234,23 @@ struct DeviceRecordingManifest: Codable, Equatable, Sendable {
     /// Raw planes held only for the length of the capture, then transcoded into
     /// the archive and removed.
     static let captureScratchPath = "capture_scratch.raw"
+
+    /// 🔴 Bench-only ruler. Same append-only stream + JSONL index shape as
+    /// `frames.bin` / `frames.pwvi`, so one reader serves both.
+    ///
+    /// `depth.bin`      : float32, metres, row-major `depth_width x depth_height`.
+    /// `depth_conf.bin` : uint8, `ARConfidenceLevel` (0 low, 1 medium, 2 high).
+    /// `depth.pwvi`     : one JSON row per depth frame, `{frame, offset, len,
+    ///                    t_ns, w, h, conf_offset, conf_len}`.
+    static let depthStreamPath = "depth.bin"
+    static let depthConfidencePath = "depth_conf.bin"
+    static let depthIndexPath = "depth.pwvi"
+
+    /// `ARDepthData.depthMap` on the LiDAR devices this bench runs on. Recorded
+    /// per frame in the index all the same -- this constant is only the
+    /// projection used before a capture starts, never what a reader trusts.
+    static let expectedDepthWidth = 256
+    static let expectedDepthHeight = 192
 }
 
 /// A recording replayed as the same event stream `ReplayScheduler` already
@@ -231,6 +302,10 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
     case decoderUnavailable
     case decodeFailed(status: Int)
     case insufficientFreeSpace(requiredBytes: Int64, availableBytes: Int64)
+    /// A depth frame arrived with a different geometry than the first one. The
+    /// stream is fixed-stride by construction, so a size change would silently
+    /// shear every later frame the way a camera stride change would.
+    case depthGeometryChanged(expected: String, actual: String)
 
     var errorDescription: String? { description }
 
@@ -272,6 +347,8 @@ enum DeviceRecordingError: Error, Equatable, CustomStringConvertible, LocalizedE
                 Double(available) / 1_073_741_824,
                 Double(max(0, required - available)) / 1_073_741_824
             )
+        case .depthGeometryChanged(let e, let a):
+            "depth frame geometry changed mid-recording: \(e) -> \(a)"
         }
     }
 }

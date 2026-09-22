@@ -392,9 +392,15 @@ final class BenchmarkCoordinator {
             // selected rate once the session reports it.
             var format = DeviceRecordingCameraFormat.scoring
             format.nominalFPS = BenchResolution.scoringFramesPerSecond
+            // The bench-only LiDAR ruler rides along on this arm, so its two
+            // streams are part of what the capture will occupy: 245,760 B per
+            // frame on top of the luma, 422 MiB over 30 s at 60 fps. Projecting
+            // without it is how a preflight passes and the capture still runs
+            // the volume out partway through.
             let projected = DeviceRecordingWriter.projectedByteCount(
                 seconds: Double(LiveBenchmarkDuration.measurementNanoseconds) / 1_000_000_000,
-                format: format
+                format: format,
+                includingDepth: true
             )
             try DeviceRecordingWriter.checkFreeSpace(
                 at: context.directoryURL,

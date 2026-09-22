@@ -105,6 +105,58 @@ final class DeviceRecordingWriter: @unchecked Sendable {
 
     private var intrinsics: DeviceRecordingIntrinsics?
 
+    // MARK: - Depth (🔴 bench-only ruler)
+
+    /// The LiDAR depth ARKit hands back on the same frame, kept so an offline
+    /// tool can put a *metric* number on a trajectory.
+    ///
+    /// 🔴 **This is a bench-only ruler and stays one.** The product pipeline is
+    /// monocular + IMU; nothing recorded here may be proposed as a product
+    /// input, a product fallback, or a shipping requirement. It is here to
+    /// check the instrument, not to become part of it.
+    ///
+    /// The three handles are opened on the first depth frame, not in `init`,
+    /// so a device without a LiDAR scanner leaves no empty files behind and
+    /// `depth_present: false` in the manifest is a statement about the world
+    /// rather than about three zero-byte files.
+    private var depthStream: FileHandle?
+    private var depthConfidenceStream: FileHandle?
+    private var depthIndex: FileHandle?
+    private var depthWidth = 0
+    private var depthHeight = 0
+    private var depthFrameCount = 0
+    /// Depth frames whose bytes are actually in the stream. `depthFrameCount`
+    /// counts what was accepted into the queue; a write that then failed leaves
+    /// a hole in the index's `frame` numbering, so the manifest reports what
+    /// was written rather than what was hoped for. (A reader walks index rows,
+    /// not frame ids, so a hole costs a measurement and nothing else.)
+    private var depthFramesWritten = 0
+    private var depthStreamOffset = 0
+    private var depthConfidenceOffset = 0
+    private var depthDigest = SHA256()
+    private var depthConfidenceDigest = SHA256()
+    private var depthTotalBytes: Int64 = 0
+    private var depthConfidenceTotalBytes: Int64 = 0
+    private var depthConfidenceSeen = false
+    private var depthDropped = 0
+    private var depthInFlight = 0
+    private var depthSource: String?
+
+    /// Depth frames awaiting write.
+    ///
+    /// Separate from `queueDepth` on purpose. A 1920x1440 luma plane is 2.76 MB
+    /// and 64 of them is 177 MB, so the camera queue is sized by memory. A
+    /// depth frame is 256x192x4 B plus 256x192 B = 240 KiB, so the same slack in
+    /// time costs 1/11 as much; sharing one cap would make depth evict camera
+    /// frames, and a camera frame loss invalidates the whole recording.
+    static let depthQueueDepth = 120
+
+    /// 4 bytes of float32 metres plus 1 byte of `ARConfidenceLevel`, per depth
+    /// pixel. 256 x 192 x 5 = 245,760 B per frame; 60 fps for 30 s is 422 MiB.
+    static let depthBytesPerFrame =
+        DeviceRecordingManifest.expectedDepthWidth
+            * DeviceRecordingManifest.expectedDepthHeight * 5
+
     init(
         directory: URL,
         recordingID: String,
@@ -153,11 +205,21 @@ final class DeviceRecordingWriter: @unchecked Sendable {
 
     /// Bytes a recording of `seconds` will occupy, so the operator is told before
     /// the capture rather than after it fails.
+    /// `includingDepth` adds the bench-only LiDAR ruler's two streams. The
+    /// ARKit `record` arm passes true unconditionally rather than waiting to
+    /// learn whether the device has a scanner, because support is only knowable
+    /// after `session.run` and a projection that is too large refuses a capture
+    /// the device could have taken, while one that is too small truncates a
+    /// capture the operator has already paid for.
     static func projectedByteCount(
         seconds: Double,
-        format: DeviceRecordingCameraFormat = .scoring
+        format: DeviceRecordingCameraFormat = .scoring,
+        includingDepth: Bool = false
     ) -> Int64 {
-        Int64((seconds * format.nominalFPS).rounded(.up)) * Int64(format.bytesPerFrame)
+        let frames = Int64((seconds * format.nominalFPS).rounded(.up))
+        let perFrame = Int64(format.bytesPerFrame)
+            + (includingDepth ? Int64(depthBytesPerFrame) : 0)
+        return frames * perFrame
     }
 
     static func checkFreeSpace(
@@ -418,6 +480,170 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         }
     }
 
+    /// Records one LiDAR depth frame beside the camera frame it arrived with.
+    ///
+    /// 🔴 **Bench-only ruler.** See the `depthStream` comment above: this
+    /// never becomes a product input.
+    ///
+    /// `depthMap` is `ARDepthData.depthMap` -- "A pixel buffer that contains
+    /// per-pixel depth data (in meters)" (ARKit SDK header `ARDepthData.h`) --
+    /// and Apple's own overview fixes what a pixel of it means: "Every pixel in
+    /// the depthMap maps to a region of the visible scene (capturedImage),
+    /// where the pixel value defines that region's distance from the plane of
+    /// the camera in meters."
+    /// (https://developer.apple.com/documentation/arkit/ardepthdata)
+    /// It is therefore a *planar* z-depth in the camera frame, directly
+    /// comparable with the z of a triangulated point -- not a radial range that
+    /// would need converting first.
+    ///
+    /// `confidenceMap` is `ARDepthData.confidenceMap`, one `ARConfidenceLevel`
+    /// per pixel (`ARConfidenceLevelLow` = 0, `Medium` = 1, `High` = 2, from
+    /// `ARDepthData.h`). It is `nullable` in the header, so the recording
+    /// records whether it was there instead of assuming it was.
+    ///
+    /// The depth map is 256x192 while `capturedImage` is 1920x1440, and the
+    /// consumer maps between them by scaling the intrinsics by the resolution
+    /// ratio. That is a consequence of the sentence quoted above -- every depth
+    /// pixel covers a region of the *same* captured image -- and not a separate
+    /// Apple-published formula; the offline tool states the same thing where it
+    /// does the scaling.
+    ///
+    /// `smoothedSceneDepth` is deliberately not recorded. It is ARKit's own
+    /// temporally filtered estimate, i.e. another estimator's output, and this
+    /// file already refuses `CMDeviceMotion` for the same reason.
+    ///
+    /// A depth frame that cannot be kept is counted in `depth_dropped` and does
+    /// not invalidate the recording: unlike a camera frame, no arm is scored on
+    /// it.
+    func appendDepth(
+        depthMap: CVPixelBuffer,
+        confidenceMap: CVPixelBuffer?,
+        timestampNanoseconds: Int64,
+        source: String = "ARFrame.sceneDepth"
+    ) {
+        let width = CVPixelBufferGetWidth(depthMap)
+        let height = CVPixelBufferGetHeight(depthMap)
+        guard width > 0, height > 0,
+              let depth = Self.copyTightly(depthMap, bytesPerPixel: 4) else {
+            stateLock.lock(); depthDropped += 1; stateLock.unlock()
+            return
+        }
+        var confidence: Data?
+        if let confidenceMap {
+            guard CVPixelBufferGetWidth(confidenceMap) == width,
+                  CVPixelBufferGetHeight(confidenceMap) == height,
+                  let bytes = Self.copyTightly(confidenceMap, bytesPerPixel: 1) else {
+                stateLock.lock(); depthDropped += 1; stateLock.unlock()
+                return
+            }
+            confidence = bytes
+        }
+
+        stateLock.lock()
+        guard !sealed else {
+            lateAfterSeal += 1
+            stateLock.unlock()
+            return
+        }
+        if depthFrameCount == 0 {
+            depthWidth = width
+            depthHeight = height
+            depthSource = source
+        } else if width != depthWidth || height != depthHeight {
+            // Fixed stride is the whole point of an append-only stream; a
+            // geometry change mid-run would shear every later frame exactly the
+            // way an unhandled camera row stride does.
+            depthDropped += 1
+            stateLock.unlock()
+            return
+        }
+        guard depthInFlight < Self.depthQueueDepth else {
+            depthDropped += 1
+            stateLock.unlock()
+            return
+        }
+        let index = depthFrameCount
+        depthFrameCount += 1
+        depthInFlight += 1
+        if confidence != nil { depthConfidenceSeen = true }
+        stateLock.unlock()
+
+        writeQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                try self.openDepthHandlesIfNeeded()
+                guard let stream = self.depthStream, let index_ = self.depthIndex else {
+                    self.stateLock.lock()
+                    self.depthDropped += 1
+                    self.depthInFlight -= 1
+                    self.stateLock.unlock()
+                    return
+                }
+                // Stream, then confidence, then the index row -- the same order
+                // frames.bin / frames.pwvi use, so an interrupted capture leaves
+                // a prefix the index never over-claims.
+                let offset = self.depthStreamOffset
+                try stream.write(contentsOf: depth)
+                try stream.synchronize()
+                var confidenceOffset = -1
+                var confidenceLength = 0
+                if let confidence, let confidenceStream = self.depthConfidenceStream {
+                    confidenceOffset = self.depthConfidenceOffset
+                    confidenceLength = confidence.count
+                    try confidenceStream.write(contentsOf: confidence)
+                    try confidenceStream.synchronize()
+                }
+                let row = "{\"frame\":\(index),\"offset\":\(offset),"
+                    + "\"len\":\(depth.count),\"t_ns\":\(timestampNanoseconds),"
+                    + "\"w\":\(width),\"h\":\(height),"
+                    + "\"conf_offset\":\(confidenceOffset),"
+                    + "\"conf_len\":\(confidenceLength)}\n"
+                try index_.write(contentsOf: Data(row.utf8))
+                try index_.synchronize()
+                self.stateLock.lock()
+                self.depthStreamOffset = offset + depth.count
+                self.depthConfidenceOffset += confidenceLength
+                self.depthDigest.update(data: depth)
+                self.depthTotalBytes += Int64(depth.count)
+                if let confidence {
+                    self.depthConfidenceDigest.update(data: confidence)
+                    self.depthConfidenceTotalBytes += Int64(confidence.count)
+                }
+                self.depthFramesWritten += 1
+                self.depthInFlight -= 1
+                self.stateLock.unlock()
+            } catch {
+                // Never sets firstError: a depth write failure costs the ruler,
+                // not the recording.
+                self.stateLock.lock()
+                self.depthDropped += 1
+                self.depthInFlight -= 1
+                self.stateLock.unlock()
+            }
+        }
+    }
+
+    /// Opens the three depth files on first use. Called only from `writeQueue`,
+    /// which is serial, so no lock is needed around the handles themselves.
+    private func openDepthHandlesIfNeeded() throws {
+        guard depthStream == nil else { return }
+        let stream = directory.appendingPathComponent(
+            DeviceRecordingManifest.depthStreamPath
+        )
+        let confidence = directory.appendingPathComponent(
+            DeviceRecordingManifest.depthConfidencePath
+        )
+        let index = directory.appendingPathComponent(
+            DeviceRecordingManifest.depthIndexPath
+        )
+        for url in [stream, confidence, index] {
+            FileManager.default.createFile(atPath: url.path, contents: nil)
+        }
+        depthStream = try FileHandle(forWritingTo: stream)
+        depthConfidenceStream = try FileHandle(forWritingTo: confidence)
+        depthIndex = try FileHandle(forWritingTo: index)
+    }
+
     func appendIMU(
         timestampNanoseconds: Int64,
         gyroscope: (x: Double, y: Double, z: Double),
@@ -503,6 +729,16 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         let focalLow = focalMinimum == .greatestFiniteMagnitude ? 0 : focalMinimum
         let focalHigh = focalMaximum
         let capturedIntrinsics = intrinsics
+        let depthFrames = depthFramesWritten
+        let depthW = depthWidth
+        let depthH = depthHeight
+        let depthBytes = depthTotalBytes
+        let depthConfidenceBytes = depthConfidenceTotalBytes
+        let depthSHA = Self.hex(depthDigest.finalize())
+        let depthConfidenceSHA = Self.hex(depthConfidenceDigest.finalize())
+        let depthHadConfidence = depthConfidenceSeen
+        let depthDrops = depthDropped
+        let depthSourceName = depthSource
         stateLock.unlock()
 
         guard let capturedIntrinsics else {
@@ -551,6 +787,47 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             byteCount: Int64(indexData.count),
             sha256: Self.hex(SHA256.hash(data: indexData))
         ))
+        // 🔴 Bench-only ruler. Present only when the device actually delivered
+        // depth; on a phone without a LiDAR scanner these three files do not
+        // exist and the manifest says so rather than naming empty files.
+        //
+        // Nothing in here may throw out of `finish()`. A camera-frame failure
+        // must fail the recording; a depth failure must not, or a bench-only
+        // ruler would be able to destroy a capture the operator cannot retake.
+        var depthDeclared = false
+        if depthFrames > 0, depthStream != nil {
+            try? depthStream?.close()
+            try? depthConfidenceStream?.close()
+            try? depthIndex?.close()
+            let depthIndexURL = directory.appendingPathComponent(
+                DeviceRecordingManifest.depthIndexPath
+            )
+            if let depthIndexData = try? Data(contentsOf: depthIndexURL) {
+                files.append(DeviceRecordingFile(
+                    role: .depthStream,
+                    relativePath: DeviceRecordingManifest.depthStreamPath,
+                    byteCount: depthBytes,
+                    // Accumulated while writing, like the frame stream's, so
+                    // sealing does not re-read hundreds of megabytes.
+                    sha256: depthSHA
+                ))
+                if depthHadConfidence {
+                    files.append(DeviceRecordingFile(
+                        role: .depthConfidenceStream,
+                        relativePath: DeviceRecordingManifest.depthConfidencePath,
+                        byteCount: depthConfidenceBytes,
+                        sha256: depthConfidenceSHA
+                    ))
+                }
+                files.append(DeviceRecordingFile(
+                    role: .depthIndex,
+                    relativePath: DeviceRecordingManifest.depthIndexPath,
+                    byteCount: Int64(depthIndexData.count),
+                    sha256: Self.hex(SHA256.hash(data: depthIndexData))
+                ))
+                depthDeclared = true
+            }
+        }
         files.sort { $0.relativePath < $1.relativePath }
 
         let manifest = DeviceRecordingManifest(
@@ -571,6 +848,16 @@ final class DeviceRecordingWriter: @unchecked Sendable {
             focalLengthMinimum: focalLow,
             focalLengthMaximum: focalHigh,
             lateFramesAfterSeal: lateSeal,
+            depthPresent: depthDeclared,
+            depthWidth: depthDeclared ? depthW : nil,
+            depthHeight: depthDeclared ? depthH : nil,
+            depthFrameCount: depthDeclared ? depthFrames : 0,
+            depthSource: depthDeclared ? depthSourceName : nil,
+            depthConfidencePresent: depthDeclared ? depthHadConfidence : nil,
+            // Frames that never reached the stream are drops, whatever stage
+            // lost them -- including the case where the files could not be
+            // declared at all.
+            depthDropped: depthDrops + (depthDeclared ? 0 : depthFrames),
             files: files
         )
 
@@ -612,6 +899,39 @@ final class DeviceRecordingWriter: @unchecked Sendable {
                     destinationBase.advanced(by: row * expected.width),
                     base.advanced(by: row * stride),
                     expected.width
+                )
+            }
+        }
+        return out
+    }
+
+    /// Copies a non-planar pixel buffer row by row into tightly packed bytes.
+    ///
+    /// Same trap as `copyLumaPlane`: `CVPixelBufferGetBytesPerRow` is padded
+    /// past `width * bytesPerPixel` (256 float32 columns is 1024 B, and the
+    /// buffer is commonly 1024 or more), so blitting wholesale would bake the
+    /// stride into the file and every depth frame would be sheared.
+    static func copyTightly(
+        _ pixelBuffer: CVPixelBuffer,
+        bytesPerPixel: Int
+    ) -> Data? {
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        guard width > 0, height > 0 else { return nil }
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(pixelBuffer) else { return nil }
+        let stride = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let rowBytes = width * bytesPerPixel
+        guard stride >= rowBytes else { return nil }
+        var out = Data(count: rowBytes * height)
+        out.withUnsafeMutableBytes { destination in
+            guard let destinationBase = destination.baseAddress else { return }
+            for row in 0..<height {
+                memcpy(
+                    destinationBase.advanced(by: row * rowBytes),
+                    base.advanced(by: row * stride),
+                    rowBytes
                 )
             }
         }

@@ -33,8 +33,10 @@ final class BenchViewModel: ObservableObject {
         guard mode == .record else { return nil }
         var format = DeviceRecordingCameraFormat.scoring
         format.nominalFPS = BenchResolution.scoringFramesPerSecond
+        // Matches the coordinator's preflight, depth included, so the number on
+        // screen is the number the refusal will use.
         let need = DeviceRecordingWriter.projectedByteCount(
-            seconds: Double(measurementSeconds), format: format
+            seconds: Double(measurementSeconds), format: format, includingDepth: true
         ) + DeviceRecordingWriter.freeSpaceHeadroomBytes
         let values = try? URL.documentsDirectory.resourceValues(
             forKeys: [.volumeAvailableCapacityForImportantUsageKey]

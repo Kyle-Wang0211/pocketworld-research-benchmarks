@@ -29,7 +29,11 @@ enum BenchSelfTest {
             forKeys: [.volumeAvailableCapacityForImportantUsageKey]
         )
         let available = Int64(values?.volumeAvailableCapacityForImportantUsage ?? 0)
-        let projected300 = DeviceRecordingWriter.projectedByteCount(seconds: 300)
+        // Depth included: this is the `record` arm's projection, and that arm
+        // now writes the bench-only LiDAR ruler alongside the luma.
+        let projected300 = DeviceRecordingWriter.projectedByteCount(
+            seconds: 300, includingDepth: true
+        )
         let headroom = DeviceRecordingWriter.freeSpaceHeadroomBytes
 
         var payload: [String: Any] = [
@@ -51,6 +55,7 @@ enum BenchSelfTest {
         let usable = max(0, available - headroom)
         let bytesPerSecond = Int64(
             DeviceRecordingCameraFormat.scoring.bytesPerFrame
+                + DeviceRecordingWriter.depthBytesPerFrame
         ) * 30
         payload["max_recordable_seconds"] = bytesPerSecond > 0
             ? Int(usable / bytesPerSecond)

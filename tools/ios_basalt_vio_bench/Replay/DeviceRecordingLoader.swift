@@ -351,9 +351,16 @@ struct DeviceRecordingLoader {
         // much as replaying it. Its manifest hash is written at close, the way
         // production writes the stream's SHA-256 into its own manifest, and is
         // checked here only under the same flag as the frames digest.
-        let payloadRoles: Set<DeviceRecordingFileRole> = [.framesStream]
-        for record in files where !payloadRoles.contains(record.role) {
+        //
+        // The bench-only LiDAR depth streams join it for the same reason: 422
+        // MiB for a 30 s capture, hashed incrementally while writing, and read
+        // offline by the depth ruler rather than by any replay on this path.
+        let payloadRoles: Set<DeviceRecordingFileRole> = [
+            .framesStream, .depthStream, .depthConfidenceStream,
+        ]
+        for record in files {
             try rejectUnsafePath(record.relativePath)
+            guard !payloadRoles.contains(record.role) else { continue }
             let url = root.appendingPathComponent(record.relativePath)
             let data = try Data(contentsOf: url)
             let actual = DeviceRecordingWriter.hex(SHA256.hash(data: data))
