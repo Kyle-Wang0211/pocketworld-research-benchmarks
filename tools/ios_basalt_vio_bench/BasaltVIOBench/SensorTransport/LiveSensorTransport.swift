@@ -48,6 +48,13 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
     /// to one session, so the two can never both be recording.
     var recorder: DeviceRecordingWriter?
 
+    /// The capture device, kept so the frame callback can read
+    /// `exposureDuration` for the recording (MARS logger practice: the device
+    /// value at callback time, per frame). Set in `configureCamera()`; nil
+    /// before it, and the recording then carries no `exposure_s` for those
+    /// frames rather than a guessed 0.
+    private var cameraDevice: AVCaptureDevice?
+
     /// Pairs gyroscope and acceleration for `imu.csv` only.
     ///
     /// In `xrslamRawSeparateEvents` the engine receives the two streams
@@ -316,6 +323,7 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
         ) else {
             throw TransportError.cameraUnavailable
         }
+        cameraDevice = device
 
         let input: AVCaptureDeviceInput
         do {
@@ -618,6 +626,9 @@ public final class LiveSensorTransport: NSObject, @unchecked Sendable {
             timestampSeconds: CMTimeGetSeconds(
                 CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
             ),
+            // Same callback, same frame: the PTS above is exposure start, this
+            // is how long it lasted, so a replay can move to the midpoint.
+            exposureSeconds: cameraDevice.map { CMTimeGetSeconds($0.exposureDuration) },
             source: "AVCaptureConnection.cameraIntrinsicMatrixDelivery",
             expected: ARKitIntrinsicsCrossCheck.frozenUpstream640x480
         )

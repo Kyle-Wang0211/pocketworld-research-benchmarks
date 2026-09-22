@@ -357,8 +357,9 @@ extension DeviceRecordingTests {
         )
 
         let base = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
-        try writer.recordIntrinsics(base, timestampSeconds: 1.0)
-        // A later frame with the lens at a different focus position.
+        try writer.recordIntrinsics(base, timestampSeconds: 1.0, exposureSeconds: 0.0125)
+        // A later frame with the lens at a different focus position, from a
+        // caller that cannot report exposure.
         try writer.recordIntrinsics(
             CameraIntrinsics(fx: base.fx * 1.02, fy: base.fy * 1.02, cx: base.cx, cy: base.cy),
             timestampSeconds: 1.5
@@ -373,6 +374,11 @@ extension DeviceRecordingTests {
             .split(separator: "\n")
         XCTAssertEqual(rows.count, 2, "both frames' intrinsics must survive")
         XCTAssertTrue(rows[0].contains("intrinsics_fxfycxcy"), "production's key name")
+        // Exposure rides on the same row so a replay can shift this frame to its
+        // exposure midpoint; when the caller cannot report it the key is absent,
+        // never a silent 0 that would look like a global-shutter zero exposure.
+        XCTAssertTrue(rows[0].contains("\"exposure_s\":0.0125"), "per-frame exposure key")
+        XCTAssertFalse(rows[1].contains("exposure_s"), "unknown exposure omits the key")
         XCTAssertGreaterThan(
             manifest.focalLengthMaximum, manifest.focalLengthMinimum,
             "the recorded spread must show the focus moved"

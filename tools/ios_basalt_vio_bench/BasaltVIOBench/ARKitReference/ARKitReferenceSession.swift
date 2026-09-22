@@ -300,7 +300,11 @@ final class ARKitReferenceSession: NSObject, ARSessionDelegate, @unchecked Senda
                     ),
                     // Same frame the pose below is taken from, so intrinsics and
                     // pose stay frame-exact the way production pins them.
-                    timestampSeconds: frame.timestamp
+                    timestampSeconds: frame.timestamp,
+                    // This frame's exposure, so a replay can move the timestamp
+                    // from exposure start to exposure midpoint the way the live
+                    // feed does (see DeviceRecordingWriter.recordIntrinsics).
+                    exposureSeconds: frame.camera.exposureDuration
                 )
                 recorder.appendFrame(
                     pixelBuffer: frame.capturedImage,

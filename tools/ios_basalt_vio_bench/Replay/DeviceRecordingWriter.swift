@@ -204,9 +204,25 @@ final class DeviceRecordingWriter: @unchecked Sendable {
     /// the default is upstream's 640x480 config scaled to the 1920x1440
     /// scoring format, which is meaningless for a frame that is natively
     /// 640x480, so the native path passes the unscaled values instead.
+    ///
+    /// `exposureSeconds` is this frame's exposure duration, written as
+    /// `exposure_s` on the same row. It is recorded because the frame timestamp
+    /// (`ARFrame.timestamp` / `CMSampleBufferGetPresentationTimeStamp`) marks
+    /// the *start* of exposure while a VIO wants the exposure midpoint, so a
+    /// replay must shift each frame by exposure/2 to match what the live path
+    /// now feeds the engine (Huai et al., arXiv 2001.00470 §IV.B: images are
+    /// "timestamped at the beginning of exposure"; the correction is half the
+    /// exposure plus half the rolling-shutter readout). The ARKit arm passes
+    /// `ARFrame.camera.exposureDuration`, the AVFoundation transport passes
+    /// `AVCaptureDevice.exposureDuration` -- the MARS logger's practice of
+    /// reading the device value in the frame callback. `nil` means the caller
+    /// cannot report it and the key is omitted; a reader must treat a missing
+    /// key as unknown, never as 0 (`pwvi_to_euroc.py --exposure-half` refuses
+    /// such recordings instead of silently shifting by nothing).
     func recordIntrinsics(
         _ reported: CameraIntrinsics,
         timestampSeconds: Double,
+        exposureSeconds: Double? = nil,
         source: String = "ARFrame.camera.intrinsics",
         expected: CameraIntrinsics = ARKitIntrinsicsCrossCheck.expectedScoringIntrinsics
     ) throws {
@@ -219,9 +235,18 @@ final class DeviceRecordingWriter: @unchecked Sendable {
         }
         // Same keys as the production sidecar, so a consumer that reads one
         // reads the other.
+        // `exposure_s` only when the caller could report a finite, non-negative
+        // value; the key's absence is the documented "unknown".
+        let exposureField: String
+        if let e = exposureSeconds, e.isFinite, e >= 0 {
+            exposureField = ",\"exposure_s\":\(e)"
+        } else {
+            exposureField = ""
+        }
         intrinsicsRows.append(
             "{\"t\":\(timestampSeconds),\"intrinsics_fxfycxcy\":"
-                + "[\(reported.fx),\(reported.fy),\(reported.cx),\(reported.cy)]}"
+                + "[\(reported.fx),\(reported.fy),\(reported.cx),\(reported.cy)]"
+                + exposureField + "}"
         )
 
         guard intrinsics == nil else { return }
