@@ -1,0 +1,61 @@
+00:00 +0: loading /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart
+00:00 +0: (A) ARSession 没起 🔴 ON:整条 attach 走完,ARKit 通道上一条 startSession 都没有
+[TargetPoints] generated 11 rings, 118 total points (per-ring az: 1, 6, 11, 15, 17, 18, 17, 15, 11, 6, 1). Each point owns its 12-frame ring buffer + 5-gate v1 promotion.
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+[CaptureSession] first ARPose received (isTracking=false, hasOrigin=false)
+00:00 +1: (A) ARSession 没起 🔴 阴性对照 —— OFF(平台臂)时同一条通道上**有** startSession
+[TargetPoints] generated 11 rings, 118 total points (per-ring az: 1, 6, 11, 15, 17, 18, 17, 15, 11, 6, 1). Each point owns its 12-frame ring buffer + 5-gate v1 promotion.
+00:00 +2: (B) 相机归我们 起相机的参数 = 1920×1440 / 30fps / 锁镜头 0.835
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +3: (B) 相机归我们 🔴 租约拿不到(ARKit 还占着)⇒ 失败关闭,不建会话、不去抢
+00:00 +4: (B) 相机归我们 🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑)
+00:00 +5: (B) 相机归我们 会话起不来 ⇒ 相机也停掉,不留一个空转的采集
+00:00 +6: (B) 相机归我们 start 幂等;stop 后相机与会话都停
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +7: (B) 相机归我们 provider.stop() 把运行时一起停掉(离开采集页相机不能还开着)
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +8: (G) 等第一帧内参 🔴 首帧晚到 200 ms ⇒ 会话仍建成、intrinsicsWaitMs ≈ 200、相机没被停过
+[zero-arkit] c=3.00ms provenance=measured(iPhone15,2) —— 09-22 run-4ad6e500 回放扫描碗底 2–5 ms 取 3 ms(一场定,相对 ARKit 口径);内参等待 200ms;喂料 1920x1440(=采集)
+00:00 +9: (G) 等第一帧内参 等的途中再调 start ⇒ 同一个 Future、相机只起一次;建成后再调不重起
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 200ms;喂料 1920x1440(=采集)
+00:00 +10: (G) 等第一帧内参 🔴 等的途中 stop ⇒ 相机停(恰一次)、醒来不建会话、如实「被叫停」
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 50ms;喂料 1920x1440(=采集)
+00:00 +11: (G) 等第一帧内参 🔴 provider 侧:起动过程中 tick() 不抛、位姿如实未跟踪;建成后回执到位
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 200ms;喂料 1920x1440(=采集)
+00:00 +12: (G) 等第一帧内参 provider 侧:超时起不来 ⇒ 相机停、runtimeStart 如实 !ok、tick 仍不抛
+[zero-arkit] 运行时起不来:ZeroArkitStartResult(cameraRc=0 session=false K=null feed=?(=采集) intrinsicsWait=5000ms c=0.00ms provenance=PLACEHOLDER(机型未知) err=相机起来 5000ms 仍没自报可用内参(上限 5000ms,每 50ms 问一次)—— 不拿 PLACEHOLDER 建会话,相机已停)
+00:00 +13: (G) 等第一帧内参 provider 等的途中 stop ⇒ 相机停、不建会话
+00:00 +14: (C) 内参换算 🔴 默认不缩:喂料内参 == 采集内参(用户铁律最低 1920×1440)
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +15: (C) 内参换算 显式传参才缩:feedWidth/feedHeight 传 640×480 ⇒ 缩,回执标 feedDownscaled
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 640x480(显式降采样)
+00:00 +16: (C) 内参换算 等尺寸时 scaleIntrinsicsForFeed 是恒等
+00:00 +17: (C) 内参换算 1920×1440 → 640×480(显式传参):fx/fy/cx/cy 各按自己的方向比例缩,分辨率跟着改
+00:00 +18: (C) 内参换算 🔴 fx 绝不为 0(安卓喂料链在这一步漏写过)
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +19: (C) 内参换算 各向异性也对(非等比时 x/y 用各自的比例)
+00:00 +20: (C) 内参换算 尺寸非法就抛,不静默产出 0
+00:00 +21: (D) 尺度 provenance 🔴 默认恒 vio_unanchored,mayReportAbsoluteDimensions == false
+00:00 +22: (D) 尺度 provenance 量过一段已知距离之后才变成 user_measured_distance
+00:00 +23: (D) 尺度 provenance 🔴 缩放被拒时尺度状态**不变**(仍是未锚定)
+00:00 +24: (D) 尺度 provenance 三个 provenance 取值互不相同(读回执的人要能分辨)
+00:00 +25: (F) 每机常量 c 进会话 查表命中:iPhone15,2 ⇒ startSession 收到 0.003 s,回执 measured
+[zero-arkit] c=3.00ms provenance=measured(iPhone15,2) —— 09-22 run-4ad6e500 回放扫描碗底 2–5 ms 取 3 ms(一场定,相对 ARKit 口径);内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +26: (F) 每机常量 c 进会话 🔴 未测机型 ⇒ startSession 收到 0,回执 PLACEHOLDER —— 不拿 3 ms 顶
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(iPhone99,9) —— iPhone99,9 **没测过** ⇒ c=0。不拿 iPhone15,2 的 3 ms 顶别的机型 ——未测就是未测;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +27: (F) 每机常量 c 进会话 机型还不知道(查表没回来)⇒ 0 / PLACEHOLDER(机型未知),与本刀之前逐位相同
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +28: (F) 每机常量 c 进会话 机型缓存热了之后,不传参的运行时(采集页那种构造法)也查得到表
+[zero-arkit] c=3.00ms provenance=measured(iPhone15,2) —— 09-22 run-4ad6e500 回放扫描碗底 2–5 ms 取 3 ms(一场定,相对 ARKit 口径);内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +29: (F) 每机常量 c 进会话 显式覆盖(dart-define 口径)优先于查表,原样进 startSession
+[zero-arkit] c=8.00ms provenance=dev-override(iPhone15,2) —— --dart-define=PW_CAM_TD_MS=8 覆盖(研发口径,不是这台机的实测值);内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +30: (F) 每机常量 c 进会话 c 只在建会话时传一次;start 幂等不重传
+[zero-arkit] c=3.00ms provenance=measured(iPhone15,2) —— 09-22 run-4ad6e500 回放扫描碗底 2–5 ms 取 3 ms(一场定,相对 ARKit 口径);内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +31: (F) 每机常量 c 进会话 失败路径的回执也带 c 与来源(没起成也得说清打算用哪个 c)
+00:00 +32: (E) 照片 🔴 按签名调对方接口,结果按 requestId 配对(不按到达顺序);受理码 0 ≠ requestId
+00:00 +33: (E) 照片 🔴 阴性对照:替身返回 0(真原生口径)且文件在 ⇒ saveCurrentFrame 仍 saved
+00:00 +34: (E) 照片 🔴 原生受理码为负 ⇒ 不等结果、立刻 null;saveCurrentFrame 如实 unsupported
+00:00 +35: (E) 照片 🔴 接口不可用 ⇒ saveCurrentFrame 如实 unsupported,不假装成功
+00:00 +36: (E) 照片 🔴 没有位姿 ⇒ 不拍(capturePhoto 0 次)、如实 no_pose
+00:00 +37: (E) 照片 🔴 有位姿但原生回执指向不存在的文件 ⇒ jpeg_missing,不报 saved
+00:00 +38: All tests passed!

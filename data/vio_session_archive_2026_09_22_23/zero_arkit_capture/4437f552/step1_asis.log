@@ -1,0 +1,54 @@
+── 临时身份 ──
+  bundle id     : com.kyle.PocketWorld.zeroarkit
+  display name  : PW 研究臂
+  engine arm    : generic
+
+  PW_PRODUCT_SOURCE_MANIFEST_SHA256=7f09d0d8a9041669a40a541e2b3e7d3cfb340b91192324ce3f201100f9e42399
+  PW_DIAGNOSTIC_BUILD_ID=research-zeroarkit-20260922
+  PW_VIO_SHADOW_MODE=off
+
+PW_XRSLAM_ENGINE=generic(已 touch /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Podfile,下次构建会重跑 pod install)
+Building com.kyle.PocketWorld.zeroarkit for device (ios-release)...
+The following plugins do not support Swift Package Manager for ios:
+  - onnxruntime
+  - pw_hevc
+  - thermion_flutter
+  - video_thumbnail
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Automatically signing iOS for device deployment using specified development team in Xcode project: 26AH7V448L
+Running pod install...                                           1,466ms
+Running Xcode build...                                          
+Xcode build done.                                           10.1s
+Failed to build iOS app
+Error (Xcode): No Accounts: Add a new account in Accounts settings.
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Runner.xcodeproj
+
+Error (Xcode): Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the Extended Virtual Addressing capability.
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Runner.xcodeproj
+
+Error (Xcode): Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the Increased Memory Limit capability.
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Runner.xcodeproj
+
+Error (Xcode): Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the com.apple.developer.kernel.extended-virtual-addressing and com.apple.developer.kernel.increased-memory-limit entitlements.
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Runner.xcodeproj
+
+
+Error: could not code sign the application.
+
+To resolve this issue, try the following steps:
+  1. Open the project in Xcode:
+     open ios/Runner.xcworkspace
+  2. In Runner > Signing & Capabilities, verify:
+     - Team is set to a valid Apple Developer account
+     - Bundle Identifier is correct for your app
+     - If Automatically manage signing is enabled, Xcode manages the provisioning profile
+     - If manual signing is used, the provisioning profile matches the Bundle Identifier
+  3. In Xcode Settings > Accounts, verify the correct Apple Developer account is added
+
+  4. Run Product > Build and fix any code signing issues shown by Xcode.
+Encountered error while building for device.
+
+── 源码已还原 ──
+?? ios/scripts/build_research_bundle.sh
+?? ios/scripts/install_research_bundle.sh
+?? ios/scripts/run_research_bundle.sh

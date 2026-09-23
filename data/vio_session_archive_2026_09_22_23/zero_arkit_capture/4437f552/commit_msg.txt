@@ -1,0 +1,79 @@
+零 ARKit 臂成片提升:闸改位姿源感知、saveCurrentFrame 真正落到 spec、一次快门一次曝光、手动快门路径加 sidecar 提升
+
+开关 ON 时按下快门,成片从来进不了库。静态排查到三处断点(integration@3e50521),
+写代码时又发现第四处:
+
+① 逐帧持久化闸 `arMetadataReady` 要 `scaleAlignAnchorCount >= 8`。VIO 臂如实报 0
+  (出货引擎 `XRSLAMGetResult(RESULT_FEATURES)` 空实现,09-19 实证,不许编数)
+  ⇒ 每帧 `skip persist: … anchors=0`。
+  → 新增 `_poseSourceRequiresScaleAlignAnchors(source)`,穷举 switch 照抄 A 的
+    `_poseSourceCarriesCameraGeometry` 形状:arkit true(不变)/ xrslam false /
+    imu false / 未知 throw。逐帧闸对 arkit 的布尔式逐位同旧式。
+② `VioArPoseProvider.captureHighResolutionStill` 拍一张返回 null;session 接着调
+  `saveCurrentFrame`,VIO 又拍一张并报 `saved_elsewhere`(原生自己选路径)
+  ⇒ `photo not promoted`,而且一次快门两次曝光。
+  → `captureHighResolutionStill` 返回 null **且不拍**,活让给 `saveCurrentFrame`;
+    `saveCurrentFrame(spec)` 只拍一张,JPEG `File.rename` 到 `spec.jpegPath`
+    (跨卷退 copy+delete),`spec.metadataPath` 写 sidecar,两个文件都落地才报
+    `saved`,任何一步失败如实非 saved + message(no_pose / unsupported /
+    native_format_not_jpeg / jpeg_missing / jpeg_move_failed / metadata_write_failed)。
+    `requestPhoto` 串行成一条 Future 链:原生只有一个结果槽,并发两条会让先完成的
+    那张被覆盖、轮询方按 requestId 等到超时。
+③ `_isCompleteArFrameSidecar` 要 `anchors_world` 非空 + `anchor_depth_count >= 8`。
+  → 读 sidecar 的 `poseSource` 键(与 `_sampleToCanonicalJson` 同名),缺键按
+    arkit(旧 sidecar 语义不变),再走 ① 的同一个 switch。
+    `_fallbackStillFromMetadata` 的 captureKind 按源分:arkit 仍是
+    `arkit_frame_fallback_jpeg` / `nearest_ar_frame_snapshot` 一个字符不改,
+    xrslam 另起 `xrslam_frame_fallback_jpeg` / `vio_pose_at_trigger`。
+④(排查没列到)生产采集页只以 `manualCapture: true` 起会话(`_startManualCapture`
+  两个入口都是),快门走 `captureSinglePhoto` → `_captureOfficialHighResInput`,
+  那条路上 null still 是终态 `captureFailed`,**没有** `_onPoseTick` 那种 fallback
+  ⇒ 只改 ①②③ 依然一张进不了库。
+  → 新增 `_poseSourcePromotesStillViaFrameSidecar(source)`(arkit false 不变 /
+    xrslam true / imu false / 未知 throw)与 `_promoteStillViaFrameSidecar`:
+    null still 时 `saveCurrentFrame(evidenceSpec)` → `_hasCompleteArFrameSidecar`
+    → `_fallbackStillFromMetadata`,再进既有 validate/commit。4032×3024 硬闸不放宽。
+
+sidecar 键名逐个照抄原生 ARKit 帧 sidecar 的密封契约
+(`ios/Runner/OfficialAetherARKitPlugin.swift:2763-2790`):version / native_role / t /
+image_w / image_h / extrinsic / intrinsics_fxfycxcy / trackingStateName /
+tracking_state / is_tracking / anchors_world / anchor_ids /
+scale_align_premetrics{5 键} / save_dt / dart_save_contract / save_target_t。
+值:extrinsic = 触发时刻 ARPose(= session 的 lastPose,已 y-up)的 16 个;内参 =
+成片回执全分辨率;t/image_w/h/exposure_s 来自 ZeroArkitPhotoResult;
+anchors_world [] / anchor_depth_count 0(不编);额外只加不改:poseSource=xrslam、
+source、exposure_s、photo_request_id、scale_provenance(vio_unanchored)、
+pose_pairing、native_photo_sidecar(原生同名 .json 嵌入后删孤儿)。
+
+🔴 已知缺口(如实,未处理):
+- 原生在支持 HEVC 的机型上按 AVCam 默认写 **HEIC**(`PwCameraSlot.swift`
+  `availablePhotoCodecTypes.contains(.hevc)`)。本刀不改名伪装,报
+  `native_format_not_jpeg`;真机上多半会落到这一档,要 P 的原生侧改 JPEG。
+- 手动路径的预览 spec 仍会触发第二次曝光(证据本身只拍一张)。
+- 原生照片分辨率 = activeFormat 支持的最大值,是否 4032×3024 未在真机验证。
+- 不动 ios/、ar_capture_page.dart、zero_arkit_capture_runtime.dart、lib/vio/render/。
+
+■ 自证
+flutter analyze --no-pub 五个改动文件:No issues found。
+新 test/zero_arkit_photo_promotion_test.dart 17/17:闸函数逐源(3)、sidecar 闸
+(ARKit anchors=0 仍拒 / anchors=8 仍收 / VIO 收 / 缺键按 ARKit 拒 / 其余项仍要齐 /
+未知源抛)、saveCurrentFrame(逐键、extrinsic 16 数逐位等于当时 ARPose、
+anchors_world 空、poseSource=xrslam、capturePhoto 恰 1 次、闭环
+debugIsCompleteArFrameSidecar=true;不跟踪时如实空 extrinsic 被拒;HEIC 拒;
+并发串行化)、captureHighResolutionStill null 且 0 次拍照、端到端手动快门
+VioArPoseProvider+CaptureSession 入库 captureKind=xrslam_frame_fallback_jpeg、
+ARKit 标签 null still 仍 captureFailed 且证据 spec 一次都没调 saveCurrentFrame、
+1920×1440 被 unexpectedDimensions 拒。
+既有:zero_arkit_capture_path(E 组 2 例改为 no_pose / jpeg_missing)、
+vio_pose_consumption_wiring(1 例先 tick 再测 unsupported)、
+capture_session_transaction 全过。
+OFF 逐位不变:vio_pose_source_switch_off_parity sha256 仍是
+b3362fb59f7793e18facfb6d84a6b5bf7104088bb379a6b84711340ae8f905ad。
+全量 flutter test --no-pub:1995 过 / 12 失败;11 个与基线分布逐一对上
+(opencv ×4、xrslam_build_profiles_contract ×2、staging_upload_rls ×2、
+xrslam_official_replica_contract ×1、xrslam_intrinsics ×1、zz_post_delivery_probe ×1),
+第 12 个 platform_pose_provider_fail_closed 是「failed after it had already
+completed」的 sensors 通道异步泄漏(lib/capture/ 旧会话,本刀未动),单跑三次全过。
+🔴 未跑真机、未开相机、未装 app、未做 device build。
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>

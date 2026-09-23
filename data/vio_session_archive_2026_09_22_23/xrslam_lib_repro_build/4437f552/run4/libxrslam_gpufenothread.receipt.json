@@ -1,0 +1,93 @@
+{
+ "schema": "pw.xrslam.ios-archive-receipt/2",
+ "artifact": "libxrslam_gpufenothread.a",
+ "artifact_path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/run4/libxrslam_gpufenothread.a",
+ "artifact_sha256": "b9b14814349eb945287b06ac6f5732e9c0a939e572ed46a073e597d59ea54cd2",
+ "archive_member_count": 57,
+ "arm": "gpufe_nothread (GPU 前端 ON + 线程化 OFF)",
+ "research_only": true,
+ "product_selected": false,
+ "source": {
+  "tree": "/Users/kaidongwang/Developer/xrslam-4beb1a9-thr",
+  "branch": "build/gpufe-nothread-20260922",
+  "commit": "8a1cc1213af541dc6a1f4e1b89e0ff3629205c91",
+  "tracked_dirty_files": 0,
+  "upstream_repository": "https://github.com/openxrlab/xrslam",
+  "upstream_revision": "4beb1a942f33da9afbfae2d70e2c641cfc2bb675"
+ },
+ "build_dir": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/build-run1",
+ "cmake_options": {
+  "CMAKE_BUILD_TYPE": "Release",
+  "CMAKE_TOOLCHAIN_FILE": "cmake/Modules/Platform/ios.toolchain.cmake",
+  "IOS_PLATFORM": "OS64",
+  "IOS_ARCH": "arm64",
+  "IOS_DEPLOYMENT_TARGET": "14.0",
+  "ENABLE_BITCODE": "0",
+  "ENABLE_ARC": "1",
+  "ENABLE_VISIBILITY": "0",
+  "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+  "XRSLAM_IOS_OVERRIDE": "1",
+  "XRSLAM_IOS": "OFF",
+  "XRSLAM_THREADING_OVERRIDE": "1",
+  "XRSLAM_ENABLE_THREADING": "OFF",
+  "XRSLAM_GPU_FRONTEND": "ON",
+  "PW_GPU_FRONTEND_INCLUDE_DIR": "/Users/kaidongwang/Developer/Aether3D-cross/aether_cpp/tools",
+  "CMAKE_CXX_FLAGS": "-ffp-contract=off -fno-fast-math -fchar8_t -Dceres=pw_xrslam_ceres_1_14",
+  "FETCHCONTENT_SOURCE_DIR_DEPENDS-EIGEN": "/Users/kaidongwang/Developer/xrslam-deps-tarballs/eigen-3.3.7",
+  "FETCHCONTENT_SOURCE_DIR_DEPENDS-OPENCV": "/Users/kaidongwang/Developer/xrslam-deps-tarballs/opencv-4.0.1-ios-framework/opencv2.framework",
+  "FETCHCONTENT_FULLY_DISCONNECTED": "OFF"
+ },
+ "upstream_ios_defaults_we_override_zh": "上游 CMakeLists.txt:21-27 在 if(IOS) 下强制 XRSLAM_IOS=ON + XRSLAM_ENABLE_THREADING=ON;本臂用 XRSLAM_IOS_OVERRIDE / XRSLAM_THREADING_OVERRIDE 把两个都翻成 OFF。XRSLAM_LOWLATENCY_POSE / XRSLAM_CONFIG_FROM_STRING 仍在 if(IOS OR ANDROID) 下强开。",
+ "toolchain": {
+  "cmake": "cmake version 4.2.3",
+  "ninja": "1.13.2",
+  "clang": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "xcode": "Xcode 26.2 Build version 17C52 ",
+  "iphoneos_sdk": "26.2"
+ },
+ "deps": {
+  "eigen": "3.3.7",
+  "opencv": "4.0.1 (ios framework, 预编译)",
+  "ceres": "pinned e809cf0c / CERES_VERSION 1.14.0, 命名空间 pw_xrslam_ceres_1_14",
+  "yaml-cpp": "superbuild tarball"
+ },
+ "archive_contents_zh": "xrslam-core + xrslam-extra-opencv-image + xrslam-extra-yaml-config + yaml-cpp + xrslam-interface/xrslam-localization 的散装 .o。ceres 与 OpenCV **不在归档内**,由 app 侧单独链。",
+ "gpu_frontend": {
+  "enabled": true,
+  "runtime_switch": "PW_XRSLAM_GPU_FRONTEND=1(gpu_image.cpp 读一次);未置位走 CPU 路径",
+  "companion_lib": "/Users/kaidongwang/Developer/viobench-build/gpufe/libpw_gpu_frontend_ios.a",
+  "companion_lib_sha256": "ad0a4abe0e7ea7678780ec4a450ec91d6dc404ab1b33a44a265638437caf253d",
+  "needs_dawn_zh": "libpw_gpu_frontend_ios.a 有真外部 wgpu* 符号,必须同时链 Release 版 libwebgpu_dawn.a。"
+ },
+ "exported_abi_xrslam": [
+  "XRGlobalLocalizerCreate",
+  "XRGlobalLocalizerEnable",
+  "XRGlobalLocalizerIsInitialized",
+  "XRGlobalLocalizerQueryFrame",
+  "XRGlobalLocalizerQueryLocalization",
+  "XRGlobalLocalizerTransformPose",
+  "XRSLAMCreate",
+  "XRSLAMDestroy",
+  "XRSLAMGetBodyPoseRelation",
+  "XRSLAMGetInitCounters",
+  "XRSLAMGetPendingWorkerFrames",
+  "XRSLAMGetPropagatedPose",
+  "XRSLAMGetPropagatedPoseRelation",
+  "XRSLAMGetResult",
+  "XRSLAMGetSolverCounters",
+  "XRSLAMPushSensorData",
+  "XRSLAMRunOneFrame"
+ ],
+ "exported_abi_total_count": 2604,
+ "abi_gate": [
+  "XRSLAMCreate",
+  "XRSLAMDestroy",
+  "XRSLAMGetResult",
+  "XRSLAMPushSensorData",
+  "XRSLAMRunOneFrame"
+ ],
+ "abi_gate_zh": "闸是生产传输层实际消费的五个符号;研究臂导出更多但生产不依赖。",
+ "build_script": "/Users/kaidongwang/Documents/progecttwo/<stdin>",
+ "built_at_utc": "2026-09-22T04:30:35.391686+00:00",
+ "determinism_note_zh": "归档头已归一化(mtime/uid/gid 清零)。实测:同一 --build-dir 路径下两次 --clean 全量构建,58 个成员逐字节相同,整档 sha256 相同。🔴 唯一的路径敏感点:OpenCV 头 mat.inl.hpp 的绝对路径被 CV_Assert 的 __FILE__ 烤进 4 个 .o 的 __TEXT,__cstring(XRSLAMManager / XRGlobalLocalizerManager / gpu_image / localizer),换 --build-dir 路径这 4 个成员就变 ⇒ 要复现某个历史 sha,必须用它原来的构建目录路径。"
+}

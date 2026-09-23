@@ -1,0 +1,20 @@
+manifest=3d416d66ef8b02926b9f095f6b1a2d69c7316e850fdd0dbb1bdafd027572f5ed build_id=zeroarkit-verify-202609221731
+Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+Building com.kyle.PocketWorld for device (ios-release)...
+The following plugins do not support Swift Package Manager for ios:
+  - onnxruntime
+  - pw_hevc
+  - thermion_flutter
+  - video_thumbnail
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Running pod install...                                           1,168ms
+Running Xcode build...                                          
+Xcode build done.                                           51.3s
+✓ Built build/ios/iphoneos/Runner.app (258.0MB)
+BUILD_RC=0
+/dev/disk3s5   926Gi   886Gi   4.7Gi   100%    4.5M   50M    8%   /System/Volumes/Data
+/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/build_ios.sh: line 18: 88317 Terminated: 15          ( while true; do
+    free=$(df -k /Users/kaidongwang | tail -1 | awk '{print $4}'); if [ "$free" -lt 1258291 ]; then
+        echo "DISK-GUARD: free=${free}K < 1.2GiB, killing build"; pkill -f "xcodebuild"; pkill -f "flutter_tools"; exit 1;
+    fi; sleep 15;
+done )

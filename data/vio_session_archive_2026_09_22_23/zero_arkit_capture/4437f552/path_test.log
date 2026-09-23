@@ -1,0 +1,65 @@
+00:00 +0: loading /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart
+00:00 +0: (A) ARSession 没起 🔴 ON:整条 attach 走完,ARKit 通道上一条 startSession 都没有
+[TargetPoints] generated 11 rings, 118 total points (per-ring az: 1, 6, 11, 15, 17, 18, 17, 15, 11, 6, 1). Each point owns its 12-frame ring buffer + 5-gate v1 promotion.
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+[CaptureSession] first ARPose received (isTracking=false, hasOrigin=false)
+00:00 +1: (A) ARSession 没起 🔴 阴性对照 —— OFF(平台臂)时同一条通道上**有** startSession
+[TargetPoints] generated 11 rings, 118 total points (per-ring az: 1, 6, 11, 15, 17, 18, 17, 15, 11, 6, 1). Each point owns its 12-frame ring buffer + 5-gate v1 promotion.
+00:00 +2: (B) 相机归我们 起相机的参数 = 1920×1440 / 30fps / 锁镜头 0.835
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +3: (B) 相机归我们 🔴 租约拿不到(ARKit 还占着)⇒ 失败关闭,不建会话、不去抢
+00:00 +4: (B) 相机归我们 🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <101>
+  Actual: <100>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart:302:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart line 302
+The test description was:
+  🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +4 -1: (B) 相机归我们 🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑) [E]
+  Test failed. See exception logs above.
+  The test description was: 🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑)
+  
+00:00 +4 -1: (B) 相机归我们 会话起不来 ⇒ 相机也停掉,不留一个空转的采集
+00:00 +5 -1: (B) 相机归我们 start 幂等;stop 后相机与会话都停
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +6 -1: (B) 相机归我们 provider.stop() 把运行时一起停掉(离开采集页相机不能还开着)
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 0ms;喂料 1920x1440(=采集)
+00:00 +7 -1: (G) 等第一帧内参 🔴 首帧晚到 200 ms ⇒ 会话仍建成、intrinsicsWaitMs ≈ 200、相机没被停过
+[zero-arkit] c=3.00ms provenance=measured(iPhone15,2) —— 09-22 run-4ad6e500 回放扫描碗底 2–5 ms 取 3 ms(一场定,相对 ARKit 口径);内参等待 200ms;喂料 1920x1440(=采集)
+00:00 +8 -1: (G) 等第一帧内参 等的途中再调 start ⇒ 同一个 Future、相机只起一次;建成后再调不重起
+[zero-arkit] c=0.00ms provenance=PLACEHOLDER(机型未知) —— 机型还不知道(deviceMachine 查表没回来 / 非 iOS)⇒ c=0,与本刀之前逐位相同;内参等待 200ms;喂料 1920x1440(=采集)
+00:00 +9 -1: (G) 等第一帧内参 🔴 等的途中 stop ⇒ 相机停(恰一次)、醒来不建会话、如实「被叫停」
+unhandled error during finalization of test:
+/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart
+TestDeviceException(Shell subprocess crashed with SIGTERM (-15).)
+#0      FlutterTesterTestDevice.finished (package:flutter_tools/src/test/flutter_tester_device.dart:256:5)
+<asynchronous suspension>
+#1      FlutterTesterTestDevice.kill (package:flutter_tools/src/test/flutter_tester_device.dart:238:5)
+<asynchronous suspension>
+#2      FlutterPlatform._startTest.<anonymous closure> (package:flutter_tools/src/test/flutter_platform.dart:689:9)
+<asynchronous suspension>
+#3      FlutterPlatform._startTest.finalize (package:flutter_tools/src/test/flutter_platform.dart:591:11)
+<asynchronous suspension>
+#4      FlutterPlatform._startTest (package:flutter_tools/src/test/flutter_platform.dart:762:7)
+<asynchronous suspension>
+
+05:06 +9 -1: (G) 等第一帧内参 🔴 等的途中 stop ⇒ 相机停(恰一次)、醒来不建会话、如实「被叫停」 - did not complete [E]
+05:06 +9 -1: Some tests failed.
+
+Failing tests:
+  /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart: (B) 相机归我们 🔴 相机始终不自报内参 ⇒ 等满上限后不建会话(不拿 PLACEHOLDER 内参开跑)
+  /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/runtime-intrinsics-wait-20260922/test/zero_arkit_capture_path_test.dart: (G) 等第一帧内参 🔴 等的途中 stop ⇒ 相机停(恰一次)、醒来不建会话、如实「被叫停」 (did not complete)

@@ -1,0 +1,47 @@
+── 临时身份 ──
+  bundle id          : com.kyle.PocketWorld.zeroarkit
+  display name       : PW 研究臂
+  engine arm         : generic
+  kernel entitlements: 去掉(研究臂无增大内存上限,已知差异)
+
+  PW_PRODUCT_SOURCE_MANIFEST_SHA256=e71492f5cd49033859b30f9a11ec45589db3e4db7635d9f5c3219733864a5f0e
+  PW_DIAGNOSTIC_BUILD_ID=research-zeroarkit-20260922
+  PW_VIO_SHADOW_MODE=off
+
+PW_XRSLAM_ENGINE=generic(已 touch /Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/ios/Podfile,下次构建会重跑 pod install)
+Building com.kyle.PocketWorld.zeroarkit for device (ios-release)...
+The following plugins do not support Swift Package Manager for ios:
+  - onnxruntime
+  - pw_hevc
+  - thermion_flutter
+  - video_thumbnail
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Automatically signing iOS for device deployment using specified development team in Xcode project: 26AH7V448L
+Running pod install...                                           1,624ms
+Running Xcode build...                                          
+Xcode build done.                                           72.1s
+✓ Built build/ios/iphoneos/Runner.app (258.6MB)
+
+══ 自检 ══════════════════════════════════════════════════════════════
+产物时间戳          : Sep 22 20:24(必须是刚才)
+CFBundleIdentifier  : com.kyle.PocketWorld.zeroarkit
+CFBundleDisplayName : PW 研究臂
+CFBundleVersion     : 1.0.0 (20)
+PWXrslamEngineArm   : generic
+PWLiveCloudDiagnosticBuildId: research-zeroarkit-20260922
+导出 _pw_ 符号数    : 44(期望 44)
+codesign --verify --deep --strict:
+  build/ios/iphoneos/Runner.app: valid on disk
+  build/ios/iphoneos/Runner.app: satisfies its Designated Requirement
+  ✅ 签名有效
+签名里的 application-identifier: 26AH7V448L.com.kyle.PocketWorld.zeroarkit
+签名里 com.apple.developer.kernel.increased-memory-limit: 不在场(研究臂已知差异)
+签名里 com.apple.developer.kernel.extended-virtual-addressing: 不在场(研究臂已知差异)
+══════════════════════════════════════════════════════════════════════
+✅ 自检全过。产物:/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/research-bundle-20260922/build/ios/iphoneos/Runner.app
+   下一步:sh ios/scripts/install_research_bundle.sh
+
+── 源码已还原 ──
+?? ios/scripts/build_research_bundle.sh
+?? ios/scripts/install_research_bundle.sh
+?? ios/scripts/run_research_bundle.sh
