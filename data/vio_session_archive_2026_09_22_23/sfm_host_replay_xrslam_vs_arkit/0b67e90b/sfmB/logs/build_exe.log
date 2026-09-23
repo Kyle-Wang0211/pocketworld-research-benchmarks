@@ -1,0 +1,10 @@
+[df ok 6.6Gi] compile exe-level TUs + shim + Metal matcher
+/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/sfmB/driver/pwofficial_pose_ab_driver.cc:221:9: error: no member named 'fseeko' in namespace 'std'; did you mean simply 'fseeko'?
+  221 |     if (std::fseeko(fb, static_cast<off_t>(f.byte_offset), SEEK_SET) != 0 ||
+      |         ^~~~~~~~~~~
+      |         fseeko
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:432:6: note: 'fseeko' declared here
+  432 | int      fseeko(FILE * __stream, off_t __offset, int __whence);
+      |          ^
+1 error generated.
+bash tools/build.sh exe  2.61s user 0.33s system 186% cpu 1.578 total
