@@ -1,0 +1,10 @@
+#import "GeneratedPluginRegistrant.h"
+
+// [pw][vio] 跨端 C++ 传输层。iOS 与安卓编的是**同一个源文件**
+// (安卓:android_ready/native/xrslam/CMakeLists.txt)。Swift 只看到裸传输;
+// 配置与解释归 Dart。
+#import "../../vendor/xrslam/transport/PwXrslamTransportCore.h"
+
+// [pw][af] 跨端 CDAF 的 C ABI 门面(对焦三臂用)。真源在 pocketworld
+// vendor/pw_af/,由 sync_from_production.sh 镜像并自证逐字节一致。
+#import "../../vendor/pw_af/pw_af_c.h"

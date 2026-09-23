@@ -1,0 +1,11 @@
+台架回放:从 BasaltVIOBench 搬录制装载器与节拍器,附 Mac 单测
+
+- PwBenchReplayScheduler.swift:Replay/ReplayScheduler.swift:1-68 逐字照抄(diff 为空)
+- PwBenchReplayRecording.swift:Replay/DeviceRecordingTypes.swift + DeviceRecordingLoader.swift
+  的移植,偏离 D1-D9 逐条写在文件头(只收 raw luma、兼容 length 键、后加 manifest 字段
+  改 Optional、分辨率照收并标出、有损须显式放行、intrinsics.jsonl 逐帧配对逐字抄
+  pwvi_to_euroc.py:130-157 等)
+- tool/bench/replay_swift_tests:源 ReplaySchedulerTests 三条原样 + 装载器 21 条,
+  run.sh 把被测文件逐字节复制进临时 SwiftPM 包再 swift test
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

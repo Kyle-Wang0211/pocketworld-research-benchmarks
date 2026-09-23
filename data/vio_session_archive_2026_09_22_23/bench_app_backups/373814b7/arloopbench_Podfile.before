@@ -1,0 +1,124 @@
+# Uncomment this line to define a global platform for your project
+# platform :ios, '15.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+
+  # ── XRSLAM official RD-VIO core ──────────────────────────────────────
+  # [bench 2026-09-19] 原样抄生产 ios/Podfile 的同名段(那边 :206-260)。
+  #
+  # 为什么台架必须链它:台架之前**根本没链 XRSLAM**,于是 Dart 侧
+  # `DynamicLibrary.process().lookup('XRSLAMTryGetLatestPose')` 取不到符号,
+  # 第一次 poll 就抛异常;而那次 poll 在 requestFrame 的 hook 里,
+  # 异常把**整条渲染回路**打断 —— 页面停在"运行中",一帧不跑、日志无异常。
+  #
+  # Dart 侧用 DynamicLibrary.process().lookup 取符号,静态链接器看不到任何
+  # 引用就会把它们 dead-strip 掉,运行时 lookup 返回 NULL ⇒ 必须 -force_load
+  # 加 -Wl,-u 显式保活。
+  #
+  # ⚠️ 不写在 xrslam.podspec 的 user_target_xcconfig 里:两个 pod 同时设
+  #   OTHER_LDFLAGS[sdk=iphoneos*] 时 CocoaPods 视其为单值设置,冲突就**整槽丢弃**,
+  #   不报错、只静默丢符号。生产那边的注释记着这次实测。
+  xrslam_dir = '$(PODS_ROOT)/../../vendor/xrslam/libs/ios-arm64'
+  # [2026-09-20] 实验臂开关。**不设 = 出货档 generic**,与加入这段之前逐字节等价。
+  #   PW_XRSLAM_ARM=gpufenothread ⇒ GPU 前端 ON + 线程化 OFF。
+  # 为什么要这个臂:generic 在 1920×1440 直播下引擎只吃得下 24.5 fps
+  #   (传输层账本:6.98 s 内相机交付 412 帧 / 进引擎 171 帧)。回放对照里
+  #   GPU 前端把 1920×1440 从 31.4 提到 39.6–44.1 fps。
+  # 🔴 它是**研究臂**(receipt 自标 research_only),不是出货血统,
+  #   在它上面测出来的数**不能直接代表生产**。
+  xrslam_arm = ENV['PW_XRSLAM_ARM'].to_s
+  xrslam_lib = case xrslam_arm
+               when '' then 'libxrslam_generic_4beb1a9.a'
+               when 'gpufenothread' then 'libxrslam_gpufenothread_4beb1a9.a'
+               else raise "unknown PW_XRSLAM_ARM=#{xrslam_arm}"
+               end
+  # GPU 前端那条臂还要两个库:
+  #   · libpw_gpu_frontend_ios.a —— CLAHE/金字塔/GFTT/LK 的 Dawn/WGSL 实现
+  #   · libwebgpu_dawn.a(**Release**,20 MB)—— 前端库有 147 个真外部符号含 wgpu*
+  #     🔴 别链 Debug 那个(680 MB,实测慢约 10%)
+  # 两者都在仓外的本机路径上,所以这条臂只能本机跑,不进任何交付流程。
+  gpufe_extra = if xrslam_arm == 'gpufenothread'
+    dawn = File.expand_path('~/Developer/Aether3D-cross/aether_cpp/build-ios-device-dawn/' \
+                            'third_party/dawn/src/dawn/native/Release-iphoneos/libwebgpu_dawn.a')
+    fe   = File.expand_path('~/Developer/viobench-build/gpufe/libpw_gpu_frontend_ios.a')
+    [dawn, fe].each { |f| raise "缺 #{f}" unless File.exist?(f) }
+    " -force_load \"#{fe}\" \"#{dawn}\" -framework Metal -framework IOSurface -framework QuartzCore"
+  else
+    ''
+  end
+  xrslam_sym_names = %w[
+    XRSLAMCreate XRSLAMDestroy XRSLAMRunOneFrame
+    XRSLAMPushSensorData XRSLAMGetResult
+  ]
+  # 🔴 2026-09-19 实测:出货 libxrslam_generic_4beb1a9.a **只导出这五个符号**
+  #   (nm 逐个核过,与 receipt 的 exported_abi 一致)。
+  #   `XRSLAMTryGetLatestPose` / `XRSLAMGetBodyPose` 等虽然在 xrslam_bindings.dart
+  #   里有完整绑定和文档,但**不在出货归档里** —— 绑定存在 ≠ 符号存在。
+  #   我一开始把它加进 -Wl,-u 列表,链接期直接 "Undefined symbol"。
+  #   取位姿只能走 XRSLAMGetResult(XRSLAM_RESULT_BODY_POSE, ...)。
+  xrslam_syms = xrslam_sym_names.map { |n| "-Wl,-u,_#{n}" }.join(' ')
+  # 🔴 **不要** -Wl,-exported_symbol。2026-09-19 真机实测:它的语义是
+  #   「只导出列出的符号,其余全部隐藏」——于是整个 Runner 二进制只导出这 5 个,
+  #   Flutter 的 debug dylib 入口点被藏掉,启动即 abort:
+  #       abort_could_not_find_entry_point___debug_dylib
+  #       getDebugDylibEntryPoint / __debug_blank_executor_main / dyld start
+  #   生产用得没事是因为**出货是 release 构建,不走 debug dylib 那条路**;
+  #   台架是 debug,正好踩中。防 dead-strip 靠 -force_load + -Wl,-u 就够了。
+  xrslam_flags = "-force_load \"#{xrslam_dir}/#{xrslam_lib}\" " \
+                 "\"#{xrslam_dir}/libceres_official_1_14.a\" " \
+                 "\"#{xrslam_dir}/libopencv_generic_4_0_1.a\" " \
+                 "#{xrslam_syms} -lz -lc++" + gpufe_extra
+
+  # 🔴 [2026-09-20] 原来的幂等判据是 `next if contents.include?(xrslam_lib)`,
+  #   换臂时会出事:`flutter run` 只在 Podfile 变了才跑 pod install,不跑时旧
+  #   xcconfig 原样留着 —— 我据此做的"归因轮"实际上还在跑上一条臂,整轮数据作废。
+  #   改成**先删掉我们自己那一行,再重建**,谁也不用记得清缓存。
+  #   注意只删带 `libxrslam_` 的 `OTHER_LDFLAGS[sdk=iphoneos*]` 行:那一行整行
+  #   都是我们写的(CocoaPods 自己写的是不带 [sdk=] 限定的 OTHER_LDFLAGS)。
+  Dir[File.join(installer.config.installation_root, 'Pods/Target Support Files/Pods-Runner/*.xcconfig')].each do |xcconfig|
+    contents = File.read(xcconfig)
+    stripped = contents.lines.reject { |l|
+      l.start_with?('OTHER_LDFLAGS[sdk=iphoneos*]') && l.include?('libxrslam_')
+    }.join
+    rebuilt = stripped + "\nOTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) #{xrslam_flags}\n"
+    File.write(xcconfig, rebuilt) if rebuilt != contents
+  end
+end

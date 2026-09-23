@@ -1,0 +1,14 @@
+台架回放:原生回放器 PwBenchReplay.swift + 只读引擎读数
+
+- 录制帧读进 OneComponent8 CVPixelBuffer(录多少喂多少)→ PwXrslamLive.onCameraFrame,
+  带录制里这一帧的 K 与 exposure_s;IMU 行 → pushReplayImu。会话走同一个 create。
+- 三档节拍:paced / max(只等不丢,源 -PWPaceReplay / replay-max 语义)、
+  paced-live-drop(用 PwXrslamLive 自己的闸丢帧,同直播背压)
+- 落盘:poses_camera.tum(产品 CAMERA_POSE)、poses_body.tum(pw_euroc_runner 同口径)、
+  frame_timing.csv(runner --timing-csv 同列名 + rc/state/queue_wait)、
+  intrinsics_ledger.csv、replay_native_summary.json(传输层账本、31 项 K 账、时基、不变量)
+- PwBenchReplayEngineProbe:BODY_POSE 只读查询;求解遥测用弱定义 + 哨兵
+  (iOS 归档 hidden visibility,dlsym 拿不到;引擎不改)
+- 5 个 pw_bench_replay_* C ABI 给 Dart
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

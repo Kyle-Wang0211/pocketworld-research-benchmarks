@@ -1,0 +1,12 @@
+PwXrslamLive:台架回放入口(beginReplay / pushReplayImu / 逐帧观察者),直播路径不变
+
+- beginReplay:与 begin 同一个「允许推送」开关,不起 CoreMotion
+- pushReplayImu:录制的一行 IMU 走同一个 enqueueImu,先陀螺后加速度
+- pendingWork / replayCapacity:回放器在两道有界闸满之前自己等
+  (抄 BasaltVIOBench BenchmarkCoordinator.swift:1457-1508)
+- 逐帧观察者 + 传输层调用计时(形状抄 PwVioSlamFeeder.swift:1694-1720);
+  观察者恒为 nil 时不取时钟、不构造记录
+- runOneFrame 的 channel 跟像素格式走:OneComponent8 ⇒ 1(录制 luma),
+  32BGRA ⇒ 4(直播相机槽,与改动前逐字相同)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
