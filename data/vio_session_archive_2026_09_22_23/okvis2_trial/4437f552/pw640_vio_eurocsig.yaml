@@ -1,0 +1,88 @@
+%YAML:1.0
+# OKVIS2 config for pocketworld run-6e2d4b99 @ 640x480 (3x block-average of 1920x1440).
+# Structure copied verbatim from okvis2/config/euroc.yaml; only the device-specific
+# numbers were replaced.  Single camera -> monocular-inertial.
+cameras:
+     # T_SC = camera -> IMU(sensor).  Taken from XRSLAM q_bc/p_bc (iPhone 14 Pro,
+     # upstream author calibration), q_bi = identity / p_bi = 0 so body == IMU.
+     # q_bc = [-0.7071068, 0.7071068, 0, 0] (x y z w) -> R = [[0,-1,0],[-1,0,0],[0,0,-1]]
+     - {T_SC:
+        [ 0.0, -1.0,  0.0,  0.03290364,
+         -1.0,  0.0,  0.0, -0.00696553,
+          0.0,  0.0, -1.0, -0.00286231,
+          0.0,  0.0,  0.0,  1.0],
+        image_dimension: [640, 480],
+        distortion_coefficients: [0.0, 0.0, 0.0, 0.0],
+        distortion_type: radialtangential,
+        focal_length: [449.26477050781250, 449.26477050781250],
+        principal_point: [318.82309977213544, 239.32139078776044],
+        camera_type: gray,
+        slam_use: okvis}
+
+camera_parameters:
+    timestamp_tolerance: 0.005
+    sync_cameras: [0]
+    # td = +8 ms on the camera clock (measured optimum on this recording).
+    # OKVIS applies timestamp_corrected = timestamp - image_delay, so -0.008 => +8 ms.
+    image_delay: -0.008
+    online_calibration:
+        do_extrinsics: false
+        do_extrinsics_final_ba: false
+        sigma_r: 0.01
+        sigma_alpha: 0.1
+        sigma_r_final_ba: 0.03
+        sigma_alpha_final_ba: 0.3
+
+imu_parameters:
+    use: true
+    a_max: 176.0
+    g_max: 7.8
+    # sigma = sqrt of the XRSLAM device yaml `noise.cov_*` entries (those are variances
+    # of the continuous-time densities: sqrt gives 1.70e-4 / 2.0e-3 / 1.94e-5 / 3.0e-3,
+    # i.e. exactly the EuRoC-datasheet order of magnitude 1.2e-4 / 2.0e-3 / 4e-6 / 3e-3).
+    sigma_g_c: 20.0e-4  # verbatim from okvis2/config/euroc.yaml
+    sigma_a_c: 20.0e-3  # verbatim from okvis2/config/euroc.yaml
+    sigma_bg: 0.01
+    sigma_ba: 0.1
+    sigma_gw_c: 20.0e-5 # verbatim from okvis2/config/euroc.yaml
+    sigma_aw_c: 20.0e-3 # verbatim from okvis2/config/euroc.yaml
+    g: 9.80665
+    g0: [ 0.0, 0.0, 0.0 ]
+    a0: [ 0.0, 0.0, 0.0 ]
+    T_BS:
+        [1.0000, 0.0000, 0.0000, 0.0000,
+         0.0000, 1.0000, 0.0000, 0.0000,
+         0.0000, 0.0000, 1.0000, 0.0000,
+         0.0000, 0.0000, 0.0000, 1.0000]
+
+# verbatim from okvis2/config/euroc.yaml
+frontend_parameters:
+    detection_threshold: 38.0
+    absolute_threshold: 150.0
+    matching_threshold: 60.0
+    octaves: 0
+    max_num_keypoints: 700
+    keyframe_overlap: 0.60
+    use_cnn: false
+    parallelise_detection: true
+    num_matching_threads: 4
+
+estimator_parameters:
+    num_keyframes: 5
+    num_loop_closure_frames: 3
+    num_imu_frames: 3
+    do_loop_closures: false
+    do_final_ba: false
+    enforce_realtime: false
+    realtime_min_iterations: 3
+    realtime_max_iterations: 10
+    realtime_time_limit: 0.035
+    realtime_num_threads: 3
+    full_graph_iterations: 15
+    full_graph_num_threads: 3
+    p_dbow: 0.4
+    drift_percentage_heuristic: 1.35
+
+output_parameters:
+    display_matches: false
+    display_overhead: false
