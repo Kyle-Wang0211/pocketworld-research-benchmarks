@@ -1,0 +1,60 @@
+%YAML:1.0
+output:
+  q_bo: [ 0.0, 0.0, 0.0, 1.0 ] # x y z w
+  p_bo: [ 0.0, 0.0, 0.0 ] # x y z [m]
+
+sliding_window:
+  size: 10
+  subframe_size: 3
+  force_keyframe_landmarks: 35
+  # [bench 2026-09-17] The mean-reprojection gate on TT_VALID, in real pixels, plus the focal
+  # length the number belongs to. reference_focal 0 keeps the bare threshold (upstream behaviour);
+  # set it to the focal the value was authored against and the gate becomes a fixed angle:
+  # threshold_px * fx / reference_focal. See sliding_window_tracker.cpp pw_rpe_threshold().
+  rpe_threshold_px: 3.0
+  rpe_reference_focal: 0.0
+
+feature_tracker:
+  min_keypoint_distance: 25.0 # [px]
+  max_keypoint_detection: 200
+  max_init_frames: 60
+  max_frames: 20
+  predict_keypoints: true
+  clahe_clip_limit: 6.0
+  clahe_width: 8
+  clahe_height: 8
+
+initializer:
+  keyframe_num: 8
+  keyframe_gap: 5
+  min_matches: 50
+  min_parallax: 10.0
+  min_triangulation: 20
+  min_landmarks: 30
+  refine_imu: true
+
+solver:
+  iteration_limit: 10
+  time_limit: 0.1
+  frame_time_budget: 0.0117
+  min_iterations: 3
+
+rotation:
+  misalignment_threshold: 0.02
+  ransac_threshold: 10 # degree
+
+parsac:
+  parsac_flag: false
+  dynamic_probability: 0.15
+  threshold: 1.0
+  norm_scale: 1.0
+  keyframe_check_size: 1
+
+backend:
+  backend_flag: true
+  voc_file: Vocabulary/ORBvoc.txt
+  orb_n_features: 1000
+  orb_scale_factor: 1.2
+  orb_n_levels: 8
+  orb_init_threshold_fast: 20
+  orb_min_threshold_fast: 7

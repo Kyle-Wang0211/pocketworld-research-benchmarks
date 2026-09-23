@@ -1,0 +1,173 @@
+diff --git a/xrslam/src/xrslam/core/sliding_window_tracker.cpp b/xrslam/src/xrslam/core/sliding_window_tracker.cpp
+index b38434f..b5d1589 100644
+--- a/xrslam/src/xrslam/core/sliding_window_tracker.cpp
++++ b/xrslam/src/xrslam/core/sliding_window_tracker.cpp
+@@ -151,6 +151,9 @@ void SlidingWindowTracker::mirror_frame(Map *feature_tracking_map,
+ }
+ 
+ bool SlidingWindowTracker::track() {
++    // [pw 2026-09-23] OKVIS per-frame solver budget; inert unless
++    // solver.frame_time_budget >= 0 (see Solver::FrameBudgetScope).
++    Solver::FrameBudgetScope pw_frame_budget_scope;
+ 
+     if (config->parsac_flag()) {
+         if (judge_track_status()) {
+diff --git a/xrslam/src/xrslam/estimation/solver.cpp b/xrslam/src/xrslam/estimation/solver.cpp
+index fe93a46..2a6d8ff 100644
+--- a/xrslam/src/xrslam/estimation/solver.cpp
++++ b/xrslam/src/xrslam/estimation/solver.cpp
+@@ -1,5 +1,8 @@
++#include <atomic>
+ #include <ceres/ceres.h>
++#include <chrono>
+ #include <xrslam/estimation/ceres/marginalization_factor.h>
++#include <xrslam/estimation/ceres/okvis_iteration_callback.h>
+ #include <xrslam/estimation/ceres/preintegration_factor.h>
+ #include <xrslam/estimation/ceres/quaternion_parameterization.h>
+ #include <xrslam/estimation/ceres/reprojection_factor.h>
+@@ -8,8 +11,47 @@
+ #include <xrslam/estimation/state.h>
+ #include <xrslam/map/frame.h>
+ 
++// [pw 2026-09-23 solver time budget] Read-only telemetry, one set per process.
++// Filled from the Ceres summary AFTER each Solve() returns; nothing here is read
++// back by the estimator, so trajectories do not depend on it. Exported with C
++// linkage so a replay harness can dlsym() it and take per-frame deltas
++// (pw_tools/regression/euroc_runner.cpp --timing-csv). "scoped" = solves inside a
++// Solver::FrameBudgetScope (the per-frame sliding-window solves), "unscoped" =
++// everything else (initializer). Times are Ceres' own total_time_in_seconds.
++extern "C" {
++std::atomic<unsigned long long> pw_solver_scoped_ns{0};
++std::atomic<unsigned long long> pw_solver_scoped_calls{0};
++std::atomic<unsigned long long> pw_solver_scoped_iterations{0};
++std::atomic<unsigned long long> pw_solver_unscoped_ns{0};
++std::atomic<unsigned long long> pw_solver_unscoped_calls{0};
++// how scoped solves ended
++std::atomic<unsigned long long> pw_solver_stop_budget{0};     // OKVIS callback (USER_SUCCESS)
++std::atomic<unsigned long long> pw_solver_stop_time_limit{0}; // max_solver_time_in_seconds
++std::atomic<unsigned long long> pw_solver_stop_iter_limit{0}; // max_num_iterations
++std::atomic<unsigned long long> pw_solver_stop_converged{0};  // CONVERGENCE
++}
++
+ namespace xrslam {
+ 
++namespace {
++thread_local const Solver::FrameBudgetScope *tl_frame_budget_scope = nullptr;
++
++double pw_steady_seconds() {
++    return std::chrono::duration<double>(
++               std::chrono::steady_clock::now().time_since_epoch())
++        .count();
++}
++} // namespace
++
++Solver::FrameBudgetScope::FrameBudgetScope()
++    : outer(tl_frame_budget_scope), t0_seconds(pw_steady_seconds()) {
++    tl_frame_budget_scope = this;
++}
++
++Solver::FrameBudgetScope::~FrameBudgetScope() {
++    tl_frame_budget_scope = outer;
++}
++
+ struct Solver::SolverDetails {
+     static Config *&config() {
+         static Config *s_config = nullptr;
+@@ -185,7 +227,62 @@ bool Solver::solve(bool verbose) {
+     solver_options.num_threads = 1;
+     solver_options.minimizer_progress_to_stdout = verbose;
+     solver_options.update_state_every_iteration = true;
++
++    // [pw 2026-09-23 solver time budget] OKVIS per-frame budget.
++    // Off (budget < 0, the default) => no callback, options identical to before.
++    // On  => remaining = budget - (now - frame start), clamped at 0, exactly as
++    //        OKVIS ThreadedKFVio.cpp:527-530:
++    //          double timeLimit = timeLimitForMatchingAndOptimization
++    //                             - (okvis::Time::now() - t0Matching).toSec();
++    //          setOptimizationTimeLimit(std::max<double>(0.0, timeLimit),
++    //                                   min_iterations);
++    //        and the callback is registered the way Estimator.cpp:920-923 does
++    //        (pushed onto the ceres options' callbacks).
++    //        Our "now" is taken after the problem was built, so problem
++    //        construction is charged to the frame as well.
++    const FrameBudgetScope *scope = tl_frame_budget_scope;
++    std::unique_ptr<OkvisIterationCallback> budget_callback;
++    const double frame_budget = details->config()->solver_frame_time_budget();
++    if (scope && frame_budget >= 0.0) {
++        const double remaining =
++            frame_budget - (pw_steady_seconds() - scope->t0_seconds);
++        budget_callback = std::make_unique<OkvisIterationCallback>(
++            std::max<double>(0.0, remaining),
++            (int)details->config()->solver_min_iterations());
++        solver_options.callbacks.push_back(budget_callback.get());
++    }
++
+     ceres::Solve(solver_options, details->problem.get(), &solver_summary);
++
++    // telemetry only (see top of file); nothing below feeds the estimator.
++    const auto ns = (unsigned long long)(solver_summary.total_time_in_seconds * 1e9);
++    if (scope) {
++        pw_solver_scoped_ns.fetch_add(ns, std::memory_order_relaxed);
++        pw_solver_scoped_calls.fetch_add(1, std::memory_order_relaxed);
++        pw_solver_scoped_iterations.fetch_add(
++            (unsigned long long)(solver_summary.num_successful_steps +
++                                 solver_summary.num_unsuccessful_steps),
++            std::memory_order_relaxed);
++        switch (solver_summary.termination_type) {
++        case ceres::USER_SUCCESS:
++            pw_solver_stop_budget.fetch_add(1, std::memory_order_relaxed);
++            break;
++        case ceres::CONVERGENCE:
++            pw_solver_stop_converged.fetch_add(1, std::memory_order_relaxed);
++            break;
++        case ceres::NO_CONVERGENCE:
++            if (solver_summary.message.compare(0, 19, "Maximum solver time") == 0)
++                pw_solver_stop_time_limit.fetch_add(1, std::memory_order_relaxed);
++            else
++                pw_solver_stop_iter_limit.fetch_add(1, std::memory_order_relaxed);
++            break;
++        default:
++            break;
++        }
++    } else {
++        pw_solver_unscoped_ns.fetch_add(ns, std::memory_order_relaxed);
++        pw_solver_unscoped_calls.fetch_add(1, std::memory_order_relaxed);
++    }
+     return solver_summary.IsSolutionUsable();
+ }
+ 
+diff --git a/xrslam/src/xrslam/estimation/solver.h b/xrslam/src/xrslam/estimation/solver.h
+index f1197b5..4a2455b 100644
+--- a/xrslam/src/xrslam/estimation/solver.h
++++ b/xrslam/src/xrslam/estimation/solver.h
+@@ -56,6 +56,30 @@ class Solver {
+ 
+     virtual bool solve(bool verbose = false);
+ 
++    // [pw 2026-09-23 solver time budget] Marks "one frame" for the OKVIS
++    // per-frame budget (Config::solver_frame_time_budget()). Construct it at the
++    // start of the per-frame estimation; every solve() on the same thread while it
++    // is alive shares the frame's budget, the way OKVIS measures from
++    // `t0Matching` (ThreadedKFVio.cpp:506, taken just before addStates()) and
++    // hands the remainder to the optimiser (ThreadedKFVio.cpp:527-530).
++    // Solves outside any scope (the initializer) are never budgeted.
++    // thread_local, so it is also correct with XRSLAM_ENABLE_THREADING, where the
++    // sliding window runs on the frontend worker thread.
++    // With the budget off (< 0, the default) the scope is inert: it records a
++    // start time and nothing ever reads it.
++    class FrameBudgetScope {
++      public:
++        FrameBudgetScope();
++        ~FrameBudgetScope();
++        FrameBudgetScope(const FrameBudgetScope &) = delete;
++        FrameBudgetScope &operator=(const FrameBudgetScope &) = delete;
++
++      private:
++        const FrameBudgetScope *outer;
++        double t0_seconds;
++        friend class Solver;
++    };
++
+   protected:
+     virtual void
+     manage_factor(std::unique_ptr<ReprojectionErrorFactor> &&factor);
