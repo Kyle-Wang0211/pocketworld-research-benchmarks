@@ -1,0 +1,1 @@
+下一步:出版商页面全被 403/空返回,改走 Semantic Scholar API 拿摘要、作者主页/CVF/arXiv 拿正文、GitHub 拿 LICENSE。
