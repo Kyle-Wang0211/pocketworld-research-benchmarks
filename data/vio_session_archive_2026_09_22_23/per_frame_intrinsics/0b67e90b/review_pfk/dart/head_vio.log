@@ -1,0 +1,114 @@
++0: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/platform_pose/extrinsics_contract_ci_test.dart: xrslam 树:相机外参恰好被应用一次
+[extrinsics-contract] SKIPPED: no xrslam tree at /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/../xrslam
+xrslam tree not found at /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/../xrslam
++89 ~1 -1: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/ffi/xrslam_intrinsics_test.dart: 官方复刻臂逐项使用 OpenXRLab iPhone 配置值 [E]
+  Expected: contains 'max_keypoint_detection: 300'
+    Actual: '%YAML:1.0\n'
+              '# GENERATED at runtime by XrslamConfigBuilder。\n'
+              '# 字段集 = 上游 configs/iphone_slam.yaml @4beb1a9,逐字段复刻。\n'
+              '# 偏离只有两处,见 buildSlamConfigYaml 的文档注释。\n'
+              'output:\n'
+              '  q_bo: [ 0.0, 0.0, 0.0, 1.0 ]\n'
+              '  p_bo: [ 0.0, 0.0, 0.0 ]\n'
+              '\n'
+              'sliding_window:\n'
+              '  size: 10\n'
+              '  subframe_size: 3\n'
+              '  force_keyframe_landmarks: 35\n'
+              '  # 上游这份 yaml 没有这个键 ⇒ 走代码默认 1(config.cpp:82)。\n'
+              '  # 显式写出来是为了可审计:我们曾经在这里写过 3。\n'
+              '  tracker_frequent: 1\n'
+              '\n'
+              'feature_tracker:\n'
+              '  min_keypoint_distance: 25.0\n'
+              '  max_keypoint_detection: 200\n'
+              '  max_init_frames: 60\n'
+              '  max_frames: 20\n'
+              '  predict_keypoints: true\n'
+              '  clahe_clip_limit: 6.0\n'
+              '  clahe_width: 8\n'
+              '  clahe_height: 8\n'
+              '\n'
+              'initializer:\n'
+              '  keyframe_num: 8\n'
+              '  keyframe_gap: 5\n'
+              '  min_matches: 50\n'
+              '  min_parallax: 10.0\n'
+              '  min_triangulation: 20\n'
+              '  min_landmarks: 30\n'
+              '  refine_imu: true\n'
+              '\n'
+              'solver:\n'
+              '  # 🔴 偏离①:端上预算,不是上游的离线档(1.0e6 / 30)。见文档注释。\n'
+              '  iteration_limit: 10\n'
+              '  time_limit: 0.1\n'
+              '\n'
+              'rotation:\n'
+              '  # 🔴 这一条漏写过,代价是无界发散。见文档注释。\n'
+              '  misalignment_threshold: 0.02\n'
+              '  ransac_threshold: 10\n'
+              '\n'
+              'parsac:\n'
+              '  parsac_flag: false\n'
+              '  dynamic_probability: 0.15\n'
+              '  threshold: 1.0\n'
+              '  norm_scale: 1.0\n'
+              '  keyframe_check_size: 1\n'
+              '\n'
+              'visual_localization:\n'
+              '  # 🔴 偏离②:显式关死。开启会把图像明文外发到硬编码内网地址。\n'
+              '  enable: false\n'
+              '  port: 12345\n'
+              ''
+     Which: does not contain 'max_keypoint_detection: 300'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/vio/ffi/xrslam_intrinsics_test.dart 165:5      main.<fn>
+  
++92 ~1 -2: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/ffi/xrslam_build_profiles_contract_test.dart: current Android identity tells the observed debug and strip truth [E]
+  PathNotFoundException: Cannot open file, path = 'android_ready/native/xrslam/libs/arm64-v8a/libxrslam_generic_4beb1a9.so' (OS Error: No such file or directory, errno = 2)
+  dart:io                                                       _File.readAsBytesSync
+  test/vio/ffi/xrslam_build_profiles_contract_test.dart 127:31  main.<fn>
+  
++96 ~1 -3: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/ffi/xrslam_official_replica_contract_test.dart: Android core has a reproducible, artifact-bound build receipt [E]
+  PathNotFoundException: Cannot open file, path = 'android_ready/native/xrslam/libs/arm64-v8a/libxrslam_generic_4beb1a9.so' (OS Error: No such file or directory, errno = 2)
+  dart:io                                                         _File.readAsBytesSync
+  test/vio/ffi/xrslam_official_replica_contract_test.dart 360:27  main.<fn>
+  
++98 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/ffi/xrslam_build_profiles_contract_test.dart: profile builder verifies identities and never installs artifacts [E]
+  Expected: <0>
+    Actual: <65>
+  
+  shasum: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/android_ready/native/xrslam/libs/arm64-v8a/libxrslam_generic_4beb1a9.so: No such file or directory
+  hash mismatch: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/android_ready/native/xrslam/libs/arm64-v8a/libxrslam_generic_4beb1a9.so expected=083220bb6ecbaa161c0f0bae9bf007da5c59ed010455cf6f2e3b600bb0eaf8f4 actual=
+  
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test/vio/ffi/xrslam_build_profiles_contract_test.dart 154:5  main.<fn>
+  
++192 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/pose/zero_velocity_detector_test.dart: 🔴 阴性对照:这把尺子分得开静止与运动吗 参考参数下,典型手持抖动的 T 必须远大于完美静止
+T: 完美静止=0.0  手持轻抖=9.848e+2  明显运动=4.399e+5  参考阈值 gamma=3.0e+4
++289 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/pose/projection_roundtrip_test.dart: 复刻 Basalt testProjectUnproject:投影往返 网格穷举,往返必须回到同一条归一化射线
+往返: 11025 点通过,2205 点在相机后被跳过,最差分量误差 3.33e-16 (容差 1.49e-8)
++291 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/pose/projection_roundtrip_test.dart: 复刻同一形状:位姿矩阵的互逆性 网格穷举:viewMatrix 必须是 modelMatrix 的逆
+互逆: 160 组位姿通过,最差元素误差 8.88e-16
++355 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/diagnostics/vio_poll_gate_test.dart: start and stop are one serialized transaction across an await
+[pw][vio-diag] intrinsics: 拿不到(ARKit 未跑帧或值不合理)⇒ 落 PLACEHOLDER
+[pw][vio-diag] timebase.snapshot returned null
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
+[pw][vio-diag] slamStop/terminal snapshot failed: Bad state: shadow terminal receipt invalid: state=null generation=-1 backlog=-1 inflight=-1 raw=missing runningGeneration=null nativeStartGeneration=null nativeReceiptAccepted=false generationConflict=false
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
++356 ~1 -4: /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/0b67e90b-a648-4571-8c8b-efe50b991a36/scratchpad/review_pfk/dart/head/test/vio/diagnostics/vio_poll_gate_test.dart: start-stop-start queues cleanly without losing the restart
+[pw][vio-diag] intrinsics: 拿不到(ARKit 未跑帧或值不合理)⇒ 落 PLACEHOLDER
+[pw][vio-diag] timebase.snapshot returned null
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
+[pw][vio-diag] slamStop/terminal snapshot failed: Bad state: shadow terminal receipt invalid: state=null generation=-1 backlog=-1 inflight=-1 raw=missing runningGeneration=null nativeStartGeneration=null nativeReceiptAccepted=false generationConflict=false
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
+[pw][vio-diag] intrinsics: 拿不到(ARKit 未跑帧或值不合理)⇒ 落 PLACEHOLDER
+[pw][vio-diag] timebase.snapshot returned null
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
+[pw][vio-diag] slamStop/terminal snapshot failed: Bad state: shadow terminal receipt invalid: state=null generation=-1 backlog=-1 inflight=-1 raw=missing runningGeneration=null nativeStartGeneration=null nativeReceiptAccepted=false generationConflict=false
+[pw][vio-diag] 尚无时基样本 (ok=0 fail=1)
++357 ~1 -4: Some tests failed.

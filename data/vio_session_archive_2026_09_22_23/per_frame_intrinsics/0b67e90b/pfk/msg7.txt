@@ -1,0 +1,37 @@
+逐帧内参账:不再从回读相等推断「引擎吃到」;ON 臂核 yaml cam0.resolution;开关解析失败进诊断
+
+复核三条(同一份账、同一个报告布局,拆开会有编不过的中间提交,所以合在一起):
+
+1) 回读相等不是消费证据(复核 Medium)
+   - 传输层 PWXrslamIntrinsicsTrace:删掉 last_engine_report_matches / engine_report_matched,
+     改为 last_engine_report_differs + engine_report_differs(回读 ≠ 推的值 ⇒ 证明没收下)和
+     engine_report_equal(相等,不是证据)。依据:fork 04c0e83 XRSLAMManager.cpp:348-362 报
+     最近一次收下的逐帧 K;上游 4beb1a9 XRSLAMManager.cpp:183-188 报 yaml K —— 当 yaml K
+     与推的值同源(如第一帧)时两者数值相等,却什么都没吃。
+   - 「引擎认不认逐帧 K」只从构建身份来:PwXrslamEngineIdentity 读 Info.plist 的
+     PWXrslamEngineArm,那是 Release 构建里 stamp_runtime_identity.sh 在链接产物上核过
+     本臂指纹在场、另两臂不在场(:183-196)之后才写的(:208);Debug/Profile 不盖章(:24)
+     ⇒ 标「无法核实」。
+   - 标签统一由 PwPerFrameIntrinsicsSource.classify 给:config / per_frame(盖章为
+     gpufenothread_pfk 且回读无反证)/ per_frame_not_consumed(回读不等或盖章为别的臂)/
+     per_frame_attached_unverified(相等但没盖章)。ON 臂与 ARKit 影子两条通路共用。
+   - 新增单测:上游核 yaml K == 推的 K 时账本只记「相等」、下一帧 K 变了记「不等」。
+
+3) ON 臂核「推送尺寸 == 引擎 yaml 的 cam0.resolution」(复核 Low)
+   - 之前核的「推送 vs sample buffer 格式描述」两边取自同一个 buffer,恒等。引擎按 yaml 尺寸
+     包 cv::Mat(fork XRSLAMManager.cpp:143-144,键 cam0.resolution 见 yaml_config.cpp:177),
+     所以 create 时从引擎要读的同一个 device yaml 里读出这个尺寸(PwXrslamDeviceYaml,格式
+     由契约测试钉在 XrslamConfigBuilder 的输出上),每帧比对;不等或读不出 ⇒ 不推逐帧 K,
+     按原因计数(例如显式传了更小的 feedWidth)。
+
+5) -PWPerFrameIntrinsics 值解析不了(复核 Info)
+   - 仍按默认 on 跑,但不只 NSLog:ON 臂报告 source==2(Dart 写成 switch_parse_failed /
+     unparseable_fell_back_to_default_on),影子快照带 switchParseFailed + 原文 switchRaw。
+
+- pw_xrslam_live_intrinsics 改为 31 个 double(布局见 PwXrslamLive.intrinsicsReport);
+  Dart XrslamLiveIntrinsics 与 probe manifest(schema pw.vio.per-frame-intrinsics/2)同步,
+  不再有 engineConsumed / *_matched 字样。
+- JNI 只跟着改账本字段名与顺序(安卓长度错误的处理在下一个提交)。
+- OpenSpec proposal/design/spec 改掉「能检测出引擎吃没吃到」的承诺。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,13 @@
+安卓 JNI:K 数组长度不对时照样推帧(不带逐帧 K)并记 rejected_invalid,与 iOS 一致
+
+之前 nativePushCameraAndRunRawWithIntrinsics 在长度 ≠ 4 时直接返回 INVALID_ARGUMENT,
+整帧没进引擎(复核 Low)。现在按 iOS 对「不可用的 K」的处理:帧照推(旧推送),在共享账本
+rejected_invalid 里记一笔。做法是给传输层一个全 NaN 的 K,由传输层自己的判据
+IsAttachableIntrinsics(四值有限)拒掉 —— 推送、调用顺序、计数都与任何其他不可附加的 K
+完全相同,JNI 里没有第二条计数路径。Kotlin 文档同步。
+
+核对(本机,无真机):NDK r29 aarch64-linux-android26 -Wall -Wextra -Werror 编译通过;
+宿主 JVM 经 JNI 跑 Kotlin 封装 + 传输层测试替身:长度 3 / 5 的 K ⇒ rc 0、相机序号前进、
+rejected_invalid 1 / 2、不附加。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

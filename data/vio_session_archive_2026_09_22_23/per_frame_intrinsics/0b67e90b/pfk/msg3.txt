@@ -1,0 +1,13 @@
+Dart:读 ON 臂逐帧内参账并落盘;宿主接线契约测试
+
+- xrslam_live_ffi.dart:XrslamLiveIntrinsics(按 pw_xrslam_live_intrinsics 的 25 个 double
+  解析,长度不对返回 null;符号不在的旧包降级 null,不抛)。
+- zero_arkit_capture_probe_page.dart:停会话前读一次,写进 run_manifest.json 的
+  per_frame_intrinsics(臂名 per_frame_k_on/off、C 账本各计数、宿主原因);没有就如实 null。
+- ar_minimal_loop_page.dart:每秒诊断行打印这份账。
+- test/vio/ffi/per_frame_intrinsics_host_contract_test.dart:镜像头布局、旧入口是 NULL 包装、
+  ARKit 通路只经 C 函数换算且 Swift 无换算算术、ON 臂原值直推、新符号三套配置都导出、
+  默认引擎仍 generic 且出货档 sha256 不变、25 个 double 的解析。
+- test/zero_arkit_capture_probe_page_test.dart:per_frame_intrinsics 键在场;不传为 null,传了原样落盘。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

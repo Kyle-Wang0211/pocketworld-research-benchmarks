@@ -1,0 +1,20 @@
+ARKit 影子通路的 yaml 常量 K 改用与逐帧 K 相同的 box 降采样换算(主点平移 1/3 像素)
+
+🔴 这会改动旧有 ARKit 通路 yaml 里的主点:cx、cy 各减小 1/3 像素(n=3,1920×1440→640×480)。
+这是修正一个早就存在的偏差,不是新引入的行为;fx、fy 不变。
+
+- 原因:逐帧 K 走 PWXrslamTransportScaleIntrinsicsForBoxNxN,即
+  fx/n、fy/n、(c+0.5)/n−0.5(像素中心在整数坐标,出处 ARCamera.h:54-63
+  iPhoneOS26.2.sdk "The origin is at the center of the upper-left pixel.";与离线
+  转换器 arloopbench tools/pwvi_to_euroc.py:224-226 同一表达式)。而 yaml 常量 K 走
+  CameraIntrinsics.scaledTo,是 c·(1/n)(xrslam_config.dart:223),两者在 n=3 时恒差
+  (1−1/n)/2 = 1/3 像素 ⇒ 台架 A/B(-PWPerFrameIntrinsics on|off)会同时改两个变量。
+- 新增 CameraIntrinsics.boxDownsampledBy(n),与上面同一表达式,因子不整除时抛错不截断;
+  vio_diagnostics_recorder.dart 建影子会话 yaml 时改用它。scaledTo 本身不动(其他调用方照旧)。
+- ON 臂(零 ARKit)不动:它推整帧、不缩放,K 原值直推。
+- 测试 test/vio/ffi/box_downsample_intrinsics_test.dart:对传输层 C++ 单测用的同一份 fixture
+  (真转换器在 run-6e2d4b99 上的输出)逐行比对,120 行最大绝对差 0;另在全部 1702 行上
+  手跑一次,差也是 0。另钉「与旧 scaledTo 恰差 1/3 像素」和「影子会话走 boxDownsampledBy」。
+- OpenSpec design/spec 补这一条。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

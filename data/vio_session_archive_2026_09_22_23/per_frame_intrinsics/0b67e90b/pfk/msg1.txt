@@ -1,0 +1,24 @@
+iOS 零 ARKit ON 臂:每帧 sample buffer 自带的 K 随这一帧推进引擎(研究臂,默认 on)
+
+- PwCameraSlot.swift:captureOutput 每帧读 kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix
+  (按整个 matrix_float3x3 判长度 + loadUnaligned,与 PwVioCapability.swift fromSampleBuffer
+  同读法),连同这个 sample buffer 格式描述的宽高、start() 选定的 activeFormat 宽高
+  打包成 PwFrameIntrinsics,跟着这一帧交给 PwXrslamLive.onCameraFrame。
+- PwXrslamLive.swift:
+  · 参照尺寸:苹果官方(CMSampleBuffer.h:1849-1857 / AVCaptureSession.h:1292,
+    iPhoneOS26.2.sdk;在线文档 developer.apple.com/documentation/coremedia/
+    kcmsamplebufferattachmentkey_cameraintrinsicmatrix 与 avfoundation/avcaptureconnection/
+    iscameraintrinsicmatrixdeliveryenabled)写的是「这个 sample buffer」。ON 臂推的就是
+    它的整帧 BGRA(1920×1440,不降采样)⇒ 原值直推,不做任何算术。
+  · 官方没写 videoSettings 缩放时矩阵跟不跟着缩;逐帧核对 推送像素 / 格式描述 /
+    activeFormat 三组尺寸,任一不等就不推逐帧 K、退回 yaml 常量并按原因计数。
+  · 开关 -PWPerFrameIntrinsics on|off(读法同 PwFocusArms.swift:214-235 的 -PWFocusArm),
+    本分支默认 on;off 一字不差走旧入口 PWXrslamTransportPushCameraAndRunRaw。
+  · 新 C 符号 pw_xrslam_live_intrinsics(25 个 double):开关、C 账本
+    (PWXrslamTransportGetIntrinsicsTrace)里推了/没推/引擎回读一致的帧数、宿主侧
+    不推的原因、最近一帧来源、fx 范围、推送尺寸、trace 序号对账(应恒 0)。
+- project.pbxproj:三套配置各加 -u / -exported_symbol _pw_xrslam_live_intrinsics
+  (只这 6 行;上一轮 pod install / Xcode 带进来的重排与 [CP] Copy Pods Resources
+  删除已还原)。build_research_bundle.sh 期望导出 _pw_ 符号数 44 → 45。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

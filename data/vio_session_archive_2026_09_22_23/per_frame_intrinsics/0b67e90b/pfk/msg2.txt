@@ -1,0 +1,15 @@
+iOS ARKit 喂料通路:ARFrame.camera.intrinsics 换算到 640×480 灰度再随帧推
+
+- PwVioSlamFeeder.swift:tryOfferFrame 取 frame.camera.intrinsics 与 imageResolution
+  随许可证带进 consume;consume 在 PWXrslamTransportPrepareGrayBoxNxN 之后,只在
+  imageResolution == 被降采样的亮度平面尺寸时,调传输层那一个 C 函数
+  PWXrslamTransportScaleIntrinsicsForBoxNxN(fx/d、fy/d、(c+0.5)/d−0.5,与离线转换器
+  arloopbench tools/pwvi_to_euroc.py:224-226 同一表达式;像素中心约定出自
+  ARCamera.h:54-63 iPhoneOS26.2.sdk)。Swift 里不写换算算术。
+- 推的时候走 PWXrslamTransportPushCameraAndRunRawWithIntrinsics,不推(开关 off /
+  尺寸不符 / 换算拒收)走旧入口,原因计数。
+- 诊断:每条位姿观测带 intrinsicsSource(per_frame / per_frame_not_consumed / config)、
+  intrinsicsHostReason、换算后的 fx fy cx cy(照抄 C 账本);影子快照加
+  perFrameIntrinsics 一块;VioDiagnosticsRecorder 把它原样落进 latest.json 的每个 slam tick。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

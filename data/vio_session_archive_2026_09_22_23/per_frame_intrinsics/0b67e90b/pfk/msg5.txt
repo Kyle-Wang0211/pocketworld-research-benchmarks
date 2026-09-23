@@ -1,0 +1,10 @@
+OpenSpec tasks:按实际做过的核对改写安卓那条,补记本轮宿主侧复核与 iOS 构建
+
+- 安卓:原文「with host JNI smoke test」没有对应的入库测试。改成如实写:NDK r29
+  aarch64 -Werror 编译 + 手跑的宿主 JVM JNI 冒烟(未入库),无真机。
+- 新增两条已完成记录:传输层 ctest 2/2、与 cfe7d44 旧传输层跨二进制逐字节对照、
+  fork 保护页单测 12/12、换算对 run-6e2d4b99 全部 1702 行差 0、链进去的 PushImage
+  有 ext_size==72 比较;iOS 通用设备 Profile 无签名构建两条臂都成功,什么都没装。
+  Release 导出符号数 45 是推算,不是实测。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
