@@ -1,0 +1,46 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品管线,也不作为任何产品方案的一部分。
+
+OpenCV 4.13.0  ·  深度 256×192 vs 图像 1920×1440(比 7.5×)
+  渲染 0/80
+  渲染 20/80
+  渲染 40/80
+  渲染 60/80
+
+合成录制:/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/run-synthetic-depth   high 置信度像素占比均值 8.7%
+
+$ /Applications/Xcode.app/Contents/Developer/usr/bin/python3 /Users/kaidongwang/.config/superpowers/worktrees/pocketworld_research_benchmarks/basalt-vio-phone-bench-20260829/tools/scale_arbiter/depth_ruler.py --recording /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/run-synthetic-depth --traj truth_metric=/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/run-synthetic-depth/depth_truth_metric.tum --traj over_1100=/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/run-synthetic-depth/depth_over_1100.tum --out /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/ruler
+
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定本台架,永不进入产品管线,也不作为任何产品方案的一部分。
+
+── truth_metric ──────────────────────────────────────────────
+内参配对:内参 80 行 ↔ 相机 80 帧;配上 80,配不上 0
+深度流:80 帧 256×192;图像 1920×1440 (缩放比 7.500×7.500)
+可用帧(有内参 + 有深度 + 有位姿):80/80
+  s(轨迹×s=米)   = 0.999838   [IQR 0.000332, 0.999026–1.001333]
+  k = 1/s(过报因子) = 1.000162   ⇒ 轨迹比米制大 +0.016%
+  有效帧对 20/20; LiDAR 置信度 low/med/high = [13, 0, 10831]
+── over_1100 ──────────────────────────────────────────────
+内参配对:内参 80 行 ↔ 相机 80 帧;配上 80,配不上 0
+深度流:80 帧 256×192;图像 1920×1440 (缩放比 7.500×7.500)
+可用帧(有内参 + 有深度 + 有位姿):80/80
+  s(轨迹×s=米)   = 0.908944   [IQR 0.000302, 0.908205–0.910303]
+  k = 1/s(过报因子) = 1.100178   ⇒ 轨迹比米制大 +10.018%
+  有效帧对 20/20; LiDAR 置信度 low/med/high = [13, 0, 10831]
+
+两条轨迹的相对尺度 s_truth_metric/s_over_1100 = 1.100000(这才是 accept_scale.py 报的那个相对量的米制核对)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth/ruler/depth_ruler_report.json
+
+══ 判据 ══════════════════════════════════════════════════════
+  ✅ ①a 深度几何(不量化):解析深度 vs projectPoints 的真实相机系 Z,最大差 0.0437 µm ≤ 1 µm  ⇒ 射线-平面求交与「按分辨率比缩内参」是精确的,且与 depth_ruler.sample_depth() 的公式互逆
+  ✅ ①b 最近邻取值(尺子真实走的路)最大差 1.2903 mm ≤ 5 mm  —— 这一项**不是 bug**,是 256×192 的量化:一个深度像素横跨 7.5 个图像像素,斜看平面时这段距离内深度本来就在变(0.0437 µm 的 ①a 已把几何钉死)。真机上同样存在,所以尺子的输出是中位数而不是单点值
+  ✅ ③ truth_metric  期望 k=1.0000 恢复 k=1.000162 偏差 +0.0162%  (s=0.999838, IQR 0.000332, 有效帧对 20/20)
+     ·  逐点比值中位数口径 k=1.000046(与中位数之比差 -0.0116%)
+  ✅ ② over_1100     期望 k=1.1000 恢复 k=1.100178 偏差 +0.0162%  (s=0.908944, IQR 0.000302, 有效帧对 20/20)
+     ·  逐点比值中位数口径 k=1.100050(与中位数之比差 -0.0116%)
+  ✅ ④ 无深度的旧录制被干净拒绝(exit 1):    要么换一份带深度的录制,要么改用 charuco_scale_arbiter.py + 印出来的板。)
+  ✅ ⑤ 深度全 low 置信度被拒绝(exit 1),且拒绝理由点名 --min-confidence
+  ✅ ⑥ --camera-axes 喂错时拒绝而不是给坏数(exit 1)
+
+✅ 深度尺子合成验证通过
+   工作目录保留:/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/4437f552-36d8-4d91-9d8d-ae4aaadf54b6/scratchpad/synthdepth
