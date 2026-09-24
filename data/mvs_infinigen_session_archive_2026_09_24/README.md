@@ -28,3 +28,16 @@
 |---|---|---|
 | `orb_thres.mp4`、`orb_2048.mp4` | 37 MB + 36 MB | 已从 Mac 删除。它们是 thres / 2048 分辨率对照的环绕视频，可在旧箱上用 `/root/orbit.py` / `/root/orbit2.py` 从对应点云重新生成（前提是那些点云还在旧箱上，删除前未逐个核对） |
 | `ckpt_backup/`（full_ep0–6、sky_ep0、skyfix_ep0 的 model_000000） | 101 MB | **留在 Mac 本地，不删**（检查点备份，按规矩不动；md5 已与箱上核对过） |
+
+## 09-24 补充（台湾渲染箱删机前）
+
+| 路径 | 内容 |
+|---|---|
+| `box_taiwan/` 新增 | `ig7_convert_all.sh`（已完成房间 → 训练格式的批量转换，幂等，8 路并行，写 `ig7_blend_manifest.tsv`）；`conc16.sh` / `fast_step.sh` / `fix_step*.sh` / `relaunch3-5.sh` / `switch8.sh`（各次改并发、切 fast_solve、修依赖后重启的记录）；`wmg_covis.py` / `ig2_covis.py` / `ig2sheet.py` / `ig2_unpack.sh`（WMGStereo、infinigen2-flying-indoors 的共视度核验） |
+| `box_taiwan/run_records/` | 各轮官方调度器记录（`scenes_db.csv`、`crash_summaries.txt`、`crashed_seeds.txt`、`finished_seeds.txt`、`datagen_command.sh`），3 小时看门狗日志，转换日志与清单 |
+| `box_india/` | 印度 8×5090 箱的预检脚本（解释器 / bpy / 单卡钉住恰好 1 张 OPTIX / Infinigen 导入 / PR #506 补丁 / 七个配置 / 转换器）和启动脚本（同一份官方命令与参数，输出目录 `ig7_official_g`） |
+
+- **WMGStereo 核验**：深度与位姿正确，但按官方共视度判据（前后向重投影 < 1 px），每张参考图第 7 好邻居的共视度只有 0.11–0.38，约 17% 的参考图能凑齐 7 个好邻居 ⇒ 不能替代我们自己渲染的房间。
+- **infinigen2-flying-indoors 核验**（只测了 1 个场景）：从全部 192 个视角里挑邻居，第 7 好邻居共视度 0.68，与我们 fast_solve 房间（0.69–0.84）相当，但场景里有漂浮/运动物体。
+- **转换**：全暗房间（30 帧平均亮度 3–20/255）被转换器的黑帧过滤全部丢弃，记为 FAIL，不进训练集。
+- 台湾箱删机后，Infinigen 渲染在印度箱接着跑；转换好的房间已直传过去。
