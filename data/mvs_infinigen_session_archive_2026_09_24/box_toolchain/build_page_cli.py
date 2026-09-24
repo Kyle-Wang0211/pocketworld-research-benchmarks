@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""三窗并排 · 全分辨率 · 零降采样的稠密云对比页。
+
+  python3.11 build_page_fullres.py --out <目录>      # 目录里须已有 bin/(export_bins.py 产)
+  cd <目录> && python3.11 -m http.server 8732
+
+GL/加载代码取自 `_artifacts/casdiffmvs_fixture97_20260817/index.html`(已实测扛 22M/59M 点):
+位置与颜色分开存 ⇒ 零解析,typed array 直接上显卡。三窗相机同步取自 build_local_page.py。
+
+🔴 **必须起服务器,不能双击**:9000 万点无法 base64 内嵌(>1.2 GB)。
+   这是与 handoff「自包含单 HTML」要求的**有意偏离** —— 抽稀 1/20 的自包含页
+   看起来跟稀疏云没区别,而判据是肉眼看稠密。两份都留着:
+   `compare_mvs_ablation.html`(自包含/抽稀,双击可开) vs 本页(全量/需服务器)。
+"""
+import argparse, glob, json, os
+
+TPL = r"""<meta charset="utf-8"><title>__TITLE__</title>
+<style>
+ html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif}
+ header{padding:8px 12px;background:#111;border-bottom:1px solid #222}
+ h1{margin:0 0 4px;font-size:15px;color:#fff} .hint{color:#8a8a8a;font-size:12px}
+ #ctl{display:flex;gap:14px;align-items:center;padding:6px 12px;background:#0d0d0d;
+      border-bottom:1px solid #222;position:sticky;top:0;z-index:5}
+ #grid{display:grid;grid-template-columns:repeat(__NCOL__,1fr);gap:1px;background:#222;
+       height:calc(100vh - 118px)}
+ .pane{position:relative;background:#000;overflow:hidden}
+ canvas{display:block;width:100%;height:100%}
+ .cap{position:absolute;left:8px;top:6px;right:8px;pointer-events:none;text-shadow:0 1px 3px #000}
+ .cap b{color:#fff;font-size:13px} .cap div{color:#b0b0b0;font-size:11px;margin-top:2px}
+ .pts{position:absolute;left:8px;bottom:6px;color:#7a7a7a;font-size:11px;
+      font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000}
+ #bar{height:3px;background:#1a5fb4;width:0;transition:width .12s} #barw{background:#181818}
+</style>
+<header><h1>__H1__</h1><div class="hint">__HINT__</div></header>
+<div id="ctl"><span>点大小</span><input id="ps" type="range" min="0.5" max="4" step="0.1" value="1.3">
+ <span id="msg" style="color:#8a8a8a"></span></div>
+<div id="barw"><div id="bar"></div></div>
+<div id="grid"></div>
+<script>
+const PLAN=__PLAN__, META=__META__, REF=__REF__;
+let PS=1.3;
+// 相机与矩阵逐字取自 build_local_page.py:290 / 335(那份的默认视角是用户认可过的)
+const V=__VIEW__;
+const cam={az:0.6,el:0.35,dist:V.radius*2.4,tx:V.cx,ty:V.cy,tz:V.cz};
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const crs=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const nrm=a=>{const l=Math.hypot(...a)||1;return[a[0]/l,a[1]/l,a[2]/l]};
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function lookAt(e,c,u){const f=nrm(sub(c,e)),s=nrm(crs(f,u)),v=crs(s,f);
+ return [s[0],v[0],-f[0],0, s[1],v[1],-f[1],0, s[2],v[2],-f[2],0,
+         -dot3(s,e),-dot3(v,e),dot3(f,e),1];}
+function persp(fy,a,zn,zf){const t=1/Math.tan(fy/2);
+ return [t/a,0,0,0, 0,t,0,0, 0,0,(zf+zn)/(zn-zf),-1, 0,0,2*zf*zn/(zn-zf),0];}
+const mul=(A,B)=>{const O=new Array(16).fill(0);
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++)for(let k=0;k<4;k++)O[c*4+r]+=A[k*4+r]*B[c*4+k];return O};
+const bar=document.getElementById("bar"), msg=document.getElementById("msg");
+function assertGpu(g,lab){
+ if(!g||g.isContextLost())throw new Error(lab+" WebGL上下文不可用");
+ const e=g.getError();
+ if(e!==g.NO_ERROR)throw new Error(lab+" WebGL错误 "+e);
+}
+// 三窗共用同一世界坐标系(云本身已 gauge 对齐)⇒ 不做任何归一化,直接 lookAt。
+const VS=`attribute vec3 p;attribute vec3 c;uniform mat4 mvp;uniform float ps;varying vec3 vc;
+ void main(){gl_Position=mvp*vec4(p,1.0);gl_PointSize=ps;vc=c;}`;
+const FS=`precision mediump float;varying vec3 vc;
+ void main(){vec2 d=gl_PointCoord-vec2(0.5);if(dot(d,d)>0.25)discard;gl_FragColor=vec4(vc,1.0);}`;
+
+// A single WebGL buffer cannot exceed 2^31-1 bytes, so a pane is split into chunks of CHUNK_PTS points and
+// drawn with one draw call per chunk. Ranged fetch keeps it streaming; nothing is kept on the CPU side.
+const CHUNK_PTS=40000000;   // 40M points = 480MB positions / 120MB colours per chunk
+async function uploadChunked(url,lab,stride,n,i,tot,g){
+ // the local http.server ignores Range, so oversized panes are split into <tag>.pos.k / .col.k files on disk
+ const bufs=[]; let done=0, k=0;
+ for(let off=0;off<n;off+=CHUNK_PTS,k++){
+  const cnt=Math.min(CHUNK_PTS,n-off), bytes=cnt*stride;
+  const part=(n>CHUNK_PTS)?`${url}.${k}`:url;
+  const r=await fetch(part);
+  if(!r.ok||!r.body)throw new Error(lab+" 下载失败: HTTP "+r.status);
+  const b=g.createBuffer();
+  g.bindBuffer(g.ARRAY_BUFFER,b);
+  g.bufferData(g.ARRAY_BUFFER,bytes,g.STATIC_DRAW);
+  assertGpu(g,lab+" 分配("+(bytes/1048576|0)+"MB)");
+  const rd=r.body.getReader(); let got=0;
+  for(;;){
+   const{done:d,value}=await rd.read(); if(d)break;
+   if(got+value.byteLength>bytes)throw new Error(lab+" 数据越界");
+   g.bindBuffer(g.ARRAY_BUFFER,b);
+   g.bufferSubData(g.ARRAY_BUFFER,got,value);
+   got+=value.byteLength; done+=value.byteLength;
+   bar.style.width=(100*(i+done/(n*stride))/tot)+"%";
+   msg.textContent=lab+" "+(100*done/(n*stride)|0)+"%";
+  }
+  if(got!==bytes)throw new Error(lab+" 不完整: "+got+" != "+bytes);
+  assertGpu(g,lab+" 上传");
+  bufs.push({buf:b,count:cnt});
+ }
+ return bufs;
+}
+
+const panes=PLAN.map(([name,tag,sub])=>{
+ const d=document.createElement("div"); d.className="pane";
+ d.innerHTML=`<canvas></canvas><div class="cap"><b>${name}</b><div>${sub}</div></div>
+   <div class="pts">${META[tag].n.toLocaleString()} 点 · 全分辨率,零降采样</div>`;
+ document.getElementById("grid").appendChild(d);
+ const cv=d.querySelector("canvas"), gl=cv.getContext("webgl",{antialias:true});
+ if(!gl)throw new Error(tag+" 无法创建WebGL上下文");
+ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+   if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o};
+ const pr=gl.createProgram();
+ gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));
+ gl.linkProgram(pr); gl.useProgram(pr);
+ gl.enable(gl.DEPTH_TEST); gl.clearColor(0,0,0,1);
+ return {d,cv,gl,pr,tag,n:0,
+   loc:{p:gl.getAttribLocation(pr,"p"),c:gl.getAttribLocation(pr,"c"),
+        mvp:gl.getUniformLocation(pr,"mvp"),ps:gl.getUniformLocation(pr,"ps")}};
+});
+
+(async()=>{
+ const tot=panes.length*2;
+ for(let i=0;i<panes.length;i++){
+  const v=panes[i];
+  const g=v.gl;
+  const n=META[v.tag].n;
+  v.pchunks=await uploadChunked(`bin/${v.tag}.pos`,v.tag+" 位置",12,n,2*i,tot,g);
+  v.cchunks=await uploadChunked(`bin/${v.tag}.col`,v.tag+" 颜色",3,n,2*i+1,tot,g);
+  v.n=n;
+ }
+ bar.style.width="0"; msg.textContent=""; document.body.dataset.ready="1";
+})().catch(e=>{msg.textContent="加载失败："+e.message;console.error(e);});
+
+function draw(){
+ for(const v of panes){
+  const {gl,cv}=v, w=cv.clientWidth, h=cv.clientHeight, dp=Math.min(devicePixelRatio||1,2);
+  if(cv.width!==w*dp||cv.height!==h*dp){cv.width=w*dp;cv.height=h*dp;}
+  gl.viewport(0,0,cv.width,cv.height); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  if(!v.n||!v.pchunks) continue;
+  const ce=[cam.tx+cam.dist*Math.cos(cam.el)*Math.sin(cam.az),
+            cam.ty+cam.dist*Math.sin(cam.el),
+            cam.tz+cam.dist*Math.cos(cam.el)*Math.cos(cam.az)];
+  const mvp=mul(persp(1.0,cv.width/cv.height,V.radius*0.005,V.radius*40),
+                lookAt(ce,[cam.tx,cam.ty,cam.tz],[0,1,0]));
+  gl.useProgram(v.pr);
+  gl.uniformMatrix4fv(v.loc.mvp,false,new Float32Array(mvp));
+  gl.uniform1f(v.loc.ps,PS*dp);
+  for(let k=0;k<v.pchunks.length;k++){
+   gl.bindBuffer(gl.ARRAY_BUFFER,v.pchunks[k].buf);
+   gl.vertexAttribPointer(v.loc.p,3,gl.FLOAT,false,0,0); gl.enableVertexAttribArray(v.loc.p);
+   gl.bindBuffer(gl.ARRAY_BUFFER,v.cchunks[k].buf);
+   gl.vertexAttribPointer(v.loc.c,3,gl.UNSIGNED_BYTE,true,0,0); gl.enableVertexAttribArray(v.loc.c);
+   gl.drawArrays(gl.POINTS,0,v.pchunks[k].count);
+  }
+ }
+ requestAnimationFrame(draw);
+}
+draw();
+
+let drag=null;   // 交互也照抄 build_local_page.py:365
+addEventListener("mousedown",e=>{if(e.target.tagName==="CANVAS"){
+ drag={x:e.clientX,y:e.clientY,b:e.button}; e.preventDefault();}});
+addEventListener("mouseup",()=>drag=null);
+addEventListener("mousemove",e=>{if(!drag)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY;
+ if(drag.b===2){const k=cam.dist*0.0015;
+  cam.tx-=k*(dx*Math.cos(cam.az)); cam.tz+=k*(dx*Math.sin(cam.az)); cam.ty+=k*dy;}
+ else{cam.az-=dx*0.006; cam.el=Math.max(-1.5,Math.min(1.5,cam.el+dy*0.006));}});
+addEventListener("contextmenu",e=>e.preventDefault());
+addEventListener("wheel",e=>{e.preventDefault();cam.dist*=Math.exp(e.deltaY*0.001);},{passive:false});
+document.getElementById("ps").oninput=e=>{PS=parseFloat(e.target.value);};
+</script>
+"""
+
+
+
+def _sampled_median(paths, step=997):
+    """Component medians read straight off the .pos file(s), without numpy. Accepts a single path or the ordered
+    list of split parts, and samples across all of them so the median is the whole cloud's, not one part's."""
+    import struct
+    if isinstance(paths, str):
+        paths = [paths]
+    xs, ys, zs = [], [], []
+    for q in paths:
+        cnt = os.path.getsize(q) // 12
+        with open(q, "rb") as f:
+            for i in range(0, cnt, step):
+                f.seek(i * 12)
+                x, y, z = struct.unpack("<3f", f.read(12))
+                xs.append(x); ys.append(y); zs.append(z)
+    m = lambda v: sorted(v)[len(v) // 2]
+    return [m(xs), m(ys), m(zs)]
+
+
+def _check_frames(out, meta, plan):
+    """Refuse to build a page whose panes are in different coordinate conventions.
+
+    Bins exported before 2026-09-04 hold RAW COLMAP coordinates and rely on the
+    viewer applying `node_matrix` (a 180 deg turn about X) to stand the scene up.
+    Bins exported by ply2bin.py have that turn baked in. This template ignores
+    node_matrix, so mixing the two generations silently mirrors one pane against
+    the other -- which reads as "the algorithm broke", not "the page is wrong".
+
+    Each pane's meta already records the median it was exported with, so compare
+    that against the median actually in the file: they agree only when the file
+    is in the convention its meta describes.
+    """
+    bad = []
+    for _, tag, _ in plan:
+        m = meta[tag]
+        pos = f"{out}/bin/{tag}.pos"
+        parts = sorted(glob.glob(pos + ".*"), key=lambda q: int(q.rsplit(".", 1)[1]))
+        total = os.path.getsize(pos) if os.path.exists(pos) else sum(os.path.getsize(q) for q in parts)
+        if total != m["n"] * 12:
+            raise SystemExit(f"{tag} positions are {total} bytes, expected {m['n']*12}")
+        got = _sampled_median(pos if os.path.exists(pos) else parts)
+        want = m.get("med")
+        if want is None:
+            continue
+        if max(abs(a - b) for a, b in zip(got, want)) > 0.25:
+            bad.append((tag, [round(x, 3) for x in got], [round(x, 3) for x in want]))
+    if bad:
+        lines = "\n".join(f"    {t}: file median {g}  but meta says {w}" for t, g, w in bad)
+        raise SystemExit(
+            "ABORT: pane(s) not in the convention their meta describes -- most likely a\n"
+            "pre-09-04 bin that still needs node_matrix mixed with a baked-in one:\n"
+            + lines)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--ref", required=True)
+    ap.add_argument("--title", required=True)
+    ap.add_argument("--h1", required=True)
+    ap.add_argument("--hint", required=True)
+    ap.add_argument("--pane", action="append", required=True,
+                    help="label::tag::sub  (repeatable, one per window)")
+    a = ap.parse_args()
+    meta = json.load(open(f"{a.out}/bin/meta.json"))
+    plan = [tuple(p.split("::")) for p in a.pane]
+    _check_frames(a.out, meta, plan)
+    html = (TPL.replace("__TITLE__", a.title)
+            .replace("__H1__", a.h1)
+            .replace("__HINT__", a.hint)
+            .replace("__NCOL__", str(len(plan)))
+            .replace("__PLAN__", json.dumps([[n, t, s] for n, t, s in plan], ensure_ascii=False))
+            .replace("__META__", json.dumps(meta))
+            .replace("__REF__", json.dumps(a.ref))
+            .replace("__VIEW__", json.dumps(
+                {"cx": meta[a.ref]["med"][0], "cy": meta[a.ref]["med"][1],
+                 "cz": meta[a.ref]["med"][2], "radius": meta[a.ref]["radius"]})))
+    open(f"{a.out}/index.html", "w").write(html)
+    print(f"  -> {a.out}/index.html  ({sum(meta[t]['n'] for _, t, _ in plan):,} points)")
+
+
+if __name__ == "__main__":
+    main()

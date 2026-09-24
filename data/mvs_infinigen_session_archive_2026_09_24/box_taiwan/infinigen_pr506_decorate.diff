@@ -1,0 +1,33 @@
+--- decorate.py.orig_3f58bb8	2026-09-24 01:26:40.606720035 +0000
++++ decorate.py	2026-09-24 01:26:40.618719850 +0000
+@@ -7,6 +7,7 @@
+ # - Karhan Kayan: fix constants
+ 
+ import importlib
++import inspect
+ import logging
+ import os
+ from collections import defaultdict
+@@ -227,9 +228,19 @@
+             if wall_fn.__class__.__name__ == "Plaster":
+                 for r in rooms__:
+                     unwrap_normal(r, selection=None)
+-            if wall_fn.__class__.__name__ == "Brick":
+-                kwargs = {}
+-            surface.assign_material(rooms__, wall_fn(**kwargs))
++            # 社区修复 princeton-vl/infinigen PR #506 (Fixes #505, 未合并), 09-24 用户批准照抄:
++            # 只把 generate() 签名接受的 kwargs 传下去 (Concrete/Ceramic/MarbleRegular/MarbleVoronoi 的 generate(self) 不收参数)
++            sig = inspect.signature(wall_fn.generate)
++            has_var_keyword = any(
++                p.kind == inspect.Parameter.VAR_KEYWORD
++                for p in sig.parameters.values()
++            )
++            accepted_kwargs = {
++                k: v
++                for k, v in kwargs.items()
++                if has_var_keyword or k in sig.parameters
++            }
++            surface.assign_material(rooms__, wall_fn(**accepted_kwargs))
+ 
+     for w in walls:
+         logger.debug(
