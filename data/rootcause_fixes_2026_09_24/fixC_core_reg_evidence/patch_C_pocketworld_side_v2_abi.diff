@@ -1,0 +1,253 @@
+diff -ruN orig/include/aether_sfm_c.h new/include/aether_sfm_c.h
+--- orig/include/aether_sfm_c.h	2026-09-24 13:44:14
++++ new/include/aether_sfm_c.h	2026-09-24 13:44:56
+@@ -105,6 +105,48 @@
+                                          const double pose_t[3],
+                                          int* out_frame_id);
+ 
++// [DEVICE-POSE-TRUST-V1 2026-09-24] aether_sfm_add_frame with the per-frame
++// device-pose trust bit (contract with the Dart capture layer; the pocketworld
++// JPEG entry pwofficial_add_jpeg_frame_v2 decodes and calls this). Parameters
++// are aether_sfm_add_frame's in the same order plus `device_pose_trusted`
++// right after pose_t. aether_sfm_add_frame == this with device_pose_trusted=1,
++// so existing callers keep today's behaviour.
++//   device_pose_trusted != 0 : today's route — the frame is placed at its
++//       device pose (subject to the registration-evidence gate when
++//       AETHER_REG_EVIDENCE=1), is a Sim3 alignment pair, carries its
++//       gravity attitude anchor, drives spatial candidate selection.
++//   device_pose_trusted == 0 : the device pose is NEVER used for placement,
++//       as a Sim3 alignment pair, as a gravity/pose prior, or for spatial
++//       candidate / pose-guided matching. The frame is registered from image
++//       evidence exactly as upstream COLMAP registers an image without a
++//       prior (IncrementalMapper::RegisterNextImage: P3P RANSAC + refinement,
++//       retried by the upstream registration loop during capture, at
++//       finalize and on resume), or stays unregistered (get_poses
++//       registered=0) when the evidence is insufficient. The pose values are
++//       still persisted, with the untrusted bit, in the pose store (bit 0 of
++//       the former reserved word) so resume applies the same rule.
++aether_sfm_result_t aether_sfm_add_frame_v2(aether_sfm_session_t* s,
++                                            const uint8_t* gray,
++                                            int width, int height,
++                                            float fx, float fy,
++                                            float cx, float cy,
++                                            const double pose_qwxyz[4],
++                                            const double pose_t[3],
++                                            int32_t device_pose_trusted,
++                                            int* out_frame_id);
++
++// [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1 2026-09-24] Counters (nullable
++// out-params): frames fed untrusted, untrusted frames registered from image
++// evidence, trusted frames whose placement went through the evidence gate,
++// gate failures (frame left pending), pending frames registered later (live
++// retry / finalize / resume), and frames still unregistered in the delivered
++// model. Per-frame records: "reg_evidence_v1" lines in sfm_match_fail.jsonl.
++void aether_sfm_registration_evidence_stats_v1(
++    aether_sfm_session_t* s, int64_t* untrusted_fed,
++    int64_t* untrusted_registered, int64_t* evidence_checked,
++    int64_t* evidence_failed, int64_t* late_registered,
++    int64_t* unregistered_delivered);
++
+ // Feature-injection sibling of aether_sfm_add_frame: skips extraction and
+ // feeds precomputed keypoints (xy pairs, extractor's +0.5 half-pixel
+ // convention) + n_keypoints×128 UBC RootSIFT u8 descriptors into the same
+diff -ruN orig/include/official_sfm_c.h new/include/official_sfm_c.h
+--- orig/include/official_sfm_c.h	2026-09-24 13:44:14
++++ new/include/official_sfm_c.h	2026-09-24 13:44:56
+@@ -88,6 +88,34 @@
+ // see the k_neighbors field doc) -> WriteMatches + WriteTwoViewGeometry.
+ // Returns the assigned frame index in *out_frame_id.
+ 
++// [DEVICE-POSE-TRUST-V1 2026-09-24] pwofficial_add_frame with the per-frame
++// device-pose trust bit (contract with the Dart capture layer; the pocketworld
++// JPEG entry pwofficial_add_jpeg_frame_v2 decodes and calls this). Parameters
++// are pwofficial_add_frame's in the same order plus `device_pose_trusted`
++// right after pose_t. pwofficial_add_frame == this with device_pose_trusted=1,
++// so existing callers keep today's behaviour.
++//   device_pose_trusted != 0 : today's route — the frame is placed at its
++//       device pose (subject to the registration-evidence gate when
++//       OFFICIAL_AETHER_REG_EVIDENCE=1), is a Sim3 alignment pair, carries its
++//       gravity attitude anchor, drives spatial candidate selection.
++//   device_pose_trusted == 0 : the device pose is NEVER used for placement,
++//       as a Sim3 alignment pair, as a gravity/pose prior, or for spatial
++//       candidate / pose-guided matching. The frame is registered from image
++//       evidence exactly as upstream COLMAP registers an image without a
++//       prior (IncrementalMapper::RegisterNextImage: P3P RANSAC + refinement,
++//       retried by the upstream registration loop during capture, at
++//       finalize and on resume), or stays unregistered (get_poses
++//       registered=0) when the evidence is insufficient. The pose values are
++//       still persisted, with the untrusted bit, in the pose store (bit 0 of
++//       the former reserved word) so resume applies the same rule.
++
++// [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1 2026-09-24] Counters (nullable
++// out-params): frames fed untrusted, untrusted frames registered from image
++// evidence, trusted frames whose placement went through the evidence gate,
++// gate failures (frame left pending), pending frames registered later (live
++// retry / finalize / resume), and frames still unregistered in the delivered
++// model. Per-frame records: "reg_evidence_v1" lines in sfm_match_fail.jsonl.
++
+ // Feature-injection sibling of pwofficial_add_frame: skips extraction and
+ // feeds precomputed keypoints (xy pairs, extractor's +0.5 half-pixel
+ // convention) + n_keypoints×128 UBC RootSIFT u8 descriptors into the same
+@@ -517,6 +545,22 @@
+ int pwofficial_telemetry(double* phys_footprint_mb,
+                          double* footprint_peak_mb,
+                          int* thermal_state);
++
++aether_sfm_result_t pwofficial_add_frame_v2(aether_sfm_session_t* s,
++                                            const uint8_t* gray,
++                                            int width, int height,
++                                            float fx, float fy,
++                                            float cx, float cy,
++                                            const double pose_qwxyz[4],
++                                            const double pose_t[3],
++                                            int32_t device_pose_trusted,
++                                            int* out_frame_id);
++
++void pwofficial_registration_evidence_stats_v1(
++    aether_sfm_session_t* s, int64_t* untrusted_fed,
++    int64_t* untrusted_registered, int64_t* evidence_checked,
++    int64_t* evidence_failed, int64_t* late_registered,
++    int64_t* unregistered_delivered);
+ 
+ #ifdef __cplusplus
+ }  // extern "C"
+diff -ruN orig/include/official_sfm_io_c.h new/include/official_sfm_io_c.h
+--- orig/include/official_sfm_io_c.h	2026-09-24 13:44:14
++++ new/include/official_sfm_io_c.h	2026-09-24 13:45:20
+@@ -24,6 +24,25 @@
+     const double pose_t[3],
+     int* out_frame_id);
+ 
++// [DEVICE-POSE-TRUST-V1 2026-09-24] pwofficial_add_jpeg_frame with the
++// per-frame device-pose trust bit: identical arguments in the same order plus
++// `device_pose_trusted` right after pose_t (1 = trusted, 0 = untrusted).
++// Decodes with the SAME helper as pwofficial_add_jpeg_frame, then calls
++// pwofficial_add_frame_v2 (official_sfm_c.h) — a decode failure returns before
++// the core is touched. v1 == this with device_pose_trusted = 1.
++aether_sfm_result_t pwofficial_add_jpeg_frame_v2(
++    aether_sfm_session_t* session,
++    const char* jpeg_path,
++    double capture_timestamp,
++    float fx,
++    float fy,
++    float cx,
++    float cy,
++    const double pose_qwxyz[4],
++    const double pose_t[3],
++    int32_t device_pose_trusted,
++    int* out_frame_id);
++
+ // [EXTRACT-PREFETCH 2026-08-09] JPEG-path prefetch: decode with the SAME
+ // helper as pwofficial_add_jpeg_frame, then hand the luma plane to the
+ // session's dedicated extraction thread (non-blocking). The next add whose
+diff -ruN orig/pwofficial_abi_symbols.txt new/pwofficial_abi_symbols.txt
+--- orig/pwofficial_abi_symbols.txt	2026-09-24 13:44:14
++++ new/pwofficial_abi_symbols.txt	2026-09-24 13:44:23
+@@ -28,3 +28,5 @@
+ pwofficial_thermal_throttle_stats
+ pwofficial_track_obs_free
+ pwofficial_telemetry
++pwofficial_add_frame_v2
++pwofficial_registration_evidence_stats_v1
+diff -ruN orig/pwofficial_io_abi_symbols.txt new/pwofficial_io_abi_symbols.txt
+--- orig/pwofficial_io_abi_symbols.txt	2026-09-24 13:44:14
++++ new/pwofficial_io_abi_symbols.txt	2026-09-24 13:44:23
+@@ -4,3 +4,4 @@
+ pwofficial_phase_b_replay_add_jpeg_v1
+ pwofficial_phase_b_replay_seal_v1
+ pwofficial_phase_b_replay_destroy_v1
++pwofficial_add_jpeg_frame_v2
+diff -ruN orig/pwofficial_only_abi_symbols.txt new/pwofficial_only_abi_symbols.txt
+--- orig/pwofficial_only_abi_symbols.txt	2026-09-24 13:44:14
++++ new/pwofficial_only_abi_symbols.txt	2026-09-24 13:44:23
+@@ -1,3 +1,5 @@
+ pwofficial_match_set_capture_active
+ pwofficial_match_set_preview_fps30
+ pwofficial_prefetch_frame
++pwofficial_add_frame_v2
++pwofficial_registration_evidence_stats_v1
+diff -ruN orig/src/pwofficial_export_shim.c new/src/pwofficial_export_shim.c
+--- orig/src/pwofficial_export_shim.c	2026-09-24 13:44:14
++++ new/src/pwofficial_export_shim.c	2026-09-24 13:44:23
+@@ -60,6 +60,26 @@
+                               pose_qwxyz, pose_t, out_frame_id);
+ }
+ 
++/* [DEVICE-POSE-TRUST-V1 2026-09-24] pure forwarders (see aether_sfm_c.h). */
++PWOFFICIAL_EXPORT aether_sfm_result_t pwofficial_add_frame_v2(
++    aether_sfm_session_t* s, const uint8_t* gray, int width, int height,
++    float fx, float fy, float cx, float cy, const double pose_qwxyz[4],
++    const double pose_t[3], int32_t device_pose_trusted, int* out_frame_id) {
++  return aether_sfm_add_frame_v2(s, gray, width, height, fx, fy, cx, cy,
++                                 pose_qwxyz, pose_t, device_pose_trusted,
++                                 out_frame_id);
++}
++
++PWOFFICIAL_EXPORT void pwofficial_registration_evidence_stats_v1(
++    aether_sfm_session_t* s, int64_t* untrusted_fed,
++    int64_t* untrusted_registered, int64_t* evidence_checked,
++    int64_t* evidence_failed, int64_t* late_registered,
++    int64_t* unregistered_delivered) {
++  aether_sfm_registration_evidence_stats_v1(
++      s, untrusted_fed, untrusted_registered, evidence_checked,
++      evidence_failed, late_registered, unregistered_delivered);
++}
++
+ /* [EXTRACT-PREFETCH 2026-08-09] 提取∥匹配帧级流水的对外入口。转发到
+    aether_sfm_prefetch_frame:非阻塞,拷 gray 交给会话的专属提取线程后立即
+    返回;下一次 add_frame 图像内容匹配(FNV 抽样摘要)即字节等同地领取成品,
+diff -ruN orig/src/pwofficial_jpeg_decode.mm new/src/pwofficial_jpeg_decode.mm
+--- orig/src/pwofficial_jpeg_decode.mm	2026-09-24 13:44:14
++++ new/src/pwofficial_jpeg_decode.mm	2026-09-24 13:45:20
+@@ -180,6 +180,51 @@
+       out_frame_id);
+ }
+ 
++// [DEVICE-POSE-TRUST-V1 2026-09-24] v1 + device_pose_trusted (see
++// official_sfm_io_c.h). Same validation and decode as v1; forwards to the
++// trust-carrying core entry.
++extern "C" PWOFFICIAL_IO_EXPORT aether_sfm_result_t
++pwofficial_add_jpeg_frame_v2(
++    aether_sfm_session_t* session,
++    const char* jpeg_path,
++    double capture_timestamp,
++    float fx,
++    float fy,
++    float cx,
++    float cy,
++    const double pose_qwxyz[4],
++    const double pose_t[3],
++    int32_t device_pose_trusted,
++    int* out_frame_id) {
++  if (session == nullptr ||
++      jpeg_path == nullptr ||
++      jpeg_path[0] == '\0' ||
++      !std::isfinite(capture_timestamp) ||
++      capture_timestamp < 0.0) {
++    return AETHER_SFM_ERR_INVALID_ARG;
++  }
++  std::vector<uint8_t> gray;
++  int width = 0;
++  int height = 0;
++  const aether_sfm_result_t decode =
++      DecodeOfficialJpegGray(jpeg_path, &gray, &width, &height);
++  if (decode != AETHER_SFM_OK) return decode;
++
++  return pwofficial_add_frame_v2(
++      session,
++      gray.data(),
++      width,
++      height,
++      fx,
++      fy,
++      cx,
++      cy,
++      pose_qwxyz,
++      pose_t,
++      device_pose_trusted,
++      out_frame_id);
++}
++
+ extern "C" PWOFFICIAL_IO_EXPORT uint32_t
+ pwofficial_phase_b_replay_create_v1(
+     const char* ordered_manifest_sha256, const int64_t* ordered_frame_ids,

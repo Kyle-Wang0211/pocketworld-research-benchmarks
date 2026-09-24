@@ -1,0 +1,25 @@
+--- a/aether_cpp/tools/sift_pyramid_dawn.cc	2026-09-24 13:50:57
++++ b/aether_cpp/tools/sift_pyramid_dawn.cc	2026-09-24 13:51:27
+@@ -217,10 +217,20 @@
+     wgpu::ComputePipeline pipe_blur = harness.load_compute(s1_src);
+     wgpu::ComputePipeline pipe_resample = harness.load_compute(s1b_src);
+     // [GSS-FUSED 2026-08-10] H+V 融合 blur(FidelityFX Blur 结构,逐位同
+-    // 2-pass)。kill switch:OFFICIAL_AETHER_GSS_FUSED=0;radius>16 自动回落。
++    // 2-pass)。
++    // [FIXD-2PASS-DEFAULT 2026-09-24] 默认改回 2-pass(sift_gss_blur.wgsl),
++    // 即上游 VLFeat 的结构:_vl_scalespace_fill_octave(scalespace.c:669-690)
++    // 每层调 vl_imsmooth_f(imopv.c:645-675)= 两次一维 vl_imconvcol_v,
++    // 短寿命 8x8 workgroup 覆盖二维网格。原因:真机 cap_1788795741337526
++    // 第 5 帧 octave-0 的三个 fused 派发(s=2,3,4;每个 workgroup 自上而下扫
++    // 满 3024 行)只有前 ~144/504 条带写出了结果,其余保持 0,且没有任何一层
++    // 报错(Dawn metal/QueueMTL.mm:236 的完成回调不看 MTLCommandBuffer 状态)。
++    // 同一命令缓冲里的 2-pass 派发完好。宿主上两条路输出集合逐点相同(差 0-1
++    // 个关键点 = fused 自身 run-to-run 的原子序抖动)。
++    // 想再开 fused 做台架对照:OFFICIAL_AETHER_GSS_FUSED=1。
+     static const bool fused_on = [] {
+         const char* v = std::getenv("OFFICIAL_AETHER_GSS_FUSED");
+-        return v == nullptr || !(v[0] == '0' && v[1] == '\0');
++        return v != nullptr && v[0] == '1' && v[1] == '\0';
+     }();
+     wgpu::ComputePipeline pipe_blur_fused =
+         harness.load_compute(load_wgsl("sift_gss_blur_fused.wgsl"));

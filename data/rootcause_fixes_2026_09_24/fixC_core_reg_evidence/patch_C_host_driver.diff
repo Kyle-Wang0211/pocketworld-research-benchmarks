@@ -1,0 +1,184 @@
+--- step2/driver/pwofficial_pose_ab_driver.cc	2026-09-24 12:11:46
++++ fixC/driver/pwofficial_pose_ab_driver.cc	2026-09-24 14:02:55
+@@ -47,6 +47,7 @@
+ 
+ #include <glog/logging.h>
+ #include <jpeglib.h>
++#include <sqlite3.h>
+ 
+ #include <array>
+ #include <chrono>
+@@ -68,6 +69,12 @@
+ extern "C" aether_sfm_result_t aether_sfm_debug_dump_model(
+     aether_sfm_session_t* s, const char* out_dir);
+ extern "C" const char* aether_sfm_result_str(aether_sfm_result_t r);
++// [FIXC PHONEDB 2026-09-24] host-bench-only core entry (official_aether_sfm_c.cc).
++extern "C" aether_sfm_result_t aether_sfm_add_frame_features_scaled_v1(
++    aether_sfm_session_t* s, const float* xy, const uint8_t* desc,
++    const float* scales, int n_keypoints, int width, int height, float fx,
++    float fy, float cx, float cy, const double pose_qwxyz[4],
++    const double pose_t[3], int32_t device_pose_trusted, int* out_frame_id);
+ // [DEVICE-ALIGN-V1 2026-09-24] step2 workspace addition: read the new core
+ // accessor (official_pipeline/include/aether_sfm_c.h) after REFINED.
+ extern "C" int aether_sfm_device_alignment_v1(
+@@ -135,6 +142,7 @@
+ 
+ struct Feed {
+   std::string jpeg;  // [TASKB-JPEG]
++  bool device_pose_trusted = true;  // [FIXC] feed "devicePoseTrusted": false
+   long long frame_index = -1, byte_offset = -1, w = 0, h = 0;
+   double k[4] = {0, 0, 0, 0};
+   double q[4] = {1, 0, 0, 0};
+@@ -158,6 +166,11 @@
+         f.jpeg = line.substr(b, e - b);
+       }
+     }
++    // [FIXC 2026-09-24] contract flag (default trusted).
++    if (line.find("\"devicePoseTrusted\": false") != std::string::npos ||
++        line.find("\"devicePoseTrusted\":false") != std::string::npos) {
++      f.device_pose_trusted = false;
++    }
+     const bool ok = ParseArray(line, "\"fxfycxcy\":", f.k, 4) &&
+                     ParseArray(line, "\"arkitCamFromWorldQwxyz\":", f.q, 4) &&
+                     ParseArray(line, "\"arkitCamFromWorldTxyz\":", f.t, 3);
+@@ -243,10 +256,26 @@
+   }
+   const bool jpeg_mode = frames_bin == "JPEG";  // [TASKB-JPEG]
+   const bool resume_mode = frames_bin == "RESUME";  // [TASKB-RESUME]
+-  std::FILE* fb = (jpeg_mode || resume_mode)
++  // [FIXC PHONEDB 2026-09-24] <frames.bin> = PHONEDB:<db path> ⇒ every fed
++  // frame's keypoints (xy + detection scale = affine a11, orientation 0) and
++  // descriptors are read from the capture's OWN db (sqlite immutable=1,
++  // read-only) and injected through aether_sfm_add_frame_features_scaled_v1:
++  // the live route replays the phone's features instead of re-extracting.
++  const bool phonedb_mode = frames_bin.rfind("PHONEDB:", 0) == 0;
++  sqlite3* pdb = nullptr;
++  if (phonedb_mode) {
++    const std::string uri = "file:" + frames_bin.substr(8) + "?immutable=1";
++    if (sqlite3_open_v2(uri.c_str(), &pdb,
++                        SQLITE_OPEN_READONLY | SQLITE_OPEN_URI,
++                        nullptr) != SQLITE_OK) {
++      std::fprintf(stderr, "cannot open phone db %s\n", uri.c_str());
++      return 2;
++    }
++  }
++  std::FILE* fb = (jpeg_mode || resume_mode || phonedb_mode)
+                       ? nullptr
+                       : std::fopen(frames_bin.c_str(), "rb");
+-  if (!fb && !jpeg_mode && !resume_mode) {
++  if (!fb && !jpeg_mode && !resume_mode && !phonedb_mode) {
+     std::fprintf(stderr, "cannot open %s\n", frames_bin.c_str());
+     return 2;
+   }
+@@ -283,6 +312,70 @@
+   for (const Feed& f : feed) {
+     if (resume_mode) break;  // [TASKB-RESUME] frames come from the db copy
+     const size_t n = static_cast<size_t>(f.w) * static_cast<size_t>(f.h);
++    if (phonedb_mode) {  // [FIXC PHONEDB]
++      char nm[64];
++      std::snprintf(nm, sizeof(nm), "frame_%06lld.jpg", f.frame_index);
++      std::vector<float> xy, sc;
++      std::vector<uint8_t> desc;
++      int nk = 0;
++      sqlite3_stmt* st = nullptr;
++      sqlite3_prepare_v2(pdb,
++                         "select k.rows,k.cols,k.data,d.rows,d.cols,d.data "
++                         "from images i join keypoints k on k.image_id="
++                         "i.image_id join descriptors d on d.image_id="
++                         "i.image_id where i.name=?",
++                         -1, &st, nullptr);
++      sqlite3_bind_text(st, 1, nm, -1, SQLITE_TRANSIENT);
++      if (sqlite3_step(st) == SQLITE_ROW) {
++        nk = sqlite3_column_int(st, 0);
++        const int kc = sqlite3_column_int(st, 1);
++        const float* kd = static_cast<const float*>(sqlite3_column_blob(st, 2));
++        const int dr = sqlite3_column_int(st, 3), dc = sqlite3_column_int(st, 4);
++        const uint8_t* dd =
++            static_cast<const uint8_t*>(sqlite3_column_blob(st, 5));
++        if (kd && dd && dr == nk && dc == 128 && (kc == 6 || kc == 4 || kc == 2)) {
++          xy.resize(2 * nk);
++          sc.resize(nk);
++          for (int i = 0; i < nk; ++i) {
++            xy[2 * i] = kd[i * kc];
++            xy[2 * i + 1] = kd[i * kc + 1];
++            sc[i] = kc >= 4 ? kd[i * kc + 2] : 1.0f;  // a11 (orientation 0) / scale
++          }
++          desc.assign(dd, dd + static_cast<size_t>(nk) * 128);
++        } else {
++          nk = 0;
++        }
++      }
++      sqlite3_finalize(st);
++      if (nk <= 0) {
++        std::fprintf(stderr, "phone db has no features for %s\n", nm);
++        return 3;
++      }
++      int out_fid = -1;
++      const double t0 = NowMs();
++      rc = aether_sfm_add_frame_features_scaled_v1(
++          s, xy.data(), desc.data(), sc.data(), nk, static_cast<int>(f.w),
++          static_cast<int>(f.h), static_cast<float>(f.k[0]),
++          static_cast<float>(f.k[1]), static_cast<float>(f.k[2]),
++          static_cast<float>(f.k[3]), f.q, f.t, f.device_pose_trusted ? 1 : 0,
++          &out_fid);
++      const double add_ms = NowMs() - t0;
++      std::fprintf(per_frame,
++                   "{\"frameIndex\":%lld,\"rc\":\"%s\",\"fid\":%d,"
++                   "\"add_ms\":%.1f,\"extract_ms\":0,\"n_kp\":%d}\n",
++                   f.frame_index, aether_sfm_result_str(rc), out_fid, add_ms,
++                   nk);
++      std::fflush(per_frame);
++      if (rc != AETHER_SFM_OK) {
++        ++rejected;
++        continue;
++      }
++      ++fed;
++      std::printf("  fed %d/%zu frame=%lld fid=%d add_ms=%.0f kp=%d\n", fed,
++                  feed.size(), f.frame_index, out_fid, add_ms, nk);
++      std::fflush(stdout);
++      continue;
++    }
+     gray.resize(n);
+     if (jpeg_mode) {  // [TASKB-JPEG]
+       if (!DecodeJpegLuma(f.jpeg, f.w, f.h, &gray)) {
+@@ -297,6 +390,15 @@
+     }
+     int out_fid = -1;
+     const double t0 = NowMs();
++    // [FIXC] untrusted frames go through the contract entry (v2, trust=0);
++    // every trusted add stays on the v1 entry, byte-identical to production.
++    if (!f.device_pose_trusted) {
++      rc = pwofficial_add_frame_v2(
++          s, gray.data(), static_cast<int>(f.w), static_cast<int>(f.h),
++          static_cast<float>(f.k[0]), static_cast<float>(f.k[1]),
++          static_cast<float>(f.k[2]), static_cast<float>(f.k[3]), f.q, f.t,
++          /*device_pose_trusted=*/0, &out_fid);
++    } else
+     rc = pwofficial_add_frame(s, gray.data(), static_cast<int>(f.w),
+                               static_cast<int>(f.h), static_cast<float>(f.k[0]),
+                               static_cast<float>(f.k[1]),
+@@ -326,6 +428,7 @@
+   }
+   std::fclose(per_frame);
+   if (fb) std::fclose(fb);
++  if (pdb) sqlite3_close(pdb);
+   const double stream_ms = NowMs() - t_stream0;
+ 
+   int64_t tvg = 0, raw = 0, ga = 0, gr = 0, rf = 0, tf = 0, x[31] = {0};
+@@ -394,6 +497,16 @@
+                 da_cmax * 1e3, da_rmed, da_rmax);
+     std::fflush(stdout);
+   }
++  {  // [FIXC] contract / evidence counters
++    int64_t uf = 0, ur = 0, ec = 0, ef = 0, lr = 0, ud = 0;
++    pwofficial_registration_evidence_stats_v1(s, &uf, &ur, &ec, &ef, &lr, &ud);
++    std::printf("REG_EVIDENCE untrusted_fed=%lld untrusted_registered=%lld "
++                "evidence_checked=%lld evidence_failed=%lld "
++                "late_registered=%lld unregistered_delivered=%lld\n",
++                (long long)uf, (long long)ur, (long long)ec, (long long)ef,
++                (long long)lr, (long long)ud);
++    std::fflush(stdout);
++  }
+   std::vector<aether_sfm_pose_t> poses(feed.size() + 8);
+   int n_pose = 0;
+   pwofficial_get_poses(s, poses.data(), static_cast<int>(poses.size()),

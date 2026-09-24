@@ -1,0 +1,38 @@
+# Summary re-printed from results/phone_gate_state.json by the same logic as phone_gate_state.py lines 107-131
+captures 90 skipped []
+bundle: {'present': 89, 'missing': 1}
+sigma=0.04 arm=all        status: {'aligned': 84, 'aligned_gate_tripped': 6}
+sigma=0.04 arm=trusted    status: {'aligned': 85, 'aligned_gate_tripped': 5}
+sigma=0.04 arm=failclosed status: {'aligned': 85, 'aligned_gate_tripped': 5}
+sigma=1.0 arm=all        status: {'aligned': 89, 'aligned_gate_tripped': 1}
+sigma=1.0 arm=trusted    status: {'aligned': 89, 'aligned_gate_tripped': 1}
+sigma=1.0 arm=failclosed status: {'aligned': 89, 'aligned_gate_tripped': 1}
+captures with excluded frames: 3 ; excluded frames total: 5 of 4499
+frames with no recorded state anywhere: 29 in 3 captures; states taken from native sidecar: 148
+failclosed arm: captures with excluded frames 6 frames 34
+
+per-capture changes (sigma=0.040):
+   failclosed excl=1 -> aligned max_err_mm 21.2 scale 1.04854
+ cap_1784809021393372 excl=0 aligned -> aligned | inliers 38/38 -> 38/38 | max_err_mm 21.3 -> 21.3 | scale 1.04900 -> 1.04900 (+0.00%)
+   failclosed excl=13 -> aligned max_err_mm 7.4 scale 1.02940
+ cap_1784814888131788 excl=0 aligned -> aligned | inliers 41/41 -> 41/41 | max_err_mm 10.2 -> 10.2 | scale 1.02752 -> 1.02752 (+0.00%)
+   failclosed excl=15 -> aligned_gate_tripped max_err_mm 164.7 scale 1.05402
+ cap_1784820775062947 excl=0 aligned_gate_tripped -> aligned_gate_tripped | inliers 49/50 -> 49/50 | max_err_mm 164.5 -> 164.5 | scale 1.05304 -> 1.05304 (+0.00%)
+   failclosed excl=0 -> aligned_gate_tripped max_err_mm 612.6 scale 1.09556
+ cap_1786013666212373 excl=0 aligned_gate_tripped -> aligned_gate_tripped | inliers 149/154 -> 149/154 | max_err_mm 612.6 -> 612.6 | scale 1.09556 -> 1.09556 (+0.00%)
+   failclosed excl=0 -> aligned_gate_tripped max_err_mm 21134614400.0 scale 1.18339
+ cap_1786199789306631 excl=0 aligned_gate_tripped -> aligned_gate_tripped | inliers 181/189 -> 181/189 | max_err_mm 21134614400.0 -> 21134614400.0 | scale 1.18339 -> 1.18339 (+0.00%)
+   failclosed excl=3 -> aligned max_err_mm 59.4 scale 0.92270
+ cap_1787733401226757 excl=3 aligned_gate_tripped -> aligned | inliers 18/20 -> 17/17 | max_err_mm 382.3 -> 59.4 | scale 0.91093 -> 0.92270 (+1.29%)
+   failclosed excl=0 -> aligned_gate_tripped max_err_mm 185.4 scale 1.05300
+ cap_1788795741337526 excl=0 aligned_gate_tripped -> aligned_gate_tripped | inliers 19/20 -> 19/20 | max_err_mm 185.4 -> 185.4 | scale 1.05300 -> 1.05300 (+0.00%)
+   failclosed excl=1 -> aligned max_err_mm 6.9 scale 1.01845
+ cap_1789105782936554 excl=1 aligned -> aligned | inliers 6/6 -> 5/5 | max_err_mm 8.6 -> 6.9 | scale 1.02088 -> 1.01845 (-0.24%)
+   failclosed excl=1 -> aligned_gate_tripped max_err_mm 361.9 scale 1.09092
+ cap_1789119308200005 excl=1 aligned_gate_tripped -> aligned_gate_tripped | inliers 17/23 -> 16/22 | max_err_mm 362.2 -> 361.9 | scale 1.09099 -> 1.09092 (-0.01%)
+
+good-subset reference (Umeyama on trusted frames after the last untrusted frame; same method as phone_gate_state.py lines 132-159,
+re-computed from results/*.all.pairs.txt; the trusted_postwindow core re-run is not repeated here):
+  {"cap": "cap_1787733401226757", "excluded": [3, 2, 1], "good_ids": "4-19", "n_good": 16, "good_scale": 0.940817, "all_bias_pct": -3.18, "trusted_bias_pct": -1.93}
+  {"cap": "cap_1789105782936554", "excluded": [0], "good_ids": "1-5", "n_good": 5, "good_scale": 1.018453, "all_bias_pct": 0.24, "trusted_bias_pct": 0.0}
+  {"cap": "cap_1789119308200005", "excluded": [8], "good_ids": "9-22", "n_good": 14, "good_scale": 1.083999, "all_bias_pct": 0.65, "trusted_bias_pct": 0.64}
