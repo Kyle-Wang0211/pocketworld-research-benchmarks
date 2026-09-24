@@ -1,0 +1,169 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>TSDF 对比:四种深度来源</title>
+<style>
+html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif;overflow:hidden}
+#top{padding:7px 12px;border-bottom:1px solid #222;background:#101012}
+h1{margin:0 0 2px;font-size:14px;color:#fff;font-weight:600}
+.hint{color:#8a8a8a;font-size:11.5px}
+#bar{margin-top:6px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px}
+#bar label{color:#9a9a9a;cursor:pointer;user-select:none}
+.ab{border:1px solid #444;background:#1a1a1e;color:#bbb;padding:3px 12px;border-radius:5px;cursor:pointer;font:600 12.5px -apple-system,"PingFang SC",sans-serif}
+.ab.onA{background:#1d3b5c;border-color:#4a90d9;color:#fff}
+.ab.onB{background:#5c3a14;border-color:#e0943a;color:#fff}
+.ab.onC{background:#1e4a26;border-color:#5fbf6f;color:#fff}
+#tag.C{background:rgba(30,74,38,.85);border:1px solid #5fbf6f;color:#fff}
+#stats .c{color:#8fd694}#stats .d{color:#d99be8}
+.ab.onD{background:#4a2a5c;border-color:#b76fd9;color:#fff}
+#tag.D{background:rgba(74,42,92,.85);border:1px solid #b76fd9;color:#fff}
+select{background:#1a1a1e;color:#ccc;border:1px solid #444;border-radius:4px;font-size:12px;padding:2px 4px}
+#msg{color:#6fbf73;font-size:11.5px;font-variant-numeric:tabular-nums}
+#wrap{position:relative;background:#000}
+canvas{display:block;width:100%;height:100%}
+#tag{position:absolute;left:14px;top:12px;padding:6px 14px;border-radius:6px;font:700 18px -apple-system,"PingFang SC",sans-serif;pointer-events:none}
+#tag.A{background:rgba(29,59,92,.85);border:1px solid #4a90d9;color:#fff}
+#tag.B{background:rgba(92,58,20,.85);border:1px solid #e0943a;color:#fff}
+#stats{position:absolute;right:12px;top:12px;background:rgba(16,16,18,.88);border:1px solid #2a2a2e;border-radius:6px;padding:8px 10px;font-size:11.5px;font-variant-numeric:tabular-nums;max-width:430px}
+#stats table{border-collapse:collapse}
+#stats td,#stats th{padding:1px 7px;text-align:right;white-space:nowrap}
+#stats th{color:#9a9a9a;font-weight:500}
+#stats td:first-child,#stats th:first-child{text-align:left;color:#aaa}
+#stats .a{color:#8ec1f0}#stats .b{color:#f0b46a}
+#stats .note{color:#777;font-size:10.5px;margin-top:4px;white-space:normal}
+</style></head><body>
+<div id="top">
+<h1>TSDF 对比 —— <span style="color:#8ec1f0">A 现在</span> vs <span style="color:#f0b46a">MVS 深度 → KIRI 1cm</span> vs <span style="color:#8fd694">VGGT-1B-Commercial 深度 → KIRI 1cm</span>(同一视角原地切换,全量、零减面)</h1>
+<div class="hint">四份用同样的 132 张照片。1 = A,CasDiffMVS 深度 → Open3D TSDF 3mm(现有)。后三份都走同一个 TSDF:照抄 GauStudio(KIRI 上游)VDBFusion 1cm / 截断 4cm / min_weight=5。2 = CasDiffMVS 深度(你满意的版本)。3 = VGGT-1B-Commercial,官方 demo_colmap.py,不吃位姿(自带相机对齐残差中位 64mm)。4 = MapAnything Apache 版,官方 demo_inference_on_colmap_outputs.py,吃我们的内参+位姿(输出相机对齐残差中位 34mm,模型没有原样保留我们的位姿)。<b style="color:#e0c070">2–4 本身没有颜色(贴图在最后),颜色借自 A 的最近顶点,只为辨认位置 —— 看几何请切「打光看几何」。</b></div>
+<div id="bar">
+<button class="ab" id="b_OLD">1 · A 现在</button><button class="ab" id="b_K1">2 · MVS→1cm</button><button class="ab" id="b_V1">3 · VGGT→1cm</button><button class="ab" id="b_M1">4 · MapAnything(吃位姿)→1cm</button>
+<span class="hint">按 1/2/3 或空格轮换</span>
+<label><input type="radio" name="sh" value="col" checked> 顶点色</label>
+<label><input type="radio" name="sh" value="lit"> 打光看几何</label>
+<label><input type="radio" name="sh" value="norm"> 法线</label>
+<label>拍摄机位 <select id="camsel"><option value="-1">自由环绕</option></select></label>
+<span class="hint">拖拽=旋转 · 滚轮=缩放 · Shift+拖拽=平移</span>
+<span id="msg">启动…</span></div></div>
+<div id="wrap"><canvas id="cv"></canvas><div id="tag" class="B">加载中</div><div id="stats">统计加载中…</div></div>
+<script>
+const PORTS=[8940,8941,8942,8943];
+const VS=`#version 300 es
+in vec3 p; in vec3 c; in vec3 n; uniform mat4 mvp; uniform mat4 mv;
+out vec3 vc; out vec3 vn; out vec3 vp;
+void main(){gl_Position=mvp*vec4(p,1.0); vc=c; vn=mat3(mv)*n; vp=(mv*vec4(p,1.0)).xyz;}`;
+const FS=`#version 300 es
+precision highp float; in vec3 vc; in vec3 vn; in vec3 vp; out vec4 o; uniform int mode;
+void main(){
+ vec3 N=normalize(vn); if(!gl_FrontFacing) N=-N;
+ if(mode==0){ o=vec4(vc,1.0); return; }
+ if(mode==2){ o=vec4(N*0.5+0.5,1.0); return; }
+ vec3 L=normalize(vec3(0.3,0.55,1.0));
+ float d=max(dot(N,L),0.0);
+ float rim=pow(1.0-max(dot(N,normalize(-vp)),0.0),2.0)*0.25;
+ vec3 b=vec3(0.76,0.76,0.78);
+ o=vec4(b*(0.30+0.85*d)+vec3(rim),1.0);}`;
+function mul(a,b){const r=new Float32Array(16);for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+j]*b[i*4+k];r[i*4+j]=s;}return r;}
+function persp(f,ar,n,fa){const t=1/Math.tan(f/2),r=new Float32Array(16);r[0]=t/ar;r[5]=t;r[10]=(fa+n)/(n-fa);r[11]=-1;r[14]=2*fa*n/(n-fa);return r;}
+function look(e,c,u){const f=[c[0]-e[0],c[1]-e[1],c[2]-e[2]];let l=Math.hypot(...f);f.forEach((_,i)=>f[i]/=l);
+ const s=[f[1]*u[2]-f[2]*u[1],f[2]*u[0]-f[0]*u[2],f[0]*u[1]-f[1]*u[0]];l=Math.hypot(...s)||1;s.forEach((_,i)=>s[i]/=l);
+ const v=[s[1]*f[2]-s[2]*f[1],s[2]*f[0]-s[0]*f[2],s[0]*f[1]-s[1]*f[0]];
+ return new Float32Array([s[0],v[0],-f[0],0,s[1],v[1],-f[1],0,s[2],v[2],-f[2],0,
+  -(s[0]*e[0]+s[1]*e[1]+s[2]*e[2]),-(v[0]*e[0]+v[1]*e[1]+v[2]*e[2]),f[0]*e[0]+f[1]*e[1]+f[2]*e[2],1]);}
+const cv=document.getElementById('cv'), gl=cv.getContext('webgl2',{antialias:true});
+const msg=document.getElementById('msg'), tagEl=document.getElementById('tag');
+if(!gl){msg.textContent='需要 WebGL2';throw new Error('no webgl2');}
+const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+ if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o;};
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw gl.getProgramInfoLog(pr);
+gl.useProgram(pr);gl.enable(gl.DEPTH_TEST);gl.clearColor(0.02,0.02,0.03,1);
+const U={mvp:gl.getUniformLocation(pr,'mvp'),mv:gl.getUniformLocation(pr,'mv'),mode:gl.getUniformLocation(pr,'mode')};
+const LP=gl.getAttribLocation(pr,'p'),LC=gl.getAttribLocation(pr,'c'),LN=gl.getAttribLocation(pr,'n');
+let CAM={az:0.6,el:0.42,dist:1,tgt:[0,0,0]}, CAPV=null, MODE=0, SHOW='M1';
+const ORDER=['OLD','K1','V1','M1'];
+const INFO={OLD:{name:'A 现在',cls:'A',btn:'onA'},K1:{name:'MVS 深度 → 1cm',cls:'B',btn:'onB'},V1:{name:'VGGT 深度 → 1cm',cls:'C',btn:'onC'},M1:{name:'MapAnything(吃我们位姿)→ 1cm',cls:'D',btn:'onD'}};
+const MESH={OLD:{chunks:[],meta:null,tris:0,done:false},K1:{chunks:[],meta:null,tris:0,done:false},V1:{chunks:[],meta:null,tris:0,done:false},M1:{chunks:[],meta:null,tris:0,done:false}};
+let CAMS=[];
+let rr=0; const url=u=>`http://127.0.0.1:${PORTS[(rr++)%PORTS.length]}/${u}`;
+async function bin(u){const r=await fetch(url(u));if(!r.ok)throw new Error(u+' '+r.status);return new Uint8Array(await r.arrayBuffer());}
+function mkbuf(data,t){const b=gl.createBuffer();gl.bindBuffer(t,b);gl.bufferData(t,data,gl.STATIC_DRAW);return b;}
+async function fetchChunk(tag,k){return Promise.all(['pos','col','nrm','idx'].map(e=>bin(`bin/${tag}.${k}.${e}`)));}
+function upload(tag,ci,[p,c,n,i]){
+ const va=gl.createVertexArray();gl.bindVertexArray(va);
+ gl.bindBuffer(gl.ARRAY_BUFFER,mkbuf(p,gl.ARRAY_BUFFER));gl.vertexAttribPointer(LP,3,gl.FLOAT,false,0,0);gl.enableVertexAttribArray(LP);
+ gl.bindBuffer(gl.ARRAY_BUFFER,mkbuf(c,gl.ARRAY_BUFFER));gl.vertexAttribPointer(LC,3,gl.UNSIGNED_BYTE,true,0,0);gl.enableVertexAttribArray(LC);
+ gl.bindBuffer(gl.ARRAY_BUFFER,mkbuf(n,gl.ARRAY_BUFFER));gl.vertexAttribPointer(LN,3,gl.BYTE,true,0,0);gl.enableVertexAttribArray(LN);
+ mkbuf(i,gl.ELEMENT_ARRAY_BUFFER);gl.bindVertexArray(null);
+ MESH[tag].chunks.push({va,count:ci.tris*3});MESH[tag].tris+=ci.tris;
+}
+function setShow(t){SHOW=t;for(const k of ORDER)document.getElementById('b_'+k).className='ab'+(k===t?' '+INFO[k].btn:'');
+ const m=MESH[t];tagEl.className=INFO[t].cls;
+ tagEl.textContent=INFO[t].name+(m.done?'':` (加载中 ${m.tris.toLocaleString()} 三角)`);}
+function viewMats(w,h){
+ if(CAPV){const mv=new Float32Array(CAPV.viewmat);return {mv,P:persp(CAPV.fovy,w/h,0.02,200)};}
+ const t=CAM.tgt,D=CAM.dist;
+ const e=[t[0]+D*Math.cos(CAM.el)*Math.sin(CAM.az),t[1]+D*Math.sin(CAM.el),t[2]+D*Math.cos(CAM.el)*Math.cos(CAM.az)];
+ return {mv:look(e,t,[0,1,0]),P:persp(0.9,w/h,D*0.004,D*60)};
+}
+function draw(){
+ const dp=Math.min(devicePixelRatio||1,2);
+ const w=cv.clientWidth*dp|0,h=cv.clientHeight*dp|0;
+ if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+ gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ const m=MESH[SHOW];
+ if(m.chunks.length){
+  const {mv,P}=viewMats(w,h);const mvp=mul(P,mv);
+  gl.useProgram(pr);gl.uniformMatrix4fv(U.mvp,false,mvp);gl.uniformMatrix4fv(U.mv,false,mv);gl.uniform1i(U.mode,MODE);
+  for(const c of m.chunks){gl.bindVertexArray(c.va);gl.drawElements(gl.TRIANGLES,c.count,gl.UNSIGNED_INT,0);}
+ }
+ requestAnimationFrame(draw);
+}
+function fit(){document.getElementById('wrap').style.height=(innerHeight-document.getElementById('top').offsetHeight-1)+'px';}
+async function metaWhenReady(tag){
+ for(;;){try{const r=await fetch(url(`bin/${tag}.meta.json`));if(r.ok)return await r.json();}catch(e){}
+  msg.textContent=`${INFO[tag].name} 还在箱子上生成,10 秒后重试…`;await new Promise(z=>setTimeout(z,10000));}}
+async function loadMesh(tag){
+ const M=MESH[tag];M.meta=await metaWhenReady(tag);
+ const q=M.meta.chunks.slice();const inflight=[];
+ // two chunks in flight (8 requests across the 4 tunnels); upload in order of arrival
+ async function worker(){while(q.length){const ci=q.shift();const d=await fetchChunk(tag,ci.k);upload(tag,ci,d);setShow(SHOW);
+  msg.textContent=`${INFO[tag].name}:已上屏 ${M.tris.toLocaleString()} / ${M.meta.total_f.toLocaleString()} 三角`;}}
+ await Promise.all([worker(),worker()]);M.done=true;setShow(SHOW);
+}
+function fmt(x){return typeof x==='number'?x.toLocaleString():x;}
+async function loadStats(){
+ try{const r=await fetch(url('stats_feed.json'));if(!r.ok){document.getElementById('stats').textContent='统计还在算(两把尺子依次量两份网格),自动刷新…';setTimeout(loadStats,30000);return;}
+  const s=await r.json();
+  let h='<table><tr><th></th><th class="a">A 现在</th><th class="b">MVS→1cm</th><th class="c">VGGT→1cm</th><th class="d">MapAny→1cm</th></tr>';
+  const f=(r,x)=>r.pct?x.toFixed(2)+'%':fmt(x);
+  for(const r of s.rows){h+=`<tr><td>${r.name}</td><td class="a">${f(r,r.a)}</td><td class="b">${f(r,r.k1)}</td><td class="c">${f(r,r.v1)}</td><td class="d">${f(r,r.m1)}</td></tr>`;}
+  h+='</table>'+(s.note?`<div class="note">${s.note}</div>`:'');document.getElementById('stats').innerHTML=h;
+ }catch(e){document.getElementById('stats').textContent='统计还没算完';}
+}
+async function loadCams(){
+ try{CAMS=await (await fetch(url('cams.json'))).json();const sel=document.getElementById('camsel');
+  CAMS.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`第 ${c.view} 张照片的机位`;sel.appendChild(o);});
+ }catch(e){}
+}
+document.getElementById('camsel').addEventListener('change',e=>{const i=+e.target.value;CAPV=i<0?null:CAMS[i];});
+function capToOrbit(){ if(!CAPV)return; const C=CAPV.center,F=CAPV.fwd,D=1.2;
+ const T=[C[0]+F[0]*D,C[1]+F[1]*D,C[2]+F[2]*D];CAM.tgt=T;CAM.dist=D;
+ const o=[C[0]-T[0],C[1]-T[1],C[2]-T[2]];CAM.el=Math.asin(Math.max(-0.999,Math.min(0.999,o[1]/D)));CAM.az=Math.atan2(o[0],o[2]);
+ CAPV=null;document.getElementById('camsel').value='-1';}
+(async()=>{
+ fit();addEventListener('resize',fit);setShow('M1');
+ const m0=await metaWhenReady('OLD');CAM.tgt=m0.med.slice();CAM.dist=m0.radius*1.7;
+ draw();loadStats();loadCams();
+ await loadMesh('M1');await loadMesh('V1');await loadMesh('K1');await loadMesh('OLD');
+ msg.textContent=`✅ 三份都已全量上屏 —— A ${MESH.OLD.meta.total_f.toLocaleString()} · MVS→1cm ${MESH.K1.meta.total_f.toLocaleString()} · VGGT→1cm ${MESH.V1.meta.total_f.toLocaleString()} · MapAnything→1cm ${MESH.M1.meta.total_f.toLocaleString()} 三角`;
+})().catch(e=>{msg.textContent='错误: '+e;msg.style.color='#e66';console.error(e);});
+for(const k of ORDER)document.getElementById('b_'+k).onclick=()=>setShow(k);
+addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Tab'){e.preventDefault();setShow(ORDER[(ORDER.indexOf(SHOW)+1)%ORDER.length]);}
+ const i=['1','2','3','4'].indexOf(e.key);if(i>=0)setShow(ORDER[i]);});
+let dn=false,lx=0,ly=0,sft=false;
+cv.addEventListener('mousedown',e=>{dn=true;lx=e.clientX;ly=e.clientY;sft=e.shiftKey;capToOrbit();});
+addEventListener('mouseup',()=>dn=false);
+addEventListener('mousemove',e=>{if(!dn)return;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+ if(sft){const s=CAM.dist*0.0014,r=[Math.cos(CAM.az),0,-Math.sin(CAM.az)];
+  CAM.tgt[0]-=r[0]*dx*s;CAM.tgt[2]-=r[2]*dx*s;CAM.tgt[1]+=dy*s;}
+ else{CAM.az-=dx*0.006;CAM.el=Math.max(-1.52,Math.min(1.52,CAM.el+dy*0.006));}});
+cv.addEventListener('wheel',e=>{e.preventDefault();capToOrbit();CAM.dist*=Math.exp(e.deltaY*0.0012);},{passive:false});
+document.querySelectorAll('input[name=sh]').forEach(r=>r.addEventListener('change',e=>{MODE={col:0,lit:1,norm:2}[e.target.value];}));
+</script></body></html>

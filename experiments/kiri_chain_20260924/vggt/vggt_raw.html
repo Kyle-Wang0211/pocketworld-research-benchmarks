@@ -1,0 +1,112 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VGGT 完整点云</title>
+<style>
+html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif;overflow:hidden}
+#top{padding:7px 12px;border-bottom:1px solid #222;background:#101012}
+h1{margin:0 0 2px;font-size:14px;color:#fff;font-weight:600}
+.hint{color:#8a8a8a;font-size:11.5px}
+#bar{margin-top:6px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px}
+#bar label{color:#9a9a9a;cursor:pointer;user-select:none}
+.ab{border:1px solid #444;background:#1a1a1e;color:#bbb;padding:3px 12px;border-radius:5px;cursor:pointer;font:600 12.5px -apple-system,"PingFang SC",sans-serif}
+.ab.onA{background:#1d3b5c;border-color:#4a90d9;color:#fff}
+.ab.onB{background:#4a2a5c;border-color:#b76fd9;color:#fff}
+#msg{color:#6fbf73;font-size:11.5px;font-variant-numeric:tabular-nums}
+#wrap{position:relative;background:#000}
+canvas{display:block;width:100%;height:100%}
+#tag{position:absolute;left:14px;top:12px;padding:6px 14px;border-radius:6px;font:700 18px -apple-system,"PingFang SC",sans-serif;pointer-events:none}
+#tag.A{background:rgba(29,59,92,.85);border:1px solid #4a90d9;color:#fff}
+#tag.B{background:rgba(74,42,92,.85);border:1px solid #b76fd9;color:#fff}
+#stats{position:absolute;right:12px;top:12px;background:rgba(16,16,18,.88);border:1px solid #2a2a2e;border-radius:6px;padding:8px 10px;font-size:11.5px;font-variant-numeric:tabular-nums;max-width:420px}
+#stats table{border-collapse:collapse}
+#stats td,#stats th{padding:1px 7px;text-align:right;white-space:nowrap}
+#stats th{color:#9a9a9a;font-weight:500}
+#stats td:first-child,#stats th:first-child{text-align:left;color:#aaa}
+#stats .a{color:#8ec1f0}#stats .b{color:#d99be8}
+#stats .note{color:#777;font-size:10.5px;margin-top:4px;white-space:normal}
+@media (max-width:700px){#stats{position:static;max-width:none;margin:6px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<div id="top">
+<h1>VGGT-1B-Commercial 完整稠密点云 —— 全部 26,803,392 点,不做任何过滤和下游处理</h1>
+<div class="hint">同样 132 张原图,一次前向。VGGT 深度图 × VGGT 自己估的相机 = 每个像素一个点(官方 <code>demo_gradio.py</code> 默认的「深度图+相机分支」,导出用官方 <code>predictions_to_glb()</code>,置信度滑块拉到 0 = 一个点都不删)。<b style="color:#e0c070">没有置信度过滤、没有 TSDF、没有对齐到我们的相机;坐标、尺度、位姿全是 VGGT 自己的。</b>唯一不同:权重是商用版 VGGT-1B-Commercial。</div>
+<div id="bar">
+<label><input type="checkbox" id="cams"> 显示 VGGT 估的相机</label>
+<label>点大小 <input type="range" id="psize" min="1" max="4" step="0.5" value="1" style="width:80px;vertical-align:middle"> <span id="pv">1</span> px</label>
+<button class="ab" id="home">回到初始视角</button>
+<span class="hint">拖拽=旋转 · 滚轮=缩放 · 右键拖=平移</span>
+<span id="msg">启动…</span></div></div>
+<div id="wrap"><canvas id="cv"></canvas><div id="tag" class="A">加载中</div><div id="stats">统计加载中…</div></div>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const PORTS=[8940,8941,8942,8943]; let rr=0;
+const url=u=>`http://127.0.0.1:${PORTS[(rr++)%PORTS.length]}/${u}`;
+const msg=document.getElementById('msg'), tagEl=document.getElementById('tag'), cv=document.getElementById('cv');
+const INFO={B:{name:'VGGT 全部点',file:'vggt_raw/all',parts:16,cls:'B'}};
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x050508);
+const camera=new THREE.PerspectiveCamera(55,1,0.001,100);
+scene.add(new THREE.AmbientLight(0xffffff,1.2)); const sun=new THREE.DirectionalLight(0xffffff,1.5); camera.add(sun); scene.add(camera);
+const controls=new OrbitControls(camera,cv); controls.screenSpacePanning=true;
+const MODELS={B:null}; let SHOW='B', HOME=null;
+function fit(){const h=innerHeight-document.getElementById('top').offsetHeight-1;document.getElementById('wrap').style.height=h+'px';
+ renderer.setSize(cv.clientWidth,h,false);camera.aspect=cv.clientWidth/h;camera.updateProjectionMatrix();}
+function setShow(t){SHOW=t;
+ for(const k in MODELS)if(MODELS[k])MODELS[k].root.visible=(k===t);
+ tagEl.className=INFO[t].cls;tagEl.textContent=INFO[t].name+(MODELS[t]?'':' (加载中)');}
+function applyView(){const ps=+document.getElementById('psize').value, cams=document.getElementById('cams').checked;
+ document.getElementById('pv').textContent=ps;
+ for(const k in MODELS){const m=MODELS[k];if(!m)continue;m.root.traverse(o=>{if(o.isPoints)o.material.size=ps;else if(o.isMesh)o.visible=cams;});}}
+async function fetchParts(base,n,label){
+ let got=0; const bufs=new Array(n);
+ // at most 8 requests in flight (2 per tunnel)
+ const q=[...Array(n).keys()];
+ async function worker(){while(q.length){const i=q.shift();const r=await fetch(url(`${base}.part${String(i).padStart(2,'0')}`));
+  if(!r.ok)throw new Error(base+' part '+i+' '+r.status);bufs[i]=new Uint8Array(await r.arrayBuffer());got++;msg.textContent=`${label}:下载 ${got}/${n} 段`;}}
+ await Promise.all([...Array(Math.min(8,n))].map(worker));
+ const tot=bufs.reduce((s,b)=>s+b.length,0),out=new Uint8Array(tot);let o=0;for(const b of bufs){out.set(b,o);o+=b.length;}return out.buffer;}
+function setHome(root){
+ // orbit target = median of a point subsample; start from the side the (VGGT-estimated) cameras are on
+ let P=null; const camC=new THREE.Vector3(); let nc=0; const box=new THREE.Box3(), c=new THREE.Vector3();
+ root.updateMatrixWorld(true);
+ root.traverse(o=>{if(o.isPoints&&!P)P=o;else if(o.isMesh){box.setFromObject(o);box.getCenter(c);camC.add(c);nc++;}});
+ const a=P.geometry.attributes.position, m=P.matrixWorld, xs=[],ys=[],zs=[], v=new THREE.Vector3();
+ for(let i=0;i<a.count;i+=997){v.fromBufferAttribute(a,i).applyMatrix4(m);xs.push(v.x);ys.push(v.y);zs.push(v.z);}
+ const med=arr=>{arr.sort((p,q)=>p-q);return arr[arr.length>>1];}, q=(arr,f)=>arr[Math.floor(arr.length*f)];
+ const T=new THREE.Vector3(med(xs),med(ys),med(zs));
+ const span=Math.hypot(q(xs,.95)-q(xs,.05),q(ys,.95)-q(ys,.05),q(zs,.95)-q(zs,.05));
+ camC.divideScalar(Math.max(nc,1)); let dir=camC.clone().sub(T); if(dir.lengthSq()<1e-9)dir.set(0,0.3,1);
+ dir.normalize(); HOME={T,pos:T.clone().add(dir.multiplyScalar(span*0.9))};
+ camera.near=span*1e-3; camera.far=span*50; camera.updateProjectionMatrix();}
+function goHome(){if(!HOME)return;camera.position.copy(HOME.pos);controls.target.copy(HOME.T);controls.update();}
+async function loadModel(k){
+ const t0=performance.now(); const buf=await fetchParts(INFO[k].file,INFO[k].parts,INFO[k].name);
+ msg.textContent=`${INFO[k].name}:解析…`;
+ const gltf=await new Promise((res,rej)=>new GLTFLoader().parse(buf,'',res,rej));
+ let pts=0,cams=0; gltf.scene.traverse(o=>{if(o.isPoints)pts+=o.geometry.attributes.position.count;else if(o.isMesh)cams++;});
+ scene.add(gltf.scene); MODELS[k]={root:gltf.scene,pts,cams};
+ if(!HOME){setHome(gltf.scene);goHome();}
+ applyView(); setShow(SHOW);
+ msg.textContent=`${INFO[k].name}:已上屏 ${pts.toLocaleString()} 点、${cams} 个相机(${((performance.now()-t0)/1000).toFixed(1)} s)`;
+}
+async function loadStats(){
+ try{const s=await (await fetch(url('vggt_raw/info.json'))).json();const B=s.glb.all_points_conf0;const f=x=>x.toLocaleString();
+  document.getElementById('stats').innerHTML=`<table>
+  <tr><td>点数</td><td class="b">${f(B.points)}</td></tr>
+  <tr><td>占全部像素</td><td class="b">${(100*B.points/s.total_pixels).toFixed(1)}%(每个像素一个点)</td></tr>
+  <tr><td>输入分辨率(官方预处理)</td><td class="b">${s.images_shape[0]} 张 × ${s.images_shape[3]}×${s.images_shape[2]}</td></tr>
+  <tr><td>推理(含读图)</td><td class="b">${s.run_model_s} s,显存峰值 ${s.peak_gpu_gb} GB</td></tr>
+  <tr><td>GLB 大小</td><td class="b">${(B.bytes/1e6).toFixed(1)} MB</td></tr></table>
+  <div class="note">官方预处理把 4032×3024 原图缩到宽 518(横图不裁切),所以是 132×392×518 = ${f(s.total_pixels)} 点。颜色 = 缩小后输入图的像素色。坐标是 VGGT 自己的归一化单位,不是米;导出时官方函数只做了一次整体旋转平移方便观看,不改形状。</div>`;
+ }catch(e){document.getElementById('stats').textContent='统计读取失败';}}
+fit();addEventListener('resize',fit);setShow('B');loadStats();
+renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+(async()=>{await loadModel('B');
+ msg.textContent=`✅ 全量上屏 ${MODELS.B.pts.toLocaleString()} 点`;})()
+ .catch(e=>{msg.textContent='错误: '+e;msg.style.color='#e66';console.error(e);});
+document.getElementById('home').onclick=goHome;
+document.getElementById('cams').addEventListener('change',applyView);
+document.getElementById('psize').addEventListener('input',applyView);
+</script></body></html>

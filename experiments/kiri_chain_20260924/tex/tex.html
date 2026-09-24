@@ -1,0 +1,130 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KIRI 1cm 贴图</title>
+<style>
+html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif;overflow:hidden}
+#top{padding:7px 12px;border-bottom:1px solid #222;background:#101012}
+h1{margin:0 0 2px;font-size:14px;color:#fff;font-weight:600}
+.hint{color:#8a8a8a;font-size:11.5px}
+#bar{margin-top:6px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px}
+#bar label{color:#9a9a9a;cursor:pointer;user-select:none}
+.ab{border:1px solid #444;background:#1a1a1e;color:#bbb;padding:3px 12px;border-radius:5px;cursor:pointer;font:600 12.5px -apple-system,"PingFang SC",sans-serif}
+.ab.onA{background:#5c3a14;border-color:#e0943a;color:#fff}
+.ab.onB{background:#1e4a26;border-color:#5fbf6f;color:#fff}
+select{background:#1a1a1e;color:#ccc;border:1px solid #444;border-radius:4px;font-size:12px;padding:2px 4px}
+#msg{color:#6fbf73;font-size:11.5px;font-variant-numeric:tabular-nums}
+#wrap{position:relative;background:#000}
+canvas{display:block;width:100%;height:100%}
+#tag{position:absolute;left:14px;top:12px;padding:6px 14px;border-radius:6px;font:700 18px -apple-system,"PingFang SC",sans-serif;pointer-events:none}
+#tag.A{background:rgba(92,58,20,.85);border:1px solid #e0943a;color:#fff}
+#tag.B{background:rgba(30,74,38,.85);border:1px solid #5fbf6f;color:#fff}
+#stats{position:absolute;right:12px;top:12px;background:rgba(16,16,18,.88);border:1px solid #2a2a2e;border-radius:6px;padding:8px 10px;font-size:11.5px;font-variant-numeric:tabular-nums;max-width:440px}
+#stats table{border-collapse:collapse}
+#stats td,#stats th{padding:1px 7px;text-align:right;white-space:nowrap}
+#stats th{color:#9a9a9a;font-weight:500}
+#stats td:first-child,#stats th:first-child{text-align:left;color:#aaa}
+#stats .a{color:#f0b46a}#stats .b{color:#8fd694}
+#stats .note{color:#777;font-size:10.5px;margin-top:4px;white-space:normal}
+@media (max-width:700px){#stats{position:static;max-width:none;margin:6px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<div id="top">
+<h1>KIRI 1cm 网格 → texrecon 贴图(照抄 GauStudio README 参数)—— <span style="color:#f0b46a">官方默认</span> vs <span style="color:#8fd694">加 texrecon 自带的「保留未见面」</span></h1>
+<div class="hint">网格 = 你选定的 KIRI 1cm(3,781,890 三角,零减面);照片 = 132 张全分辨率原图 + 融合时用的同一套相机。两份都是 texrecon 原样输出,没有任何后处理。<b style="color:#e0c070">区别只有一处:任何照片都没看到、texrecon 自带补洞也补不上的面,默认直接从输出里删掉;加 <code>--keep_unseen_faces</code>(texrecon 官方选项,默认关)就保留几何、贴一块黑色。</b></div>
+<div id="bar">
+<button class="ab" id="b_A">1 · 官方默认(删未见面)</button><button class="ab" id="b_B">2 · 保留未见面</button>
+<span class="hint">按 1/2 或空格切换</span>
+<label><input type="checkbox" id="showdrop"> 红色标出默认版删掉的面</label>
+<label><input type="radio" name="sh" value="tex" checked> 贴图</label>
+<label><input type="radio" name="sh" value="lit"> 白模打光看几何</label>
+<label><input type="checkbox" id="dbl" checked> 背面也显示</label>
+<label>拍摄机位 <select id="camsel"><option value="-1">自由环绕</option></select></label>
+<span class="hint">拖拽=旋转 · 滚轮=缩放 · 右键拖=平移</span>
+<span id="msg">启动…</span></div></div>
+<div id="wrap"><canvas id="cv"></canvas><div id="tag" class="A">加载中</div><div id="stats">统计加载中…</div></div>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {PLYLoader} from 'three/addons/loaders/PLYLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const PORTS=[8940,8941,8942,8943]; let rr=0;
+const url=u=>`http://127.0.0.1:${PORTS[(rr++)%PORTS.length]}/${u}`;
+const msg=document.getElementById('msg'), tagEl=document.getElementById('tag'), cv=document.getElementById('cv');
+const INFO={A:{name:'官方默认(删未见面)',file:'tex/K1def',cls:'A',btn:'onA'},B:{name:'保留未见面(黑色)',file:'tex/K1keep',cls:'B',btn:'onB'}};
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x050508);
+const camera=new THREE.PerspectiveCamera(50,1,0.01,200);
+const sun=new THREE.DirectionalLight(0xffffff,2.2); sun.position.set(0.3,0.55,1.0); camera.add(sun); scene.add(camera);
+scene.add(new THREE.AmbientLight(0xffffff,0.55));
+const MODELS={A:null,B:null}; let SHOW='A', MODE='tex', DROP=null, CAMS=[];
+const litMat=new THREE.MeshLambertMaterial({color:0xc2c2c7,flatShading:true,side:THREE.DoubleSide});
+function fit(){const h=innerHeight-document.getElementById('top').offsetHeight-1;document.getElementById('wrap').style.height=h+'px';
+ renderer.setSize(cv.clientWidth,h,false);camera.aspect=cv.clientWidth/h;camera.updateProjectionMatrix();}
+function side(){return document.getElementById('dbl').checked?THREE.DoubleSide:THREE.FrontSide;}
+function applyMode(){for(const k in MODELS){const g=MODELS[k];if(!g)continue;
+ g.root.traverse(o=>{if(!o.isMesh)return;o.material=MODE==='tex'?o.userData.texMat:litMat;});}
+ litMat.side=side(); for(const k in MODELS){const g=MODELS[k];if(g)g.root.traverse(o=>{if(o.isMesh){o.userData.texMat.side=side();o.userData.texMat.needsUpdate=true;}});}
+ litMat.needsUpdate=true;}
+function setShow(t){SHOW=t;for(const k of ['A','B'])document.getElementById('b_'+k).className='ab'+(k===t?' '+INFO[k].btn:'');
+ for(const k in MODELS)if(MODELS[k])MODELS[k].root.visible=(k===t);
+ tagEl.className=INFO[t].cls;tagEl.textContent=INFO[t].name+(MODELS[t]?'':' (加载中)');}
+async function fetchParts(base,n,label){
+ let got=0; const bufs=new Array(n);
+ await Promise.all([...Array(n).keys()].map(async i=>{const r=await fetch(url(`${base}.part${String(i).padStart(2,'0')}`));
+  if(!r.ok)throw new Error(base+' part '+i+' '+r.status);bufs[i]=new Uint8Array(await r.arrayBuffer());got++;
+  msg.textContent=`${label}:下载 ${got}/${n} 段`;}));
+ const tot=bufs.reduce((s,b)=>s+b.length,0),out=new Uint8Array(tot);let o=0;for(const b of bufs){out.set(b,o);o+=b.length;}return out.buffer;}
+async function loadModel(k){
+ const t0=performance.now(); const buf=await fetchParts(INFO[k].file,8,INFO[k].name);
+ msg.textContent=`${INFO[k].name}:解析 + 解码贴图…`;
+ const gltf=await new Promise((res,rej)=>new GLTFLoader().parse(buf,'',res,rej));
+ let tris=0,tex=new Set();
+ gltf.scene.traverse(o=>{if(!o.isMesh)return;const m=o.material;
+  const bm=new THREE.MeshBasicMaterial({map:m.map||null,color:m.map?0xffffff:(m.color||0xffffff),side:side()});
+  if(m.map){tex.add(m.map.uuid);m.map.anisotropy=renderer.capabilities.getMaxAnisotropy();}
+  o.userData.texMat=bm;o.material=bm;tris+=o.geometry.index?o.geometry.index.count/3:o.geometry.attributes.position.count/3;});
+ scene.add(gltf.scene); MODELS[k]={root:gltf.scene,tris,ntex:tex.size};
+ applyMode(); setShow(SHOW);
+ msg.textContent=`${INFO[k].name}:已上屏 ${tris.toLocaleString()} 三角、${tex.size} 张贴图(${((performance.now()-t0)/1000).toFixed(1)} s)`;
+}
+async function loadDrop(){
+ const r=await fetch(url('tex/K1_dropped_faces.ply'));if(!r.ok)return;const geo=new PLYLoader().parse(await r.arrayBuffer());
+ DROP=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xff2a2a,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+ DROP.visible=document.getElementById('showdrop').checked;scene.add(DROP);}
+function fmt(x){return typeof x==='number'?x.toLocaleString():x;}
+async function loadStats(){
+ try{const s=await (await fetch(url('stats_tex.json'))).json();
+  let h='<table><tr><th></th><th class="a">官方默认</th><th class="b">保留未见面</th></tr>';
+  for(const r of s.rows)h+=`<tr><td>${r.name}</td><td class="a">${fmt(r.a)}</td><td class="b">${fmt(r.b)}</td></tr>`;
+  h+='</table>'+(s.note?`<div class="note">${s.note}</div>`:'');document.getElementById('stats').innerHTML=h;
+ }catch(e){document.getElementById('stats').textContent='统计还没算完';}}
+let controls;
+// inspection hook: look at point t from point p (used to check where the dropped faces sit)
+window.lookFrom=(p,t)=>{camera.position.set(...p);controls.target.set(...t);camera.fov=50;camera.updateProjectionMatrix();controls.update();};
+function setCapture(c){const M=new THREE.Matrix4().fromArray(c.viewmat).invert();M.decompose(camera.position,camera.quaternion,new THREE.Vector3());
+ camera.fov=c.fovy*180/Math.PI;camera.updateProjectionMatrix();
+ controls.target.set(c.center[0]+c.fwd[0]*1.2,c.center[1]+c.fwd[1]*1.2,c.center[2]+c.fwd[2]*1.2);}
+(async()=>{
+ const meta=await (await fetch(url('bin/OLD.meta.json'))).json();
+ try{CAMS=await (await fetch(url('cams.json'))).json();}catch(e){}
+ // world "up" of this reconstruction = mean camera up axis over the capture views (row 1 of each view matrix)
+ const up=new THREE.Vector3();for(const c of CAMS)up.add(new THREE.Vector3(c.viewmat[1],c.viewmat[5],c.viewmat[9]));
+ if(up.lengthSq()>0)camera.up.copy(up.normalize());
+ const T=new THREE.Vector3(...meta.med),D=meta.radius*1.7;
+ const off=new THREE.Vector3(Math.sin(0.6),0.42,Math.cos(0.6)).normalize().multiplyScalar(D);
+ camera.position.copy(T).add(off);
+ controls=new OrbitControls(camera,cv);controls.target.copy(T);controls.screenSpacePanning=true;controls.update();
+ controls.addEventListener('start',()=>{camera.fov=50;camera.updateProjectionMatrix();document.getElementById('camsel').value='-1';});
+ const sel=document.getElementById('camsel');CAMS.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`第 ${c.view} 张照片的机位`;sel.appendChild(o);});
+ sel.addEventListener('change',e=>{const i=+e.target.value;if(i>=0)setCapture(CAMS[i]);});
+ fit();addEventListener('resize',fit);setShow('A');loadStats();
+ renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+ await loadModel('A'); loadDrop(); await loadModel('B');
+ msg.textContent=`✅ 两份都已全量上屏 —— 默认 ${MODELS.A.tris.toLocaleString()} 三角 · 保留 ${MODELS.B.tris.toLocaleString()} 三角`;
+})().catch(e=>{msg.textContent='错误: '+e;msg.style.color='#e66';console.error(e);});
+for(const k of ['A','B'])document.getElementById('b_'+k).onclick=()=>setShow(k);
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();setShow(SHOW==='A'?'B':'A');}if(e.key==='1')setShow('A');if(e.key==='2')setShow('B');});
+document.getElementById('showdrop').addEventListener('change',e=>{if(DROP)DROP.visible=e.target.checked;});
+document.getElementById('dbl').addEventListener('change',applyMode);
+document.querySelectorAll('input[name=sh]').forEach(r=>r.addEventListener('change',e=>{MODE=e.target.value;applyMode();}));
+</script></body></html>
