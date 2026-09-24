@@ -26,3 +26,11 @@ These files are intentionally kept out of git. They are reproducibility inputs o
 - Local official DA3 streaming reference copy: `/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/vendor/official_da3_streaming`
 
 Only manifests, summaries, reports, and scripts are committed. Large depth/confidence tensors, descriptor arrays, copied photos, local databases, and vendor checkouts are intentionally excluded.
+
+## SfM Device-Pose Alignment (2026-09-24)
+
+- Lightweight archive: `data/sfm_device_align_2026_09_24/` (patches B/C, header, tools, text run outputs, results, README).
+- Excluded, local only, in the VOLATILE session scratch `/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/step2/` (lost on reboot):
+  - `proto/cap_*/{U0,U1,U2,RR}/**/*.bin`: 45 COLMAP sparse-model files (about 24 MB), ignored by `*.bin`. To regenerate, rerun `proto/run_upstream.sh` on the `inputs/` feeds.
+  - `runs/*/` binaries (`*.bin`, `cloud.ply`, `session.db.arkit_pose_v1`, about 233 MB). To regenerate, apply `patch_B_device_align_v1.diff` to Aether3D `7dc00642` + shim `4e22ee7`, then run `tools/build.sh` and `tools/batch_*.sh`.
+  - `src/`, `src_orig/`, `base_sfmB/`, `build/`, `c_patch/`, `dart_check/`, `pubspec*.bak`: source copies and build trees that can be rebuilt from the base revisions plus the patches.

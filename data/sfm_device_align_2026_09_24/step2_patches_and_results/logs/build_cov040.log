@@ -1,0 +1,19 @@
+[df ok 2.1Gi] compile 14 official core TUs
+[df ok 2.1Gi] compile exe-level TUs + shim + Metal matcher
+[df ok 2.1Gi] link
+-rwxr-xr-x@ 1 kaidongwang  wheel  4720360 Sep 24 11:25 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/step2/build/pwofficial_pose_ab_driver
+[df ok 2.1Gi] offline checker
+Undefined symbols for architecture arm64:
+  "colmap::CeresBundleAdjustmentOptions::CeresBundleAdjustmentOptions()", referenced from:
+      colmap::BundleAdjustmentBackendOptions::BundleAdjustmentBackendOptions() in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+  "colmap::CreateDefaultCeresBundleAdjuster(colmap::BundleAdjustmentOptions const&, colmap::BundleAdjustmentConfig const&, colmap::Reconstruction&)", referenced from:
+      colmap::CreateDefaultBundleAdjuster(colmap::BundleAdjustmentOptions const&, colmap::BundleAdjustmentConfig const&, colmap::Reconstruction&) in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+  "colmap::CreatePosePriorCeresBundleAdjuster(colmap::BundleAdjustmentOptions const&, colmap::PosePriorBundleAdjustmentOptions const&, colmap::BundleAdjustmentConfig const&, std::__1::vector<colmap::PosePrior, std::__1::allocator<colmap::PosePrior>>, colmap::Reconstruction&)", referenced from:
+      colmap::CreatePosePriorBundleAdjuster(colmap::BundleAdjustmentOptions const&, colmap::PosePriorBundleAdjustmentOptions const&, colmap::BundleAdjustmentConfig const&, std::__1::vector<colmap::PosePrior, std::__1::allocator<colmap::PosePrior>>, colmap::Reconstruction&) in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+  "colmap::CeresBundleAdjustmentOptions::Check() const", referenced from:
+      colmap::BundleAdjuster::BundleAdjuster(colmap::BundleAdjustmentOptions const&, colmap::BundleAdjustmentConfig const&) in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+      colmap::BundleAdjustmentOptions::Check() const in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+  "colmap::CeresPosePriorBundleAdjustmentOptions::Check() const", referenced from:
+      colmap::PosePriorBundleAdjustmentOptions::Check() const in libcolmap_reuse_sep9host.a[3](bundle_adjustment.cc.o)
+ld: symbol(s) not found for architecture arm64
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)

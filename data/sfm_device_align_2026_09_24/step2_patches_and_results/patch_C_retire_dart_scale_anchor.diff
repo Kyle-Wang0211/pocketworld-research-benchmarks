@@ -1,0 +1,344 @@
+diff --git a/ios/Runner/OfficialAetherARKitPlugin.swift b/ios/Runner/OfficialAetherARKitPlugin.swift
+index 7c118ae..4358fd3 100644
+--- a/ios/Runner/OfficialAetherARKitPlugin.swift
++++ b/ios/Runner/OfficialAetherARKitPlugin.swift
+@@ -338,16 +338,11 @@ class OfficialAetherARKitPlugin: NSObject {
+     setenv("OFFICIAL_AETHER_OFFICIAL_TRIANGULATE", "1", 0)
+     setenv("OFFICIAL_AETHER_SELFDEV_TRIANGULATE", "0", 0)
+     setenv("OFFICIAL_AETHER_TRI_IGNORE_2VIEW", "0", 0)
+-    // [SCALE-ANCHOR 2026-07-28 用户签决"四端通用,上生产"] 交付模型米制
+-    // 尺度锚定:BA 后全局 scale 是无锚 gauge 漂移(单目对 scale 严格不可
+-    // 观测;35 run 实测每采集 ±4~10.6% 系统性偏移),锚回平台 VIO
+-    // (IMU 米制,四端皆有:ARKit/ARCore/AREngine;LiDAR 仅 iPhone Pro
+-    // 加分项非依赖)。相似变换严格保重投影残差——质量零扰动,只把"一米"
+-    // 变回真一米。Dart 侧实现(sfm_live_recon._gravityAlign 链),
+-    // fail-open:估计失败/|s−1|>15% 即不缩放。裁决档
+-    // _host_fixtures/pose_drift_audit/SCALE_VERDICT.md;并排对比
+-    // _host_fixtures/scale_anchor_compare/(用户肉眼批准)。
+-    setenv("OFFICIAL_AETHER_SCALE_ANCHOR", "1", 0)
++    // [SCALE-ANCHOR RETIRED 2026-09-24] 原 OFFICIAL_AETHER_SCALE_ANCHOR=1 的
++    // setenv 已删除:Dart 读的是 Platform.environment 启动快照,看不到这里的 setenv,
++    // 真机上从未生效;交付尺度改由 C++ 核 finalize 末尾的 DEVICE-ALIGN-V1
++    // 负责(四端同一份,核内 getenv 开关 OFFICIAL_AETHER_DEVICE_ALIGN_V1,
++    // 默认开)。不要在这里恢复 Dart 侧缩放,否则会与核内对齐叠乘。
+     // [AR-EVERY-FRAME 2026-08-05 设备实验臂] 开启后:拍摄期每个被接受的帧
+     // 都把当前 previewTracked(实时局部BA点云)推给 AR,让点云每帧可见生长,
+     // 而不是只在稀疏的全局BA检查点(~8次)才刷新。Dart 侧默认关(读此 env);
+diff --git a/lib/official_capture/sfm_live_recon.dart b/lib/official_capture/sfm_live_recon.dart
+index 7979cba..d161812 100644
+--- a/lib/official_capture/sfm_live_recon.dart
++++ b/lib/official_capture/sfm_live_recon.dart
+@@ -140,9 +140,11 @@ class SfmLiveSnapshot {
+   /// must be carried, not recomputed. Null when no alignment was applied.
+   final Float64List? posesPackedRawColmap;
+ 
+-  /// [SCALE-ANCHOR 2026-07-28] 应用到本快照的米制尺度锚定因子(x'=s·x,
+-  /// t'=s·t;详见 gravity_align.dart scaleAnchorFactor)。null = 臂关闭或
+-  /// 估计失败(未缩放)。posesPackedRawColmap 不含此缩放(raw 真值)。
++  /// [SCALE-ANCHOR 2026-07-28 → RETIRED 2026-09-24] 曾是 Dart 侧米制尺度锚定
++  /// 因子。Dart 臂已拆除(它读 Platform.environment,看不到插件 setenv,真机
++  /// 遥测 final_alignment_result 全部 feature_disabled);交付尺度改由 C++ 核
++  /// finalize 末尾的 DEVICE-ALIGN-V1(COLMAP pose-prior 对齐步)负责。字段保留
++  /// 以免 meta schema 变动,**恒为 null**。
+   final double? scaleAnchorFactor;
+ 
+   /// {solve_ms, n_registered, n_points3d, reproj_px, rc, result} from the
+@@ -1551,7 +1553,6 @@ class SfmLiveRecon {
+       required String? scaleReason,
+       required double? scaleFactor,
+       required GravityAlignDiagV1 gravityDiag,
+-      ScaleAnchorDiagV1? scaleDiag,
+     }) {
+       TelemetryWriter.instance.event('final_alignment_result', {
+         'schema_version': 1,
+@@ -1565,11 +1566,12 @@ class SfmLiveRecon {
+         'scale_status': scaleStatus,
+         'scale_reason': scaleReason,
+         'scale_factor': scaleFactor,
+-        'scale_registered_frames': scaleDiag?.registeredFrames,
+-        'scale_pairs_with_arkit_center': scaleDiag?.pairsWithArkitCenter,
+-        'scale_usable_ratios': scaleDiag?.usableRatios,
+-        'scale_required_pairs': scaleDiag?.requiredPairs,
+-        'scale_rejected_factor': scaleDiag?.rejectedFactor,
++        // [SCALE-ANCHOR RETIRED 2026-09-24] 键保留(遥测 schema 不变),恒 null。
++        'scale_registered_frames': null,
++        'scale_pairs_with_arkit_center': null,
++        'scale_usable_ratios': null,
++        'scale_required_pairs': null,
++        'scale_rejected_factor': null,
+         'fed_meta_size': _fedMeta.length,
+         'n_points': snap.pointCount,
+       });
+@@ -1600,8 +1602,8 @@ class SfmLiveRecon {
+         gravityStatus: 'skipped',
+         gravityReason: reason,
+         gravityQuatWxyz: null,
+-        scaleStatus: 'skipped',
+-        scaleReason: 'gravity_not_applied',
++        scaleStatus: 'disabled',
++        scaleReason: 'moved_to_core_device_align_v1',
+         scaleFactor: null,
+         gravityDiag: diag,
+       );
+@@ -1615,55 +1617,26 @@ class SfmLiveRecon {
+       );
+       return snap;
+     }
+-    // [SCALE-ANCHOR 2026-07-28] 实验臂,默认关(env OFFICIAL_AETHER_SCALE_
+-    // ANCHOR=1 开):把交付模型的 gauge 尺度锚回 ARKit 米制(±4% 系统性
+-    // 滑移,裁决见 gravity_align.dart 的 scaleAnchorFactor 注释)。相似
+-    // 变换保持全部重投影残差 —— 质量零扰动,只改坐标刻度。fail-open:
+-    // 估计失败即不缩放。
+-    // [SCALE-DIAG 2026-07-30] 同 GRAV-DIAG 的动机,但这一条更要紧:SCALE-ANCHOR
+-    // 是**生产开启**的臂,它的五个 fail-open 分支此前全部静默 —— 交付物的尺度
+-    // 可能压根没锚回米制,而没有任何信号。其中 scale_out_of_band 不是"数据不够"
+-    // 而是"量到了却拒绝施加",所以被拒的 s 必须一起上报。
+-    final scaleDiag = _scaleAnchorEnabled ? ScaleAnchorDiagV1() : null;
+-    final double? s = _scaleAnchorEnabled
+-        ? scaleAnchorFactor(
+-            posesPacked: snap.posesPacked,
+-            arkitCenterWorldOf: (frameId) =>
+-                _fedMeta[frameId]?.arkitCameraCenterWorld,
+-            diag: scaleDiag,
+-          )
+-        : null;
+-    if (scaleDiag != null && s == null) {
+-      DeviceLog.log(
+-        'SfmLive',
+-        'scale anchor SKIPPED (reason=${scaleDiag.skipReason} '
+-            'registered=${scaleDiag.registeredFrames} '
+-            'pairs=${scaleDiag.pairsWithArkitCenter}/${scaleDiag.requiredPairs} '
+-            'ratios=${scaleDiag.usableRatios} '
+-            'rejected_s=${scaleDiag.rejectedFactor?.toStringAsFixed(4) ?? '-'}) '
+-            '→ delivering UNSCALED (raw BA gauge)',
+-      );
+-    }
++    // [SCALE-ANCHOR RETIRED 2026-09-24] Dart 侧尺度锚定已拆除,Dart 永不缩放。
++    // 原因:① 它读 Platform.environment,而那是进程启动快照,看不到插件
++    //   setenv(本文件顶部 ROOT-CAUSE FIX 注释同一机制)⇒ 真机遥测
++    //   final_alignment_result 在 08-21..09-14 全部 scale_status=disabled /
++    //   feature_disabled,从未生效;② 交付尺度改由 C++ 核 finalize 末尾的
++    //   DEVICE-ALIGN-V1 负责(COLMAP 3.14 pose-prior 对齐步:LO-RANSAC Sim3 到
++    //   喂入的设备相机中心 + Reconstruction::Transform,四端同一份,结果与闸在
++    //   sfm_match_fail.jsonl 的 device_alignment_v1 行)。两处同时缩放会叠乘,
++    //   所以 Dart 这条路整条删除,而不是留开关。重力旋转对齐不依赖该开关,原样保留。
+     emitFinalAlignmentResult(
+       gravityStatus: 'applied',
+       gravityReason: null,
+       gravityQuatWxyz: q,
+-      scaleStatus: !_scaleAnchorEnabled
+-          ? 'disabled'
+-          : (s != null ? 'applied' : 'skipped'),
+-      scaleReason: !_scaleAnchorEnabled
+-          ? 'feature_disabled'
+-          : (s == null ? (scaleDiag?.skipReason ?? 'unknown') : null),
+-      scaleFactor: s,
++      scaleStatus: 'disabled',
++      scaleReason: 'moved_to_core_device_align_v1',
++      scaleFactor: null,
+       gravityDiag: diag,
+-      scaleDiag: scaleDiag,
+     );
+-    var xyz = rotatePointsByQuatWxyz(snap.xyz, q);
+-    var poses = gravityAlignedPosesPacked(snap.posesPacked, q);
+-    if (s != null) {
+-      xyz = scaleAnchoredPoints(xyz, s);
+-      poses = scaleAnchoredPosesPacked(poses, s);
+-    }
++    final xyz = rotatePointsByQuatWxyz(snap.xyz, q);
++    final poses = gravityAlignedPosesPacked(snap.posesPacked, q);
+     return SfmLiveSnapshot(
+       xyz: xyz,
+       rgb: snap.rgb,
+@@ -1675,15 +1648,9 @@ class SfmLiveRecon {
+       obsXY: snap.obsXY,
+       gravityAlignQuatWxyz: q,
+       posesPackedRawColmap: snap.posesPacked,
+-      scaleAnchorFactor: s,
+     );
+   }
+ 
+-  /// [SCALE-ANCHOR] 默认关;插件 setenv 后进程内可见。static final:
+-  /// 每次采集会话读一次即可(env 在进程生命周期内不变)。
+-  static final bool _scaleAnchorEnabled =
+-      Platform.environment['OFFICIAL_AETHER_SCALE_ANCHOR'] == '1';
+-
+   static SfmLiveSnapshot _snapshotFromMsg(Map msg, {required bool refined}) {
+     return SfmLiveSnapshot(
+       xyz: msg['xyz'] as Float32List? ?? Float32List(0),
+diff --git a/lib/vio/platform_pose/platform_pose_source.dart b/lib/vio/platform_pose/platform_pose_source.dart
+index 723eba5..612da46 100644
+--- a/lib/vio/platform_pose/platform_pose_source.dart
++++ b/lib/vio/platform_pose/platform_pose_source.dart
+@@ -398,11 +398,13 @@ abstract final class PlatformPoseGate {
+ 
+ // ── 与既有管线的对接(零改动扩展)──────────────────────────────────────
+ //
+-// 既有交付链已经是"COLMAP 自己解位姿,事后用 ARKit 修重力与尺度" —— 方向
+-// 与条目 14 一致。下面两个适配器把 [PlatformPoseSource] 直接变成既有两个
+-// 纯函数已经接受的回调签名,**不改既有函数一个字**:
++// 既有交付链已经是"COLMAP 自己解位姿,事后用平台位姿修重力" —— 方向
++// 与条目 14 一致。下面的适配器把 [PlatformPoseSource] 直接变成既有纯函数
++// 已经接受的回调签名,**不改既有函数一个字**:
+ //   • gravityAlignQuatWxyz(arkitQuatWxyzOf: ...)
+-//   • scaleAnchorFactor(arkitCenterWorldOf: ...)
++// [SCALE-ANCHOR RETIRED 2026-09-24] 原尺度适配器 scaleCenterLookupOf(喂
++// Dart 侧 scaleAnchorFactor)已删除:交付尺度改由 C++ 核 finalize 末尾的
++// DEVICE-ALIGN-V1 对齐到喂入的设备位姿,Dart 侧再缩放会叠乘。
+ 
+ /// 适配 `gravityAlignQuatWxyz` 的 `arkitQuatWxyzOf` 回调。
+ ///
+@@ -425,26 +427,3 @@ List<double>? Function(int frameId) gravityQuatLookupOf(
+     return s!.quatWxyz;
+   };
+ }
+-
+-/// 适配 `scaleAnchorFactor` 的 `arkitCenterWorldOf` 回调。
+-///
+-/// 过 [PlatformPoseRole.scalePrior] 闸,并把 CamFromWorld 换算成相机中心。
+-/// 不过闸返回 null ⇒ 既有实现少一个配对,配对 <3 时它自己会放弃缩放
+-/// (fail-open,保持现状交付)。
+-List<double>? Function(int frameId) scaleCenterLookupOf(
+-  PlatformPoseSource source, {
+-  void Function(int frameId, String reason)? onReject,
+-}) {
+-  return (int frameId) {
+-    final s = source.sampleForFrame(frameId);
+-    final reason = PlatformPoseGate.rejectionReason(
+-      s,
+-      PlatformPoseRole.scalePrior,
+-    );
+-    if (reason != null) {
+-      onReject?.call(frameId, reason);
+-      return null;
+-    }
+-    return s!.cameraCenterWorld();
+-  };
+-}
+diff --git a/test/gravity_align_consistency_test.dart b/test/gravity_align_consistency_test.dart
+index 5aea930..9f9fd1b 100644
+--- a/test/gravity_align_consistency_test.dart
++++ b/test/gravity_align_consistency_test.dart
+@@ -209,16 +209,20 @@ void scaleAnchorTests() {
+     );
+   });
+ 
+-  test('persist writes scale_anchor_factor and the arm is env-gated', () {
++  test('Dart never rescales the delivered model (arm retired → core DEVICE-ALIGN-V1)', () {
+     final ply = File('lib/official_capture/sparse_ply.dart').readAsStringSync();
+     expect(ply, contains("'scale_anchor_factor': snapshot.scaleAnchorFactor"));
+     final live = File(
+       'lib/official_capture/sfm_live_recon.dart',
+     ).readAsStringSync();
+-    expect(
+-      live,
+-      contains("Platform.environment['OFFICIAL_AETHER_SCALE_ANCHOR'] == '1'"),
+-    );
++    // 双重缩放防线:Dart 侧不得再有尺度开关或缩放调用。
++    expect(live, isNot(contains('OFFICIAL_AETHER_SCALE_ANCHOR')));
++    expect(live, isNot(contains('scaleAnchoredPoints(')));
++    expect(live, isNot(contains('scaleAnchoredPosesPacked(')));
++    final plugin = File(
++      'ios/Runner/OfficialAetherARKitPlugin.swift',
++    ).readAsStringSync();
++    expect(plugin, isNot(contains('setenv("OFFICIAL_AETHER_SCALE_ANCHOR"')));
+     // raw 真值不含缩放:posesPackedRawColmap 存的是缩放前的 snap.posesPacked。
+     expect(live, contains('posesPackedRawColmap: snap.posesPacked'));
+   });
+diff --git a/test/gravity_skip_diagnostics_test.dart b/test/gravity_skip_diagnostics_test.dart
+index 992fecb..e1cf4cd 100644
+--- a/test/gravity_skip_diagnostics_test.dart
++++ b/test/gravity_skip_diagnostics_test.dart
+@@ -226,12 +226,13 @@ void main() {
+     );
+   });
+ 
+-  test('the final record retains scale rejection evidence', () {
++  test('the final record reports the retired Dart scale arm explicitly', () {
+     final src = File(
+       'lib/official_capture/sfm_live_recon.dart',
+     ).readAsStringSync();
+-    expect(src, contains('delivering UNSCALED (raw BA gauge)'));
+-    expect(src, contains('rejected_s='));
++    // [SCALE-ANCHOR RETIRED 2026-09-24] 交付尺度改由 C++ 核 DEVICE-ALIGN-V1。
++    expect(src, isNot(contains('delivering UNSCALED (raw BA gauge)')));
++    expect(src, contains("'moved_to_core_device_align_v1'"));
+     expect(src, contains("'scale_rejected_factor':"));
+   });
+ }
+diff --git a/test/vio/platform_pose/platform_pose_test.dart b/test/vio/platform_pose/platform_pose_test.dart
+index 0fa8bf7..8bff577 100644
+--- a/test/vio/platform_pose/platform_pose_test.dart
++++ b/test/vio/platform_pose/platform_pose_test.dart
+@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:pocketworld_flutter/capture/true_parallax.dart'
+     show cameraCenterFromCamFromWorld;
+ import 'package:pocketworld_flutter/official_capture/gravity_align.dart'
+-    show scaleAnchorFactor, gravityAlignQuatWxyz;
++    show gravityAlignQuatWxyz;
+ 
+ import 'package:pocketworld_flutter/vio/platform_pose/extrinsics_contract.dart';
+ import 'package:pocketworld_flutter/vio/platform_pose/platform_pose_source.dart';
+@@ -341,50 +341,8 @@ void main() {
+       poses[o + 8] = -cb[2];
+     }
+ 
+-    test('scaleCenterLookupOf 喂进既有 scaleAnchorFactor,尺度被找回', () {
+-      final src = _FakeSource({
+-        for (var i = 0; i < n; i++)
+-          i: _sample(
+-            i,
+-            quat: [1, 0, 0, 0],
+-            trans: arkCenters[i]!.map((v) => -v).toList(),
+-          ),
+-      });
+-      final s = scaleAnchorFactor(
+-        posesPacked: poses,
+-        arkitCenterWorldOf: scaleCenterLookupOf(src),
+-      );
+-      expect(s, isNotNull);
+-      expect(s!, closeTo(sTrue, 1e-9));
+-    });
+-
+-    test('tracking 受限的帧被闸掉后,可用配对不足 ⇒ 既有实现 fail-open 返回 null', () {
+-      final rejects = <int, String>{};
+-      final src = _FakeSource({
+-        for (var i = 0; i < n; i++)
+-          i: _sample(
+-            i,
+-            quat: [1, 0, 0, 0],
+-            trans: arkCenters[i]!.map((v) => -v).toList(),
+-            // 只留 2 帧 normal,低于既有实现的 <3 门。
+-            tracking: i < 2
+-                ? PlatformTrackingState.normal
+-                : PlatformTrackingState.limited,
+-          ),
+-      });
+-      final s = scaleAnchorFactor(
+-        posesPacked: poses,
+-        arkitCenterWorldOf: scaleCenterLookupOf(
+-          src,
+-          onReject: (f, r) => rejects[f] = r,
+-        ),
+-      );
+-      expect(s, isNull, reason: 'fail-open:不缩放,保持现状交付');
+-      expect(rejects.length, n - 2);
+-      expect(rejects.values.toSet(), {
+-        PlatformPoseGate.reasonTrackingNotNormal,
+-      });
+-    });
++    // [SCALE-ANCHOR RETIRED 2026-09-24] scaleCenterLookupOf 的两条用例随适配器
++    // 一起删除(交付尺度改由 C++ 核 DEVICE-ALIGN-V1 负责)。
+ 
+     test('gravityQuatLookupOf 喂进既有 gravityAlignQuatWxyz 能出解', () {
+       final src = _FakeSource({
+@@ -404,9 +362,6 @@ void main() {
+       });
+       final lookup = gravityQuatLookupOf(src);
+       expect(lookup(0), isNotNull);
+-      // 同一批样本走尺度适配器则应当全拒(没有平移)。
+-      final scaleLookup = scaleCenterLookupOf(src);
+-      expect(scaleLookup(0), isNull);
+     });
+   });
+ 
