@@ -1,0 +1,252 @@
+{
+  "schema_version": "aether_official_da3_image_only_geometry_path_audit_v1",
+  "date": "2026-06-04",
+  "purpose": "Explain where official DA3 image-only camera geometry comes from and where single-window K35 overlap thickness can or cannot be removed.",
+  "fixed_target": {
+    "model": "DA3-BASE",
+    "resource": "DA3BASE_476x742_N35_image_only",
+    "window_size": 35,
+    "height": 476,
+    "width": 742,
+    "dimension_sweep": "disabled",
+    "official_camera_input": "image_only"
+  },
+  "official_evidence": {
+    "repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "license_and_commercial": {
+      "da3_base_license": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/README.md",
+        "line": 223,
+        "needle": "DA3-BASE",
+        "text": "| [DA3-BASE](https://huggingface.co/depth-anything/DA3-BASE)                     | 0.12B     | ✅             | ✅            | ✅             |       |               |           | Apache 2.0     |"
+      },
+      "da3_large_license": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/README.md",
+        "line": 221,
+        "needle": "DA3-LARGE-1.1",
+        "text": "| [DA3-LARGE-1.1](https://huggingface.co/depth-anything/DA3-LARGE-1.1)                     | 0.35B     | ✅             | ✅            | ✅             |       |               |           | CC BY-NC 4.0     |"
+      },
+      "apache_license_file": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/LICENSE",
+      "interpretation": "For commercial APP work, DA3-BASE/DA3-SMALL are the safe main-series choices shown as Apache 2.0; DA3-LARGE/DA3-LARGE-1.1 are CC BY-NC 4.0."
+    },
+    "official_image_only_entry": {
+      "streaming_inference_call": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 273,
+        "needle": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)",
+        "text": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)"
+      },
+      "api_example_no_camera": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/docs/API.md",
+        "line": 34,
+        "needle": "prediction = model.inference([\"image1.jpg\", \"image2.jpg\"])",
+        "text": "prediction = model.inference([\"image1.jpg\", \"image2.jpg\"])"
+      },
+      "readme_with_or_without_pose": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/README.md",
+        "line": 21,
+        "needle": "with or without known camera poses",
+        "text": "arbitrary visual inputs, with or without known camera poses."
+      },
+      "meaning": "DA3-Streaming default feeds image paths only. It receives predicted depth, confidence, extrinsics, and intrinsics from DA3 itself."
+    },
+    "camera_generation_path": {
+      "optional_camera_api": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 136,
+        "needle": "extrinsics: np.ndarray | None = None",
+        "text": "extrinsics: np.ndarray | None = None,"
+      },
+      "normalize_only_if_camera_provided": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 329,
+        "needle": "if ex_t is None:",
+        "text": "if ex_t is None:"
+      },
+      "align_returns_prediction_when_no_input_camera": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+        "line": 350,
+        "needle": "if extrinsics is None:",
+        "text": "if extrinsics is None:"
+      },
+      "cam_enc_only_when_extrinsics_present": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 126,
+        "needle": "if extrinsics is not None:",
+        "text": "if extrinsics is not None:"
+      },
+      "backbone_receives_cam_token": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 133,
+        "needle": "x, cam_token=cam_token",
+        "text": "x, cam_token=cam_token, export_feat_layers=export_feat_layers, ref_view_strategy=ref_view_strategy"
+      },
+      "camera_decoder_call": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 216,
+        "needle": "pose_enc = self.cam_dec(feats[-1][1])",
+        "text": "pose_enc = self.cam_dec(feats[-1][1])"
+      },
+      "pose_encoding_conversion": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+        "line": 224,
+        "needle": "pose_encoding_to_extri_intri(pose_enc, (H, W))",
+        "text": "c2w, ixt = pose_encoding_to_extri_intri(pose_enc, (H, W))"
+      },
+      "cam_dec_translation_rotation_fov": [
+        {
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/cam_dec.py",
+          "line": 29,
+          "needle": "self.fc_t = nn.Linear(output_dim, 3)",
+          "text": "self.fc_t = nn.Linear(output_dim, 3)"
+        },
+        {
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/cam_dec.py",
+          "line": 30,
+          "needle": "self.fc_qvec = nn.Linear(output_dim, 4)",
+          "text": "self.fc_qvec = nn.Linear(output_dim, 4)"
+        },
+        {
+          "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/cam_dec.py",
+          "line": 31,
+          "needle": "self.fc_fov = nn.Sequential(nn.Linear(output_dim, 2), nn.ReLU())",
+          "text": "self.fc_fov = nn.Sequential(nn.Linear(output_dim, 2), nn.ReLU())"
+        }
+      ],
+      "pose_encoding_to_intrinsics": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/utils/transform.py",
+        "line": 59,
+        "needle": "intrinsics[..., 0, 0] = fx",
+        "text": "intrinsics[..., 0, 0] = fx"
+      },
+      "meaning": "Without AR/VIO/input poses, the network predicts translation, rotation, and FOV from multi-view features through cam_dec, then converts them to OpenCV-style w2c extrinsics and intrinsics."
+    },
+    "reference_view_and_view_order": {
+      "automatic_reference_selection_doc": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/docs/funcs/ref_view_strategy.md",
+        "line": 12,
+        "needle": "automatic reference view selection",
+        "text": "DA3 provides a simple approach to address this through **automatic reference view selection** based on **class tokens**. Instead of relying on heuristics or manual selection, the model analyzes the class token features from all input views and intelligently selects the most suitable reference frame."
+      },
+      "select_reference_view": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/dinov2/vision_transformer.py",
+        "line": 318,
+        "needle": "b_idx = select_reference_view(x, strategy=strategy)",
+        "text": "b_idx = select_reference_view(x, strategy=strategy)"
+      },
+      "learned_camera_tokens_when_no_cam_token": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/dinov2/vision_transformer.py",
+        "line": 328,
+        "needle": "ref_token = self.camera_token[:, :1].expand(B, -1, -1)",
+        "text": "ref_token = self.camera_token[:, :1].expand(B, -1, -1)"
+      },
+      "restore_original_order": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/dinov2/vision_transformer.py",
+        "line": 345,
+        "needle": "out_x = restore_original_order(out_x, b_idx)",
+        "text": "out_x = restore_original_order(out_x, b_idx)"
+      },
+      "meaning": "The image-only world frame is model-defined. It can reorder views around a selected reference internally, then restores output order."
+    },
+    "downstream_overlap_handling": {
+      "save_depth_conf_result": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 695,
+        "needle": "self.save_depth_conf_result(predictions, chunk_idx + 1, s, R, t)",
+        "text": "self.save_depth_conf_result(predictions, chunk_idx + 1, s, R, t)"
+      },
+      "npz_conf_threshold": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 77,
+        "needle": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef",
+        "text": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef"
+      },
+      "npz_sampling": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+        "line": 120,
+        "needle": "sample_ratio = args.sample_ratio",
+        "text": "sample_ratio = args.sample_ratio"
+      },
+      "full_chunk_pcd_save": {
+        "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+        "line": 665,
+        "needle": "save_confident_pointcloud_batch(",
+        "text": "save_confident_pointcloud_batch("
+      },
+      "meaning": "Official downstream thresholds and samples points and aligns chunks, but does not contain an intra-window surface fusion/deduplication step."
+    }
+  },
+  "current_project_state": {
+    "app_model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "app_coreml_packages": [
+      "DA3BASE_476x742_N35_pose.mlpackage"
+    ],
+    "has_target_image_only_package": false,
+    "readiness_gate_decision": {
+      "status": "fail",
+      "official_baseline_ready": false,
+      "has_image_only_coreml_signature": false,
+      "current_bundle_is_pose_conditioned_only": true,
+      "app_contract_ready_for_future_image_only_model": true,
+      "policy_blocks_current_pose_model_from_official_baseline": true,
+      "selected_policy_resource": "DA3BASE_476x742_N35_pose",
+      "highest_priority_gap": "missing_image_only_da3_base_coreml_signature",
+      "do_not_use_arkit_vio_as_da3_input_for_official_baseline": true,
+      "do_not_add_downstream_cleanup_to_hide_this_gap": true
+    },
+    "overlap_regression_gate_decision": {
+      "status": "blocked_missing_image_only_target_output",
+      "can_judge_original_thick_layer": false,
+      "reason": "Need DA3BASE_476x742_N35 image-only CoreML output for the same capture/window before testing whether overlap thickness is removed.",
+      "highest_priority_gap": "da3_output_dir_missing",
+      "do_not_change_dimension": true,
+      "do_not_use_arkit_vio_as_da3_input": true,
+      "do_not_claim_downstream_cleanup_fixed_upstream_overlap": true
+    },
+    "overlap_thickness_findings": {
+      "overlap_frame_duplicate_saved_to_downstream": false,
+      "official_core_frame_selection_removed_overlap_duplicates": true,
+      "single_window_thickness_remains_after_official_filter": true,
+      "confidence_or_valid_fraction_is_sufficient_explanation": false,
+      "pose_span_is_strongest_current_clue": true,
+      "most_likely_current_cause": "within_window_upstream_geometry_consistency",
+      "plain_language": [
+        "Official core-frame downstream removes repeated overlap frames from the final sequence-level pointcloud.",
+        "That does not fuse multiple K35 views of the same surface into one thin surface.",
+        "Current evidence says the remaining thick layer is already present inside individual K35 windows, before cross-window loop or full-chunk merge can explain it."
+      ]
+    }
+  },
+  "external_state": {
+    "issue_254": {
+      "url": "https://github.com/ByteDance-Seed/Depth-Anything-3/issues/254",
+      "number": 254,
+      "state": "open",
+      "title": "DA3-Streaming 在室内近距离宽视角视频中出现 chunk 内/跨 chunk 多重影和局部错位，请教推荐配置与处理方式",
+      "created_at": "2026-05-12T14:48:54Z",
+      "updated_at": "2026-05-12T14:48:54Z",
+      "comments": 0
+    }
+  },
+  "decision": {
+    "official_pose_source": "network_cam_dec_from_images_not_arkit_vio",
+    "official_default_pose_mode": "camera_decoder_use_ray_pose_false",
+    "where_single_window_thickness_can_be_reduced": "upstream_depth_pose_scale_consistency",
+    "where_single_window_thickness_is_not_removed": "npz_downstream_threshold_sampling",
+    "cross_window_duplicate_policy": "core_frame_npz_path_reduces_overlap_frame_duplicates",
+    "current_blocker": "missing_DA3BASE_476x742_N35_image_only_coreml_and_outputs",
+    "commercial_model_choice": "DA3-BASE",
+    "external_issue_status": "open",
+    "no_official_forum_fix_found": true,
+    "do_next": [
+      "Export or obtain DA3BASE_476x742_N35_image_only.mlpackage.",
+      "Run da3_mac_window_export.py against the same capture/window_016 with the image-only package.",
+      "Rerun da3_image_only_overlap_regression_gate.py; judge PCA minor first35/first10 against old _pose.",
+      "Only after that result, decide whether remaining cleanup is official parity or product adaptation."
+    ]
+  },
+  "source_links": {
+    "official_repo": "https://github.com/ByteDance-Seed/Depth-Anything-3",
+    "issue_254": "https://github.com/ByteDance-Seed/Depth-Anything-3/issues/254"
+  }
+}

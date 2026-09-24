@@ -1,0 +1,185 @@
+{
+  "schema_version": "aether_da3_continuity_quarantine_window_true_rerun_attribution_v1",
+  "date": "2026-06-05",
+  "source_window_id": "window_004",
+  "decision": {
+    "status": "source_window_not_thick_continuity_quarantine_negative_control",
+    "goal_complete": false,
+    "source_is_thick": false,
+    "drop_variant_reduces_npz_minor": false,
+    "conclusion": "window_004 is a negative/control sample: it has continuity risk, but the source official-save window is not thick by the current npz/glb growth metrics. Continuity risk alone is not enough to prove single-window thickening.",
+    "boundary": "This is still the current pose-conditioned DA3BASE_476x742_N35 CoreML product path. It tests a mobile continuity/windowing adaptation candidate, not official image-only parity.",
+    "next_best_action": "Continue the same true-rerun attribution on the remaining prepared candidates, then decide whether continuity quarantine should be a hard product gate, a warning gate, or only a capture-quality signal."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "diagnostics_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics"
+  },
+  "rows": {
+    "official_save_source": {
+      "status": "completed",
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_004_official_save_frame_pose_depth_scale_2026_06_05/window_004_pose_depth_scale_audit.json",
+      "window_id": "window_004",
+      "frame_count": 17,
+      "pose_scale": 0.6994513865820984,
+      "frame_ids": [
+        "cap-310",
+        "cap-312",
+        "cap-333",
+        "cap-335",
+        "cap-337",
+        "cap-339",
+        "cap-347",
+        "cap-358",
+        "cap-360",
+        "cap-371",
+        "cap-373",
+        "cap-380",
+        "cap-382",
+        "cap-387",
+        "cap-389",
+        "cap-393",
+        "cap-395"
+      ],
+      "npz_minor_abs": 0.7346631727383358,
+      "npz_bbox_abs": 2.642833709716797,
+      "glb_minor_abs": 0.7344275526562757,
+      "glb_bbox_abs": 2.0124969482421875,
+      "pose_diag_abs": 0.759996771812439,
+      "depth_p95_abs": 2.1110293865203857,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 0.998740237820181,
+        "npz_bbox_ratio_vs_k10": 0.9773688182889066,
+        "glb_minor_ratio_vs_k10": 0.9830509715991084,
+        "glb_bbox_ratio_vs_k10": 0.9968879375249118,
+        "pose_diag_ratio_vs_k10": 1.369776320670386
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 1.0,
+        "npz_bbox_ratio": 1.0,
+        "glb_minor_ratio": 1.0,
+        "glb_bbox_ratio": 1.0,
+        "pose_diag_ratio": 1.0
+      }
+    },
+    "prefix_before_first_break": {
+      "status": "missing_or_skipped",
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_004_prefix_before_first_break_true_rerun_pose_depth_scale_2026_06_05/window_004_prefix_before_first_break_pose_depth_scale_audit.json",
+      "window_id": "window_004_prefix_before_first_break",
+      "frame_count": 0,
+      "pose_scale": null,
+      "frame_ids": [],
+      "npz_minor_abs": null,
+      "npz_bbox_abs": null,
+      "glb_minor_abs": null,
+      "glb_bbox_abs": null,
+      "pose_diag_abs": null,
+      "depth_p95_abs": null,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": null,
+        "npz_bbox_ratio_vs_k10": null,
+        "glb_minor_ratio_vs_k10": null,
+        "glb_bbox_ratio_vs_k10": null,
+        "pose_diag_ratio_vs_k10": null
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": null,
+        "npz_bbox_ratio": null,
+        "glb_minor_ratio": null,
+        "glb_bbox_ratio": null,
+        "pose_diag_ratio": null
+      }
+    },
+    "segment_from_first_break": {
+      "status": "completed",
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_004_segment_from_first_break_true_rerun_pose_depth_scale_2026_06_05/window_004_segment_from_first_break_pose_depth_scale_audit.json",
+      "window_id": "window_004_segment_from_first_break",
+      "frame_count": 15,
+      "pose_scale": 0.6772593792263403,
+      "frame_ids": [
+        "cap-333",
+        "cap-335",
+        "cap-337",
+        "cap-339",
+        "cap-347",
+        "cap-358",
+        "cap-360",
+        "cap-371",
+        "cap-373",
+        "cap-380",
+        "cap-382",
+        "cap-387",
+        "cap-389",
+        "cap-393",
+        "cap-395"
+      ],
+      "npz_minor_abs": 0.8670136759471174,
+      "npz_bbox_abs": 2.6346514225006104,
+      "glb_minor_abs": 0.7887795171619513,
+      "glb_bbox_abs": 2.2142324447631836,
+      "pose_diag_abs": 0.5015472769737244,
+      "depth_p95_abs": 2.0014026165008545,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 0.9677550147752237,
+        "npz_bbox_ratio_vs_k10": 0.9845432330103592,
+        "glb_minor_ratio_vs_k10": 0.9149505187279957,
+        "glb_bbox_ratio_vs_k10": 0.9769679687030729,
+        "pose_diag_ratio_vs_k10": 1.270516461697582
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 1.1801512694796814,
+        "npz_bbox_ratio": 0.9969039719804909,
+        "glb_minor_ratio": 1.0740058897696518,
+        "glb_bbox_ratio": 1.100241392513515,
+        "pose_diag_ratio": 0.659933430740285
+      }
+    },
+    "drop_all_high_risk_targets": {
+      "status": "completed",
+      "source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_004_drop_all_high_risk_targets_true_rerun_pose_depth_scale_2026_06_05/window_004_drop_all_high_risk_targets_pose_depth_scale_audit.json",
+      "window_id": "window_004_drop_all_high_risk_targets",
+      "frame_count": 11,
+      "pose_scale": 0.7025370258981725,
+      "frame_ids": [
+        "cap-310",
+        "cap-312",
+        "cap-335",
+        "cap-337",
+        "cap-347",
+        "cap-360",
+        "cap-371",
+        "cap-373",
+        "cap-380",
+        "cap-387",
+        "cap-389"
+      ],
+      "npz_minor_abs": 0.8622898790718712,
+      "npz_bbox_abs": 2.8232321739196777,
+      "glb_minor_abs": 0.8200909414964727,
+      "glb_bbox_abs": 2.1420249938964844,
+      "pose_diag_abs": 0.7596409320831299,
+      "depth_p95_abs": 2.0572760105133057,
+      "within_window": {
+        "npz_minor_ratio_vs_k10": 0.9958642978505622,
+        "npz_bbox_ratio_vs_k10": 0.9957067246794464,
+        "glb_minor_ratio_vs_k10": 0.996482232287897,
+        "glb_bbox_ratio_vs_k10": 0.9912155063931457,
+        "pose_diag_ratio_vs_k10": 1.0146062617644127
+      },
+      "vs_official_save": {
+        "npz_minor_ratio": 1.1737213883443045,
+        "npz_bbox_ratio": 1.0682594835761392,
+        "glb_minor_ratio": 1.1166396719872094,
+        "glb_bbox_ratio": 1.0643618594142132,
+        "pose_diag_ratio": 0.9995317878410713
+      }
+    }
+  },
+  "plain_language": [
+    "window_004 原始 official-save 17 帧：npz minor/k10=0.999, bbox/k10=0.977。",
+    "prefix 未生成有效审计：通常是帧数太少或官方 Umeyama 对齐退化。",
+    "segment 15 帧：npz minor/orig=1.180, bbox/orig=0.997。",
+    "drop-high-risk 11 帧：npz minor/orig=1.174, bbox/orig=1.068。",
+    "这不是 window_016 那种阳性减薄样本；它更像 negative/control，提醒我们 continuity gate 需要结合实际几何厚度，不能只看时间/位移/质量阈值。"
+  ]
+}

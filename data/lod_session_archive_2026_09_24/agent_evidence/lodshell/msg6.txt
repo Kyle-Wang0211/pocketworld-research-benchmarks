@@ -1,0 +1,18 @@
+LOD 查看器(六):PwLodSurface 在真 Dawn 上实跑后补一条诊断(导入被拒=错误对象,不是 NULL)
+
+Mac 宿主实跑(测试程序只在 scratchpad,不入库):PwLodSurface.m + 真 Dawn(pw_splat_ab_bench
+build/mac_deps/libwebgpu_dawn.a,Metal 后端,与手机同一份 SharedTextureMemoryMTL.mm)。
+pwlod_gpu_create 用台架 InitGpu 形状 + 调用方特性临时顶上(头文件说引擎就是这么做)。
+- 正:PwLodSurfaceCreateGpu → Metal;97×61(奇数宽,bytesPerRow 对齐成 512)三个槽都导入成功;
+  按引擎方式 BeginAccess→清屏→提交→EndAccess→等空闲后读 CVPixelBuffer:
+  三槽分别 5917/5917 像素 = 目标 BGRA(204/102/51、102/51/204、51/204/102),EndAccess=Success,
+  无 Dawn 未捕获错误。
+- 阴性:渲染前读槽 0 命中 0;槽 1 用槽 0 的颜色命中 0(三个目标是三块不同的 IOSurface)。
+- 阴性:设备不要 SharedFenceMTLSharedEvent → EndAccess 返回 Error,Dawn 原话
+  「Required feature (FeatureName::SharedFenceMTLSharedEvent) is missing」⇒ 外壳多要这个特性是必须的。
+- 阴性:设备不要 SharedTextureMemoryIOSurface → 导入被拒。此时 Dawn 返回的是错误对象(属性读回
+  0×0)而不是 NULL,原先被尺寸核对拦下但报「size mismatch」,现改为明说是错误对象。
+
+iOS arm64 冒烟重跑仍通过。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

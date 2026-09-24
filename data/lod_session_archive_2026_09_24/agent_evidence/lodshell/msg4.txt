@@ -1,0 +1,21 @@
+LOD 查看器(四):iOS 外壳 C 半边 PwLodSurface.{h,m}(IOSurface → Dawn SharedTextureMemory)
+
+只进台架与本分支;生产 Runner.xcodeproj 不编、生产桥接头不 import。
+- PwLodSurfaceCreateGpu:pwlod_gpu_create + 两个设备特性 SharedTextureMemoryIOSurface 与
+  SharedFenceMTLSharedEvent。🔴 后者是任务说明里没写的:Dawn @12ee391c
+  src/dawn/native/metal/SharedTextureMemoryMTL.mm:228-230 在没有它时让每次 EndAccess 失败,
+  而引擎按冻结头 :116-118 对每个目标都 Begin/EndAccess。生产渲染器也是请求这一对
+  (Aether3D dawn_gpu_device.cpp:474-478 @849c4d6b01)。走接口原有的特性数组,不改接口。
+- PwLodSurfaceRingCreate:PWLOD_TARGET_COUNT(=3)个 BGRA8 IOSurface + CVPixelBuffer
+  (照 ios/Runner/MetalRenderer.swift:165-186 @875fe67)+ 逐个导入成 WGPUSharedTextureMemory +
+  WGPUTexture(照 Aether3D dawn_gpu_device.cpp:901-983 @849c4d6b01 import_iosurface:
+  链式描述符、allowStorageBinding=false、GetProperties、尺寸/格式核对、按属性建纹理);
+  另加契约要求的 usage ⊇ RenderAttachment|CopySrc 核对。
+  product_adapter:bytesPerRow 走 IOSurfaceAlignProperty(SDK IOSurfaceRef.h:388-391),
+  因为宽度是屏幕物理宽,不再是固定 256。
+- 头文件经 include 两份冻结头,供台架桥接头导入后 Swift 按编译器排布使用 C 结构体。
+
+验证:xcrun --sdk iphoneos clang -arch arm64 -fobjc-arc -Wall -Wextra -Werror -fsyntax-only 通过
+(webgpu.h = dawn_gen_include/dawn/webgpu.h,sha256 6d632738…)。链接冒烟在 Swift 外壳落地后做。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

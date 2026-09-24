@@ -1,0 +1,706 @@
+{
+  "schema_version": "aether_official_da3_copy_paste_parity_ledger_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "copy_paste_parity_rows_closed",
+    "goal_complete": false,
+    "copy_paste_answer": "官方 image-only CoreML signature/artifact 已落地并通过 readiness gate；已验证的 C++ OpenCV/libjpeg preprocess kernel 已完成 macOS/JIT bundled native asset smoke，APP 测试也已强断言 native 可用时 manifest 必须走 native_cpp_opencv_libjpeg；hook fallback 已加 host os/arch 安全限制，prebuilt matrix 已对当前 macOS arm64 做 ABI probe pass，并已把 ohos_arm64/ohos_x64 纳入正式目标；但总体仍是 1/9 ready，iOS/Android/Harmony/Windows/Linux/macOS x64 的预编译库与平台打包矩阵还没闭环。Research/CLI/capture package 已证明 source_highres 到官方 PIL/OpenCV InputProcessor 的 pixel/tensor exact；APP Dart runner 默认 tryOpen 已接上，Dart package:image decode/resize 现在只是 fallback-only gap。",
+    "next_copy_paste_action": "用 DA3BASE_280x504_N35_image_only 跑 same-capture APP image-only regression；同时补齐 C++ OpenCV/libjpeg kernel 的 iOS/Android/Harmony/Windows/Linux/macOS x64 预编译库与平台打包矩阵。"
+  },
+  "sources": {
+    "official_streaming": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+    "official_npz_output_process": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py",
+    "official_npz_oracle_bridge": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_depth_index_official_npz_oracle_bridge.py",
+    "official_sim3utils": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/loop_utils/sim3utils.py",
+    "official_base_config": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/configs/base_config.yaml",
+    "official_api": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+    "official_input_processor": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+    "official_da3_model": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+    "dart_policy": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+    "dart_derivation": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart",
+    "dart_decode_probe": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/example/da3_source_decode_probe.dart",
+    "opencv_native_preprocess_audit": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_opencv_native_preprocess_parity_audit.py",
+    "cpp_preprocess_kernel": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/da3_preprocess/src/da3_preprocess.cpp",
+    "cpp_preprocess_c_api": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/da3_preprocess/include/aether/da3_preprocess_c_api.h",
+    "cpp_preprocess_kernel_audit": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/da3_cpp_preprocess_kernel_parity_audit.py",
+    "dart_native_preprocess_runner": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/da3_native_preprocess_runner.dart",
+    "dart_native_preprocess_hook": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/hook/build.dart",
+    "dart_native_preprocess_matrix": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/tool/da3_preprocess_prebuilt_matrix.dart",
+    "dart_native_preprocess_smoke": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/example/da3_native_preprocess_runner_smoke.dart",
+    "app_runner": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+    "app_runner_test": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/test/local_pipeline_runner_test.dart",
+    "swift_da3": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+    "xcode_project": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner.xcodeproj/project.pbxproj",
+    "image_only_readiness_report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_readiness_gate_2026_06_05/official_da3_image_only_coreml_readiness_gate.json"
+  },
+  "rows": [
+    {
+      "id": "commercial_checkpoint",
+      "requirement": "DA3-BASE / Apache-2.0 must be the product checkpoint.",
+      "status": "copied",
+      "evidence": [
+        {
+          "needle": "license: 'Apache-2.0'",
+          "present": true
+        },
+        {
+          "needle": "id: 'DA3-BASE'",
+          "present": true
+        }
+      ],
+      "conclusion": "本地产品路径锁 DA3-BASE / Apache-2.0；未复制 LARGE/GIANT/NESTED。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart"
+    },
+    {
+      "id": "streaming_k_window_size",
+      "requirement": "Official chunk_size=120/overlap=60; mobile override is K35/overlap18 only.",
+      "status": "mobile_override_allowed",
+      "evidence": [
+        {
+          "needle": "chunk_size: 120",
+          "present": true
+        },
+        {
+          "needle": "overlap: 60",
+          "present": true
+        },
+        {
+          "needle": "windowSize: 35",
+          "present": true
+        },
+        {
+          "needle": "overlap =",
+          "present": true
+        }
+      ],
+      "conclusion": "这是用户允许的核心差异：官方 120/60 无法作为手机主线，Dart 复制 sliding-window 公式但缩到 K35。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/configs/base_config.yaml"
+    },
+    {
+      "id": "streaming_image_only_forward",
+      "requirement": "Official DA3-Streaming calls model.inference(images, ref_view_strategy=...) with no camera tensors.",
+      "status": "copied_image_only_coreml_artifact_signature_and_bundle_gate",
+      "evidence": [
+        {
+          "needle": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)",
+          "present": true
+        },
+        {
+          "needle": "if extrinsics is not None:",
+          "present": true
+        },
+        {
+          "needle": "cam_token = None",
+          "present": true
+        },
+        {
+          "needle": "resourceName: 'DA3BASE_280x504_N35_image_only'",
+          "present": true
+        },
+        {
+          "needle": "DA3BASE_280x504_N35_image_only.mlpackage in Resources",
+          "present": true
+        },
+        {
+          "needle": "\"official_baseline_ready\": true",
+          "present": true
+        },
+        {
+          "needle": "\"has_image_only_coreml_signature\": true",
+          "present": true
+        },
+        {
+          "needle": "provider = try MLDictionaryFeatureProvider(dictionary: [",
+          "present": true
+        },
+        {
+          "needle": "\"image\": MLFeatureValue(multiArray: imageArray)",
+          "present": true
+        },
+        {
+          "needle": "\"extrinsics\": MLFeatureValue(multiArray: extrinsics)",
+          "present": true
+        },
+        {
+          "needle": "\"intrinsics\": MLFeatureValue(multiArray: intrinsics)",
+          "present": true
+        }
+      ],
+      "conclusion": "DA3BASE_280x504_N35_image_only CoreML is now exported, has an image-only signature, is referenced by Xcode resources, and Swift still refuses pose fallback for the official image-only path.",
+      "primary_source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift"
+    },
+    {
+      "id": "api_preprocess_resize",
+      "requirement": "Official preprocess uses process_res=504 and upper_bound_resize, then patch-size divisibility.",
+      "status": "copied_shape_contract_only",
+      "evidence": [
+        {
+          "needle": "process_res: int = 504",
+          "present": true
+        },
+        {
+          "needle": "process_res_method: str = \"upper_bound_resize\"",
+          "present": true
+        },
+        {
+          "needle": "pil_img = self._resize_image(pil_img, process_res, process_res_method)",
+          "present": true
+        },
+        {
+          "needle": "pil_img = self._make_divisible_by_resize(pil_img, self.PATCH_SIZE)",
+          "present": true
+        },
+        {
+          "needle": "interpolation = cv2.INTER_CUBIC if scale > 1.0 else cv2.INTER_AREA",
+          "present": true
+        },
+        {
+          "needle": "processRes: 504",
+          "present": true
+        },
+        {
+          "needle": "processResMethod: 'upper_bound_resize'",
+          "present": true
+        },
+        {
+          "needle": "mode: 'upper_bound_resize_patch_align'",
+          "present": true
+        },
+        {
+          "needle": "_nearestMultiple(boundaryWidth, patchSize)",
+          "present": true
+        },
+        {
+          "needle": "_resizeAreaRgb8",
+          "present": true
+        },
+        {
+          "needle": "opencv_area",
+          "present": true
+        },
+        {
+          "needle": "imageTensorFloat32ChwRelativePath",
+          "present": true
+        }
+      ],
+      "conclusion": "Dart photos_depth/photos_depth_tensor 默认路径已复制官方 process_res=504、upper_bound_resize、nearest patch-size shape contract，并把官方预处理终点推进到 normalized float tensor。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart"
+    },
+    {
+      "id": "opencv_preprocess_pixel_parity",
+      "requirement": "Official preprocess pixels come from OpenCV INTER_AREA/INTER_CUBIC, not a merely similar resize.",
+      "status": "copied_via_native_kernel_verified",
+      "evidence": [
+        {
+          "needle": "import cv2",
+          "present": true
+        },
+        {
+          "needle": "cv2.INTER_AREA",
+          "present": true
+        },
+        {
+          "needle": "cv2.INTER_CUBIC",
+          "present": true
+        },
+        {
+          "needle": "cv::imread",
+          "present": true
+        },
+        {
+          "needle": "cv::INTER_AREA",
+          "present": true
+        },
+        {
+          "needle": "cv::INTER_CUBIC",
+          "present": true
+        },
+        {
+          "needle": "Da3NativePreprocessRunner",
+          "present": true
+        },
+        {
+          "needle": "owner': 'native_cpp_opencv_libjpeg'",
+          "present": true
+        },
+        {
+          "needle": "byte_exact_official_input_processor_target",
+          "present": true
+        },
+        {
+          "needle": "pass_cpp_kernel_matches_official_input_processor",
+          "present": true
+        },
+        {
+          "needle": "_resizeAreaRgb8",
+          "present": true
+        },
+        {
+          "needle": "cubic_compat_pending_opencv_exact",
+          "present": true
+        }
+      ],
+      "conclusion": "Research/CLI/capture package 已接 C++ OpenCV/libjpeg kernel；从 source_highres 到 photos_depth/photos_depth_tensor 的 sampled gate 已 pixel/tensor exact。Dart 手写 resize 只保留 fallback/compat，不再是 official product preprocess。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart"
+    },
+    {
+      "id": "opencv_native_preprocess_path",
+      "requirement": "Official PIL/OpenCV InputProcessor can be reproduced by a cross-platform native OpenCV/libjpeg kernel.",
+      "status": "copied_native_path_verified_in_research",
+      "evidence": [
+        {
+          "needle": "import cv2",
+          "present": true
+        },
+        {
+          "needle": "Image.open(img).convert(\"RGB\")",
+          "present": true
+        },
+        {
+          "needle": "cv2.imread",
+          "present": true
+        },
+        {
+          "needle": "cv::imread",
+          "present": true
+        },
+        {
+          "needle": "cv::INTER_AREA",
+          "present": true
+        },
+        {
+          "needle": "cv::INTER_CUBIC",
+          "present": true
+        },
+        {
+          "needle": "aether_da3_preprocess_image_file_to_cache",
+          "present": true
+        },
+        {
+          "needle": "pass_cpp_kernel_matches_official_input_processor",
+          "present": true
+        },
+        {
+          "needle": "cv2.INTER_AREA",
+          "present": true
+        },
+        {
+          "needle": "cv2.INTER_CUBIC",
+          "present": true
+        },
+        {
+          "needle": "pass_cv2_native_matches_official_input_processor",
+          "present": true
+        }
+      ],
+      "conclusion": "Research audit 已证明 source_highres 抽样 32 帧里，实际 C++ OpenCV/libjpeg kernel 对官方 InputProcessor pixel/tensor exact；C ABI 已暴露给 Dart/平台插件调用。产品方向应接这个 native kernel，而不是继续手写 Dart resize/decode。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/da3_preprocess/src/da3_preprocess.cpp"
+    },
+    {
+      "id": "app_native_preprocess_runner_hook",
+      "requirement": "APP sidecar derivation should prefer the native C ABI preprocess runner when the platform has packaged the library.",
+      "status": "macos_bundled_native_asset_hook_verified_cross_platform_prebuilts_pending",
+      "evidence": [
+        {
+          "needle": "Da3NativePreprocessRunner.tryOpen",
+          "present": false
+        },
+        {
+          "needle": "package:aether_capture_services/aether_da3_preprocess",
+          "present": true
+        },
+        {
+          "needle": "aether_da3_preprocess_abi_version",
+          "present": true
+        },
+        {
+          "needle": "AETHER_DA3_PREPROCESS_DYLIB",
+          "present": true
+        },
+        {
+          "needle": "CodeAsset(",
+          "present": true
+        },
+        {
+          "needle": "DynamicLoadingBundled()",
+          "present": true
+        },
+        {
+          "needle": "AETHER_DA3_PREPROCESS_PREBUILT",
+          "present": true
+        },
+        {
+          "needle": "native/prebuilt",
+          "present": true
+        },
+        {
+          "needle": "_targetMatchesHost",
+          "present": true
+        },
+        {
+          "needle": "_currentArch",
+          "present": true
+        },
+        {
+          "needle": "hookFallbackPolicy",
+          "present": true
+        },
+        {
+          "needle": "abiProbe",
+          "present": true
+        },
+        {
+          "needle": "aether_da3_preprocess_abi_version",
+          "present": true
+        },
+        {
+          "needle": "_Target('ohos', 'arm64'",
+          "present": true
+        },
+        {
+          "needle": "_Target('ohos', 'x64'",
+          "present": true
+        },
+        {
+          "needle": "Da3NativePreprocessRunner.tryOpen",
+          "present": true
+        },
+        {
+          "needle": "libaether_da3_preprocess.so",
+          "present": true
+        },
+        {
+          "needle": "libaether_da3_preprocess.dylib",
+          "present": true
+        },
+        {
+          "needle": "_defaultPhotoBundleDerivationService",
+          "present": true
+        },
+        {
+          "needle": "Da3NativePreprocessRunner.tryOpen",
+          "present": true
+        },
+        {
+          "needle": "Isolate.run",
+          "present": true
+        },
+        {
+          "needle": "nativePreprocessAvailable",
+          "present": true
+        },
+        {
+          "needle": "native_cpp_opencv_libjpeg",
+          "present": true
+        },
+        {
+          "needle": "dart_package_image_fallback",
+          "present": true
+        },
+        {
+          "needle": "fallbackDartFrameCount', 0",
+          "present": true
+        }
+      ],
+      "conclusion": "APP LocalPipelineRunner 和后台 isolate 已默认尝试打开 native preprocess runner；aether_capture_services hook/build.dart 已能把现有 dylib 注册成 bundled CodeAsset，并已限制 monorepo fallback 只能用于 host os/arch，避免把 macOS dylib 误塞进 iOS/Android/HarmonyOS 包。package smoke 不带 env 已通过；prebuilt matrix 现在对 host 库做 ABI probe，当前 macOS arm64 为 pass，并已把 ohos_arm64/ohos_x64 纳入正式跨端目标；但总体仍是 1/9 ready。APP local_pipeline_runner_test 也强断言 native 可用时 da3_input_manifest execution.owner 必须是 native_cpp_opencv_libjpeg。剩余工程差异是补齐 iOS/Android/Harmony/Windows/Linux/macOS x64 的预编译库与平台打包矩阵。",
+      "primary_source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart"
+    },
+    {
+      "id": "source_jpeg_decode_parity",
+      "requirement": "Official source image load uses PIL/libjpeg; Dart package:image JPEG decode must be treated as a separate byte-exact gap.",
+      "status": "fallback_only_gap_not_product_official_path",
+      "evidence": [
+        {
+          "needle": "return Image.open(img).convert(\"RGB\")",
+          "present": true
+        },
+        {
+          "needle": "cv::imread",
+          "present": true
+        },
+        {
+          "needle": "owner': 'native_cpp_opencv_libjpeg'",
+          "present": true
+        },
+        {
+          "needle": "image.decodeImage(await sourceFile.readAsBytes())",
+          "present": true
+        },
+        {
+          "needle": "image.decodeImage(await source.readAsBytes())",
+          "present": true
+        }
+      ],
+      "conclusion": "cap-1 source decode audit 仍证明 Dart package:image 与 PIL/libjpeg 不 byte-exact；但 official product preprocess 现在应走 C++ OpenCV/libjpeg kernel，这个 gap 只约束 fallback，不能再算产品 official preprocess blocker。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart"
+    },
+    {
+      "id": "image_tensor_normalization",
+      "requirement": "Official tensor is RGB/NCHW/ImageNet normalized.",
+      "status": "copied",
+      "evidence": [
+        {
+          "needle": "return self.NORMALIZE(img_tensor)",
+          "present": true
+        },
+        {
+          "needle": "_writeOfficialImageTensorBin",
+          "present": true
+        },
+        {
+          "needle": "Float32List.fromList([0.485, 0.456, 0.406])",
+          "present": true
+        },
+        {
+          "needle": "Float32List.fromList([0.229, 0.224, 0.225])",
+          "present": true
+        },
+        {
+          "needle": "imageTensorFloat32ChwPath",
+          "present": true
+        }
+      ],
+      "conclusion": "Dart tensor layout/normalization now copies official ImageNet semantics before native; Swift only loads pre-normalized float32 CHW into CoreML. Runtime tensor boundary audit is exact on sampled frames.",
+      "primary_source": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift"
+    },
+    {
+      "id": "official_save_depth_conf_result",
+      "requirement": "Official downstream saves only core/save-frame indices, not all K slots.",
+      "status": "copied",
+      "evidence": [
+        {
+          "needle": "save_indices = list(range(0, chunk_end - chunk_start - self.overlap_e))",
+          "present": true
+        },
+        {
+          "needle": "save_indices = list(range(self.overlap_s, chunk_end - chunk_start - self.overlap_e))",
+          "present": true
+        },
+        {
+          "needle": "'officialSaveFrameIDs': officialSaveFrameIDs",
+          "present": true
+        },
+        {
+          "needle": "final downstreamFrameIDs = _downstreamFrameIDsForWindow(window)",
+          "present": true
+        },
+        {
+          "needle": "!downstreamFrameIDs.contains(frameResult.frameID)",
+          "present": true
+        }
+      ],
+      "conclusion": "Dart/APP 已复制官方 results_output/core-frame ownership，不再把 full-K withheld tail 当 downstream。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart"
+    },
+    {
+      "id": "confidence_minus_one",
+      "requirement": "Official DA3-Streaming subtracts 1.0 from confidence before saving/pointcloud.",
+      "status": "copied_in_native_and_downstream_executor_smoke_passed",
+      "evidence": [
+        {
+          "needle": "predictions.conf -= 1.0",
+          "present": true
+        },
+        {
+          "needle": "let confSlice = Array(conf[lo..<hi]).map { $0 - 1.0 }",
+          "present": true
+        },
+        {
+          "needle": "confidence_min_policy",
+          "present": true
+        },
+        {
+          "needle": "official_da3_streaming_confidence_minus_one",
+          "present": true
+        },
+        {
+          "needle": "downstream_must_not_use_raw_depth_confidence",
+          "present": true
+        },
+        {
+          "needle": "raw depth_conf before official predictions.conf -= 1.0",
+          "present": true
+        },
+        {
+          "needle": "pointcloud stage executes mobile replay of official npz_output_process",
+          "present": true
+        }
+      ],
+      "conclusion": "Research NPZ 路径已按 confidence-minus-one 做对照；Swift native 写 confidencePath 前现在显式执行 conf -= 1.0；APP depth_index/PointCloudStage contract 禁止 raw depth_conf，Dart 点云 executor smoke 已跑通。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py"
+    },
+    {
+      "id": "npz_output_process_pointcloud_filter",
+      "requirement": "Official results_output/frame_*.npz downstream filters by mean confidence, positive confidence, and sample_ratio.",
+      "status": "official_python_oracle_with_mobile_replay_smoke",
+      "evidence": [
+        {
+          "needle": "conf_threshold = np.mean(confs_combined) * conf_threshold_coef",
+          "present": true
+        },
+        {
+          "needle": "sample_ratio=sample_ratio",
+          "present": true
+        },
+        {
+          "needle": "--conf_threshold_coef",
+          "present": true
+        },
+        {
+          "needle": "default=0.5",
+          "present": true
+        },
+        {
+          "needle": "default=0.015",
+          "present": true
+        },
+        {
+          "needle": "official_authority",
+          "present": true
+        },
+        {
+          "needle": "This bridge only creates official frame_*.npz + camera_poses.txt inputs",
+          "present": true
+        },
+        {
+          "needle": "subprocess.run",
+          "present": true
+        },
+        {
+          "needle": "conf_mask = (confs >= conf_threshold) & (confs > 1e-5)",
+          "present": true
+        },
+        {
+          "needle": "batch_size=1000000",
+          "present": true
+        },
+        {
+          "needle": "format binary_little_endian 1.0",
+          "present": true
+        },
+        {
+          "needle": "_writeDa3PointCloudMobileReplay",
+          "present": true
+        },
+        {
+          "needle": "_writeBinaryLittleEndianPly",
+          "present": true
+        },
+        {
+          "needle": "mobile_replay_of_official_npz_output_process",
+          "present": true
+        },
+        {
+          "needle": "official_python_oracle",
+          "present": true
+        },
+        {
+          "needle": "official_npz_output_process",
+          "present": true
+        },
+        {
+          "needle": "frames[].imageRelativePath is DA3 processed image, equivalent to frame_*.npz image",
+          "present": true
+        },
+        {
+          "needle": "frames[].relativeDepthPath is DA3 predictions.depth, equivalent to frame_*.npz depth",
+          "present": true
+        },
+        {
+          "needle": "compute mean(confs) from confidencePath float32 payload",
+          "present": true
+        },
+        {
+          "needle": "OpenCV w2c",
+          "present": true
+        },
+        {
+          "needle": "'conf_threshold_coef': 0.5",
+          "present": true
+        },
+        {
+          "needle": "'sample_ratio': 0.015",
+          "present": true
+        },
+        {
+          "needle": "'valid_conf_mask': '(conf >= conf_threshold) && (conf > 1e-5)'",
+          "present": true
+        },
+        {
+          "needle": "streaming_full_chunk_pcd_path_not_product_baseline",
+          "present": true
+        },
+        {
+          "needle": "officialNpzProcess",
+          "present": true
+        },
+        {
+          "needle": "Dart is only the product mobile replay",
+          "present": true
+        },
+        {
+          "needle": "element vertex 1",
+          "present": true
+        }
+      ],
+      "conclusion": "Research/desktop 权威路径现在有 bridge 直接生成官方 Python npz_output_process.py 所需的 results_output/frame_*.npz + camera_poses.txt；APP PointCloudStage 只是移动端 replay。bridge 不重写点云过滤算法，只做格式转换；Dart smoke 仅证明移动端 replay 边界。full-chunk pcd/combined_pcd.ply 仍不是产品 baseline。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/npz_output_process.py"
+    },
+    {
+      "id": "combined_pcd_merge",
+      "requirement": "Official CLI combined_pcd.ply just merges chunk PLY files after chunk alignment.",
+      "status": "copied_as_boundary_not_product_solution",
+      "evidence": [
+        {
+          "needle": "all_ply_path = os.path.join(save_dir, \"pcd/combined_pcd.ply\")",
+          "present": true
+        },
+        {
+          "needle": "merge_ply_files(input_dir, all_ply_path)",
+          "present": true
+        },
+        {
+          "needle": "do not read full K window reports",
+          "present": true
+        }
+      ],
+      "conclusion": "官方 full-chunk PLY merge 没有 hidden 单窗去厚；产品点云不能把这条路误当厚层修复。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py"
+    },
+    {
+      "id": "continuity_rejection",
+      "requirement": "Official DA3-Streaming does not reject motion-discontinuous frames inside a chunk.",
+      "status": "not_official_do_not_call_parity",
+      "evidence": [
+        {
+          "needle": "self.img_list = sorted(",
+          "present": true
+        },
+        {
+          "needle": "da3ImageOnlyInputContinuityRisk",
+          "present": true
+        },
+        {
+          "needle": "research_continuity_quarantine_counterfactual_v1",
+          "present": true
+        }
+      ],
+      "conclusion": "连续性风险字段和 quarantine 是产品/研究候选，不是官方复制内容。它解释 window_016，但不能标成官方算法。",
+      "primary_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart"
+    }
+  ],
+  "plain_language": [
+    "你说的“找不同”是对的：现在剩下的大差异不是很多。",
+    "允许不同：官方 120/60 被手机约束改成 K35/overlap18。",
+    "刚补掉的差异：官方 image-only CoreML artifact/signature 已落地，并被 Xcode Resources 引用。",
+    "已经复制的部分：DA3-BASE 商用模型、官方 image-only 输入合约、官方 preprocess 的尺寸/patch 合同、K-window sliding/save-frame ownership、RGB/NCHW/ImageNet normalization、results_output core-frame downstream 边界。",
+    "刚补掉的差异：source_highres JPEG 到 photos_depth/photos_depth_tensor 已能通过实际 C++ OpenCV/libjpeg kernel byte-exact 复刻官方 InputProcessor。",
+    "仍要标注但不再算产品 blocker 的差异：Dart package:image 解同一张 JPEG 在原图阶段不是 byte-exact；它只能做 fallback/compat。",
+    "刚确认的复刻路线：实际 C++ OpenCV/libjpeg kernel 已有 C ABI 和 Dart FFI runner；不用再继续硬翻成 Dart。",
+    "官方 Python/C++ 能直接作为 Research/desktop oracle 的地方不替换；Dart 只负责 APP 编排和移动端 replay。",
+    "刚补上的 APP 接口：LocalPipelineRunner 和后台 isolate 已默认 tryOpen native preprocess runner。",
+    "刚补上的打包路径：aether_capture_services hook/build.dart 已能把现有 macOS dylib 注册成 bundled native asset；不带 env 的 package smoke 已通过。",
+    "还没闭环的工程差异：iOS/Android/Harmony/Windows 的 C++ OpenCV/libjpeg 预编译库和平台打包矩阵还没补齐；Harmony/OHOS 现在已进入机器可检查矩阵。",
+    "连续性 quarantine 不是官方复制，是后续移动端产品候选；不能拿它冒充 DA3 parity。"
+  ]
+}

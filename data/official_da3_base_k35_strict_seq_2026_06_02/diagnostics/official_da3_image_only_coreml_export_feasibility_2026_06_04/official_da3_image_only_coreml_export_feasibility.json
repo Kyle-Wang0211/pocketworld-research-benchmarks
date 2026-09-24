@@ -1,0 +1,175 @@
+{
+  "schema_version": "aether_official_da3_image_only_coreml_export_feasibility_v1",
+  "date": "2026-06-04",
+  "purpose": "Define the exact image-only CoreML wrapper needed to match official DA3-Streaming before mobile-specific tuning.",
+  "inputs": {
+    "official_da3_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "current_coreml": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage"
+  },
+  "official_source_evidence": {
+    "api_inference_flow": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "lines": [
+        "195-210 preprocess -> prepare -> normalize optional extrinsics -> _run_model_forward",
+        "341-365 align only when input extrinsics are present"
+      ]
+    },
+    "da3_forward_contract": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "lines": [
+        "100-109 forward(x, extrinsics=None, intrinsics=None, ...)",
+        "126-130 if extrinsics is None, cam_token=None",
+        "211-226 cam_dec predicts pose encoding, then outputs extrinsics/intrinsics",
+        "336-365 DepthAnything3Metric forwards optional cameras through anyview branch"
+      ]
+    },
+    "reference_view_selection": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/dinov2/vision_transformer.py",
+      "lines": [
+        "314-330 image-only path selects reference view and uses learned camera tokens",
+        "323-326 pose-conditioned path uses user-provided camera condition tokens"
+      ]
+    },
+    "streaming_entry": {
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "lines": [
+        "253-274 DA3-Streaming calls model.inference(images, ref_view_strategy=...)",
+        "880-915 CLI accepts image_dir/config/output_dir, not camera files"
+      ]
+    }
+  },
+  "model_config_evidence": {
+    "model_name": "da3-base",
+    "has_cam_enc": true,
+    "has_cam_dec": true,
+    "backbone_name": "vitb",
+    "alt_start": 4,
+    "out_layers": [
+      5,
+      7,
+      9,
+      11
+    ]
+  },
+  "current_coreml_signature": {
+    "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+    "available": true,
+    "input_names": [
+      "image",
+      "extrinsics",
+      "intrinsics"
+    ],
+    "output_names": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ],
+    "required_inputs": [
+      "image",
+      "extrinsics",
+      "intrinsics"
+    ],
+    "is_pose_conditioned_coreml_signature": true,
+    "is_image_only_signature": false
+  },
+  "environment": {
+    "python": "3.11.15",
+    "torch_available": true,
+    "torch_version": "2.12.0",
+    "coremltools_available": true,
+    "coremltools_version": "9.0",
+    "torch_coremltools_warning": true
+  },
+  "official_export_scripts_found": [],
+  "required_image_only_wrapper": {
+    "coreml_inputs": [
+      {
+        "name": "image",
+        "shape": [
+          1,
+          35,
+          3,
+          476,
+          742
+        ],
+        "dtype": "float32",
+        "preprocess": "already ImageNet-normalized RGB CHW tensor"
+      }
+    ],
+    "forbidden_coreml_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "torch_call_semantics": {
+      "call": "da3_model(image, extrinsics=None, intrinsics=None, export_feat_layers=[], infer_gs=False, use_ray_pose=False, ref_view_strategy='saddle_balanced')",
+      "must_not_do": [
+        "do not feed identity extrinsics",
+        "do not feed ARKit/VIO extrinsics",
+        "do not feed ARKit intrinsics"
+      ]
+    },
+    "coreml_outputs": [
+      {
+        "name": "depth",
+        "shape": [
+          1,
+          35,
+          476,
+          742
+        ]
+      },
+      {
+        "name": "depth_conf",
+        "shape": [
+          1,
+          35,
+          476,
+          742
+        ]
+      },
+      {
+        "name": "pred_extrinsics",
+        "shape": [
+          1,
+          35,
+          3,
+          4
+        ]
+      },
+      {
+        "name": "pred_intrinsics",
+        "shape": [
+          1,
+          35,
+          3,
+          3
+        ]
+      }
+    ],
+    "post_export_acceptance": [
+      "coreml signature required_inputs exactly ['image']",
+      "readiness gate passes",
+      "Mac exporter model_input_contract reports image_only",
+      "same-window CoreML image-only output is compared against PyTorch image-only reference"
+    ]
+  },
+  "decision": {
+    "status": "ready_to_attempt_export",
+    "image_only_wrapper_contract_known": true,
+    "current_coreml_is_pose_conditioned": true,
+    "official_repo_contains_coreml_export_script": false,
+    "local_coremltools_available": true,
+    "torch_coremltools_version_mismatch_warning": true,
+    "full_k35_coreml_conversion_attempted": false,
+    "highest_priority_action": "write_or_recover_the_original_coreml_export_wrapper_for_image_only_da3",
+    "why_not_identity_camera": "Identity extrinsics would still create a camera-conditioned token path; official streaming default requires extrinsics=None so the backbone uses learned camera tokens and cam_dec predicts poses from image features."
+  },
+  "next_commands": [
+    "# implement export wrapper, then convert to CoreML",
+    "# expected output: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_image_only.mlpackage",
+    "python3.11 tools/python/da3_image_only_coreml_readiness_gate.py --app-repo /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter --capture-services-dir /Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services --out-dir data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_readiness_gate_2026_06_04 --date 2026-06-04",
+    "python3.11 tools/python/da3_mac_window_export.py --capture-dir data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict --out-dir data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_probe --model /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_image_only.mlpackage --compute-unit cpu --max-windows 1"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": "pocketworld_official_da3_k35_loop_fusion_export_v1",
+  "backend": "selavprpp",
+  "route": "official DA3 streaming route plus standard Open3D pointcloud/mesh fusion preview",
+  "inputs": {
+    "sequential_capture_dir": "data/official_da3_base_k35_streaming_2026_05_30/capture_seq_k35",
+    "sequential_da3_dir": "data/official_da3_base_k35_streaming_2026_05_30/da3_seq_k35",
+    "vpr_backend_dir": "data/official_da3_base_k35_streaming_2026_05_30/vpr_loop/selavprpp"
+  },
+  "official_streaming": {
+    "sequential_window_count": 24,
+    "loop_window_count": 41,
+    "adjacent_edge_count": 23,
+    "loop_constraint_count": 41,
+    "adjacent": {
+      "edge_count": 23,
+      "estimated_count": 23,
+      "rmse_mean": 0.18374690970759822,
+      "p90_mean": 0.28614580590330874,
+      "scale_mean": 1.0145871543823284,
+      "scale_std": 0.17317879609650771,
+      "a_rmse_mean": NaN,
+      "b_rmse_mean": NaN
+    },
+    "loop": {
+      "edge_count": 41,
+      "estimated_count": 41,
+      "rmse_mean": NaN,
+      "p90_mean": NaN,
+      "scale_mean": 1.0239356706790506,
+      "scale_std": 0.15095125544894755,
+      "a_rmse_mean": 0.12434583593597945,
+      "b_rmse_mean": 0.18767378691693906
+    },
+    "optimizer": {
+      "status": "completed",
+      "sequential_transform_count": 23,
+      "optimized_transform_count": 23,
+      "loop_constraint_count": 41,
+      "pre_scale_mean": 1.0145871543823284,
+      "post_scale_mean": 1.0161129262136377,
+      "pre_scale_std": 0.17317879609650771,
+      "post_scale_std": 0.19145529459333147,
+      "elapsed_s": 0.752
+    }
+  },
+  "fusion": {
+    "frame_count": 414,
+    "skipped_frame_count": 0,
+    "valid_point_count_before_sampling": 90534599,
+    "raw_sampled_point_count": 1357793,
+    "raw_ply": "data/official_da3_base_k35_streaming_2026_05_30/fusion/selavprpp_official_loop/official_loop_optimizer_raw_sampled.ply",
+    "fused_ply": "data/official_da3_base_k35_streaming_2026_05_30/fusion/selavprpp_official_loop/official_loop_optimizer_voxel_clean.ply",
+    "mesh_ply": "data/official_da3_base_k35_streaming_2026_05_30/fusion/selavprpp_official_loop/official_loop_optimizer_poisson_mesh.ply",
+    "sample_ratio": 0.015,
+    "conf_threshold_coef": 0.75,
+    "poisson_depth": 8
+  },
+  "elapsed_s": 530.392
+}

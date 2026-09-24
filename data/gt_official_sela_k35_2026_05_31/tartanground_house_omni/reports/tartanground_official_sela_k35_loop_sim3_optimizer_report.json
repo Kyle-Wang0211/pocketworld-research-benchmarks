@@ -1,0 +1,1089 @@
+{
+  "schema_version": "aether_official_da3_k35_loop_sim3_eval_v1",
+  "backend": "selavprpp",
+  "route": "DA3-BASE K35 sequential -> VPR loop retrieval -> official loop chunks -> dense Sim3 -> Sim3LoopOptimizer",
+  "note": "Dense Sim3 uses the same weighted Sim3/IRLS math as the official DA3-Streaming path. The official Triton module is not imported on this Mac because Triton is not available; the optimizer itself is the official Sim3LoopOptimizer.",
+  "sequential_window_count": 41,
+  "loop_window_count": 22,
+  "adjacent_edge_count": 40,
+  "loop_constraint_count": 22,
+  "retrieval": {
+    "raw_loop_pair_count": 111,
+    "loop_result_count": 22,
+    "threshold_sweep": [
+      {
+        "threshold": 0.7,
+        "raw_pair_count": 509,
+        "nms_pair_count": 470
+      },
+      {
+        "threshold": 0.75,
+        "raw_pair_count": 384,
+        "nms_pair_count": 364
+      },
+      {
+        "threshold": 0.8,
+        "raw_pair_count": 252,
+        "nms_pair_count": 244
+      },
+      {
+        "threshold": 0.85,
+        "raw_pair_count": 115,
+        "nms_pair_count": 111
+      },
+      {
+        "threshold": 0.9,
+        "raw_pair_count": 17,
+        "nms_pair_count": 17
+      }
+    ],
+    "parameters": {
+      "top_k": 5,
+      "similarity_threshold": 0.85,
+      "min_frame_gap": 10,
+      "nms_threshold": 25,
+      "loop_half_window": 8,
+      "window_size": 35
+    }
+  },
+  "adjacent": {
+    "edge_count": 40,
+    "estimated_count": 40,
+    "rmse_mean": 0.06547610068404028,
+    "p90_mean": 0.08990859478565613,
+    "scale_mean": 0.9877915399996677,
+    "scale_std": 0.11635141520890749,
+    "a_rmse_mean": NaN,
+    "b_rmse_mean": NaN
+  },
+  "loop": {
+    "edge_count": 22,
+    "estimated_count": 22,
+    "rmse_mean": NaN,
+    "p90_mean": NaN,
+    "scale_mean": 1.060058719616271,
+    "scale_std": 0.1418962720176741,
+    "a_rmse_mean": 0.04640961014352907,
+    "b_rmse_mean": 0.051821114865404055
+  },
+  "optimizer": {
+    "status": "completed",
+    "sequential_transform_count": 40,
+    "optimized_transform_count": 40,
+    "loop_constraint_count": 22,
+    "pre_scale_mean": 0.9877915399996677,
+    "post_scale_mean": 0.99915359467268,
+    "pre_scale_std": 0.11635141520890749,
+    "post_scale_std": 0.11881043904908636,
+    "elapsed_s": 0.522
+  },
+  "adjacent_edges": [
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_000",
+      "currentWindowID": "window_001",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.42421875000000003,
+      "rmse": 0.08592480755793572,
+      "median": 0.04908290034063567,
+      "p90": 0.10183225333169085,
+      "sim3_scale": 0.9714253339812106
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_001",
+      "currentWindowID": "window_002",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.486328125,
+      "rmse": 0.04114860095017639,
+      "median": 0.025980669656989558,
+      "p90": 0.05964668184469239,
+      "sim3_scale": 0.8137936304710935
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_002",
+      "currentWindowID": "window_003",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.41796875,
+      "rmse": 0.0323856369003351,
+      "median": 0.02050383798210793,
+      "p90": 0.046370566325612886,
+      "sim3_scale": 0.8581462061933702
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_003",
+      "currentWindowID": "window_004",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.30390625000000004,
+      "rmse": 0.1436445628990855,
+      "median": 0.11302925255903062,
+      "p90": 0.2174853373952591,
+      "sim3_scale": 0.8896308912299793
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_004",
+      "currentWindowID": "window_005",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.2818359375,
+      "rmse": 0.08586946323093264,
+      "median": 0.04965341564476485,
+      "p90": 0.1091571283361765,
+      "sim3_scale": 0.9699583946166104
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_005",
+      "currentWindowID": "window_006",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.501953125,
+      "rmse": 0.05451954523463492,
+      "median": 0.028480664712438757,
+      "p90": 0.062443408832847755,
+      "sim3_scale": 0.945607339755914
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_006",
+      "currentWindowID": "window_007",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.598046875,
+      "rmse": 0.09639710424715263,
+      "median": 0.024843229323027065,
+      "p90": 0.09052349286343676,
+      "sim3_scale": 0.9383554401483253
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_007",
+      "currentWindowID": "window_008",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.40546875000000004,
+      "rmse": 0.05699340904132603,
+      "median": 0.026087252422019234,
+      "p90": 0.08100940850486572,
+      "sim3_scale": 1.0470281356800808
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_008",
+      "currentWindowID": "window_009",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.21054687500000002,
+      "rmse": 0.08304763420347659,
+      "median": 0.045946323496266275,
+      "p90": 0.11051308426705639,
+      "sim3_scale": 1.0884100310983131
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_009",
+      "currentWindowID": "window_010",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.24531250000000002,
+      "rmse": 0.081184544097621,
+      "median": 0.03745703532840293,
+      "p90": 0.10625017382383292,
+      "sim3_scale": 0.8621249802028015
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_010",
+      "currentWindowID": "window_011",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.32578125,
+      "rmse": 0.0446245470818415,
+      "median": 0.02999864396186848,
+      "p90": 0.0628493854876357,
+      "sim3_scale": 1.0027953243011383
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_011",
+      "currentWindowID": "window_012",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.13691406250000002,
+      "rmse": 0.07699923842043734,
+      "median": 0.06369989512025519,
+      "p90": 0.11219434294111817,
+      "sim3_scale": 1.1331746420008142
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_012",
+      "currentWindowID": "window_013",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.203515625,
+      "rmse": 0.0403712186744799,
+      "median": 0.02731786177573188,
+      "p90": 0.05938038389687754,
+      "sim3_scale": 0.9375118723509361
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_013",
+      "currentWindowID": "window_014",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.276171875,
+      "rmse": 0.046458554212130736,
+      "median": 0.032974039627442574,
+      "p90": 0.06624261254381883,
+      "sim3_scale": 1.0474416907558104
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_014",
+      "currentWindowID": "window_015",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.23554687500000002,
+      "rmse": 0.042900311672437234,
+      "median": 0.021056209866913304,
+      "p90": 0.06422827365744045,
+      "sim3_scale": 0.8845039120251665
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_015",
+      "currentWindowID": "window_016",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.307421875,
+      "rmse": 0.0747082198938431,
+      "median": 0.04432672587710644,
+      "p90": 0.10699006409845482,
+      "sim3_scale": 1.0593475743464063
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_016",
+      "currentWindowID": "window_017",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.43281250000000004,
+      "rmse": 0.053665339868015485,
+      "median": 0.038322477424714785,
+      "p90": 0.08298095430892864,
+      "sim3_scale": 0.9343384521062459
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_017",
+      "currentWindowID": "window_018",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.326171875,
+      "rmse": 0.07908702466124541,
+      "median": 0.04879143385812235,
+      "p90": 0.11382858067972593,
+      "sim3_scale": 0.7852293844127354
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_018",
+      "currentWindowID": "window_019",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.463671875,
+      "rmse": 0.06561712407603444,
+      "median": 0.02740953487408624,
+      "p90": 0.08431803354626864,
+      "sim3_scale": 1.1309153036964095
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_019",
+      "currentWindowID": "window_020",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.42734375,
+      "rmse": 0.0869020692387746,
+      "median": 0.04660489989108817,
+      "p90": 0.1215636924920567,
+      "sim3_scale": 0.8386257659925003
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_020",
+      "currentWindowID": "window_021",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.4578125,
+      "rmse": 0.07521203397691523,
+      "median": 0.05202322682450656,
+      "p90": 0.10970881489519727,
+      "sim3_scale": 1.2226767179189664
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_021",
+      "currentWindowID": "window_022",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.274609375,
+      "rmse": 0.06168082334008537,
+      "median": 0.036590302969550764,
+      "p90": 0.0919509446592767,
+      "sim3_scale": 1.0242484966153822
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_022",
+      "currentWindowID": "window_023",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.4296875,
+      "rmse": 0.046109152967473185,
+      "median": 0.03365213727887156,
+      "p90": 0.061692926255943525,
+      "sim3_scale": 0.8990398838546076
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_023",
+      "currentWindowID": "window_024",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.29609375,
+      "rmse": 0.06332831030268547,
+      "median": 0.04155553892519043,
+      "p90": 0.10122726320059906,
+      "sim3_scale": 1.0599592233428745
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_024",
+      "currentWindowID": "window_025",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.33125000000000004,
+      "rmse": 0.05716970440454115,
+      "median": 0.02857966579612277,
+      "p90": 0.08553173581449068,
+      "sim3_scale": 1.0306370003317469
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_025",
+      "currentWindowID": "window_026",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.6312500000000001,
+      "rmse": 0.0433707924866431,
+      "median": 0.01875962572317847,
+      "p90": 0.05493044156686437,
+      "sim3_scale": 0.9124087252058564
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_026",
+      "currentWindowID": "window_027",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.292578125,
+      "rmse": 0.08579106852128099,
+      "median": 0.06509651977800421,
+      "p90": 0.12135473316429954,
+      "sim3_scale": 0.9933594041508722
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_027",
+      "currentWindowID": "window_028",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.43203125000000003,
+      "rmse": 0.0753010191294477,
+      "median": 0.029425830205249744,
+      "p90": 0.09685027565650403,
+      "sim3_scale": 0.7804671759877456
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_028",
+      "currentWindowID": "window_029",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.43789062500000003,
+      "rmse": 0.06898062898659865,
+      "median": 0.03072701095533876,
+      "p90": 0.10414639234490963,
+      "sim3_scale": 1.1199069822274959
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_029",
+      "currentWindowID": "window_030",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.46210937500000004,
+      "rmse": 0.09390711992803737,
+      "median": 0.03902562935851364,
+      "p90": 0.09680417835730878,
+      "sim3_scale": 0.9614239594039615
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_030",
+      "currentWindowID": "window_031",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.42109375000000004,
+      "rmse": 0.0839974948492194,
+      "median": 0.0483794640811321,
+      "p90": 0.08919183884613302,
+      "sim3_scale": 1.2004538868890016
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_031",
+      "currentWindowID": "window_032",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.420703125,
+      "rmse": 0.07915354009478827,
+      "median": 0.05771622553487368,
+      "p90": 0.11640279098360065,
+      "sim3_scale": 1.0833571297413507
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_032",
+      "currentWindowID": "window_033",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.46796875000000004,
+      "rmse": 0.044996772282149,
+      "median": 0.03243438419129224,
+      "p90": 0.06258365843871642,
+      "sim3_scale": 0.9088850231086335
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_033",
+      "currentWindowID": "window_034",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.40468750000000003,
+      "rmse": 0.06303091449746605,
+      "median": 0.03870128608477355,
+      "p90": 0.0962787782224023,
+      "sim3_scale": 1.1302168069613294
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_034",
+      "currentWindowID": "window_035",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.3826171875,
+      "rmse": 0.05355256940578611,
+      "median": 0.03254222469725074,
+      "p90": 0.09261900110104287,
+      "sim3_scale": 0.8272289162358233
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_035",
+      "currentWindowID": "window_036",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.40078125000000003,
+      "rmse": 0.06286673616841612,
+      "median": 0.04864571479303108,
+      "p90": 0.09763719367141818,
+      "sim3_scale": 1.1891581037574872
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_036",
+      "currentWindowID": "window_037",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.48125,
+      "rmse": 0.046277921867137944,
+      "median": 0.03711677619583198,
+      "p90": 0.06208552417923474,
+      "sim3_scale": 1.0491126276835538
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_037",
+      "currentWindowID": "window_038",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.388671875,
+      "rmse": 0.10103600701475297,
+      "median": 0.0718552774972151,
+      "p90": 0.14303753409058448,
+      "sim3_scale": 1.1197365678282358
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_038",
+      "currentWindowID": "window_039",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.80078125,
+      "rmse": 0.03324157534936072,
+      "median": 0.01838283462178577,
+      "p90": 0.04205755279643022,
+      "sim3_scale": 0.8692913792457935
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_039",
+      "currentWindowID": "window_040",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6355106,
+      "confidence_threshold": 1.0250000000000001,
+      "rmse": 0.007590885626909955,
+      "median": 0.005219383677950193,
+      "p90": 0.010444354003492374,
+      "sim3_scale": 0.9917292841301225
+    }
+  ],
+  "loop_edges": [
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_000",
+      "chunkIndexA": 28,
+      "chunkIndexB": 7,
+      "rangeA": [
+        476,
+        492
+      ],
+      "rangeB": [
+        121,
+        137
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05106672233786708,
+      "b_rmse": 0.05341181001448282,
+      "a_p90": 0.07495530243755608,
+      "b_p90": 0.07175724113986785,
+      "sim3_scale": 0.9416769937347823
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_001",
+      "chunkIndexA": 36,
+      "chunkIndexB": 35,
+      "rangeA": [
+        614,
+        630
+      ],
+      "rangeB": [
+        595,
+        611
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.019757941302155028,
+      "b_rmse": 0.05784781294263469,
+      "a_p90": 0.0313406206879718,
+      "b_p90": 0.08649175741055753,
+      "sim3_scale": 1.1938425192207984
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_002",
+      "chunkIndexA": 30,
+      "chunkIndexB": 5,
+      "rangeA": [
+        510,
+        526
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06110070387841302,
+      "b_rmse": 0.07557694207258116,
+      "a_p90": 0.08349400454737242,
+      "b_p90": 0.1030216799559992,
+      "sim3_scale": 0.9397426185292428
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_003",
+      "chunkIndexA": 28,
+      "chunkIndexB": 6,
+      "rangeA": [
+        484,
+        500
+      ],
+      "rangeB": [
+        107,
+        123
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07994909246679877,
+      "b_rmse": 0.059973661810779004,
+      "a_p90": 0.10271769401627125,
+      "b_p90": 0.07981376477221602,
+      "sim3_scale": 0.8892477716265474
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_004",
+      "chunkIndexA": 27,
+      "chunkIndexB": 8,
+      "rangeA": [
+        461,
+        477
+      ],
+      "rangeB": [
+        136,
+        152
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.03606993428469197,
+      "b_rmse": 0.054143546594546996,
+      "a_p90": 0.04493967421790962,
+      "b_p90": 0.06846741260877336,
+      "sim3_scale": 1.114704667898632
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_005",
+      "chunkIndexA": 27,
+      "chunkIndexB": 7,
+      "rangeA": [
+        467,
+        483
+      ],
+      "rangeB": [
+        127,
+        143
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.03418695571221713,
+      "b_rmse": 0.041698811802965474,
+      "a_p90": 0.04166153674594445,
+      "b_p90": 0.05753519857189655,
+      "sim3_scale": 1.1820064079673147
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_006",
+      "chunkIndexA": 30,
+      "chunkIndexB": 4,
+      "rangeA": [
+        510,
+        526
+      ],
+      "rangeB": [
+        76,
+        92
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.045905322953750875,
+      "b_rmse": 0.04798114756320484,
+      "a_p90": 0.06146671752895687,
+      "b_p90": 0.06825335855322687,
+      "sim3_scale": 0.9163648113654093
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_007",
+      "chunkIndexA": 29,
+      "chunkIndexB": 5,
+      "rangeA": [
+        496,
+        512
+      ],
+      "rangeB": [
+        91,
+        107
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06612965779680062,
+      "b_rmse": 0.06694001439332273,
+      "a_p90": 0.09996583823331992,
+      "b_p90": 0.08843547483599773,
+      "sim3_scale": 0.949569869139433
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_008",
+      "chunkIndexA": 29,
+      "chunkIndexB": 6,
+      "rangeA": [
+        493,
+        509
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0610430164640894,
+      "b_rmse": 0.04019271395520962,
+      "a_p90": 0.08016828089890542,
+      "b_p90": 0.0574798935460318,
+      "sim3_scale": 0.9997576507041654
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_009",
+      "chunkIndexA": 24,
+      "chunkIndexB": 7,
+      "rangeA": [
+        408,
+        424
+      ],
+      "rangeB": [
+        122,
+        138
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.03737275564941693,
+      "b_rmse": 0.06501782885931669,
+      "a_p90": 0.05056457227350257,
+      "b_p90": 0.07653750613586116,
+      "sim3_scale": 1.191961234453315
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_010",
+      "chunkIndexA": 22,
+      "chunkIndexB": 19,
+      "rangeA": [
+        374,
+        390
+      ],
+      "rangeB": [
+        323,
+        339
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05491925471837932,
+      "b_rmse": 0.05782747009974166,
+      "a_p90": 0.07812509381053498,
+      "b_p90": 0.0820760255559226,
+      "sim3_scale": 1.2097336981854971
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_011",
+      "chunkIndexA": 28,
+      "chunkIndexB": 24,
+      "rangeA": [
+        476,
+        492
+      ],
+      "rangeB": [
+        408,
+        424
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05612282127507285,
+      "b_rmse": 0.026148794675312795,
+      "a_p90": 0.07894050783052232,
+      "b_p90": 0.03336525238478199,
+      "sim3_scale": 0.8184185089140035
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_012",
+      "chunkIndexA": 31,
+      "chunkIndexB": 4,
+      "rangeA": [
+        527,
+        543
+      ],
+      "rangeB": [
+        68,
+        84
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07284081813377632,
+      "b_rmse": 0.06670093688860562,
+      "a_p90": 0.05237019661892368,
+      "b_p90": 0.0841159991809874,
+      "sim3_scale": 1.0965462614059522
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_013",
+      "chunkIndexA": 24,
+      "chunkIndexB": 17,
+      "rangeA": [
+        408,
+        424
+      ],
+      "rangeB": [
+        297,
+        313
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.029085651252810894,
+      "b_rmse": 0.047638156137570824,
+      "a_p90": 0.03522795774246814,
+      "b_p90": 0.07168555058469148,
+      "sim3_scale": 1.0110689244066702
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_014",
+      "chunkIndexA": 37,
+      "chunkIndexB": 34,
+      "rangeA": [
+        636,
+        652
+      ],
+      "rangeB": [
+        578,
+        594
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05296015704713559,
+      "b_rmse": 0.05053222532332405,
+      "a_p90": 0.07058215881260253,
+      "b_p90": 0.0834627910979396,
+      "sim3_scale": 1.0475180164097648
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_015",
+      "chunkIndexA": 22,
+      "chunkIndexB": 18,
+      "rangeA": [
+        379,
+        395
+      ],
+      "rangeB": [
+        314,
+        330
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0641893111318479,
+      "b_rmse": 0.04903841231787154,
+      "a_p90": 0.07342578219007585,
+      "b_p90": 0.06832948924077094,
+      "sim3_scale": 1.2993848713706013
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_016",
+      "chunkIndexA": 28,
+      "chunkIndexB": 18,
+      "rangeA": [
+        476,
+        492
+      ],
+      "rangeB": [
+        306,
+        322
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.04166536431072703,
+      "b_rmse": 0.04404249537025531,
+      "a_p90": 0.04484667465704486,
+      "b_p90": 0.047530660190846806,
+      "sim3_scale": 1.0300124612171093
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_017",
+      "chunkIndexA": 23,
+      "chunkIndexB": 17,
+      "rangeA": [
+        399,
+        415
+      ],
+      "rangeB": [
+        297,
+        313
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0323702851415535,
+      "b_rmse": 0.03686643957796173,
+      "a_p90": 0.04700453859329911,
+      "b_p90": 0.055118682088319014,
+      "sim3_scale": 0.9549722993882768
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_018",
+      "chunkIndexA": 18,
+      "chunkIndexB": 7,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        120,
+        136
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.041688196449696575,
+      "b_rmse": 0.07790853143449832,
+      "a_p90": 0.049872578751584955,
+      "b_p90": 0.08339123653227472,
+      "sim3_scale": 0.9227830006522626
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_019",
+      "chunkIndexA": 24,
+      "chunkIndexB": 18,
+      "rangeA": [
+        408,
+        424
+      ],
+      "rangeB": [
+        306,
+        322
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.02413305659805725,
+      "b_rmse": 0.026632948568808365,
+      "a_p90": 0.030007926747669146,
+      "b_p90": 0.04011767253757616,
+      "sim3_scale": 1.2592241687032928
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_020",
+      "chunkIndexA": 40,
+      "chunkIndexB": 32,
+      "rangeA": [
+        665,
+        681
+      ],
+      "rangeB": [
+        547,
+        563
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.02176286126578173,
+      "b_rmse": 0.056680353611906646,
+      "a_p90": 0.02654487016981628,
+      "b_p90": 0.06231376068859632,
+      "sim3_scale": 1.0087886796935717
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_021",
+      "chunkIndexA": 38,
+      "chunkIndexB": 33,
+      "rangeA": [
+        646,
+        662
+      ],
+      "rangeB": [
+        569,
+        585
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.03669154298659993,
+      "b_rmse": 0.03726347302398824,
+      "a_p90": 0.04711397350903219,
+      "b_p90": 0.051136193097841544,
+      "sim3_scale": 1.3439663965713133
+    }
+  ],
+  "elapsed_s": 315.429
+}

@@ -1,0 +1,2260 @@
+{
+  "schema_version": "pocketworld_strict_k35_window_official_filter_micro_audit_v1",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict_official_postprocess",
+    "window_id": "window_000",
+    "model_context": {
+      "commercial_path": "DA3-BASE",
+      "mobile_model": "DA3BASE_476x742_N35_pose.mlpackage",
+      "note": "This audit does not change the CoreML model output; it changes only point export/filter rules."
+    }
+  },
+  "parameters": {
+    "groups": [
+      [
+        "slot_00",
+        [
+          0
+        ]
+      ],
+      [
+        "slots_00_01",
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        "slots_00_02",
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      [
+        "first_05",
+        [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      [
+        "first_10",
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      ],
+      [
+        "first_35",
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ]
+      ]
+    ],
+    "seed": 4300,
+    "glb_style": {
+      "source": "Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+      "conf_thresh": 1.05,
+      "conf_thresh_percentile": 40.0,
+      "ensure_thresh_percentile": 90.0,
+      "num_max_points": 1000000
+    },
+    "npz_streaming_style": {
+      "source": "Depth-Anything-3/da3_streaming/npz_output_process.py + loop_utils/sim3utils.py",
+      "conf_threshold_coef": 0.75,
+      "sample_ratio": 0.015,
+      "note": "Uses DA3-Streaming base_config Pointcloud_Save defaults; npz_output_process.py CLI default is 0.5."
+    }
+  },
+  "styles": [
+    {
+      "style": "glb_style",
+      "parameters": {
+        "source": "Depth-Anything-3/src/depth_anything_3/utils/export/glb.py",
+        "conf_thresh": 1.05,
+        "conf_thresh_percentile": 40.0,
+        "ensure_thresh_percentile": 90.0,
+        "num_max_points": 1000000
+      },
+      "outputs": {
+        "contact_sheet": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/glb_style_contact_sheet.png"
+      },
+      "groups": [
+        {
+          "name": "slot_00",
+          "slots": [
+            0
+          ],
+          "frame_ids": [
+            "cap-1"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slot_00_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slot_00_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.87890625,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 211925,
+            "num_max_points": 1000000,
+            "exported_point_count": 211925,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.6682226657867432
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.3785079829394817
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.104618489742279
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4300
+          },
+          "metrics": {
+            "slot_count": 1,
+            "valid_point_count_before_downsample": 211925,
+            "sampled_point_count": 211925,
+            "valid_fraction_of_pixels": 0.6000277469478358,
+            "point_cloud": {
+              "point_count": 211925,
+              "bbox_p01": [
+                -1.5185983610153198,
+                -0.6194902420043945,
+                -0.6586021780967712
+              ],
+              "bbox_p99": [
+                0.381461501121521,
+                0.7386871623992928,
+                0.2850208282470703
+              ],
+              "bbox_extent_p01_p99": [
+                1.9000598621368407,
+                1.3581774044036874,
+                0.9436230063438416
+              ],
+              "bbox_diag_p01_p99": 2.518987439356853,
+              "bbox_extent_p05_p95": [
+                1.6228717386722566,
+                1.121073234081268,
+                0.7939871847629547
+              ],
+              "bbox_diag_p05_p95": 2.126248698041306,
+              "std_xyz": [
+                0.4680907428264618,
+                0.3701758086681366,
+                0.24782204627990723
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.267125553292398,
+                0.10953905849855868,
+                0.04090486212293357
+              ],
+              "extent_p01_p99_desc": [
+                2.1087482508653497,
+                1.422314838819268,
+                0.9357109658682393
+              ],
+              "major_extent": 2.1087482508653497,
+              "middle_extent": 1.422314838819268,
+              "minor_extent": 0.9357109658682393,
+              "minor_to_major_ratio": 0.44372815270113886
+            },
+            "depth": {
+              "count": 353192,
+              "min": 1.0617033243179321,
+              "max": 2.6832692623138428,
+              "mean": 1.6824113426479808,
+              "median": 1.649050235748291,
+              "p05": 1.118707537651062,
+              "p40": 1.4871989488601685,
+              "p90": 2.2414867877960205,
+              "p95": 2.345315933227539
+            },
+            "confidence": {
+              "count": 353192,
+              "min": 1.0029296875,
+              "max": 12.3359375,
+              "mean": 4.1928887701528135,
+              "median": 4.6015625,
+              "p05": 1.736328125,
+              "p40": 3.87890625,
+              "p90": 5.7890625,
+              "p95": 6.03125
+            },
+            "pose": {
+              "camera_center_min": [
+                1.1383264064788818,
+                0.22322618961334229,
+                1.573490023612976
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.22322618961334229,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "camera_center_diag": 0.0,
+              "step_mean": null,
+              "step_max": null
+            }
+          }
+        },
+        {
+          "name": "slots_00_01",
+          "slots": [
+            0,
+            1
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slots_00_01_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slots_00_01_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.837890625,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 424063,
+            "num_max_points": 1000000,
+            "exported_point_count": 424063,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.6756381690502167
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.3663043156266212
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.114120066165924
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4301
+          },
+          "metrics": {
+            "slot_count": 2,
+            "valid_point_count_before_downsample": 424063,
+            "sampled_point_count": 424063,
+            "valid_fraction_of_pixels": 0.6003292826564588,
+            "point_cloud": {
+              "point_count": 424063,
+              "bbox_p01": [
+                -1.611668782234192,
+                -0.6220583021640778,
+                -0.7061048150062561
+              ],
+              "bbox_p99": [
+                0.38514645218849186,
+                0.7478366351127624,
+                0.29045072197914124
+              ],
+              "bbox_extent_p01_p99": [
+                1.9968152344226837,
+                1.36989493727684,
+                0.9965555369853973
+              ],
+              "bbox_diag_p01_p99": 2.6185885812581344,
+              "bbox_extent_p05_p95": [
+                1.6647721618413922,
+                1.1260616660118101,
+                0.8076196253299713
+              ],
+              "bbox_diag_p05_p95": 2.1660403241217554,
+              "std_xyz": [
+                0.495498389005661,
+                0.3750036060810089,
+                0.2541440725326538
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.2956702098307523,
+                0.11222662319968874,
+                0.042880926264136046
+              ],
+              "extent_p01_p99_desc": [
+                2.174047436236069,
+                1.4345686776851845,
+                0.9526079745694743
+              ],
+              "major_extent": 2.174047436236069,
+              "middle_extent": 1.4345686776851845,
+              "minor_extent": 0.9526079745694743,
+              "minor_to_major_ratio": 0.4381725801800929
+            },
+            "depth": {
+              "count": 706384,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7015916913155102,
+              "median": 1.666355013847351,
+              "p05": 1.127868890762329,
+              "p40": 1.5024679899215698,
+              "p90": 2.2760965824127197,
+              "p95": 2.3738179206848145
+            },
+            "confidence": {
+              "count": 706384,
+              "min": 1.001953125,
+              "max": 12.3359375,
+              "mean": 4.234083669766551,
+              "median": 4.6171875,
+              "p05": 1.7421875,
+              "p40": 3.837890625,
+              "p90": 5.9453125,
+              "p95": 6.2421875
+            },
+            "pose": {
+              "camera_center_min": [
+                1.1255180835723877,
+                0.22322618961334229,
+                1.569140076637268
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.23277458548545837,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.01280832290649414,
+                0.009548395872116089,
+                0.004349946975708008
+              ],
+              "camera_center_diag": 0.01655738614499569,
+              "step_mean": 0.01655738614499569,
+              "step_max": 0.01655738614499569
+            }
+          }
+        },
+        {
+          "name": "slots_00_02",
+          "slots": [
+            0,
+            1,
+            2
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slots_00_02_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/slots_00_02_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.927734375,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 636104,
+            "num_max_points": 1000000,
+            "exported_point_count": 636104,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.6694896221160889
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.3672266155481339
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.1104106307029724
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4302
+          },
+          "metrics": {
+            "slot_count": 3,
+            "valid_point_count_before_downsample": 636104,
+            "sampled_point_count": 636104,
+            "valid_fraction_of_pixels": 0.60033824850695,
+            "point_cloud": {
+              "point_count": 636104,
+              "bbox_p01": [
+                -1.6321619260311127,
+                -0.6230035519599915,
+                -0.6956326353549958
+              ],
+              "bbox_p99": [
+                0.3850366601347922,
+                0.7540411186218259,
+                0.29632554024457913
+              ],
+              "bbox_extent_p01_p99": [
+                2.0171985861659048,
+                1.3770446705818173,
+                0.9919581755995749
+              ],
+              "bbox_diag_p01_p99": 2.636156896496555,
+              "bbox_extent_p05_p95": [
+                1.67417104691267,
+                1.1302210211753843,
+                0.8104961216449738
+              ],
+              "bbox_diag_p05_p95": 2.1764999917824346,
+              "std_xyz": [
+                0.4998537003993988,
+                0.3759075403213501,
+                0.2555847465991974
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.30001913630985955,
+                0.11387373183287255,
+                0.04267743929389815
+              ],
+              "extent_p01_p99_desc": [
+                2.193637929256302,
+                1.4495369471238315,
+                0.9478197416477698
+              ],
+              "major_extent": 2.193637929256302,
+              "middle_extent": 1.4495369471238315,
+              "minor_extent": 0.9478197416477698,
+              "minor_to_major_ratio": 0.4320766563190783
+            },
+            "depth": {
+              "count": 1059576,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7112802216475869,
+              "median": 1.6755164861679077,
+              "p05": 1.1339764595031738,
+              "p40": 1.5106114149093628,
+              "p90": 2.288311719894409,
+              "p95": 2.3921408653259277
+            },
+            "confidence": {
+              "count": 1059576,
+              "min": 1.0009765625,
+              "max": 12.625,
+              "mean": 4.291832133981246,
+              "median": 4.67578125,
+              "p05": 1.75390625,
+              "p40": 3.927734375,
+              "p90": 6.0546875,
+              "p95": 6.3046875
+            },
+            "pose": {
+              "camera_center_min": [
+                1.091809868812561,
+                0.22322618961334229,
+                1.5674103498458862
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.237285777926445,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.0465165376663208,
+                0.014059588313102722,
+                0.006079673767089844
+              ],
+              "camera_center_diag": 0.0489736944437027,
+              "step_mean": 0.025305043905973434,
+              "step_max": 0.03405270352959633
+            }
+          }
+        },
+        {
+          "name": "first_05",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_05_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_05_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.857421875,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 1059998,
+            "num_max_points": 1000000,
+            "exported_point_count": 1000000,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.6696633100509644
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.3703691251575947
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.117513597011566
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4303
+          },
+          "metrics": {
+            "slot_count": 5,
+            "valid_point_count_before_downsample": 1059998,
+            "sampled_point_count": 1000000,
+            "valid_fraction_of_pixels": 0.6002389635099322,
+            "point_cloud": {
+              "point_count": 1000000,
+              "bbox_p01": [
+                -1.6801818776130677,
+                -0.6285501229763031,
+                -0.7089900898933411
+              ],
+              "bbox_p99": [
+                0.4016531696915627,
+                0.7811322408914566,
+                0.31463871359825135
+              ],
+              "bbox_extent_p01_p99": [
+                2.0818350473046303,
+                1.4096823638677596,
+                1.0236288034915924
+              ],
+              "bbox_diag_p01_p99": 2.714600791741448,
+              "bbox_extent_p05_p95": [
+                1.711083909869194,
+                1.1592556565999983,
+                0.827601246535778
+              ],
+              "bbox_diag_p05_p95": 2.226343560019413,
+              "std_xyz": [
+                0.512421727180481,
+                0.3852512240409851,
+                0.26216384768486023
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.317201776864245,
+                0.11910055740270324,
+                0.04361013942591699
+              ],
+              "extent_p01_p99_desc": [
+                2.312176672774695,
+                1.4833044903755148,
+                0.955127254489178
+              ],
+              "major_extent": 2.312176672774695,
+              "middle_extent": 1.4833044903755148,
+              "minor_extent": 0.955127254489178,
+              "minor_to_major_ratio": 0.41308575842649214
+            },
+            "depth": {
+              "count": 1765960,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7464586112898266,
+              "median": 1.7223412990570068,
+              "p05": 1.1502634286880493,
+              "p40": 1.5513287782669067,
+              "p90": 2.329028844833374,
+              "p95": 2.434893846511841
+            },
+            "confidence": {
+              "count": 1765960,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 4.246812835356725,
+              "median": 4.6484375,
+              "p05": 1.75,
+              "p40": 3.857421875,
+              "p90": 6.015625,
+              "p95": 6.25
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                0.22322618961334229,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                1.1800085306167603,
+                0.4102502167224884,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.12504196166992188,
+                0.18702402710914612,
+                0.011185050010681152
+              ],
+              "camera_center_diag": 0.22525227069854736,
+              "step_mean": 0.07328413426876068,
+              "step_max": 0.20308798551559448
+            }
+          }
+        },
+        {
+          "name": "first_10",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_10_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_10_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.928906250000182,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 2119152,
+            "num_max_points": 1000000,
+            "exported_point_count": 1000000,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.6709563136100769
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.368625782430172
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.121534287929535
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4304
+          },
+          "metrics": {
+            "slot_count": 10,
+            "valid_point_count_before_downsample": 2119152,
+            "sampled_point_count": 1000000,
+            "valid_fraction_of_pixels": 0.6,
+            "point_cloud": {
+              "point_count": 1000000,
+              "bbox_p01": [
+                -1.6204403817653656,
+                -0.6521429562568665,
+                -0.6992121374607086
+              ],
+              "bbox_p99": [
+                0.4109550312161446,
+                0.758002821803093,
+                0.31157601535320284
+              ],
+              "bbox_extent_p01_p99": [
+                2.03139541298151,
+                1.4101457780599596,
+                1.0107881528139115
+              ],
+              "bbox_diag_p01_p99": 2.6714735875788866,
+              "bbox_extent_p05_p95": [
+                1.6965215906500817,
+                1.1821563363075254,
+                0.8249802887439728
+              ],
+              "bbox_diag_p05_p95": 2.2262685345281246,
+              "std_xyz": [
+                0.5089762210845947,
+                0.3934307098388672,
+                0.25927647948265076
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.31682052831965113,
+                0.12089454660932936,
+                0.04354435013295496
+              ],
+              "extent_p01_p99_desc": [
+                2.268291203306302,
+                1.479893650145315,
+                0.9539505445068046
+              ],
+              "major_extent": 2.268291203306302,
+              "middle_extent": 1.479893650145315,
+              "minor_extent": 0.9539505445068046,
+              "minor_to_major_ratio": 0.4205591165350856
+            },
+            "depth": {
+              "count": 3531920,
+              "min": 1.052541971206665,
+              "max": 2.7870984077453613,
+              "mean": 1.7394840707503973,
+              "median": 1.7009648084640503,
+              "p05": 1.1808013916015625,
+              "p40": 1.553364634513855,
+              "p90": 2.3005268573760986,
+              "p95": 2.410463571548462
+            },
+            "confidence": {
+              "count": 3531920,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 4.195220832381449,
+              "median": 4.64453125,
+              "p05": 1.73046875,
+              "p40": 3.928906250000182,
+              "p90": 5.859375,
+              "p95": 6.15625
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                0.22322618961334229,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                1.319271206855774,
+                0.4194173812866211,
+                1.7413945198059082
+              ],
+              "camera_center_extent": [
+                0.26430463790893555,
+                0.1961911916732788,
+                0.17908954620361328
+              ],
+              "camera_center_diag": 0.37472787499427795,
+              "step_mean": 0.06938344985246658,
+              "step_max": 0.20308798551559448
+            }
+          }
+        },
+        {
+          "name": "first_35",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35",
+            "cap-37",
+            "cap-39",
+            "cap-42",
+            "cap-44",
+            "cap-48",
+            "cap-50",
+            "cap-52",
+            "cap-54",
+            "cap-56",
+            "cap-74",
+            "cap-78",
+            "cap-80",
+            "cap-96",
+            "cap-103",
+            "cap-105",
+            "cap-107",
+            "cap-109",
+            "cap-114",
+            "cap-116",
+            "cap-118",
+            "cap-122",
+            "cap-124",
+            "cap-126",
+            "cap-128",
+            "cap-131"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_35_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/glb_style/first_35_views.png"
+          },
+          "official_filter": {
+            "style": "glb.py",
+            "conf_threshold": 3.193359375,
+            "conf_thresh_base": 1.05,
+            "conf_thresh_percentile": 40.0,
+            "ensure_thresh_percentile": 90.0,
+            "valid_point_count_before_downsample": 7418834,
+            "num_max_points": 1000000,
+            "exported_point_count": 1000000,
+            "alignment_transform": [
+              [
+                -0.6552199125289917,
+                -0.7454120516777039,
+                -0.12266846001148224,
+                0.9351375102996826
+              ],
+              [
+                -0.09762869030237198,
+                -0.07746557146310806,
+                0.992203414440155,
+                -1.479639332741499
+              ],
+              [
+                -0.7491029500961304,
+                0.6620875000953674,
+                -0.02201659604907036,
+                2.190752923488617
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "random_downsample_seed": 4305
+          },
+          "metrics": {
+            "slot_count": 35,
+            "valid_point_count_before_downsample": 7418834,
+            "sampled_point_count": 1000000,
+            "valid_fraction_of_pixels": 0.6001457725947522,
+            "point_cloud": {
+              "point_count": 1000000,
+              "bbox_p01": [
+                -1.551986005306244,
+                -0.8711562371253967,
+                -0.8014419680833816
+              ],
+              "bbox_p99": [
+                0.6454131203889848,
+                0.6230055743455887,
+                0.38735579937696457
+              ],
+              "bbox_extent_p01_p99": [
+                2.1973991256952288,
+                1.4941618114709854,
+                1.1887977674603463
+              ],
+              "bbox_diag_p01_p99": 2.9110689734843307,
+              "bbox_extent_p05_p95": [
+                1.7457634836435316,
+                1.2494739338755607,
+                0.9336665943264959
+              ],
+              "bbox_diag_p05_p95": 2.3410699608552723,
+              "std_xyz": [
+                0.5254497528076172,
+                0.40637457370758057,
+                0.2903844118118286
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.34341547529073896,
+                0.11761080204191295,
+                0.06478042989793045
+              ],
+              "extent_p01_p99_desc": [
+                2.3121498205816486,
+                1.6188666000703926,
+                1.115149137546954
+              ],
+              "major_extent": 2.3121498205816486,
+              "middle_extent": 1.6188666000703926,
+              "minor_extent": 1.115149137546954,
+              "minor_to_major_ratio": 0.48229968820377955
+            },
+            "depth": {
+              "count": 12361720,
+              "min": 0.5461206436157227,
+              "max": 2.8787124156951904,
+              "mean": 1.584544742376737,
+              "median": 1.570669412612915,
+              "p05": 0.8479375243186951,
+              "p40": 1.4006747007369995,
+              "p90": 2.2313075065612793,
+              "p95": 2.3595669269561768
+            },
+            "confidence": {
+              "count": 12361720,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 3.698475006000126,
+              "median": 3.671875,
+              "p05": 1.5126953125,
+              "p40": 3.193359375,
+              "p90": 5.60546875,
+              "p95": 5.984375
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                -0.13231487572193146,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                2.136497974395752,
+                0.4194173812866211,
+                2.319125175476074
+              ],
+              "camera_center_extent": [
+                1.0815314054489136,
+                0.5517322421073914,
+                0.7568202018737793
+              ],
+              "camera_center_diag": 1.4306975603103638,
+              "step_mean": 0.0646294578909874,
+              "step_max": 0.3314107656478882
+            }
+          }
+        }
+      ],
+      "interpretation": {
+        "summary_rows": [
+          {
+            "name": "slot_00",
+            "slots": [
+              0
+            ],
+            "valid_fraction": 0.6000277469478358,
+            "exported_points": 211925,
+            "conf_threshold": 3.87890625,
+            "bbox_diag_p01_p99": 2.518987439356853,
+            "bbox_diag_growth_from_previous_group": null,
+            "pca_minor_extent": 0.9357109658682393,
+            "pca_minor_growth_from_previous_group": null,
+            "pca_minor_to_major_ratio": 0.44372815270113886,
+            "camera_center_diag": 0.0
+          },
+          {
+            "name": "slots_00_01",
+            "slots": [
+              0,
+              1
+            ],
+            "valid_fraction": 0.6003292826564588,
+            "exported_points": 424063,
+            "conf_threshold": 3.837890625,
+            "bbox_diag_p01_p99": 2.6185885812581344,
+            "bbox_diag_growth_from_previous_group": 1.0395401502782846,
+            "pca_minor_extent": 0.9526079745694743,
+            "pca_minor_growth_from_previous_group": 1.0180579359626896,
+            "pca_minor_to_major_ratio": 0.4381725801800929,
+            "camera_center_diag": 0.01655738614499569
+          },
+          {
+            "name": "slots_00_02",
+            "slots": [
+              0,
+              1,
+              2
+            ],
+            "valid_fraction": 0.60033824850695,
+            "exported_points": 636104,
+            "conf_threshold": 3.927734375,
+            "bbox_diag_p01_p99": 2.636156896496555,
+            "bbox_diag_growth_from_previous_group": 1.0067090780751742,
+            "pca_minor_extent": 0.9478197416477698,
+            "pca_minor_growth_from_previous_group": 0.9949735536028149,
+            "pca_minor_to_major_ratio": 0.4320766563190783,
+            "camera_center_diag": 0.0489736944437027
+          },
+          {
+            "name": "first_05",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "valid_fraction": 0.6002389635099322,
+            "exported_points": 1000000,
+            "conf_threshold": 3.857421875,
+            "bbox_diag_p01_p99": 2.714600791741448,
+            "bbox_diag_growth_from_previous_group": 1.0297569144496463,
+            "pca_minor_extent": 0.955127254489178,
+            "pca_minor_growth_from_previous_group": 1.0077098128687467,
+            "pca_minor_to_major_ratio": 0.41308575842649214,
+            "camera_center_diag": 0.22525227069854736
+          },
+          {
+            "name": "first_10",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "valid_fraction": 0.6,
+            "exported_points": 1000000,
+            "conf_threshold": 3.928906250000182,
+            "bbox_diag_p01_p99": 2.6714735875788866,
+            "bbox_diag_growth_from_previous_group": 0.9841128742414849,
+            "pca_minor_extent": 0.9539505445068046,
+            "pca_minor_growth_from_previous_group": 0.9987680071144,
+            "pca_minor_to_major_ratio": 0.4205591165350856,
+            "camera_center_diag": 0.37472787499427795
+          },
+          {
+            "name": "first_35",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "valid_fraction": 0.6001457725947522,
+            "exported_points": 1000000,
+            "conf_threshold": 3.193359375,
+            "bbox_diag_p01_p99": 2.9110689734843307,
+            "bbox_diag_growth_from_previous_group": 1.0896866010652142,
+            "pca_minor_extent": 1.115149137546954,
+            "pca_minor_growth_from_previous_group": 1.1689800314789793,
+            "pca_minor_to_major_ratio": 0.48229968820377955,
+            "camera_center_diag": 1.4306975603103638
+          }
+        ],
+        "first_large_bbox_diag_jump_ge_1_35": null,
+        "first_large_pca_minor_jump_ge_1_35": null,
+        "note": "Growth thresholds are triage heuristics; visual PNG/PLY inspection remains part of the judgment."
+      }
+    },
+    {
+      "style": "npz_streaming_style",
+      "parameters": {
+        "source": "Depth-Anything-3/da3_streaming/npz_output_process.py + loop_utils/sim3utils.py",
+        "conf_threshold_coef": 0.75,
+        "sample_ratio": 0.015,
+        "note": "Uses DA3-Streaming base_config Pointcloud_Save defaults; npz_output_process.py CLI default is 0.5."
+      },
+      "outputs": {
+        "contact_sheet": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/npz_streaming_style_contact_sheet.png"
+      },
+      "groups": [
+        {
+          "name": "slot_00",
+          "slots": [
+            0
+          ],
+          "frame_ids": [
+            "cap-1"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slot_00_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slot_00_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 3.144666910171509,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 251042,
+            "exported_point_count": 3765,
+            "random_downsample_seed": 5300
+          },
+          "metrics": {
+            "slot_count": 1,
+            "valid_point_count_before_downsample": 251042,
+            "sampled_point_count": 3765,
+            "valid_fraction_of_pixels": 0.7107805386305466,
+            "point_cloud": {
+              "point_count": 3765,
+              "bbox_p01": [
+                1.4086928606033324,
+                -1.1251965761184692,
+                0.9180304765701294
+              ],
+              "bbox_p99": [
+                3.477785406112671,
+                0.03394915163517007,
+                2.412526626586914
+              ],
+              "bbox_extent_p01_p99": [
+                2.0690925455093385,
+                1.1591457277536392,
+                1.4944961500167846
+              ],
+              "bbox_diag_p01_p99": 2.8032626567032244,
+              "bbox_extent_p05_p95": [
+                1.909919714927673,
+                1.0515283860266205,
+                1.1808843851089479
+              ],
+              "bbox_diag_p05_p95": 2.4795147095920385,
+              "std_xyz": [
+                0.5823572278022766,
+                0.3493000268936157,
+                0.37017402052879333
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.41357074979309216,
+                0.13559049527258216,
+                0.04917727830620319
+              ],
+              "extent_p01_p99_desc": [
+                2.3601306765828425,
+                1.525924555707629,
+                1.0434579241197888
+              ],
+              "major_extent": 2.3601306765828425,
+              "middle_extent": 1.525924555707629,
+              "minor_extent": 1.0434579241197888,
+              "minor_to_major_ratio": 0.4421187074397838
+            },
+            "depth": {
+              "count": 353192,
+              "min": 1.0617033243179321,
+              "max": 2.6832692623138428,
+              "mean": 1.6824113426479808,
+              "median": 1.649050235748291,
+              "p05": 1.118707537651062,
+              "p40": 1.4871989488601685,
+              "p90": 2.2414867877960205,
+              "p95": 2.345315933227539
+            },
+            "confidence": {
+              "count": 353192,
+              "min": 1.0029296875,
+              "max": 12.3359375,
+              "mean": 4.1928887701528135,
+              "median": 4.6015625,
+              "p05": 1.736328125,
+              "p40": 3.87890625,
+              "p90": 5.7890625,
+              "p95": 6.03125
+            },
+            "pose": {
+              "camera_center_min": [
+                1.1383264064788818,
+                0.22322618961334229,
+                1.573490023612976
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.22322618961334229,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "camera_center_diag": 0.0,
+              "step_mean": null,
+              "step_max": null
+            }
+          }
+        },
+        {
+          "name": "slots_00_01",
+          "slots": [
+            0,
+            1
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slots_00_01_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slots_00_01_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 3.1755623817443848,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 500913,
+            "exported_point_count": 7513,
+            "random_downsample_seed": 5301
+          },
+          "metrics": {
+            "slot_count": 2,
+            "valid_point_count_before_downsample": 500913,
+            "sampled_point_count": 7513,
+            "valid_fraction_of_pixels": 0.7091228000634215,
+            "point_cloud": {
+              "point_count": 7513,
+              "bbox_p01": [
+                1.4282070302963257,
+                -1.1289294624328614,
+                0.911201012134552
+              ],
+              "bbox_p99": [
+                3.4974235248565675,
+                0.0762886980175973,
+                2.3847145938873293
+              ],
+              "bbox_extent_p01_p99": [
+                2.0692164945602416,
+                1.2052181604504586,
+                1.4735135817527774
+              ],
+              "bbox_diag_p01_p99": 2.8116632072938,
+              "bbox_extent_p05_p95": [
+                1.9170973777770997,
+                1.0979503357782958,
+                1.1854432702064515
+              ],
+              "bbox_diag_p05_p95": 2.5071962513120645,
+              "std_xyz": [
+                0.5875404477119446,
+                0.36991050839424133,
+                0.3761724829673767
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.43229100965221906,
+                0.13930952673656274,
+                0.052026094525304205
+              ],
+              "extent_p01_p99_desc": [
+                2.3802740289284015,
+                1.5330481708617523,
+                1.0615929577346188
+              ],
+              "major_extent": 2.3802740289284015,
+              "middle_extent": 1.5330481708617523,
+              "minor_extent": 1.0615929577346188,
+              "minor_to_major_ratio": 0.445996110041392
+            },
+            "depth": {
+              "count": 706384,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7015916913155102,
+              "median": 1.666355013847351,
+              "p05": 1.127868890762329,
+              "p40": 1.5024679899215698,
+              "p90": 2.2760965824127197,
+              "p95": 2.3738179206848145
+            },
+            "confidence": {
+              "count": 706384,
+              "min": 1.001953125,
+              "max": 12.3359375,
+              "mean": 4.234083669766551,
+              "median": 4.6171875,
+              "p05": 1.7421875,
+              "p40": 3.837890625,
+              "p90": 5.9453125,
+              "p95": 6.2421875
+            },
+            "pose": {
+              "camera_center_min": [
+                1.1255180835723877,
+                0.22322618961334229,
+                1.569140076637268
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.23277458548545837,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.01280832290649414,
+                0.009548395872116089,
+                0.004349946975708008
+              ],
+              "camera_center_diag": 0.01655738614499569,
+              "step_mean": 0.01655738614499569,
+              "step_max": 0.01655738614499569
+            }
+          }
+        },
+        {
+          "name": "slots_00_02",
+          "slots": [
+            0,
+            1,
+            2
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slots_00_02_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/slots_00_02_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 3.21887469291687,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 751508,
+            "exported_point_count": 11272,
+            "random_downsample_seed": 5302
+          },
+          "metrics": {
+            "slot_count": 3,
+            "valid_point_count_before_downsample": 751508,
+            "sampled_point_count": 11272,
+            "valid_fraction_of_pixels": 0.709253512725845,
+            "point_cloud": {
+              "point_count": 11272,
+              "bbox_p01": [
+                1.404722650051117,
+                -1.126528904438019,
+                0.9109709787368775
+              ],
+              "bbox_p99": [
+                3.5045279526710504,
+                0.07541557051241214,
+                2.4060131740570068
+              ],
+              "bbox_extent_p01_p99": [
+                2.0998053026199335,
+                1.201944474950431,
+                1.4950421953201292
+              ],
+              "bbox_diag_p01_p99": 2.844117437020189,
+              "bbox_extent_p05_p95": [
+                1.9361429631710048,
+                1.0967726674862202,
+                1.202154862880707
+              ],
+              "bbox_diag_p05_p95": 2.5291769752884377,
+              "std_xyz": [
+                0.5941870212554932,
+                0.3714604079723358,
+                0.3784250020980835
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.44121042876212857,
+                0.1425338665404533,
+                0.05055834711042899
+              ],
+              "extent_p01_p99_desc": [
+                2.389395626707213,
+                1.5309468227246863,
+                1.0423041373602029
+              ],
+              "major_extent": 2.389395626707213,
+              "middle_extent": 1.5309468227246863,
+              "minor_extent": 1.0423041373602029,
+              "minor_to_major_ratio": 0.43622082743852053
+            },
+            "depth": {
+              "count": 1059576,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7112802216475869,
+              "median": 1.6755164861679077,
+              "p05": 1.1339764595031738,
+              "p40": 1.5106114149093628,
+              "p90": 2.288311719894409,
+              "p95": 2.3921408653259277
+            },
+            "confidence": {
+              "count": 1059576,
+              "min": 1.0009765625,
+              "max": 12.625,
+              "mean": 4.291832133981246,
+              "median": 4.67578125,
+              "p05": 1.75390625,
+              "p40": 3.927734375,
+              "p90": 6.0546875,
+              "p95": 6.3046875
+            },
+            "pose": {
+              "camera_center_min": [
+                1.091809868812561,
+                0.22322618961334229,
+                1.5674103498458862
+              ],
+              "camera_center_max": [
+                1.1383264064788818,
+                0.237285777926445,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.0465165376663208,
+                0.014059588313102722,
+                0.006079673767089844
+              ],
+              "camera_center_diag": 0.0489736944437027,
+              "step_mean": 0.025305043905973434,
+              "step_max": 0.03405270352959633
+            }
+          }
+        },
+        {
+          "name": "first_05",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_05_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_05_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 3.185110330581665,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 1243527,
+            "exported_point_count": 18652,
+            "random_downsample_seed": 5303
+          },
+          "metrics": {
+            "slot_count": 5,
+            "valid_point_count_before_downsample": 1243527,
+            "sampled_point_count": 18652,
+            "valid_fraction_of_pixels": 0.7041648734965684,
+            "point_cloud": {
+              "point_count": 18652,
+              "bbox_p01": [
+                1.385917592048645,
+                -1.144012678861618,
+                0.9048292756080627
+              ],
+              "bbox_p99": [
+                3.5342388081550618,
+                0.09015213146805805,
+                2.4204479098320006
+              ],
+              "bbox_extent_p01_p99": [
+                2.1483212161064165,
+                1.234164810329676,
+                1.515618634223938
+              ],
+              "bbox_diag_p01_p99": 2.904401258613533,
+              "bbox_extent_p05_p95": [
+                1.9492421746253965,
+                1.1118186835199595,
+                1.2242959827184678
+              ],
+              "bbox_diag_p05_p95": 2.5562837271443444,
+              "std_xyz": [
+                0.6013191342353821,
+                0.3745618760585785,
+                0.3834366202354431
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.4494703870769168,
+                0.14557839432254752,
+                0.05389308182189451
+              ],
+              "extent_p01_p99_desc": [
+                2.433627864348698,
+                1.5517440299614167,
+                1.0703384389882624
+              ],
+              "major_extent": 2.433627864348698,
+              "middle_extent": 1.5517440299614167,
+              "minor_extent": 1.0703384389882624,
+              "minor_to_major_ratio": 0.4398118770203647
+            },
+            "depth": {
+              "count": 1765960,
+              "min": 1.0617033243179321,
+              "max": 2.7870984077453613,
+              "mean": 1.7464586112898266,
+              "median": 1.7223412990570068,
+              "p05": 1.1502634286880493,
+              "p40": 1.5513287782669067,
+              "p90": 2.329028844833374,
+              "p95": 2.434893846511841
+            },
+            "confidence": {
+              "count": 1765960,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 4.246812835356725,
+              "median": 4.6484375,
+              "p05": 1.75,
+              "p40": 3.857421875,
+              "p90": 6.015625,
+              "p95": 6.25
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                0.22322618961334229,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                1.1800085306167603,
+                0.4102502167224884,
+                1.573490023612976
+              ],
+              "camera_center_extent": [
+                0.12504196166992188,
+                0.18702402710914612,
+                0.011185050010681152
+              ],
+              "camera_center_diag": 0.22525227069854736,
+              "step_mean": 0.07328413426876068,
+              "step_max": 0.20308798551559448
+            }
+          }
+        },
+        {
+          "name": "first_10",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_10_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_10_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 3.1464171409606934,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 2521407,
+            "exported_point_count": 37821,
+            "random_downsample_seed": 5304
+          },
+          "metrics": {
+            "slot_count": 10,
+            "valid_point_count_before_downsample": 2521407,
+            "sampled_point_count": 37821,
+            "valid_fraction_of_pixels": 0.7138913112414778,
+            "point_cloud": {
+              "point_count": 37821,
+              "bbox_p01": [
+                1.397955560684204,
+                -1.1521679401397704,
+                0.8724275708198548
+              ],
+              "bbox_p99": [
+                3.4897907733917237,
+                0.06866165101528188,
+                2.396233940124512
+              ],
+              "bbox_extent_p01_p99": [
+                2.0918352127075197,
+                1.2208295911550522,
+                1.5238063693046573
+              ],
+              "bbox_diag_p01_p99": 2.8615005327443797,
+              "bbox_extent_p05_p95": [
+                1.9327285289764404,
+                1.0846200436353683,
+                1.2227700352668762
+              ],
+              "bbox_diag_p05_p95": 2.5312065828220307,
+              "std_xyz": [
+                0.5894446969032288,
+                0.3644832670688629,
+                0.39017176628112793
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.4285279884092354,
+                0.14770006380399384,
+                0.056316701316980675
+              ],
+              "extent_p01_p99_desc": [
+                2.3826790227409527,
+                1.6064809525366766,
+                1.0826620302475982
+              ],
+              "major_extent": 2.3826790227409527,
+              "middle_extent": 1.6064809525366766,
+              "minor_extent": 1.0826620302475982,
+              "minor_to_major_ratio": 0.4543885348863066
+            },
+            "depth": {
+              "count": 3531920,
+              "min": 1.052541971206665,
+              "max": 2.7870984077453613,
+              "mean": 1.7394840707503973,
+              "median": 1.7009648084640503,
+              "p05": 1.1808013916015625,
+              "p40": 1.553364634513855,
+              "p90": 2.3005268573760986,
+              "p95": 2.410463571548462
+            },
+            "confidence": {
+              "count": 3531920,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 4.195220832381449,
+              "median": 4.64453125,
+              "p05": 1.73046875,
+              "p40": 3.928906250000182,
+              "p90": 5.859375,
+              "p95": 6.15625
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                0.22322618961334229,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                1.319271206855774,
+                0.4194173812866211,
+                1.7413945198059082
+              ],
+              "camera_center_extent": [
+                0.26430463790893555,
+                0.1961911916732788,
+                0.17908954620361328
+              ],
+              "camera_center_diag": 0.37472787499427795,
+              "step_mean": 0.06938344985246658,
+              "step_max": 0.20308798551559448
+            }
+          }
+        },
+        {
+          "name": "first_35",
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34
+          ],
+          "frame_ids": [
+            "cap-1",
+            "cap-3",
+            "cap-5",
+            "cap-7",
+            "cap-21",
+            "cap-23",
+            "cap-29",
+            "cap-31",
+            "cap-33",
+            "cap-35",
+            "cap-37",
+            "cap-39",
+            "cap-42",
+            "cap-44",
+            "cap-48",
+            "cap-50",
+            "cap-52",
+            "cap-54",
+            "cap-56",
+            "cap-74",
+            "cap-78",
+            "cap-80",
+            "cap-96",
+            "cap-103",
+            "cap-105",
+            "cap-107",
+            "cap-109",
+            "cap-114",
+            "cap-116",
+            "cap-118",
+            "cap-122",
+            "cap-124",
+            "cap-126",
+            "cap-128",
+            "cap-131"
+          ],
+          "outputs": {
+            "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_35_rgb.ply",
+            "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_000_official_filter_micro_audit_official_postprocess/npz_streaming_style/first_35_views.png"
+          },
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 2.7738579511642456,
+            "conf_threshold_coef": 0.75,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 8577802,
+            "exported_point_count": 128667,
+            "random_downsample_seed": 5305
+          },
+          "metrics": {
+            "slot_count": 35,
+            "valid_point_count_before_downsample": 8577802,
+            "sampled_point_count": 128667,
+            "valid_fraction_of_pixels": 0.6939003633798533,
+            "point_cloud": {
+              "point_count": 128667,
+              "bbox_p01": [
+                1.4384481024742126,
+                -1.175217022895813,
+                0.7529142093658447
+              ],
+              "bbox_p99": [
+                3.53128942489624,
+                0.2224246966838835,
+                2.310006947517395
+              ],
+              "bbox_extent_p01_p99": [
+                2.0928413224220277,
+                1.3976417195796964,
+                1.5570927381515505
+              ],
+              "bbox_diag_p01_p99": 2.9593791531926366,
+              "bbox_extent_p05_p95": [
+                1.783757364749908,
+                1.1492100987583398,
+                1.2092796981334686
+              ],
+              "bbox_diag_p05_p95": 2.4423004679411298,
+              "std_xyz": [
+                0.5099923014640808,
+                0.4016183912754059,
+                0.3914489150047302
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.37018732568102963,
+                0.12919539262535515,
+                0.07524778084334646
+              ],
+              "extent_p01_p99_desc": [
+                2.3811106911741478,
+                1.7160903935621792,
+                1.1802871973418234
+              ],
+              "major_extent": 2.3811106911741478,
+              "middle_extent": 1.7160903935621792,
+              "minor_extent": 1.1802871973418234,
+              "minor_to_major_ratio": 0.49568766446544865
+            },
+            "depth": {
+              "count": 12361720,
+              "min": 0.5461206436157227,
+              "max": 2.8787124156951904,
+              "mean": 1.584544742376737,
+              "median": 1.570669412612915,
+              "p05": 0.8479375243186951,
+              "p40": 1.4006747007369995,
+              "p90": 2.2313075065612793,
+              "p95": 2.3595669269561768
+            },
+            "confidence": {
+              "count": 12361720,
+              "min": 1.0,
+              "max": 12.625,
+              "mean": 3.698475006000126,
+              "median": 3.671875,
+              "p05": 1.5126953125,
+              "p40": 3.193359375,
+              "p90": 5.60546875,
+              "p95": 5.984375
+            },
+            "pose": {
+              "camera_center_min": [
+                1.0549665689468384,
+                -0.13231487572193146,
+                1.562304973602295
+              ],
+              "camera_center_max": [
+                2.136497974395752,
+                0.4194173812866211,
+                2.319125175476074
+              ],
+              "camera_center_extent": [
+                1.0815314054489136,
+                0.5517322421073914,
+                0.7568202018737793
+              ],
+              "camera_center_diag": 1.4306975603103638,
+              "step_mean": 0.0646294578909874,
+              "step_max": 0.3314107656478882
+            }
+          }
+        }
+      ],
+      "interpretation": {
+        "summary_rows": [
+          {
+            "name": "slot_00",
+            "slots": [
+              0
+            ],
+            "valid_fraction": 0.7107805386305466,
+            "exported_points": 3765,
+            "conf_threshold": 3.144666910171509,
+            "bbox_diag_p01_p99": 2.8032626567032244,
+            "bbox_diag_growth_from_previous_group": null,
+            "pca_minor_extent": 1.0434579241197888,
+            "pca_minor_growth_from_previous_group": null,
+            "pca_minor_to_major_ratio": 0.4421187074397838,
+            "camera_center_diag": 0.0
+          },
+          {
+            "name": "slots_00_01",
+            "slots": [
+              0,
+              1
+            ],
+            "valid_fraction": 0.7091228000634215,
+            "exported_points": 7513,
+            "conf_threshold": 3.1755623817443848,
+            "bbox_diag_p01_p99": 2.8116632072938,
+            "bbox_diag_growth_from_previous_group": 1.00299670477559,
+            "pca_minor_extent": 1.0615929577346188,
+            "pca_minor_growth_from_previous_group": 1.0173797459347753,
+            "pca_minor_to_major_ratio": 0.445996110041392,
+            "camera_center_diag": 0.01655738614499569
+          },
+          {
+            "name": "slots_00_02",
+            "slots": [
+              0,
+              1,
+              2
+            ],
+            "valid_fraction": 0.709253512725845,
+            "exported_points": 11272,
+            "conf_threshold": 3.21887469291687,
+            "bbox_diag_p01_p99": 2.844117437020189,
+            "bbox_diag_growth_from_previous_group": 1.0115427159420085,
+            "pca_minor_extent": 1.0423041373602029,
+            "pca_minor_growth_from_previous_group": 0.9818303048886297,
+            "pca_minor_to_major_ratio": 0.43622082743852053,
+            "camera_center_diag": 0.0489736944437027
+          },
+          {
+            "name": "first_05",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "valid_fraction": 0.7041648734965684,
+            "exported_points": 18652,
+            "conf_threshold": 3.185110330581665,
+            "bbox_diag_p01_p99": 2.904401258613533,
+            "bbox_diag_growth_from_previous_group": 1.021195967792562,
+            "pca_minor_extent": 1.0703384389882624,
+            "pca_minor_growth_from_previous_group": 1.0268964696802036,
+            "pca_minor_to_major_ratio": 0.4398118770203647,
+            "camera_center_diag": 0.22525227069854736
+          },
+          {
+            "name": "first_10",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "valid_fraction": 0.7138913112414778,
+            "exported_points": 37821,
+            "conf_threshold": 3.1464171409606934,
+            "bbox_diag_p01_p99": 2.8615005327443797,
+            "bbox_diag_growth_from_previous_group": 0.9852290637383787,
+            "pca_minor_extent": 1.0826620302475982,
+            "pca_minor_growth_from_previous_group": 1.0115137332365496,
+            "pca_minor_to_major_ratio": 0.4543885348863066,
+            "camera_center_diag": 0.37472787499427795
+          },
+          {
+            "name": "first_35",
+            "slots": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "valid_fraction": 0.6939003633798533,
+            "exported_points": 128667,
+            "conf_threshold": 2.7738579511642456,
+            "bbox_diag_p01_p99": 2.9593791531926366,
+            "bbox_diag_growth_from_previous_group": 1.0342053476238162,
+            "pca_minor_extent": 1.1802871973418234,
+            "pca_minor_growth_from_previous_group": 1.0901714148707136,
+            "pca_minor_to_major_ratio": 0.49568766446544865,
+            "camera_center_diag": 1.4306975603103638
+          }
+        ],
+        "first_large_bbox_diag_jump_ge_1_35": null,
+        "first_large_pca_minor_jump_ge_1_35": null,
+        "note": "Growth thresholds are triage heuristics; visual PNG/PLY inspection remains part of the judgment."
+      }
+    }
+  ],
+  "comparison": {
+    "rows": [
+      {
+        "name": "slot_00",
+        "glb_bbox_diag": 2.518987439356853,
+        "npz_bbox_diag": 2.8032626567032244,
+        "glb_pca_minor": 0.9357109658682393,
+        "npz_pca_minor": 1.0434579241197888,
+        "glb_valid_fraction": 0.6000277469478358,
+        "npz_valid_fraction": 0.7107805386305466
+      },
+      {
+        "name": "slots_00_01",
+        "glb_bbox_diag": 2.6185885812581344,
+        "npz_bbox_diag": 2.8116632072938,
+        "glb_pca_minor": 0.9526079745694743,
+        "npz_pca_minor": 1.0615929577346188,
+        "glb_valid_fraction": 0.6003292826564588,
+        "npz_valid_fraction": 0.7091228000634215
+      },
+      {
+        "name": "slots_00_02",
+        "glb_bbox_diag": 2.636156896496555,
+        "npz_bbox_diag": 2.844117437020189,
+        "glb_pca_minor": 0.9478197416477698,
+        "npz_pca_minor": 1.0423041373602029,
+        "glb_valid_fraction": 0.60033824850695,
+        "npz_valid_fraction": 0.709253512725845
+      },
+      {
+        "name": "first_05",
+        "glb_bbox_diag": 2.714600791741448,
+        "npz_bbox_diag": 2.904401258613533,
+        "glb_pca_minor": 0.955127254489178,
+        "npz_pca_minor": 1.0703384389882624,
+        "glb_valid_fraction": 0.6002389635099322,
+        "npz_valid_fraction": 0.7041648734965684
+      },
+      {
+        "name": "first_10",
+        "glb_bbox_diag": 2.6714735875788866,
+        "npz_bbox_diag": 2.8615005327443797,
+        "glb_pca_minor": 0.9539505445068046,
+        "npz_pca_minor": 1.0826620302475982,
+        "glb_valid_fraction": 0.6,
+        "npz_valid_fraction": 0.7138913112414778
+      },
+      {
+        "name": "first_35",
+        "glb_bbox_diag": 2.9110689734843307,
+        "npz_bbox_diag": 2.9593791531926366,
+        "glb_pca_minor": 1.115149137546954,
+        "npz_pca_minor": 1.1802871973418234,
+        "glb_valid_fraction": 0.6001457725947522,
+        "npz_valid_fraction": 0.6939003633798533
+      }
+    ]
+  }
+}

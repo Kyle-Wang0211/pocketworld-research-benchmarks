@@ -1,0 +1,32 @@
+LOD 查看器(十一):近/远平面改为照抄 Potree Viewer.update(删掉自定的 camDist+2·radius)
+
+照抄 Potree @5636cd471d9eb464969e758be45c44d7613d3859 src/viewer/viewer.js:1749-1771(逐行,
+见 lod_camera.dart potreeNearFar 的文档注释):
+  有 lowestSpacing 时:near = clamp(lowestSpacing·10, 0.01, 100)(再与最近定向影像取 min,本查看器
+  没有 ⇒ ∞,:1739-1746);far = max(1.5·(−盒在视空间的 min.z), 10000);far = max(far, near+10000)。
+  lowestSpacing = ∞ 时走上游「不改 near/far」分支(:1766-1768),保持相机初值
+  Scene.js:21-22 的 0.1 / 1000*1000。
+  正交:两个分支之后都 near = −far(:1769-1771)。
+- 盒 = 上一提交的 Potree 场景盒;视空间变换 = three.js r124 Box3.applyMatrix4
+  (three.module.js:4296-4316,8 个角变换后取轴对齐盒);lowestSpacing 定义见
+  Potree_update_visibility.js:114, :276-280, :413。
+- 删掉 kLodFarRadiusK(自定远平面)与 kLodNearRadiusK(旧 painter 的近裁剪);
+  lodCameraFrame 新增 sceneBoxMin/sceneBoxMax/lowestSpacing 参数。
+
+🔴 接口缺口(未改接口,待协调会话定):Potree 的近/远平面要本帧选择得出的 lowestSpacing。LOD 库
+自己算了(Selection.lowestSpacing,select.cpp:100),但冻结的 pwlod_frame_stats 里没有这个字段,
+Dart 拿不到 ⇒ 页面现在传 ∞,即 Potree 的「尚未得到 spacing」分支:透视 0.1/1e6,正交 ±1e6。
+后果(引擎深度 Depth32Float):正交时深度量化 ≈ 2·far·2^-24 ≈ 0.12 世界单位;若拿到 lowestSpacing,
+我们这种 ~20 单位的场景 far ≈ 1e4,量化 ≈ 1.2e-3。补法:pwlod_frame_stats 加 double lowest_spacing。
+
+判据(test/point_cloud_lod/ 42/42 过,analyze 零问题):
+- 手算 Potree 各行:∞ → (0.1, 1e6);0.0005 → (0.01, 10000.01);2 → (20, 10020);50 → (100, 10100);
+  大盒 [-5000,5000]^3 → (10, 10010);[-50000,50000]^3 → far = 50010·1.5;正交 near = −far。
+- 真帧:60 组随机相机 × 两个分支 × 正交/透视,场景盒 8 个角都不被远平面裁掉(正交也不越近平面),
+  正交 near == −far。
+- 阴性:同一相机,远平面 10.5 < 最远角 11(正交与透视各一)→ 判据报被裁的角。
+  一次性阴性(改完即还原,未入库):把 `far = max(far*1.5, 10000)` 改成 `far*0.5` 并去掉
+  `near+10000` 下限 → 「手算各行」与「真帧不裁角」两条失败。
+- 旧有判据不变:正交与旧查看器像素差、逐元素、clip z 线性映射等仍全过。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

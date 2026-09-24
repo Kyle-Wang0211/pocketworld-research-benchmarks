@@ -1,0 +1,142 @@
+{
+  "schema_version": "aether_da3_image_tensor_contract_parity_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "image_tensor_normalization_matches_but_resize_contract_differs",
+    "goal_complete": false,
+    "normalization_parity": true,
+    "resize_contract_parity": false,
+    "official_algorithm_blame_supported": false,
+    "conclusion": "APP Swift normalization matches official ImageNet RGB/NCHW tensor semantics, but the image resize contract still differs: official code does aspect-preserving upper_bound_resize plus patch rounding, while current Dart photos_depth uses direct_stretch to the fixed 742x476 model size. In the strict capture, a 16:9 source frame would become 742x420 under an official long-side-742 upper_bound_resize contract, but the current manifest stores it as 742x476.",
+    "next_best_action": "Treat image normalization as closed for the current audit. Keep resize/preprocess as an upstream parity gap until an official-style fixed-size preprocessing path is tested against the same window."
+  },
+  "inputs": {
+    "official_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "dart_package": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict"
+  },
+  "manifest_preprocess": {
+    "exists": true,
+    "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+    "frame_count": 414,
+    "mode_counts": {
+      "direct_stretch": 414
+    },
+    "source_size_counts": {
+      "4224x2376": 396,
+      "3840x2160": 18
+    },
+    "input_size_counts": {
+      "742x476": 414
+    },
+    "all_frames_direct_stretch": true,
+    "official_process_res_assumption": "max(current fixed CoreML input width/height); used only to quantify resize-contract mismatch",
+    "official_process_res": 742,
+    "official_shape_by_source": {
+      "3840x2160": {
+        "frame_count": 18,
+        "official_upper_bound_resize_long_side": "742x420",
+        "current_direct_stretch_input": "742x476"
+      },
+      "4224x2376": {
+        "frame_count": 396,
+        "official_upper_bound_resize_long_side": "742x420",
+        "current_direct_stretch_input": "742x476"
+      }
+    },
+    "stretch_anisotropy_y_over_x_min": 1.1404612159329142,
+    "stretch_anisotropy_y_over_x_max": 1.1404612159329142,
+    "stretch_anisotropy_y_over_x_median": 1.1404612159329142
+  },
+  "checks": [
+    {
+      "id": "official_default_upper_bound_resize",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+      "line": 71,
+      "needle": "process_res_method: str = \"upper_bound_resize\"",
+      "evidence": "官方默认 process_res_method 是 upper_bound_resize。"
+    },
+    {
+      "id": "official_preserves_aspect_by_longest_side",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+      "line": 329,
+      "needle": "scale = target_size / float(longest)",
+      "evidence": "官方 upper_bound_resize 先按最长边等比缩放。"
+    },
+    {
+      "id": "official_rounds_to_patch_multiple",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+      "line": 376,
+      "needle": "nearest_multiple(w, patch)",
+      "evidence": "官方 resize 后还会把宽高调整到 patch size 的倍数。"
+    },
+    {
+      "id": "official_imagenet_normalization",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+      "line": 56,
+      "needle": "NORMALIZE = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])",
+      "evidence": "官方输入 tensor 使用 ImageNet mean/std normalization。"
+    },
+    {
+      "id": "app_dart_photos_depth_direct_stretch",
+      "status": "parity_gap",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart",
+      "line": 645,
+      "needle": "'mode': 'direct_stretch'",
+      "evidence": "Dart photos_depth 固定输入是 direct_stretch 到模型尺寸；这和官方等比 upper_bound_resize 不是同一 preprocess。"
+    },
+    {
+      "id": "app_swift_requires_pre_resized_photos_depth",
+      "status": "parity_gap",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 569,
+      "needle": "DA3 imagePath must already be",
+      "evidence": "Swift 不执行官方 boundary resize；它要求 Dart/photos_depth 已经是固定尺寸。"
+    },
+    {
+      "id": "app_swift_imagenet_mean_matches_official",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 554,
+      "needle": "let meanR: Float = 0.485",
+      "evidence": "Swift image tensor 使用与官方一致的 ImageNet mean。"
+    },
+    {
+      "id": "app_swift_imagenet_std_matches_official",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 557,
+      "needle": "let stdR: Float = 0.229",
+      "evidence": "Swift image tensor 使用与官方一致的 ImageNet std。"
+    },
+    {
+      "id": "app_swift_writes_nchw_float32",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 605,
+      "needle": "ptr[viewBase + 0 * planeSize + dst] = (r - meanR) / stdR",
+      "evidence": "Swift 写入 NCHW float32 normalized tensor，通道顺序与官方 RGB tensor 对齐。"
+    },
+    {
+      "id": "strict_capture_manifest_all_direct_stretch",
+      "status": "parity_gap",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+      "line": null,
+      "needle": "resize.mode",
+      "evidence": "frames=414, modes={'direct_stretch': 414}; source resize examples: 3840x2160->742x476 current, 742x420 official-like; 4224x2376->742x476 current, 742x420 official-like; median y/x stretch=1.140."
+    }
+  ],
+  "plain_language": [
+    "Swift 喂给 CoreML 的 RGB/NCHW/ImageNet normalization 和官方一致，这一点先不要再怀疑。",
+    "但 APP 当前没有在 Swift 里做官方 boundary resize；它依赖 Dart 预生成固定尺寸 photos_depth。",
+    "Dart 的固定尺寸生成是 direct_stretch，不是官方默认的等比 upper_bound_resize + patch multiple。",
+    "这批 strict capture 的源图主要是 4224x2376；当前变成 742x476，Y 方向相对 X 方向多拉伸约 14%。",
+    "如果按官方 upper_bound_resize 并把长边设成 742，同一 16:9 源图会落到 742x420，而不是 742x476。",
+    "所以 image-side 仍有未复刻点，但它集中在 resize/preprocess contract，不是 normalization。"
+  ]
+}

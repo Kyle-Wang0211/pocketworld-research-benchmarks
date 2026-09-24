@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "aether_da3_k_windows_v1",
+  "sourceManifest": "photo_bundle.json",
+  "sourceViewGraph": "official_da3_streaming_vpr_loop_chunks",
+  "model": {
+    "id": "DA3-BASE",
+    "license": "Apache-2.0",
+    "mobileTag": "da3:base:k35:476x742:active",
+    "resourceName": "DA3BASE_476x742_N35_pose",
+    "windowSize": 35,
+    "inputWidth": 742,
+    "inputHeight": 476,
+    "inputSizeStatus": "locked_da3_base_k35_476x742_benchmark_2026_05_25",
+    "commercialSafe": true
+  },
+  "windowSize": 35,
+  "windowingPolicy": {
+    "policy": "official_da3_streaming_loop_chunk_forward_scaled_to_fixed_k35",
+    "sourceSequentialWindowingPolicy": {
+      "policy": "strict_official_da3_streaming_timestamp_sliding_window",
+      "chunkSize": 35,
+      "overlap": 18,
+      "step": 17,
+      "orderBasis": {
+        "manifest": "photo_bundle.json",
+        "field": "frames[].timestamp",
+        "tieBreak": "original manifest index",
+        "ascending": true
+      }
+    }
+  },
+  "loopClosurePolicy": {
+    "policy": "official_process_loop_list",
+    "backend": "selavprpp",
+    "topK": 5,
+    "similarityThreshold": 0.85,
+    "minFrameGap": 10,
+    "nmsThreshold": 25,
+    "loopHalfWindow": 8,
+    "fixedK35PaddingPolicy": "repeat_last_frame_for_unused_slots"
+  },
+  "inputSizeLocked": true,
+  "inputHeight": 476,
+  "inputWidth": 742,
+  "bridgeGraph": [],
+  "loopCandidates": [],
+  "uncoveredFrameIDs": [],
+  "uncoveredFrameCount": 0,
+  "windowCount": 0,
+  "windows": []
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>空间序×易窗 · 全量 53,648,187 点 · 弧覆盖 66%</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: -apple-system, sans-serif; }
+  #label { position: fixed; top: 10px; left: 0; right: 0; text-align: center; font-size: 16px; font-weight: 600; color: #9f9; z-index: 10; pointer-events: none; }
+  #status { position: fixed; top: 36px; left: 0; right: 0; text-align: center; font-size: 13px; color: #ff9; z-index: 10; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="label">空间序×易窗 · 全量 53,648,187 点 · 弧覆盖 66%</div>
+<div id="status">下载中…</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(1);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+const cam = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.01, 100);
+cam.position.set(0, -2.2, 1.5); cam.up.set(0, 0, 1);
+const controls = new OrbitControls(cam, renderer.domElement);
+controls.target.set(0, 0, 0.4); cam.lookAt(controls.target);
+const st = document.getElementById('status');
+
+// sRGB → Linear 查表（官方 PLYLoader 同款语义；渲染器输出再转回 sRGB，避免双重伽马）
+const S2L = new Float32Array(256);
+for (let i = 0; i < 256; i++) {
+  const c = i / 255;
+  S2L[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+async function loadPly(url) {
+  const resp = await fetch(url);
+  const total = +resp.headers.get('content-length') || 0;
+  const reader = resp.body.getReader();
+  const chunks = []; let got = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); got += value.length;
+    if (total) st.textContent = '下载 ' + (got/1e9).toFixed(2) + ' / ' + (total/1e9).toFixed(2) + ' GB…';
+  }
+  const buf = new Uint8Array(got);
+  let off = 0; for (const c of chunks) { buf.set(c, off); off += c.length; }
+  chunks.length = 0;
+  const headerText = new TextDecoder().decode(buf.subarray(0, 2048));
+  const marker = 'end_header\n';
+  const headEnd = headerText.indexOf(marker) + marker.length;
+  const n = parseInt(headerText.match(/element vertex (\d+)/)[1]);
+  if (buf.length < headEnd + n * 15) throw new Error('file truncated');
+  st.textContent = '解析 ' + n.toLocaleString() + ' 点…';
+  await new Promise(r => setTimeout(r, 30));
+  const dv = new DataView(buf.buffer, headEnd, n * 15);
+  const pos = new Float32Array(3 * n);
+  const col = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) {
+    const b = i * 15;
+    pos[3*i]   = dv.getFloat32(b, true);
+    pos[3*i+1] = dv.getFloat32(b+4, true);
+    pos[3*i+2] = dv.getFloat32(b+8, true);
+    col[3*i]   = S2L[dv.getUint8(b+12)];
+    col[3*i+1] = S2L[dv.getUint8(b+13)];
+    col[3*i+2] = S2L[dv.getUint8(b+14)];
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return { geo, n };
+}
+
+loadPly('k414_spatial_easy_full.ply').then(({ geo, n }) => {
+  geo.computeBoundingBox();
+  const c = new THREE.Vector3(); geo.boundingBox.getCenter(c);
+  geo.translate(-c.x, -c.y, -c.z);
+  const e = new THREE.Vector3(); geo.boundingBox.getSize(e);
+  const s = 1.5 / Math.max(e.x, e.y, e.z);
+  geo.scale(s, s, s); geo.translate(0, 0, 0.4);
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.0022, vertexColors: true })));
+  st.textContent = n.toLocaleString() + ' 点已载入（零采样 · 色彩已校正）';
+}).catch(err => st.textContent = '加载失败: ' + err);
+(function r() { requestAnimationFrame(r); controls.update(); renderer.render(scene, cam); })();
+</script>
+</body>
+</html>

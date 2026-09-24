@@ -1,0 +1,776 @@
+{
+  "schema_version": "aether_official_da3_image_only_overlap_regression_gate_v1",
+  "date": "2026-06-05",
+  "purpose": "Fixed-target DA3BASE_280x504_N35_image_only regression gate for the single-K35-window same-surface overlap/thick-layer problem.",
+  "fixed_contract": {
+    "resource": "DA3BASE_280x504_N35_image_only",
+    "window_size": 35,
+    "height": 280,
+    "width": 504,
+    "camera_policy": "official_image_only_no_arkit_vio_inputs",
+    "preprocess_baseline": "photos_depth_same_input",
+    "comparison_policy": "old_pose_conditioned_is_reference_only",
+    "not_a_dimension_sweep": true
+  },
+  "official_downstream_parameters": {
+    "path": "results_output/frame_*.npz + npz_output_process.py",
+    "conf_threshold_coef": 0.5,
+    "sample_ratio": 0.015,
+    "cleanup": "none"
+  },
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "pose_da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+    "image_only_da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline_risky_windows_2026_06_05",
+    "window_id": "window_006"
+  },
+  "preprocess_baseline": {
+    "baseline": "photos_depth_same_input",
+    "ready_for_this_gate": true,
+    "manifest_path": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+    "manifest_exists": true,
+    "frame_count": 414,
+    "shape_matches_fixed_target": true,
+    "expected_tensor_source": "photos_depth official process_res=504 upper_bound_resize patch-aligned images",
+    "official_api_preprocess_equivalent": true,
+    "coreml_same_input_parity": true,
+    "resize_mode": "upper_bound_resize_patch_align",
+    "process_res": 504,
+    "process_res_method": "upper_bound_resize",
+    "interpolation": "opencv_area",
+    "scale_x": 0.11931818181818182,
+    "scale_y": 0.11784511784511785,
+    "aspect_preserving": false,
+    "missing_depth_image_count_capped": 0,
+    "missing_depth_images_sample": [],
+    "blocking_reasons": []
+  },
+  "inspections": {
+    "pose_conditioned_reference": {
+      "dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+      "exists": true,
+      "depth_index_exists": true,
+      "mac_da3_window_reports_exists": true,
+      "expected_contract": "pose_conditioned",
+      "detected_contract": "pose_conditioned_coreml_requires_image_extrinsics_intrinsics",
+      "detected_resource": "DA3BASE_476x742_N35_pose",
+      "dimensions": {
+        "window_size": 35,
+        "height": 476,
+        "width": 742
+      },
+      "window_id": "window_006",
+      "window_present": false,
+      "window_frame_count": 0,
+      "all_frame_outputs_exist": false,
+      "contract_matches": true,
+      "resource_matches": true,
+      "shape_matches_fixed_target": false,
+      "ready_for_window_metrics": false,
+      "missing_or_blocking_reasons": [
+        "window_missing",
+        "shape_not_fixed_target"
+      ]
+    },
+    "image_only_candidate": {
+      "dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline_risky_windows_2026_06_05",
+      "exists": true,
+      "depth_index_exists": true,
+      "mac_da3_window_reports_exists": true,
+      "expected_contract": "image_only",
+      "detected_contract": "image_only",
+      "detected_resource": "DA3BASE_280x504_N35_image_only",
+      "dimensions": {
+        "window_size": 35,
+        "height": 280,
+        "width": 504
+      },
+      "window_id": "window_006",
+      "window_present": true,
+      "window_frame_count": 35,
+      "all_frame_outputs_exist": true,
+      "contract_matches": true,
+      "resource_matches": true,
+      "shape_matches_fixed_target": true,
+      "ready_for_window_metrics": true,
+      "missing_or_blocking_reasons": []
+    }
+  },
+  "datasets": {
+    "image_only_candidate": {
+      "dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline_risky_windows_2026_06_05",
+      "window_id": "window_006",
+      "style": "official_npz_streaming",
+      "groups": {
+        "slot_00": {
+          "slots": [
+            0
+          ],
+          "frame_ids": [
+            "cap-458"
+          ],
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 0.5064824223518372,
+            "conf_threshold_coef": 0.5,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 141120,
+            "exported_point_count": 2116,
+            "random_downsample_seed": 9101
+          },
+          "metrics": {
+            "slot_count": 1,
+            "valid_point_count_before_downsample": 141120,
+            "sampled_point_count": 2116,
+            "valid_fraction_of_pixels": 1.0,
+            "point_cloud": {
+              "point_count": 2116,
+              "bbox_p01": [
+                -0.553665280342102,
+                -0.7134692668914795,
+                0.28785011172294617
+              ],
+              "bbox_p99": [
+                0.5564358830451965,
+                0.07475025951862335,
+                0.9547004103660583
+              ],
+              "bbox_extent_p01_p99": [
+                1.1101012229919434,
+                0.7882195115089417,
+                0.6668503284454346
+              ],
+              "bbox_diag_p01_p99": 1.516015887260437,
+              "bbox_extent_p05_p95": [
+                0.9395173192024231,
+                0.6952835917472839,
+                0.5604761838912964
+              ],
+              "bbox_diag_p05_p95": 1.2962429523468018,
+              "std_xyz": [
+                0.29733598232269287,
+                0.2165738046169281,
+                0.18540169298648834
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.10765329209699487,
+                0.03902920065654678,
+                0.02308442863761124
+              ],
+              "extent_p01_p99_desc": [
+                1.1133812021295646,
+                0.7105392874877741,
+                0.5751991020246864
+              ],
+              "major_extent": 1.1133812021295646,
+              "middle_extent": 0.7105392874877741,
+              "minor_extent": 0.5751991020246864,
+              "minor_to_major_ratio": 0.5166236873089853
+            },
+            "depth": {
+              "count": 141120,
+              "min": 0.62548828125,
+              "max": 1.3291015625,
+              "mean": 0.9920690039117861,
+              "median": 1.025390625,
+              "p05": 0.65185546875,
+              "p40": 0.9775390625,
+              "p90": 1.1923828125,
+              "p95": 1.244140625
+            },
+            "confidence": {
+              "count": 141120,
+              "min": 1.0,
+              "max": 1.408203125,
+              "mean": 1.0129647598785607,
+              "median": 1.001953125,
+              "p05": 1.0,
+              "p40": 1.0009765625,
+              "p90": 1.0478515625,
+              "p95": 1.0771484375
+            },
+            "pose": {
+              "camera_center_min": [
+                -0.21982741355895996,
+                0.6635718941688538,
+                0.3699636459350586
+              ],
+              "camera_center_max": [
+                -0.21982741355895996,
+                0.6635718941688538,
+                0.3699636459350586
+              ],
+              "camera_center_extent": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "camera_center_diag": 0.0,
+              "step_mean": null,
+              "step_max": null
+            }
+          }
+        },
+        "first_10": {
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "frame_ids": [
+            "cap-458",
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581"
+          ],
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 0.5152317881584167,
+            "conf_threshold_coef": 0.5,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 1411200,
+            "exported_point_count": 21168,
+            "random_downsample_seed": 9110
+          },
+          "metrics": {
+            "slot_count": 10,
+            "valid_point_count_before_downsample": 1411200,
+            "sampled_point_count": 21168,
+            "valid_fraction_of_pixels": 1.0,
+            "point_cloud": {
+              "point_count": 21168,
+              "bbox_p01": [
+                -0.5057207942008972,
+                -0.6143248081207275,
+                0.26618170738220215
+              ],
+              "bbox_p99": [
+                0.44326427578926086,
+                0.125601664185524,
+                1.295111894607544
+              ],
+              "bbox_extent_p01_p99": [
+                0.9489850997924805,
+                0.7399264574050903,
+                1.0289301872253418
+              ],
+              "bbox_diag_p01_p99": 1.5832754373550415,
+              "bbox_extent_p05_p95": [
+                0.8142609596252441,
+                0.6017270088195801,
+                0.7335430979728699
+              ],
+              "bbox_diag_p05_p95": 1.2502726316452026,
+              "std_xyz": [
+                0.2538219094276428,
+                0.19797521829605103,
+                0.2272089421749115
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.07588403834239191,
+                0.047033223694497056,
+                0.032334368854144785
+              ],
+              "extent_p01_p99_desc": [
+                1.0302115518625308,
+                0.962663233897669,
+                0.6710437976198904
+              ],
+              "major_extent": 1.0302115518625308,
+              "middle_extent": 0.962663233897669,
+              "minor_extent": 0.6710437976198904,
+              "minor_to_major_ratio": 0.6513650486705405
+            },
+            "depth": {
+              "count": 1411200,
+              "min": 0.37060546875,
+              "max": 1.3291015625,
+              "mean": 0.841489902418487,
+              "median": 0.87744140625,
+              "p05": 0.476806640625,
+              "p40": 0.84716796875,
+              "p90": 1.0703125,
+              "p95": 1.12890625
+            },
+            "confidence": {
+              "count": 1411200,
+              "min": 1.0,
+              "max": 1.8203125,
+              "mean": 1.0304635903840702,
+              "median": 1.0029296875,
+              "p05": 1.0,
+              "p40": 1.001953125,
+              "p90": 1.064453125,
+              "p95": 1.142578125
+            },
+            "pose": {
+              "camera_center_min": [
+                -0.2522223889827728,
+                0.18749889731407166,
+                0.1193409413099289
+              ],
+              "camera_center_max": [
+                -0.15865319967269897,
+                0.6635718941688538,
+                0.3699636459350586
+              ],
+              "camera_center_extent": [
+                0.09356918931007385,
+                0.4760729968547821,
+                0.2506226897239685
+              ],
+              "camera_center_diag": 0.5460882782936096,
+              "step_mean": 0.14593088626861572,
+              "step_max": 0.38852056860923767
+            }
+          }
+        },
+        "first_35": {
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34
+          ],
+          "frame_ids": [
+            "cap-458",
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619",
+            "cap-621",
+            "cap-630",
+            "cap-635",
+            "cap-639",
+            "cap-712",
+            "cap-714",
+            "cap-720",
+            "cap-718",
+            "cap-725",
+            "cap-731",
+            "cap-733",
+            "cap-735",
+            "cap-737",
+            "cap-739",
+            "cap-741",
+            "cap-743",
+            "cap-758",
+            "cap-764"
+          ],
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 0.5551961660385132,
+            "conf_threshold_coef": 0.5,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 4939200,
+            "exported_point_count": 74088,
+            "random_downsample_seed": 9135
+          },
+          "metrics": {
+            "slot_count": 35,
+            "valid_point_count_before_downsample": 4939200,
+            "sampled_point_count": 74088,
+            "valid_fraction_of_pixels": 1.0,
+            "point_cloud": {
+              "point_count": 74088,
+              "bbox_p01": [
+                -0.5463464856147766,
+                -0.556380569934845,
+                0.3406406342983246
+              ],
+              "bbox_p99": [
+                0.47529831528663635,
+                0.5050029158592224,
+                1.3702276945114136
+              ],
+              "bbox_extent_p01_p99": [
+                1.0216448307037354,
+                1.0613834857940674,
+                1.0295870304107666
+              ],
+              "bbox_diag_p01_p99": 1.7973153591156006,
+              "bbox_extent_p05_p95": [
+                0.8701119422912598,
+                0.7642574310302734,
+                0.8045241832733154
+              ],
+              "bbox_diag_p05_p95": 1.4101217985153198,
+              "std_xyz": [
+                0.2738390564918518,
+                0.23872235417366028,
+                0.25921469926834106
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.0954210674421171,
+                0.06854839105295489,
+                0.03520383060975015
+              ],
+              "extent_p01_p99_desc": [
+                1.1410024735521156,
+                1.1711102882984055,
+                0.7620837108487054
+              ],
+              "major_extent": 1.1410024735521156,
+              "middle_extent": 1.1711102882984055,
+              "minor_extent": 0.7620837108487054,
+              "minor_to_major_ratio": 0.6679071505219634
+            },
+            "depth": {
+              "count": 4939200,
+              "min": 0.09521484375,
+              "max": 1.412109375,
+              "mean": 0.8941883419940183,
+              "median": 0.9140625,
+              "p05": 0.50537109375,
+              "p40": 0.8681640625,
+              "p90": 1.1572265625,
+              "p95": 1.2041015625
+            },
+            "confidence": {
+              "count": 4939200,
+              "min": 1.0,
+              "max": 3.29296875,
+              "mean": 1.1103923724205085,
+              "median": 1.01953125,
+              "p05": 1.0,
+              "p40": 1.009765625,
+              "p90": 1.3720703125,
+              "p95": 1.505859375
+            },
+            "pose": {
+              "camera_center_min": [
+                -0.31436994671821594,
+                -0.20616495609283447,
+                0.0004119169316254556
+              ],
+              "camera_center_max": [
+                0.08517694473266602,
+                0.6635718941688538,
+                0.3699636459350586
+              ],
+              "camera_center_extent": [
+                0.39954689145088196,
+                0.8697368502616882,
+                0.36955171823501587
+              ],
+              "camera_center_diag": 1.0259865522384644,
+              "step_mean": 0.12898218631744385,
+              "step_max": 0.5888580083847046
+            }
+          }
+        },
+        "official_downstream": {
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
+          ],
+          "frame_ids": [
+            "cap-458",
+            "cap-487",
+            "cap-492",
+            "cap-529",
+            "cap-536",
+            "cap-538",
+            "cap-567",
+            "cap-570",
+            "cap-583",
+            "cap-581",
+            "cap-591",
+            "cap-596",
+            "cap-601",
+            "cap-606",
+            "cap-608",
+            "cap-612",
+            "cap-619"
+          ],
+          "official_filter": {
+            "style": "npz_output_process.py + save_confident_pointcloud_batch",
+            "conf_threshold": 0.5222761034965515,
+            "conf_threshold_coef": 0.5,
+            "sample_ratio": 0.015,
+            "valid_point_count_before_downsample": 2399040,
+            "exported_point_count": 35985,
+            "random_downsample_seed": 9117
+          },
+          "metrics": {
+            "slot_count": 17,
+            "valid_point_count_before_downsample": 2399040,
+            "sampled_point_count": 35985,
+            "valid_fraction_of_pixels": 1.0,
+            "point_cloud": {
+              "point_count": 35985,
+              "bbox_p01": [
+                -0.4894641935825348,
+                -0.5934454202651978,
+                0.29026132822036743
+              ],
+              "bbox_p99": [
+                0.4948554039001465,
+                0.5576176047325134,
+                1.3914308547973633
+              ],
+              "bbox_extent_p01_p99": [
+                0.9843195676803589,
+                1.1510629653930664,
+                1.1011695861816406
+              ],
+              "bbox_diag_p01_p99": 1.872539758682251,
+              "bbox_extent_p05_p95": [
+                0.8247531652450562,
+                0.8822625875473022,
+                0.8753656148910522
+              ],
+              "bbox_diag_p05_p95": 1.4915997982025146,
+              "std_xyz": [
+                0.2608508765697479,
+                0.2657248079776764,
+                0.2676812708377838
+              ]
+            },
+            "pca": {
+              "eigenvalues_desc": [
+                0.0941188715307417,
+                0.0795721518199206,
+                0.03662179345018565
+              ],
+              "extent_p01_p99_desc": [
+                1.3497488888860336,
+                1.117646110061469,
+                0.7597826212546794
+              ],
+              "major_extent": 1.3497488888860336,
+              "middle_extent": 1.117646110061469,
+              "minor_extent": 0.7597826212546794,
+              "minor_to_major_ratio": 0.562906646940631
+            },
+            "depth": {
+              "count": 2399040,
+              "min": 0.196044921875,
+              "max": 1.412109375,
+              "mean": 0.8941531265419579,
+              "median": 0.9150390625,
+              "p05": 0.50048828125,
+              "p40": 0.87744140625,
+              "p90": 1.1533203125,
+              "p95": 1.2021484375
+            },
+            "confidence": {
+              "count": 2399040,
+              "min": 1.0,
+              "max": 1.875,
+              "mean": 1.0445522638580171,
+              "median": 1.0068359375,
+              "p05": 1.0,
+              "p40": 1.0029296875,
+              "p90": 1.12890625,
+              "p95": 1.2841796875
+            },
+            "pose": {
+              "camera_center_min": [
+                -0.31436994671821594,
+                -0.20616495609283447,
+                0.048746511340141296
+              ],
+              "camera_center_max": [
+                -0.15865319967269897,
+                0.6635718941688538,
+                0.3699636459350586
+              ],
+              "camera_center_extent": [
+                0.15571674704551697,
+                0.8697368502616882,
+                0.3212171196937561
+              ],
+              "camera_center_diag": 0.9401438236236572,
+              "step_mean": 0.11979205161333084,
+              "step_max": 0.38852056860923767
+            }
+          }
+        }
+      },
+      "summary": {
+        "rows": {
+          "slot_00": {
+            "slot_count": 1,
+            "valid_fraction_of_pixels": 1.0,
+            "sampled_point_count": 2116,
+            "conf_threshold": 0.5064824223518372,
+            "bbox_diag_p01_p99": 1.516015887260437,
+            "pca_minor_extent": 0.5751991020246864,
+            "pca_minor_to_major_ratio": 0.5166236873089853,
+            "camera_center_diag": 0.0
+          },
+          "first_10": {
+            "slot_count": 10,
+            "valid_fraction_of_pixels": 1.0,
+            "sampled_point_count": 21168,
+            "conf_threshold": 0.5152317881584167,
+            "bbox_diag_p01_p99": 1.5832754373550415,
+            "pca_minor_extent": 0.6710437976198904,
+            "pca_minor_to_major_ratio": 0.6513650486705405,
+            "camera_center_diag": 0.5460882782936096
+          },
+          "first_35": {
+            "slot_count": 35,
+            "valid_fraction_of_pixels": 1.0,
+            "sampled_point_count": 74088,
+            "conf_threshold": 0.5551961660385132,
+            "bbox_diag_p01_p99": 1.7973153591156006,
+            "pca_minor_extent": 0.7620837108487054,
+            "pca_minor_to_major_ratio": 0.6679071505219634,
+            "camera_center_diag": 1.0259865522384644
+          },
+          "official_downstream": {
+            "slot_count": 17,
+            "valid_fraction_of_pixels": 1.0,
+            "sampled_point_count": 35985,
+            "conf_threshold": 0.5222761034965515,
+            "bbox_diag_p01_p99": 1.872539758682251,
+            "pca_minor_extent": 0.7597826212546794,
+            "pca_minor_to_major_ratio": 0.562906646940631,
+            "camera_center_diag": 0.9401438236236572
+          }
+        },
+        "first35_over_first10": {
+          "bbox_diag_growth": 1.1351880517505697,
+          "pca_minor_growth": 1.135669107667372,
+          "valid_fraction_delta": 0.0,
+          "conf_threshold_ratio": 1.077565823380076,
+          "pose_span_growth": 1.8787924828645248
+        },
+        "official_downstream_over_first10": {
+          "bbox_diag_growth": 1.1826999361592088,
+          "pca_minor_growth": 1.1322399878361662,
+          "valid_fraction_delta": 0.0,
+          "conf_threshold_ratio": 1.013672128739015,
+          "pose_span_growth": 1.7215967838778254
+        }
+      }
+    }
+  },
+  "comparison": null,
+  "decision": {
+    "status": "pass_image_only_within_single_window_thickness_threshold",
+    "can_judge_original_thick_layer": true,
+    "image_only_reduced_thick_layer": true,
+    "acceptance": {
+      "max_acceptable_image_only_minor_growth": 1.15,
+      "min_minor_growth_improvement": 0.15,
+      "image_only_first35_over_first10": {
+        "bbox_diag_growth": 1.1351880517505697,
+        "pca_minor_growth": 1.135669107667372,
+        "valid_fraction_delta": 0.0,
+        "conf_threshold_ratio": 1.077565823380076,
+        "pose_span_growth": 1.8787924828645248
+      },
+      "image_only_official_downstream_over_first10": {
+        "bbox_diag_growth": 1.1826999361592088,
+        "pca_minor_growth": 1.1322399878361662,
+        "valid_fraction_delta": 0.0,
+        "conf_threshold_ratio": 1.013672128739015,
+        "pose_span_growth": 1.7215967838778254
+      },
+      "product_acceptance_metric": "image_only_official_downstream_over_first10.pca_minor_growth",
+      "product_acceptance_value": 1.1322399878361662,
+      "full_k35_diagnostic_metric": "image_only_first35_over_first10.pca_minor_growth",
+      "full_k35_diagnostic_value": 1.135669107667372,
+      "image_only_minor_growth_within_acceptance": true,
+      "image_only_official_downstream_minor_growth_within_acceptance": true,
+      "pose_reference_warning": "window_missing",
+      "can_compare_to_pose_reference": false
+    },
+    "do_not_change_dimension": true,
+    "do_not_use_arkit_vio_as_da3_input": true,
+    "downstream_cleanup_allowed_as_product_adaptation_only_after_this_gate": true
+  },
+  "next_run_command": [
+    "python3.11",
+    "tools/python/da3_mac_window_export.py",
+    "--capture-dir",
+    "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "--out-dir",
+    "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline_risky_windows_2026_06_05",
+    "--model",
+    "<path-to-DA3BASE_280x504_N35_image_only.mlpackage>",
+    "--compute-unit",
+    "all",
+    "--resume"
+  ]
+}

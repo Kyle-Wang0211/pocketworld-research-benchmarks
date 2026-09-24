@@ -1,0 +1,17 @@
+LOD 查看器(八):页面不再 import sparse_cloud_view.dart,旧查看器常量本地钉住 + 防漂移测试
+
+原因:台架 arloopbench 没有 lib/ui/;为 kCloudOrthographic / kSparseThumbYaw / kSparseThumbPitch
+三个常量 import sparse_cloud_view.dart 会把 selection_box / progressive_octree_order /
+selection_rect_handles / sparse_thumbnail 一串拖进镜像。现在页面闭包只剩
+lib/point_cloud_lod/* + lib/ui/official_capture/{lod_cloud_view,cloud_camera}.dart
+(cloud_camera.dart 自包含:只 import dart:math / dart:ui),外部包只有 flutter 与 path_provider。
+
+防漂移(产品侧测试,台架不需要):
+- kLodDefaultOrthographic/Yaw/Pitch 与 kCloudOrthographic / kSparseThumbYaw / kSparseThumbPitch 相等;
+- 9 段手势代码(:294 俯仰上限、:722-757 平移/捏合/单指旋转系数)在旧查看器与 LOD 页源码里
+  都逐字存在(忽略空白);检查器自身的阴性:0.009 / ×0.1 这类漂移值查不到。
+一次性阴性对照(改完即还原,未入库):把 kLodDefaultOrthographic 改 false、页面 0.008 改 0.009
+→ 3 个测试全失败(常量钉、手势钉、widget 默认 projection 期望 1 得 0);还原后 38/38 过,
+flutter analyze 零问题。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

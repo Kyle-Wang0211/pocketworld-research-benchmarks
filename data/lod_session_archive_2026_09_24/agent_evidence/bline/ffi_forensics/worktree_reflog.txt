@@ -1,0 +1,129 @@
+2026-06-21 21:37 8b22096827 commit: glomap_vendor: on-device GLOMAP/COLMAP SfM + GPU descriptor matcher
+2026-06-21 23:43 a6ffdd2094 commit: glomap_vendor: multi-threaded DSP-SIFT extraction (bit-identical) — stage 1
+2026-06-21 23:55 db434956b6 commit: glomap_vendor: parallelize estimate_affine_shape (bit-identical) — stage 2
+2026-06-22 00:05 8da2bb6f18 commit: GPU DSP-SIFT: grounded architecture + staged roadmap + Stage-1 kernel — stage 3
+2026-06-22 00:07 411d5e3a94 commit: extraction: XFeat/ALIKED learned-feature assessment — stage 4
+2026-06-22 01:07 a6f5e139f5 commit: registration: E4 global-BA caps — 4.6x cheaper fire frame, reproj unchanged
+2026-06-22 10:19 7cf45359ba commit: registration: defer ALL global BA -> per-frame SLA met at real resolution
+2026-06-22 11:07 224a466ca6 commit: bench: on-device per-frame SLA bench -> 2048 defer validated <=2s real iPhone
+2026-06-22 13:27 5f7350bac9 commit: sfm: async finalize — global BA off the UI critical path (拍完即出图)
+2026-06-23 17:50 5f7350bac9 checkout: moving from claude/phase-6.4f.4-runtime-lod to claude/publish-to-community
+2026-06-23 17:54 c132e35cfb commit: feat(community): publish a local scan to the community feed
+2026-06-24 11:19 367ab50eb4 commit: on-device SfM: global CAUCHY full-quality finalize on iOS (gref=5)
+2026-06-24 12:08 d95a7baba6 commit: on-device SfM finalize 3.6x faster: CAUCHY -> DENSE_SCHUR for compact regions
+2026-06-24 12:50 043efefb4b commit: on-device SfM: local keep-CAUCHY-pass-2 (better preview) + finalize gftol + drift metric
+2026-06-24 13:07 56f719d2de commit: bench harness: re-enable realsim for keep-CAUCHY local 2s-gate device check
+2026-06-24 13:16 bdd310420d commit: bench: expose lnum in aether_realsim_bench for local-window 2s-gate sweep
+2026-06-24 13:35 ac0df0685d commit: production SfM: wire grounded BA ship config into RunIncremental
+2026-06-24 18:10 9dd325f83e commit: glomap: replicate COLMAP tuned BA config (DENSE routing + Cauchy + function_tolerance)
+2026-06-25 00:08 b17820ea35 commit: [AETHER] iOS SfM finalize: SPARSE_SCHUR + EIGEN_SPARSE (not Accelerate) — the real fix
+2026-06-25 01:45 e7ef7cf8ee commit: [AETHER] device-test harness: phys_footprint sampler + GLOMAP device A/B (GLOMAP device-infeasible)
+2026-06-25 12:44 86e5eec0ee commit: [AETHER] FINAL solver: DENSE_SCHUR for the finalize (supersedes EIGEN_SPARSE)
+2026-06-25 17:33 cb7021a74a merge colmap-4.0-migration: Fast-forward
+2026-06-25 19:59 31d4a88de3 commit: [plan] GPU DSP-SIFT: week-1 gates run — first_octave=0 holds (gss 642->161MB); extractor choice re-l
+2026-06-26 10:14 4e554d2db9 commit: [fix] aether_sfm_c.cc 4.0.4-compat (was 3.x, broke libaether_sfm.a rebuild): IncrementalPipeline 4-arg
+2026-07-04 18:39 bcb60df37a commit: [glomap] on-device GLOMAP week: certified universal config + iOS 26 background umbrella (validated on 
+2026-07-04 19:57 42b9722b18 commit: [glomap] real staged progress (aether_progress C ABI) + bench app separation
+2026-07-05 03:01 b0133902a6 commit: [glomap] overnight speedup campaign: adopt colmap#4354; reject SPSE; track-budget pending; app v5.5-5.
+2026-07-05 17:49 edf8c04255 commit: fix(sfm): persist streaming matches — close the "single remaining gap"
+2026-07-05 20:39 1eccb8131d commit: [glomap] NEW certified recipe: rounds=3 + ftol converge-stop (-59%); revoke knife-3; LAPACK hook; GP w
+2026-07-06 00:48 abdacc7bad commit: [glomap] Pareto probe wave: gravity RA plumbing, loss-anneal, retri knobs, CHOLMOD probe hook (all env
+2026-07-06 01:31 a2a9489747 commit: [glomap] COVGAIN knife (coverage-gain redundant-track BA exclusion) — REJECTED, kept as dead debug s
+2026-07-06 22:41 6b0f67ffbf commit: [sfm] aether_sfm_get_points_tracked — atomic points + per-point track observations ABI
+2026-07-07 20:22 c1dc8dad7f commit: perf(gpu-sift): persistent Dawn harness + pipeline cache -> 8.4x warm extract
+2026-07-07 21:44 c1dc8dad7f checkout: moving from claude/publish-to-community to archive/da3-local-mesh-from-product
+2026-07-07 21:45 a4aa59f895 commit: archive(pocketworld): DA3/BiRefNet/SigLIP local-mesh subsystem (code) from product repo
+2026-07-07 21:59 e9b077ec37 commit: feat(gpu-sift): batch extractor exe for GPU-extract->SfM->9-gate validation
+2026-07-07 22:08 c1dc8dad7f checkout: moving from archive/da3-local-mesh-from-product to claude/publish-to-community
+2026-07-07 22:08 5c31dd98fe cherry-pick: feat(gpu-sift): batch extractor exe for GPU-extract->SfM->9-gate validation
+2026-07-09 02:05 f0aa1989bb commit: Stage1 S1.3: 稠密前处理 C++ 逐字 port 'o'(逐位一致)
+2026-07-09 16:07 74d5f47716 commit: feat(sfm): streaming local-BA preview — grow-gate, TVG inliers, floater filters, telemetry
+2026-07-10 13:17 6802a7d606 commit: fix(sfm): RefineGlobalBA 补齐完整 phase-2 Cauchy(原为默认 global TRIVIAL)
+2026-07-10 13:18 74d5f47716 reset: moving to HEAD~1
+2026-07-10 19:34 b0ac56ca47 commit: snapshot: pre-4.1-merge — 主树全部未提交工作入快照
+2026-07-10 19:34 3b2fcde27a merge colmap-4.1-migration: Merge made by the 'ort' strategy.
+2026-07-10 23:03 fced12f596 commit: fix(sfm): resume finalize rebuilds FrameRecords from db — temporal detail restored
+2026-07-11 01:25 7e14bb86ab commit: feat(sfm): live merge un-starved via union refit + finalize tri-angle gate 3°
+2026-07-11 02:06 589e5d63de commit: feat(sfm): spatial-first match candidates — ARKit-center K-NN ∩ view-angle, temporal fill, no-pose
+2026-07-11 09:42 127b6c96b1 commit: fix(sfm): thermal GPU-match collapse — fail telemetry + finalize starved-frame re-match
+2026-07-11 10:32 a251f8fe3e commit: feat(sfm): S3.5 restore — finalize_async reuses the live recon, no full re-run
+2026-07-11 11:44 e5b3158728 commit: perf(sfm): finalize 三重优化 — 零拷贝 live recon + 补匹配∥refine 异构并行
+2026-07-11 11:52 efb7f6ac08 commit (amend): perf(sfm): finalize 三重优化 — 零拷贝 live recon + 补匹配∥refine 异构并行
+2026-07-11 12:58 8ec0a53246 commit: perf(sfm): 两刀 Ceres 审判 — 刀2 线程预算落地;刀1 mixed-precision 判死默认关
+2026-07-11 14:08 01be8404a1 commit: telemetry: finalize phase-2 分段计时持久化(cap44 观测盲区,零算法改动)
+2026-07-11 14:51 0168f801dd commit: fix(gpu-sift): kDspNumScales 3→10 回退到认证配置,修尺度间距错配;parity 门改读生产
+2026-07-11 16:06 91a10876c5 commit: feat(sfm): 45号冻结案 — rc=7 文件日志 + 热调速器(默认关,env opt-in)
+2026-07-11 16:38 4b06fe2f34 commit: feat(sfm): 扫描矩阵 env 钩子 ①-④(默认零漂移,host 门阈值矩阵用)
+2026-07-11 17:53 e2e7f395c3 commit: feat(sfm+sift): 三角门默认 T20(3.0°→2.0°)+ DSP 尺度 10→6 档,组合验证过门
+2026-07-11 17:55 1f7460e717 commit (amend): feat(sfm+sift): 三角门默认 T20(3.0°→2.0°)+ DSP 尺度 10→6 档,组合验证过门
+2026-07-11 20:34 619ad48018 commit: feat(sfm): 刀A「2-view 升维·并集重定位」env 三件套(默认零漂移,host 已定价未过�
+2026-07-11 21:17 a593673d73 commit: perf(sfm): P1 finalize 提速包 — 空闲还债 + enrich 时间闸 + rc=7 退避重试
+2026-07-11 21:31 7cdefcf882 commit: feat(sfm): P2 碎片合并减厚刀 AETHER_FRAG_MERGE(默认关,host 已定价)
+2026-07-11 23:42 59555b8de9 commit: feat(sfm): 合并/生长 MIN_THETA 门 + stage1 轮次/ftol 钩子 + repay 热闸重设计
+2026-07-12 10:40 eb2704e503 commit: feat(sfm): iOS ceres 重编开 LAPACK(Accelerate dense)+ dense_backend 可观测性
+2026-07-12 10:54 e2889dcf6f commit: feat(sfm): 鬼层 L1 前置 — 双峰/D带状门 C++ 移植(AETHER_GHOST_MASK,默认关)
+2026-07-12 11:01 b5d14da306 commit: bench(lapackbench): pair-2 位次反转 + phys_footprint 遥测;记录锁屏挂起坑
+2026-07-12 12:52 3aadf82baf 
+2026-07-12 12:59 b0f1e9fadd 
+2026-07-12 14:41 1dd632b002 
+2026-07-12 17:24 91ac162dce 
+2026-07-12 23:11 c381af9537 
+2026-07-13 01:12 0a8b8428fb 
+2026-07-13 09:46 8952bfc76e 
+2026-07-20 21:06 fc91e95102 commit: feat(sfm): aether_sfm_remove_frame —— 撤回一帧的全部重建贡献
+2026-07-20 21:08 8952bfc76e reset: moving to HEAD~1
+2026-07-20 21:08 ea77244a8f commit: feat(sfm): aether_sfm_remove_frame —— 撤回一帧的全部重建贡献
+2026-07-21 21:42 b930ab1851 commit: fix(sfm): remove_frame 抗 resume 复活(R1)+ 补齐 L1 成员移除的遗漏
+2026-08-07 11:30 849c4d6b01 commit: feat(sfm+gpu): 镜像鬼点V1+GPU挂死自愈A1/A2+watchdog+渲染器detox(08-06/07)
+2026-08-08 01:00 446beae3b5 commit: feat(sfm): 孤立浮点刀+scale_eps共用头+镜像鬼点尺度自适应+热账三连(08-07/08)
+2026-08-10 01:46 d5f81a9afc commit: fix(extract): GPU 提取全链根治 —— 回读守卫/OOM闸/自愈/原因账/容量与派发
+2026-08-10 01:47 6a7d45e904 commit: feat(sfm): 第2帧显示层配对草稿 + 欠账原因账 + 拆出云门判决存档
+2026-08-10 01:47 4924f0aebf commit: feat(ba): SPSE/parameter_tolerance 实验旋钮(host 已判死,留档)
+2026-08-10 01:47 50fe48cdd2 commit: feat(vendor-colmap): TVG-H-FLOOR 实验臂(判死留档,默认关=逐位同上游)
+2026-08-10 10:22 7dda8584a2 commit: feat(match): sprint旗核API+30fps让路联动 + 08-08 duty-split逐帧账
+2026-08-10 10:22 0ab02a0c54 commit: perf(extract): PRECLAMP-PRUNE (o,s)组前置剪枝,affine/orient白工-46%
+2026-08-10 17:27 7f1d05a77d commit: perf(extract): PACK-ZERO 金字塔层直住 packed 大缓冲,pack 拷贝归零
+2026-08-10 17:29 a97145ff22 commit: perf(extract): GSS-FUSED H+V 融合 blur(FidelityFX Blur 结构,逐位同 2-pass)
+2026-08-10 17:29 155405f23f commit: perf(extract): DESC-ATOMIC 定点共享原子加描述子(CudaSift 结构,desc GPU −76%)
+2026-08-10 22:17 5f3e42841e commit: perf(extract): ORIENT-ATOMIC 36格定点原子加方向直方图(orient GPU fair −32%)
+2026-08-11 10:35 93c384620e commit: perf(sfm): 批次28-31七刀+official_pipeline源码欠账入库
+2026-08-11 11:48 3e29f8de60 commit: perf(finalize): BA迭代帽旋钮+enrich_split插桩+ENRICH-TVG-FARM(全默认关)
+2026-08-11 23:13 9820ff3d5f commit: perf(finalize): 全局BA ftol 旋钮(默认1e-6不变)——迭代帽战役的胜出刀
+2026-08-17 17:41 568f53d396 commit: build(closure): 出货源码闭包入库 + official_gpu_match_host.o 构建规则 + 许可证绊线
+2026-09-04 22:39 5374942bc0 commit: feat(official): 出货算法源码补入库 —— 08-11~09-02 的空三/BA/配对改动此前只存�
+2026-09-04 22:40 7efd524aee commit: feat(dense+bench): 稠密预处理三函数逐字复刻 'o' 管线 + glomap bench 三件套补入库
+2026-09-04 22:41 f131227305 commit: build(bench): Dawn 核台架 + XRSLAM 前端搬 GPU 的 M1/M2 探针入库
+2026-09-04 22:52 5374942bc0 reset: moving to 5374942b
+2026-09-04 22:52 d5fdfa628e commit: feat(bench): COLMAP 管线的 regen/replay/finalize_resume 三个 bench 补入库
+2026-09-04 22:53 c17ae840b5 commit: chore(dense): 已退役稠密线的 preproc 三函数入库存档(不参与出货,无人编译)
+2026-09-04 22:53 8b6eacbb81 commit: build(bench): Dawn 核台架 + XRSLAM 前端搬 GPU 的 M1/M2 探针入库
+2026-09-04 23:00 5e414f0670 commit: test(official): 三个出货契约测试注册进 CMake/ctest —— 此前只入库不运行,等于�
+2026-09-04 23:04 16c9c2d313 commit: chore(git): build_codex_fix 构建树移出版本控制 + 忽略规则改成通配
+2026-09-08 00:11 c533ff99b7 commit: local BA: hand Ceres the Schur ordering it re-derives on every Solve, and skip the per-block safety ch
+2026-09-08 00:12 d3d71ba4d6 commit: extractor: grid suppression, the 2-pass blur path, the 256 MB Mali binding layout and the orientation 
+2026-09-08 00:12 c281dd3785 commit: bench/tooling: XRSLAM GPU frontend port, the Dawn descriptor-matcher bench and the feature-selection e
+2026-09-08 10:00 013290ffc7 commit: local BA: persist the ordering-activation bit into frame_split instead of stderr
+2026-09-08 12:50 0d8a251219 commit: extractor: pick pyramid binding layout from device maxStorageBufferBindingSize
+2026-09-08 13:48 9c1fcd88d4 commit: extractor: window size follows the device limit; split W256 into layout/binding knobs with a self-proo
+2026-09-08 17:42 3e91d1e1f0 commit: harness: let the host-side breakdown work without TimestampQuery
+2026-09-08 18:20 79fb97cc99 commit: extractor: dedicated keypoint-region buffer (off by default) - measured, and it buys nothing
+2026-09-08 18:47 52b73c0c1a commit: extractor: two-buffer pyramid so no binding is ever a sub-range (off by default)
+2026-09-08 19:56 74f1a9cd53 commit: harness: route the strict-math env key through the official prefix
+2026-09-09 00:47 6739f36657 commit: extractor: reuse the packed pyramid buffer across frames by default
+2026-09-10 01:16 5b6c65afaf commit: sfm: give the prefetch miss-forward its own slot so the first miss stops poisoning the rest
+2026-09-13 22:19 34837dec12 commit: bench: 补上 archived_refeed 的 manifest 生成器(台架本体已在树上,缺了它跑不起来)
+2026-09-15 21:43 f381989d7e 
+2026-09-16 00:14 47cd3d3a6b 
+2026-09-16 09:52 28ca8b48d6 
+2026-09-16 10:31 68bfa68060 
+2026-09-16 10:58 a313ede079 
+2026-09-16 12:17 7dc00642b0 
+2026-09-23 09:37 7dc00642b0 checkout: moving from claude/publish-to-community to perf/splat-vertex-expansion
+2026-09-23 09:54 3c75c8defb 
+2026-09-23 10:08 fd41b842c2 
+2026-09-23 12:22 c9033421b2 test(splat): coverage probe + rationale correction
+2026-09-23 13:25 c945c17ee0 scene smoke camera convention
+2026-09-23 13:26 ea4f9a8807 kernel smoke packed fixture + device error gate
+2026-09-23 13:46 0a4d3c1bcb 
+2026-09-23 13:53 e03b335960 fix(splat): SplatDataCache device-lifetime UAF
+2026-09-23 14:11 aede0a2e83 test(splat): bare ply reaches cache + cross_validate non-empty gate

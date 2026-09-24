@@ -1,0 +1,22 @@
+LOD 查看器(三):L4 Dart 绑定 lod_bridge.dart(MethodChannel 'pw_lod_texture')
+
+- 形状照 lib/aether_view/scene_bridge.dart:10-18, :71 @875fe67;不走 DynamicLibrary.process()。
+- 方法:create / loadOctree / setCamera / setParams / stats / buildFromPly / verifyOctree /
+  runBench(M1)/ dispose,外加 launchArgs(detached 启动时把 -PWLod* 参数交给 Dart)。
+- 线上键名 = 冻结头 pwlod_viewer.h 里的 C 字段名(句柄沿用 'textureId');错误码 = pwlod_status 名。
+- C1 判官 judgeC1:status OK 且 tree_points == ply_points 且 octree_bin_bytes == 18·tree_points;
+  judgeVerify:C2(byte_gaps = byte_overlaps = 0)、S2(leaves_selected == leaves > 0)、
+  以及 build 与 verify 读回的是同一棵树(tree_points/octree_bin_bytes/nodes 一致)。
+- lod_scene_fit.dart 只改花括号(analyze 零问题)。
+
+判据(test/point_cloud_lod/lod_bridge_test.dart,连同相机测试共 28/28 过;flutter analyze 零问题):
+- 测试现场解析 vendor/aether_lod/include/pwlod_viewer.h:setCamera 的键集合 == pwlod_camera
+  字段 + textureId;setParams 全量键 == pwlod_params 字段;stats/build/verify 解码覆盖每个头字段;
+  pwlod_status 顺序与 kPwLodStatusNames 一致。
+- 行主序:16 个 double 逐元素 == 帧矩阵,且按行主序乘一个世界点落在旧查看器同一像素(1e-6 px)。
+  阴性:转置、50 组随机打乱、仅交换 [3]↔[12] 三种都被同一个检查器判失败;透视矩阵也被判失败。
+- 正交字段:projection = 1、fov = 0、ortho 宽/高比 = 视口宽/高比。
+- 阴性:stats 缺任一头字段 → FormatException(逐个字段试);C1 丢一个点 / 多一条记录 / 截断 /
+  状态非 OK / 空树都判失败;C2 有缝或重叠、S2 少选一叶、build≠verify 各自判失败。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

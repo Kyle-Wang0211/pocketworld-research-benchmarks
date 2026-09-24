@@ -1,0 +1,120 @@
+{
+  "schema_version": "aether_da3_image_only_coreml_export_v1",
+  "purpose": "Export official DA3-Streaming image-only CoreML wrapper",
+  "inputs": {
+    "official_da3_repo": "/Users/kaidongwang/Developer/Aether3D-cross/.deps/Depth-Anything-3",
+    "model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "out_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_n60_phone_gate_2026_06_08/DA3BASE_280x504_N60_image_only.mlpackage",
+    "window_size": 60,
+    "height": 280,
+    "width": 504,
+    "dry_run": false,
+    "convert": true,
+    "compute_precision": "float16",
+    "minimum_deployment_target": "iOS18",
+    "no_trace_check": false,
+    "trace_optimize_false": false,
+    "static_shape_export_patches": true,
+    "allow_duplicate_openmp": true
+  },
+  "contract": {
+    "coreml_inputs": [
+      "image"
+    ],
+    "forbidden_coreml_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "torch_semantics": "net(image, None, None, [], False, False, 'saddle_balanced')",
+    "outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ],
+    "not_identity_camera": true
+  },
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.12.0"
+  },
+  "static_shape_export_patches": {
+    "status": "applied",
+    "scope": "fixed B=1 image-only CoreML export graph",
+    "window_size": 60,
+    "height": 280,
+    "width": 504,
+    "patch_size": 14,
+    "patch_grid": [
+      20,
+      36
+    ],
+    "token_count_with_cls": 721,
+    "patch_token_count": 720,
+    "rope_max_position": 37,
+    "head_pos_embed_shapes": [
+      [
+        60,
+        64,
+        160,
+        288
+      ],
+      [
+        60,
+        64,
+        280,
+        504
+      ],
+      [
+        60,
+        96,
+        20,
+        36
+      ],
+      [
+        60,
+        192,
+        20,
+        36
+      ],
+      [
+        60,
+        384,
+        20,
+        36
+      ],
+      [
+        60,
+        768,
+        20,
+        36
+      ]
+    ],
+    "patched_modules": [
+      "backbone.prepare_tokens_with_masks",
+      "backbone.interpolate_pos_encoding",
+      "backbone._prepare_rope",
+      "backbone.process_attention",
+      "backbone._get_intermediate_layers_not_chunked",
+      "backbone.rope.forward",
+      "backbone.block.attn.forward",
+      "head.forward",
+      "head._forward_impl",
+      "head._add_pos_embed",
+      "cam_dec.forward",
+      "net._process_camera_estimation"
+    ],
+    "semantic_guardrail": "The wrapper still calls official DA3 with extrinsics=None and intrinsics=None; patches only specialize fixed tensor shapes and precomputed positional encodings.",
+    "chunked_sdpa": {
+      "query_chunk": 720,
+      "min_gib_threshold": 0.5
+    },
+    "trace_device": "mps"
+  },
+  "conversion": {
+    "status": "fail",
+    "elapsed_s": 28.517642583028646,
+    "reason": "RuntimeError: MPS backend out of memory (MPS allocated: 21.14 GiB, other allocations: 2.72 MiB, max allowed: 22.64 GiB). Tried to allocate 1.39 GiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure)."
+  },
+  "elapsed_s": 34.153686208010186
+}

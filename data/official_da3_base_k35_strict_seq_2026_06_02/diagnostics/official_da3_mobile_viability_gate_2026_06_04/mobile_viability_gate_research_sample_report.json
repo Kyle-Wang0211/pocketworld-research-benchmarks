@@ -1,0 +1,84 @@
+{
+  "schema_version": "aether_da3_mobile_viability_gate_report_v1",
+  "status": "warning",
+  "mode": "research",
+  "meaning": "baseline evidence is useful, but product viability is not proven",
+  "paths": {
+    "capture_dir": null,
+    "depth_index": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap18_official_postprocess/depth_index.json",
+    "pointcloud_report": null,
+    "real_device_audit": null
+  },
+  "depth_status": "completed",
+  "pointcloud_status": null,
+  "audit_status": null,
+  "telemetry_summary": {},
+  "checks": [
+    {
+      "id": "depth_index_present",
+      "status": "pass",
+      "expected": "depth_index.json is present",
+      "observed": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap18_official_postprocess/depth_index.json"
+    },
+    {
+      "id": "commercial_safe_da3_base_only",
+      "status": "pass",
+      "expected": "commercial product path uses Apache-2.0 DA3-BASE only",
+      "observed": {
+        "id": "DA3-BASE",
+        "license": "Apache-2.0",
+        "mobileTag": "da3:base:k35:476x742:active",
+        "resourceName": "DA3BASE_476x742_N35_pose",
+        "windowSize": 35,
+        "inputWidth": 742,
+        "inputHeight": 476,
+        "inputSizeStatus": "locked_da3_base_k35_476x742_benchmark_2026_05_25",
+        "commercialSafe": true
+      }
+    },
+    {
+      "id": "sealed_k35_476x742_contract",
+      "status": "pass",
+      "expected": "sealed DA3-BASE K35@476x742 input contract is used",
+      "observed": {
+        "windowSize": 35,
+        "inputWidth": 742,
+        "inputHeight": 476,
+        "input_size_locked": true
+      }
+    },
+    {
+      "id": "depth_stage_completed",
+      "status": "pass",
+      "expected": "all requested DA3 frames completed",
+      "observed": {
+        "status": "completed",
+        "completed_count": 414,
+        "frame_count": 414,
+        "window_count": 24
+      }
+    },
+    {
+      "id": "real_device_audit_present",
+      "status": "warning",
+      "expected": "real-device audit with native telemetry is present",
+      "observed": {
+        "path": "None",
+        "embedded_schema": null,
+        "file_schema": null
+      }
+    },
+    {
+      "id": "official_pointcloud_report_present",
+      "status": "warning",
+      "expected": "official_pointcloud_report.json is present for downstream baseline gate",
+      "observed": "None"
+    },
+    {
+      "id": "explicit_product_thresholds_supplied",
+      "status": "warning",
+      "expected": "caller supplies target-device latency/memory thresholds",
+      "observed": {}
+    }
+  ]
+}

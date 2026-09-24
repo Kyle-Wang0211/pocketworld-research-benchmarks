@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>K=90 PLY 对比 — 224×392 vs 224×406</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: -apple-system, sans-serif; }
+  #labels { position: fixed; top: 10px; left: 0; right: 0; display: flex; z-index: 10; pointer-events: none; }
+  #labels div { flex: 1; text-align: center; font-size: 18px; font-weight: 600; }
+  #hint { position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 13px; color: #999; }
+  .l392 { color: #7fdcff; } .l406 { color: #ffc97f; }
+</style>
+</head>
+<body>
+<div id="labels"><div class="l392">224×392 (ship 候选) — 225,131 点</div><div class="l406">224×406 — 211,800 点</div></div>
+<div id="hint">左键旋转 · 滚轮缩放 · 右键平移 · 两边相机联动</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+function makeView() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+  const cam = new THREE.PerspectiveCamera(50, (W/2)/H, 0.01, 100);
+  cam.position.set(0, -1.6, 1.2);
+  cam.up.set(0, 0, 1);
+  return { scene, cam };
+}
+const left = makeView(), right = makeView();
+const controls = new OrbitControls(left.cam, renderer.domElement);
+controls.target.set(0, 0, 0.45);
+left.cam.lookAt(controls.target);
+
+const loader = new PLYLoader();
+function addCloud(view, url) {
+  loader.load(url, geo => {
+    geo.computeBoundingBox();
+    const c = new THREE.Vector3();
+    geo.boundingBox.getCenter(c);
+    geo.translate(-c.x, -c.y, -c.z + 0.45);
+    const mat = new THREE.PointsMaterial({ size: 0.004, vertexColors: true });
+    view.scene.add(new THREE.Points(geo, mat));
+  });
+}
+addCloud(left, 'fusion_392.ply');
+addCloud(right, 'fusion_406.ply');
+
+function render() {
+  requestAnimationFrame(render);
+  controls.update();
+  // mirror camera to right view
+  right.cam.position.copy(left.cam.position);
+  right.cam.quaternion.copy(left.cam.quaternion);
+  right.cam.updateMatrixWorld();
+
+  renderer.setViewport(0, 0, W/2, H);
+  renderer.setScissor(0, 0, W/2, H);
+  renderer.render(left.scene, left.cam);
+  renderer.setViewport(W/2, 0, W/2, H);
+  renderer.setScissor(W/2, 0, W/2, H);
+  renderer.render(right.scene, right.cam);
+}
+render();
+</script>
+</body>
+</html>

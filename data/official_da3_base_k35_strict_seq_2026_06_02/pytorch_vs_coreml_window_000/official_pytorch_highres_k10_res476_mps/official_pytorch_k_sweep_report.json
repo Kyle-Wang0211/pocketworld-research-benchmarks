@@ -1,0 +1,130 @@
+{
+  "schema_version": "pocketworld_official_pytorch_k_sweep_v1",
+  "inputs": {
+    "frames_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "manifest": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/strict_window_000_highres_official_manifest.json",
+    "model_path": "/Users/kaidongwang/Developer/pocketworld/ios/Runner/Models/DA3-BASE",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src"
+  },
+  "parameters": {
+    "device": "mps",
+    "process_res": [
+      476
+    ],
+    "k_values": [
+      10
+    ],
+    "process_res_method": "upper_bound_resize",
+    "ref_view_strategy": "saddle_balanced",
+    "save_arrays": true
+  },
+  "runtime": {
+    "python": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "platform": "macOS-26.1-arm64-arm-64bit",
+    "torch": "2.12.0",
+    "load_ms": 1115.1612079993356
+  },
+  "attempts": [
+    {
+      "k": 10,
+      "process_res": 476,
+      "device": "mps",
+      "status": "success",
+      "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps",
+      "rss_before_mb": 1477.34375,
+      "preprocess_ms": 234.85799999616574,
+      "forward_ms": 3057.331542004249,
+      "elapsed_ms": 3772.450749995187,
+      "rss_after_mb": 1572.8125,
+      "processed_shape_nchw": [
+        10,
+        3,
+        266,
+        476
+      ],
+      "output_shapes": {
+        "depth": [
+          10,
+          266,
+          476
+        ],
+        "conf": [
+          10,
+          266,
+          476
+        ],
+        "intrinsics": [
+          10,
+          3,
+          3
+        ],
+        "extrinsics": [
+          10,
+          3,
+          4
+        ],
+        "processed_images": [
+          10,
+          266,
+          476,
+          3
+        ],
+        "aligned_extrinsics": [
+          10,
+          4,
+          4
+        ]
+      },
+      "official_alignment": {
+        "umeyama_scale": 0.5953291728878022,
+        "ransac": true
+      },
+      "depth": {
+        "count": 1266160,
+        "min": 0.9699909090995789,
+        "max": 3.084709644317627,
+        "mean": 1.6120087392599478,
+        "median": 1.574817419052124,
+        "p05": 1.0980300664901734,
+        "p95": 2.2231184363365175
+      },
+      "confidence": {
+        "count": 1266160,
+        "min": 1.000002145767212,
+        "max": 18.628969192504883,
+        "mean": 7.950685133258851,
+        "median": 7.682138681411743,
+        "p05": 1.3775636553764343,
+        "p95": 14.190063619613648
+      },
+      "pred_intrinsics": {
+        "fx": {
+          "count": 10,
+          "min": 316.9623107910156,
+          "max": 317.4781799316406,
+          "mean": 317.34490966796875,
+          "median": 317.3506164550781,
+          "p05": 317.0768020629883,
+          "p95": 317.4762710571289
+        },
+        "fy": {
+          "count": 10,
+          "min": 314.89068603515625,
+          "max": 315.4031677246094,
+          "mean": 315.2707763671875,
+          "median": 315.2764587402344,
+          "p05": 315.0044219970703,
+          "p95": 315.4012725830078
+        }
+      },
+      "outputs": {
+        "depth_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps/pytorch_depth.npy",
+        "conf_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps/pytorch_conf.npy",
+        "intrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps/pytorch_intrinsics.npy",
+        "extrinsics_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps/pytorch_extrinsics.npy",
+        "processed_images_npy": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k10_res476_mps/k10_res476_mps/pytorch_processed_images.npy"
+      }
+    }
+  ],
+  "elapsed_s": 7.878
+}

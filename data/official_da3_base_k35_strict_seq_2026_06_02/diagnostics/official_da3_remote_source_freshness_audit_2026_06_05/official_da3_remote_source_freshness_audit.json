@@ -1,0 +1,23 @@
+{
+  "schema_version": "aether_official_da3_remote_source_freshness_audit_v1",
+  "date": "2026-06-05",
+  "purpose": "Verify that the local official Depth-Anything-3 source tree used for DA3 parity work is not stale relative to the public GitHub main branch.",
+  "official_remote": {
+    "url": "https://github.com/ByteDance-Seed/Depth-Anything-3",
+    "api_url": "https://api.github.com/repos/ByteDance-Seed/Depth-Anything-3/commits/main",
+    "main_sha": "41736238f5bced4debf3f2a12375d2466874866d",
+    "commit_date_utc": "2026-03-21T07:14:45Z",
+    "commit_message": "Update README.md"
+  },
+  "local_official_repo": {
+    "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "head_sha": "41736238f5bced4debf3f2a12375d2466874866d",
+    "remote_origin": "https://github.com/ByteDance-Seed/Depth-Anything-3.git"
+  },
+  "decision": {
+    "status": "pass_local_official_source_matches_remote_main",
+    "local_source_stale": false,
+    "highest_priority_gap": null,
+    "interpretation": "No evidence that the current official replication gap is caused by a stale local Depth-Anything-3 checkout. Continue treating DA3BASE_280x504_N35_image_only CoreML artifact/signature as the current product blocker."
+  }
+}

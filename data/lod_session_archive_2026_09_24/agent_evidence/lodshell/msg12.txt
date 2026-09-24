@@ -1,0 +1,15 @@
+LOD 查看器(十二):接口升 v2(协调会话定)—— 逐字节引入,stats 把 lowest_spacing 带回 Dart
+
+- vendor/aether_lod/include/pwlod_viewer.h:逐字节 = ~/Developer/pw_lod_data/contract/pwlod_viewer.h
+  v2(sha256 fb6459d6…,cmp 通过)。相对 v1 只有:PWLOD_ABI_VERSION 2、pwlod_frame_stats 末尾加
+  double lowest_spacing(Potree 每帧 lowestSpacing,<= 0 = 本帧没画节点)、注释。SHA256SUMS 更新
+  (校验 OK;v1 的 a1e1bcff… 记在注释里)。
+- Swift PwLodTexture.stats() 回 "lowest_spacing";Dart LodFrameStats.lowestSpacing 必解。
+
+判据(42/42 过,analyze 零问题):
+- 头文件测试钉 PWLOD_ABI_VERSION 2 且 pwlod_frame_stats 最后一个字段是 lowest_spacing;
+  解码覆盖测试按头文件字段逐个核,已含新字段;「缺任一头字段必须被拒」的阴性对照自动覆盖它。
+- iphoneos arm64 冒烟(桩按 v2 更新,只在 scratchpad):通过。阴性:外壳对着 v1 头编译 →
+  Swift 报 pwlod_frame_stats 没有 lowest_spacing;桩对着 v1 头编译 → #error 触发。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

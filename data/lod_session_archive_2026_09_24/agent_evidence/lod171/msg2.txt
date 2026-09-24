@@ -1,0 +1,15 @@
+竖屏锁写回源码 Info.plist:iPhone 只允许竖屏(来自 166/168 包)
+
+166(portrait-lock,台账:「166 = 165 + 仅 Info.plist 竖屏锁」)只改在包里的 Info.plist,源码一直留着
+Portrait + LandscapeLeft + LandscapeRight。从源码全量编出的包会因此退回可横屏(2026-09-24 从 86a45cf
+全量编出的对照包实测 Info.plist 多出两项横屏)。
+
+现在源码 = 机上 168 包:
+  UISupportedInterfaceOrientations      = [Portrait]
+  UISupportedInterfaceOrientations~ipad = [Portrait, PortraitUpsideDown, LandscapeLeft, LandscapeRight](未动,166/168 也没动)
+核对:PlistBuddy 打印两项与 Runner-168-feature-reuse.app/Info.plist 逐行相同;plutil -lint OK。
+只改这一处,别的键一个不动。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

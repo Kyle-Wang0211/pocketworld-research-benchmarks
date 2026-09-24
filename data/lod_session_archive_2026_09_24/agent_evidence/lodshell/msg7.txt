@@ -1,0 +1,30 @@
+LOD 查看器(七):L5 页面 lod_cloud_view.dart + L6 建树/M1 编排与调试入口
+
+- lib/ui/official_capture/lod_cloud_view.dart(新页,旧查看器一行未动):
+  Texture(textureId:) 照 aether_cpp_card_demo.dart:612;相机初值照 sparse_cloud_view.dart:300-305
+  (缩略图同姿态)、手势照 :722-757(双指平移/捏合 ×(1+(s−1)·0.08) 夹 0.15…20,单指 yaw/pitch,
+  pitch 夹 ±(π/2−0.02) 即 :294);默认正交(:199),工具条留透视切换与复位;黑底(:769)。
+  纹理按物理像素建(逻辑尺寸 × devicePixelRatio),尺寸变了就重建(头 :87 要求视口 = 目标尺寸);
+  setCamera 最多一个在途,最新状态覆盖。统计面板:帧号/GPU 完成帧号/点数/节点/加载中/上传/
+  缓存丢弃/min_node_pixel_size/cpu/gpu ms + 外壳取帧计数。
+  旧查看器里依赖 Dart 持有全部点的功能(双击拾取、选区、点大小/色调)不搬。
+- lib/point_cloud_lod/lod_jobs.dart:buildAndVerify(<capture>/<ply> → <capture>/lod/,
+  随后 verifyOctree,C1/C2/S2/build==verify 判,回执 <capture>/lod_build_receipt.json;
+  已有 lod/ 不许静默覆盖)、runM1(Documents/lod_bench/<tag>_<时间>/,args 末尾加 tag=,
+  照台架 App.swift:105;回执 m1_receipt.json)。PLY 优先 official_dense.ply
+  (feat/dense-stage @1a43510 native_dense_stage_launcher.dart:24)。
+- lib/point_cloud_lod/lod_debug_page.dart:台架调试入口。列 Documents 下带 PLY 或 lod/ 的目录,
+  每个可「建树+自检 / 查看 / M1」;detached 启动参数 -PWLodCapture/-PWLodAuto build|view|m1|
+  build+m1/-PWLodArgs/-PWLodTag/-PWLodThreads/-PWLodBudgetMB/-PWLodRebuild 进程内只执行一次,
+  每步追加写 Documents/lod_debug_log.txt。
+- LodFrameStats 带上外壳计数 shell(3b 判据用)。
+
+判据(test/point_cloud_lod/ 共 36/36 过,flutter analyze 零问题):
+- lod_jobs_test:路径与通道参数、回执内容;阴性:丢一个点 → C1 失败且回执 pass=false;
+  字节缝 → C2 失败(C1 仍过);建树失败 → 不做 verify、不过;已有 lod/ 未给 rebuild → 抛错且
+  原文件还在,给 rebuild → 先删再建;M1 目录/参数/回执。
+- lod_cloud_view_test(widget,mock 通道):视图 1170×2532 物理像素(dpr 3)→ create 恰为
+  1170×2532,每个 setCamera 的视口 = 1170×2532;默认 projection=1;单指拖动后矩阵改变
+  (阴性:不变即失败);点「正交」→ projection=0 且 fov>0;页面销毁 → dispose(textureId)。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

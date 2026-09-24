@@ -1,0 +1,322 @@
+{
+  "schema_version": "aether_da3_cap1396_capture_continuity_acceptance_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "cap1396_quality_accepted_but_continuity_breach_primary_suspect",
+    "goal_complete": false,
+    "conclusion": "cap-1396 was eligible by still-image quality and official timestamp ordering, but it violates the existing Dart continuity warning thresholds before entering window_016 official downstream.",
+    "official_replication_boundary": "Official DA3-Streaming image-only chunking does not reject frames by AR/VIO continuity. A continuity gate is a mobile capture/product adaptation, not an official model-input requirement.",
+    "next_best_action": "Add or simulate a Dart-side capture continuity quarantine for high-risk saved frames, then re-run DA3BASE_476x742_N35 on the same capture without using big-memory image-only export as the product gate."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "photo_bundle": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/photo_bundle.json",
+    "k_windows": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_k_windows.json",
+    "window_audits": {
+      "window_016": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_official_save_frame_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json",
+      "window_017": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_017_official_save_frame_pose_depth_scale_2026_06_05/window_017_pose_depth_scale_audit.json"
+    }
+  },
+  "thresholds": {
+    "timestampDeltaSecondsWarningGt": 2.0,
+    "translationStepMWarningGt": 0.25,
+    "azimuthDeltaRadWarningGt": 0.35,
+    "elevationDeltaRadWarningGt": 0.25,
+    "qualityScoreWarningLt": 0.5
+  },
+  "target_frame": {
+    "frame_id": "cap-1396",
+    "manifest_index": 282,
+    "metadata": {
+      "id": "cap-1396",
+      "timestamp": 1339628.778594208,
+      "azimuth": 3.2935947215854817,
+      "elevation": 0.44551418040551954,
+      "cameraRadiusM": 0.87067062088647,
+      "poseSource": "arkit",
+      "trackingState": "normal",
+      "quality": {
+        "accepted": true,
+        "score": 0.7764674201451368,
+        "kWindowWeight": 0.6869217112136229,
+        "laplacianVariance": 1124.71589997499,
+        "meanLuma": 112.2277038231318,
+        "rejectReasons": []
+      }
+    },
+    "quality": {
+      "accepted": true,
+      "score": 0.7764674201451368,
+      "kWindowWeight": 0.6869217112136229,
+      "laplacianVariance": 1124.71589997499,
+      "meanLuma": 112.2277038231318,
+      "rejectReasons": []
+    },
+    "window_roles": [
+      {
+        "windowID": "window_015",
+        "localSlot": 27,
+        "officialChunkSlot": 27,
+        "officialDownstream": false,
+        "withheldForNextOverlap": true,
+        "bridgeFrame": false,
+        "coreFrame": true
+      },
+      {
+        "windowID": "window_016",
+        "localSlot": 10,
+        "officialChunkSlot": 10,
+        "officialDownstream": true,
+        "withheldForNextOverlap": false,
+        "bridgeFrame": true,
+        "coreFrame": false
+      }
+    ],
+    "window_downstream_context": {
+      "windowID": "window_016",
+      "officialDownstream": true,
+      "officialSaveFrameCount": 17,
+      "saveIndex": 10,
+      "localChunkIndex": 10,
+      "previousOfficialSaveFrameID": "cap-1369",
+      "nextOfficialSaveFrameID": "cap-1413",
+      "officialSaveFrameIDs": [
+        "cap-1346",
+        "cap-1354",
+        "cap-1356",
+        "cap-1358",
+        "cap-1360",
+        "cap-1361",
+        "cap-1363",
+        "cap-1365",
+        "cap-1367",
+        "cap-1369",
+        "cap-1396",
+        "cap-1413",
+        "cap-1417",
+        "cap-1429",
+        "cap-1437",
+        "cap-1441",
+        "cap-1448"
+      ]
+    }
+  },
+  "adjacent_continuity": {
+    "previous_to_target": {
+      "fromFrameID": "cap-1369",
+      "toFrameID": "cap-1396",
+      "toManifestIndex": 282,
+      "timestampDeltaSeconds": 4.4669542498886585,
+      "translationStepM": 0.41002378556831426,
+      "azimuthDeltaRad": 0.2828885886364847,
+      "elevationDeltaRad": 0.38718296732736246,
+      "radiusDeltaM": 0.025308815605312507,
+      "toQualityScore": 0.7764674201451368,
+      "toKWindowWeight": 0.6869217112136229,
+      "highRisk": true,
+      "fromMetadata": {
+        "id": "cap-1369",
+        "timestamp": 1339624.311639958,
+        "azimuth": 3.5764833102219664,
+        "elevation": 0.05833121307815709,
+        "cameraRadiusM": 0.8959794364917825,
+        "poseSource": "arkit",
+        "trackingState": "normal",
+        "quality": {
+          "accepted": true,
+          "score": 0.7707641368839401,
+          "kWindowWeight": 0.7320361076529236,
+          "laplacianVariance": 806.9442565440246,
+          "meanLuma": 106.36624017218071,
+          "rejectReasons": []
+        }
+      },
+      "toMetadata": {
+        "id": "cap-1396",
+        "timestamp": 1339628.778594208,
+        "azimuth": 3.2935947215854817,
+        "elevation": 0.44551418040551954,
+        "cameraRadiusM": 0.87067062088647,
+        "poseSource": "arkit",
+        "trackingState": "normal",
+        "quality": {
+          "accepted": true,
+          "score": 0.7764674201451368,
+          "kWindowWeight": 0.6869217112136229,
+          "laplacianVariance": 1124.71589997499,
+          "meanLuma": 112.2277038231318,
+          "rejectReasons": []
+        }
+      }
+    },
+    "target_to_next": {
+      "fromFrameID": "cap-1396",
+      "toFrameID": "cap-1413",
+      "toManifestIndex": 283,
+      "timestampDeltaSeconds": 2.833515833131969,
+      "translationStepM": 0.1714592400095311,
+      "azimuthDeltaRad": 0.0339267124834004,
+      "elevationDeltaRad": 0.19457861468106724,
+      "radiusDeltaM": 0.05519286300660753,
+      "toQualityScore": 0.8827174112798758,
+      "toKWindowWeight": 0.8461429858422891,
+      "highRisk": true,
+      "fromMetadata": {
+        "id": "cap-1396",
+        "timestamp": 1339628.778594208,
+        "azimuth": 3.2935947215854817,
+        "elevation": 0.44551418040551954,
+        "cameraRadiusM": 0.87067062088647,
+        "poseSource": "arkit",
+        "trackingState": "normal",
+        "quality": {
+          "accepted": true,
+          "score": 0.7764674201451368,
+          "kWindowWeight": 0.6869217112136229,
+          "laplacianVariance": 1124.71589997499,
+          "meanLuma": 112.2277038231318,
+          "rejectReasons": []
+        }
+      },
+      "toMetadata": {
+        "id": "cap-1413",
+        "timestamp": 1339631.612110041,
+        "azimuth": 3.327521434068882,
+        "elevation": 0.6400927950865868,
+        "cameraRadiusM": 0.9258634838930775,
+        "poseSource": "arkit",
+        "trackingState": "normal",
+        "quality": {
+          "accepted": true,
+          "score": 0.8827174112798758,
+          "kWindowWeight": 0.8461429858422891,
+          "laplacianVariance": 1240.1883524635762,
+          "meanLuma": 116.26971308320664,
+          "rejectReasons": []
+        }
+      }
+    },
+    "breach_summary": {
+      "violated": true,
+      "violation_count": 3,
+      "violations": [
+        {
+          "metric": "timestampDeltaSeconds",
+          "op": ">",
+          "threshold": 2.0,
+          "value": 4.4669542498886585
+        },
+        {
+          "metric": "translationStepM",
+          "op": ">",
+          "threshold": 0.25,
+          "value": 0.41002378556831426
+        },
+        {
+          "metric": "elevationDeltaRad",
+          "op": ">",
+          "threshold": 0.25,
+          "value": 0.38718296732736246
+        }
+      ],
+      "quality_passed_despite_continuity": true
+    }
+  },
+  "pose_depth_context": {
+    "window_id": "window_016",
+    "target_slot": {
+      "slot": 10,
+      "frame_index": 282,
+      "step_from_previous": 0.410023957490921,
+      "cumulative_pose_diag": 0.6772668361663818,
+      "depth_p95": 2.441798448562622,
+      "confidence_median": 6.1796875
+    },
+    "growth_rows_around_target": [
+      {
+        "k": 10,
+        "last_frame_id": "cap-1369",
+        "pose_diag": 0.29698339104652405,
+        "npz_bbox_diag_p01_p99": 1.4300570487976074,
+        "npz_pca_minor_extent": 0.6780410514532298,
+        "depth_p95": 2.6065657138824463,
+        "confidence_median": 6.08203125
+      },
+      {
+        "k": 11,
+        "last_frame_id": "cap-1396",
+        "pose_diag": 0.6772668361663818,
+        "npz_bbox_diag_p01_p99": 1.5125658512115479,
+        "npz_pca_minor_extent": 0.7447642300847469,
+        "depth_p95": 2.5984623432159424,
+        "confidence_median": 6.11328125
+      },
+      {
+        "k": 12,
+        "last_frame_id": "cap-1413",
+        "pose_diag": 0.8342361450195312,
+        "npz_bbox_diag_p01_p99": 1.6381168365478516,
+        "npz_pca_minor_extent": 0.8995338056209855,
+        "depth_p95": 2.5984623432159424,
+        "confidence_median": 5.875
+      },
+      {
+        "k": 13,
+        "last_frame_id": "cap-1417",
+        "pose_diag": 0.868127703666687,
+        "npz_bbox_diag_p01_p99": 1.7525972127914429,
+        "npz_pca_minor_extent": 1.0072589792344062,
+        "depth_p95": 2.6025140285491943,
+        "confidence_median": 5.796875
+      }
+    ]
+  },
+  "window_summaries": {
+    "window_016": {
+      "frame_source": "depth_index",
+      "frame_count": 17,
+      "pose_scale": 0.7230838815049764,
+      "npz_bbox_ratio_vs_k10": 1.3965190442163795,
+      "npz_minor_ratio_vs_k10": 1.428882770403555,
+      "glb_bbox_ratio_vs_k10": 1.2409977557195655,
+      "glb_minor_ratio_vs_k10": 1.1525447135495752,
+      "pose_diag_ratio_vs_k10": 3.9269230271339732,
+      "largest_pose_step": 0.410023957490921,
+      "depth_p95_ratio_vs_k10": 0.9901554314572327
+    },
+    "window_017": {
+      "frame_source": "depth_index",
+      "frame_count": 17,
+      "pose_scale": 0.694218900009191,
+      "npz_bbox_ratio_vs_k10": 0.9481316854242545,
+      "npz_minor_ratio_vs_k10": 0.9695491516935039,
+      "glb_bbox_ratio_vs_k10": 0.9782950419543819,
+      "glb_minor_ratio_vs_k10": 0.9768384016867157,
+      "pose_diag_ratio_vs_k10": 1.529258860481266,
+      "largest_pose_step": 0.37145501375198364,
+      "depth_p95_ratio_vs_k10": 1.1909001555391414
+    }
+  },
+  "code_path_findings": [
+    {
+      "path": "lib/capture/dome/dome_target_points.dart",
+      "finding": "Hard rejects cover image sharpness, ROI sharpness, subject focus, focus/exposure stability, live radius outlier, angular velocity, brightness, and elevation; no previous-retained-frame dt/translation/elevation-delta hard gate is present."
+    },
+    {
+      "path": "lib/capture/dome/ring_buffer_cell.dart",
+      "finding": "Diversity eviction includes timestamp distance in the novelty metric, so a long pause can make a frame more retainable instead of less retainable."
+    },
+    {
+      "path": "packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+      "finding": "The official DA3 window plan records continuityAudit warnings but does not filter official timestamp-ordered chunks by those warnings."
+    }
+  ],
+  "plain_language": [
+    "cap-1396 不是因为模糊或曝光差进来的；它的 accepted=True，kWindowWeight 约 0.687。",
+    "真正危险的是上一张到它的连续性：cap-1369 -> cap-1396，dt=4.467s，translation=0.410m，elevation jump=0.387rad。",
+    "它违反的连续性阈值是：timestampDeltaSeconds=4.467 > 2.000, translationStepM=0.410 > 0.250, elevationDeltaRad=0.387 > 0.250。",
+    "在 window_016 official downstream 审计里，它位于 slot 10，加入后 cumulative pose diag 到 0.677。",
+    "所以现在的判断不是 DA3 downstream merge 漏了去重，而是移动端采集/保留策略允许了一个画质可用但运动连续性差的帧进入单个 K35 window。"
+  ]
+}

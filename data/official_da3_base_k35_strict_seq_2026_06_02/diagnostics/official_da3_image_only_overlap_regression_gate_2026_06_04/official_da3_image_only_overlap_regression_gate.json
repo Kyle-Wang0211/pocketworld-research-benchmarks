@@ -1,0 +1,123 @@
+{
+  "schema_version": "aether_official_da3_image_only_overlap_regression_gate_v1",
+  "date": "2026-06-04",
+  "purpose": "Fixed-target DA3BASE_476x742_N35 regression gate for the original single-K35-window same-surface overlap/thick-layer problem.",
+  "fixed_contract": {
+    "resource": "DA3BASE_476x742_N35_image_only",
+    "window_size": 35,
+    "height": 476,
+    "width": 742,
+    "camera_policy": "official_image_only_no_arkit_vio_inputs",
+    "preprocess_baseline": "photos_depth_same_input",
+    "comparison_policy": "old_pose_conditioned_is_reference_only",
+    "not_a_dimension_sweep": true
+  },
+  "official_downstream_parameters": {
+    "path": "results_output/frame_*.npz + npz_output_process.py",
+    "conf_threshold_coef": 0.5,
+    "sample_ratio": 0.015,
+    "cleanup": "none"
+  },
+  "inputs": {
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "pose_da3_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict",
+    "image_only_da3_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline",
+    "window_id": "window_016"
+  },
+  "preprocess_baseline": {
+    "baseline": "photos_depth_same_input",
+    "ready_for_this_gate": true,
+    "manifest_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/da3_input_manifest.json",
+    "manifest_exists": true,
+    "frame_count": 414,
+    "shape_matches_fixed_target": true,
+    "expected_tensor_source": "photos_depth fixed 742x476 images",
+    "official_api_preprocess_equivalent": false,
+    "coreml_same_input_parity": true,
+    "resize_mode": "direct_stretch",
+    "interpolation": "cubic",
+    "scale_x": 0.17566287878787878,
+    "scale_y": 0.20033670033670034,
+    "aspect_preserving": false,
+    "missing_depth_image_count_capped": 0,
+    "missing_depth_images_sample": [],
+    "blocking_reasons": []
+  },
+  "inspections": {
+    "pose_conditioned_reference": {
+      "dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict",
+      "exists": true,
+      "depth_index_exists": true,
+      "mac_da3_window_reports_exists": true,
+      "expected_contract": "pose_conditioned",
+      "detected_contract": null,
+      "detected_resource": "DA3BASE_476x742_N35_pose",
+      "dimensions": {
+        "window_size": 35,
+        "height": 476,
+        "width": 742
+      },
+      "window_id": "window_016",
+      "window_present": true,
+      "window_frame_count": 35,
+      "all_frame_outputs_exist": true,
+      "contract_matches": true,
+      "resource_matches": true,
+      "shape_matches_fixed_target": true,
+      "ready_for_window_metrics": true,
+      "missing_or_blocking_reasons": []
+    },
+    "image_only_candidate": {
+      "dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline",
+      "exists": false,
+      "depth_index_exists": false,
+      "mac_da3_window_reports_exists": false,
+      "expected_contract": "image_only",
+      "detected_contract": null,
+      "detected_resource": null,
+      "dimensions": {
+        "window_size": null,
+        "height": null,
+        "width": null
+      },
+      "window_id": "window_016",
+      "window_present": false,
+      "window_frame_count": 0,
+      "all_frame_outputs_exist": false,
+      "contract_matches": false,
+      "resource_matches": true,
+      "shape_matches_fixed_target": false,
+      "ready_for_window_metrics": false,
+      "missing_or_blocking_reasons": [
+        "da3_output_dir_missing",
+        "depth_index_missing",
+        "mac_da3_window_reports_missing",
+        "window_missing"
+      ]
+    }
+  },
+  "datasets": {},
+  "comparison": null,
+  "decision": {
+    "status": "blocked_missing_image_only_target_output",
+    "can_judge_original_thick_layer": false,
+    "reason": "Need DA3BASE_476x742_N35 image-only CoreML output for the same capture/window before testing whether overlap thickness is removed.",
+    "highest_priority_gap": "da3_output_dir_missing",
+    "do_not_change_dimension": true,
+    "do_not_use_arkit_vio_as_da3_input": true,
+    "do_not_claim_downstream_cleanup_fixed_upstream_overlap": true
+  },
+  "next_run_command": [
+    "python3.11",
+    "tools/python/da3_mac_window_export.py",
+    "--capture-dir",
+    "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "--out-dir",
+    "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline",
+    "--model",
+    "<path-to-DA3BASE_476x742_N35_image_only.mlpackage>",
+    "--compute-unit",
+    "all",
+    "--resume"
+  ]
+}

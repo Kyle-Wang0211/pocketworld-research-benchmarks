@@ -1,0 +1,62 @@
+{
+  "bench": "pw_lod",
+  "date": "2026-09-23",
+  "tag": "mac36M",
+  "lod_lib": "Aether3D feat/pointcloud-lod-core d89b74f34081904f2ece5b9bccca4c3384d4da28 (vendored verbatim)",
+  "adapter": "Apple M3 Pro | Metal driver on macOS Version 26.1 (Build 25B78)", "backend": 5,
+  "timestamp_query": true,
+  "octree_dir": "/Users/kaidongwang/Developer/pw_lod_data/oct_prod",
+  "octree": {"points_meta": 36232793, "points_in_nodes": 36232793, "nodes": 16227, "load_ms": 3.50, "root_center": [1.7207,-1.7932,5.1946], "R": 16.2291},
+  "target_leaf": {"index": 2857, "name": "r61216727", "level": 8, "points": 3090, "center": [2.70894,1.68388,2.08355], "radius": 0.063395},
+  "config": {"mode": "correct", "arms": "C,F,C2", "frames": 900, "rounds": 3, "pace": 1, "budget": 3630000, "cache_bytes": 163350000, "cache_floor_bytes": 54450000, "base_scale": 1.500, "fixed_px": 150.0, "w": 1179, "h": 2556, "cold_frames": 90, "target_ms": 33.3333},
+  "wgsl_fnv64": "3a80272201448b3e",
+  "correctness": {
+    "criteria": "nontrivial: coverage>0.01 && sat_mean>0.05 && min channel sd>10; matches_ref: sat_mean and min-sd within [0.8,1.25]x of the px=1 reference",
+    "neg_flat_grey": {"stat": {"hash":"8b5d632bd8ef8383","coverage":1.000000,"sat_mean":0.0000,"mean_rgb":[128.00,128.00,128.00],"sd_rgb":[0.00,0.00,0.00]}, "nontrivial": false, "expected": false},
+    "poses": [
+      {"pose": "overview", "segment": "hold_overview",
+       "eye": [1.72071,-1.79323,37.65291], "target": [1.72071,-1.79323,5.19464],
+       "ref": {"px": 1, "pts": 19999224, "nodes": 2342, "max_level": 6, "hit_budget": true, "dropped": 0, "stat": {"hash":"740a4943b14a812a","coverage":0.151524,"sat_mean":0.3689,"mean_rgb":[21.91,18.87,14.97],"sd_rgb":[56.65,49.41,41.83]}},
+       "jitter_floor_0p25px": {"frac": 0.0304, "psnr": 32.33, "psnr4": 41.93},
+       "fixed": [{"px": 150.0, "pts": 334704, "nodes": 45, "max_level": 3, "dropped": 0, "stat": {"hash":"35f292f34ffaf471","coverage":0.149701,"sat_mean":0.3683,"mean_rgb":[21.74,18.73,14.84],"sd_rgb":[56.58,49.32,41.68]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0548, "psnr": 29.55, "psnr4": 36.39}, "detail_preserved": false},
+                  {"px": 60.0, "pts": 3601519, "nodes": 304, "max_level": 4, "dropped": 0, "stat": {"hash":"3e7d8469506b6584","coverage":0.151479,"sat_mean":0.3691,"mean_rgb":[21.91,18.87,14.97],"sd_rgb":[56.67,49.41,41.82]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0176, "psnr": 37.96, "psnr4": 47.77}, "detail_preserved": true},
+                  {"px": 30.0, "pts": 3624679, "nodes": 309, "max_level": 4, "dropped": 0, "stat": {"hash":"4c0927bc9d210f00","coverage":0.151480,"sat_mean":0.3691,"mean_rgb":[21.91,18.87,14.97],"sd_rgb":[56.67,49.41,41.82]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0175, "psnr": 37.97, "psnr4": 47.78}, "detail_preserved": true}],
+       "deterministic": true,
+       "controller": {"frames": 150, "px_final": 7.85, "last_wall_ms": 10.02, "pts": 3624679, "nodes": 309, "max_level": 4, "dropped": 0, "stat": {"hash":"4c0927bc9d210f00","coverage":0.151480,"sat_mean":0.3691,"mean_rgb":[21.91,18.87,14.97],"sd_rgb":[56.67,49.41,41.82]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0175, "psnr": 37.97, "psnr4": 47.78}, "detail_preserved": true}
+      },
+      {"pose": "leaf", "segment": "hold_leaf",
+       "eye": [2.70894,1.68388,2.27373], "target": [2.70894,1.68388,2.08355],
+       "ref": {"px": 1, "pts": 815730, "nodes": 149, "max_level": 8, "hit_budget": false, "dropped": 0, "stat": {"hash":"980bdc0801d112d3","coverage":0.153319,"sat_mean":0.5177,"mean_rgb":[29.14,22.45,14.13],"sd_rgb":[68.77,53.17,34.22]}},
+       "jitter_floor_0p25px": {"frac": 0.0254, "psnr": 20.93, "psnr4": 29.73},
+       "fixed": [{"px": 150.0, "pts": 815730, "nodes": 149, "max_level": 8, "dropped": 0, "stat": {"hash":"980bdc0801d112d3","coverage":0.153319,"sat_mean":0.5177,"mean_rgb":[29.14,22.45,14.13],"sd_rgb":[68.77,53.17,34.22]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0000, "psnr": 99.00, "psnr4": 99.00}, "detail_preserved": true},
+                  {"px": 60.0, "pts": 815730, "nodes": 149, "max_level": 8, "dropped": 0, "stat": {"hash":"980bdc0801d112d3","coverage":0.153319,"sat_mean":0.5177,"mean_rgb":[29.14,22.45,14.13],"sd_rgb":[68.77,53.17,34.22]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0000, "psnr": 99.00, "psnr4": 99.00}, "detail_preserved": true},
+                  {"px": 30.0, "pts": 815730, "nodes": 149, "max_level": 8, "dropped": 0, "stat": {"hash":"980bdc0801d112d3","coverage":0.153319,"sat_mean":0.5177,"mean_rgb":[29.14,22.45,14.13],"sd_rgb":[68.77,53.17,34.22]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0000, "psnr": 99.00, "psnr4": 99.00}, "detail_preserved": true}],
+       "deterministic": true,
+       "controller": {"frames": 150, "px_final": 7.85, "last_wall_ms": 2.48, "pts": 815730, "nodes": 149, "max_level": 8, "dropped": 0, "stat": {"hash":"980bdc0801d112d3","coverage":0.153319,"sat_mean":0.5177,"mean_rgb":[29.14,22.45,14.13],"sd_rgb":[68.77,53.17,34.22]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.0000, "psnr": 99.00, "psnr4": 99.00}, "detail_preserved": true},
+       "leaf_check": {"selected": true, "drawn": true, "pixels_changed_by_leaf": 26196, "neg_same_minus_leaf_pixels": 0, "leaf_only_coverage": 0.009133, "leaf_only_px": 27522,
+          "neg_no_origin": {"stat": {"hash":"f575d19307c017df","coverage":0.000077,"sat_mean":0.3238,"mean_rgb":[0.01,0.01,0.01],"sd_rgb":[1.42,1.26,1.07]}, "diff_vs_ref_frac": 0.1534, "matches_ref": false}, "with_origin_diff_vs_ref_frac": 0.0000}
+      },
+      {"pose": "orbit_mid", "segment": "orbit",
+       "eye": [1.72071,-1.79323,-4.54284], "target": [1.72071,-1.79323,5.19464],
+       "ref": {"px": 1, "pts": 19996410, "nodes": 3576, "max_level": 7, "hit_budget": true, "dropped": 0, "stat": {"hash":"781bfecf0f1bbd1c","coverage":0.637752,"sat_mean":0.4251,"mean_rgb":[90.17,74.97,54.43],"sd_rgb":[85.41,70.02,54.29]}},
+       "jitter_floor_0p25px": {"frac": 0.1356, "psnr": 26.74, "psnr4": 36.62},
+       "fixed": [{"px": 150.0, "pts": 2496326, "nodes": 199, "max_level": 5, "dropped": 0, "stat": {"hash":"0d30c7c8e7c55c77","coverage":0.634499,"sat_mean":0.4259,"mean_rgb":[89.60,74.51,54.04],"sd_rgb":[85.53,70.12,54.28]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.2256, "psnr": 24.92, "psnr4": 31.32}, "detail_preserved": false},
+                  {"px": 60.0, "pts": 3614831, "nodes": 262, "max_level": 5, "dropped": 0, "stat": {"hash":"2d64354286c8eb8f","coverage":0.636916,"sat_mean":0.4256,"mean_rgb":[90.03,74.84,54.30],"sd_rgb":[85.49,70.08,54.27]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1782, "psnr": 27.33, "psnr4": 34.58}, "detail_preserved": false},
+                  {"px": 30.0, "pts": 3614831, "nodes": 262, "max_level": 5, "dropped": 0, "stat": {"hash":"2d64354286c8eb8f","coverage":0.636916,"sat_mean":0.4256,"mean_rgb":[90.03,74.84,54.30],"sd_rgb":[85.49,70.08,54.27]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1782, "psnr": 27.33, "psnr4": 34.58}, "detail_preserved": false}],
+       "deterministic": true,
+       "controller": {"frames": 150, "px_final": 7.85, "last_wall_ms": 8.95, "pts": 3614831, "nodes": 262, "max_level": 5, "dropped": 0, "stat": {"hash":"2d64354286c8eb8f","coverage":0.636916,"sat_mean":0.4256,"mean_rgb":[90.03,74.84,54.30],"sd_rgb":[85.49,70.08,54.27]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1782, "psnr": 27.33, "psnr4": 34.58}, "detail_preserved": false}
+      },
+      {"pose": "pan_mid", "segment": "pan",
+       "eye": [1.72071,-1.79323,10.87484], "target": [1.72071,-1.79323,5.19464],
+       "ref": {"px": 1, "pts": 19999564, "nodes": 6423, "max_level": 8, "hit_budget": true, "dropped": 0, "stat": {"hash":"0dcca55a2bf1359d","coverage":0.645732,"sat_mean":0.4788,"mean_rgb":[95.89,77.73,54.53],"sd_rgb":[88.15,71.16,55.70]}},
+       "jitter_floor_0p25px": {"frac": 0.0967, "psnr": 25.07, "psnr4": 35.32},
+       "fixed": [{"px": 150.0, "pts": 3375770, "nodes": 273, "max_level": 5, "dropped": 0, "stat": {"hash":"4088bca333572335","coverage":0.635424,"sat_mean":0.4799,"mean_rgb":[94.70,76.36,52.91],"sd_rgb":[88.36,71.09,54.78]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1993, "psnr": 22.68, "psnr4": 29.96}, "detail_preserved": false},
+                  {"px": 60.0, "pts": 3589706, "nodes": 290, "max_level": 5, "dropped": 0, "stat": {"hash":"9d6dd595728568f4","coverage":0.636716,"sat_mean":0.4799,"mean_rgb":[94.90,76.54,53.08],"sd_rgb":[88.37,71.10,54.84]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1859, "psnr": 23.22, "psnr4": 30.51}, "detail_preserved": false},
+                  {"px": 30.0, "pts": 3589706, "nodes": 290, "max_level": 5, "dropped": 0, "stat": {"hash":"9d6dd595728568f4","coverage":0.636716,"sat_mean":0.4799,"mean_rgb":[94.90,76.54,53.08],"sd_rgb":[88.37,71.10,54.84]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1859, "psnr": 23.22, "psnr4": 30.51}, "detail_preserved": false}],
+       "deterministic": true,
+       "controller": {"frames": 150, "px_final": 8.16, "last_wall_ms": 7.98, "pts": 3589706, "nodes": 290, "max_level": 5, "dropped": 0, "stat": {"hash":"9d6dd595728568f4","coverage":0.636716,"sat_mean":0.4799,"mean_rgb":[94.90,76.54,53.08],"sd_rgb":[88.37,71.10,54.84]}, "nontrivial": true, "matches_ref": true, "diff_vs_ref": {"frac": 0.1859, "psnr": 23.22, "psnr4": 30.51}, "detail_preserved": false}
+      }
+    ]
+  },
+  "wgpu_errors": ""
+}

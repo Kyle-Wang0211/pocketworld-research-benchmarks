@@ -1,0 +1,665 @@
+{
+  "schema_version": "aether_da3_image_only_coreml_target_export_gate_v1",
+  "date": "2026-06-04",
+  "purpose": "Preflight the fixed DA3BASE_476x742_N35 image-only CoreML export without running another conversion or changing K/resolution.",
+  "fixed_target": {
+    "resource": "DA3BASE_476x742_N35_image_only",
+    "pose_compat_resource": "DA3BASE_476x742_N35_pose",
+    "window_size": 35,
+    "height": 476,
+    "width": 742,
+    "patch_size": 14,
+    "dimension_sweep": "disabled",
+    "official_semantics": "image_only_no_extrinsics_no_intrinsics"
+  },
+  "model": {
+    "model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "config_exists": true,
+    "model_name": "da3-base",
+    "backbone_name": "vitb",
+    "patch_size": 14,
+    "num_heads": 12,
+    "num_heads_source": "official vit preset mapping",
+    "has_cam_dec": true,
+    "has_cam_enc": true
+  },
+  "system": {
+    "hw_model": "Mac15,6",
+    "physical_cpu": 12,
+    "logical_cpu": 12,
+    "physical_memory_bytes": 19327352832,
+    "physical_memory_gib": 18.0
+  },
+  "app_artifacts": {
+    "coreml_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "target_mlpackage": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_image_only.mlpackage",
+    "target_mlpackage_exists": false,
+    "target_mlmodelc": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_image_only.mlmodelc",
+    "target_mlmodelc_exists": false,
+    "pose_compat_mlpackage_exists": true
+  },
+  "target_resource_floor": {
+    "height": 476,
+    "width": 742,
+    "window_size": 35,
+    "patch_grid": [
+      34,
+      53
+    ],
+    "token_count_per_view_with_cls": 1803,
+    "global_tokens": 63105,
+    "num_heads": 12,
+    "attention_score_elements_no_heads": 3982241025,
+    "attention_score_elements_with_heads": 47786892300,
+    "attention_score_buffer_gib": {
+      "float16": 89.01002313941717,
+      "float32": 178.02004627883434
+    }
+  },
+  "existing_static_export_probes": {
+    "probe_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04",
+    "probe_count": 6,
+    "rows": [
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_112x112_convert_probe.json",
+        "height": 112,
+        "width": 112,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "pass",
+        "conversion_elapsed_s": 33.65663158299867,
+        "conversion_peak_memory_footprint_bytes": null,
+        "conversion_max_rss_bytes": null,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_112x112_image_only.mlpackage",
+        "package_exists": true,
+        "package_size_bytes": 268035732,
+        "dry_run": {
+          "status": "pass",
+          "elapsed_s": 2.20634337500087,
+          "output_shapes": [
+            [
+              1,
+              35,
+              112,
+              112
+            ],
+            [
+              1,
+              35,
+              112,
+              112
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "output_dtypes": [
+            "float32",
+            "float32",
+            "float32",
+            "float32"
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "shape_resource": {
+          "height": 112,
+          "width": 112,
+          "window_size": 35,
+          "patch_grid": [
+            8,
+            8
+          ],
+          "token_count_per_view_with_cls": 65,
+          "global_tokens": 2275,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 5175625,
+          "attention_score_elements_with_heads": 62107500,
+          "attention_score_buffer_gib": {
+            "float16": 0.11568423360586166,
+            "float32": 0.23136846721172333
+          }
+        }
+      },
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_168x280_convert_probe.json",
+        "height": 168,
+        "width": 280,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "pass",
+        "conversion_elapsed_s": 72.74757350000436,
+        "conversion_peak_memory_footprint_bytes": null,
+        "conversion_max_rss_bytes": null,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_168x280_image_only.mlpackage",
+        "package_exists": true,
+        "package_size_bytes": 442954929,
+        "dry_run": {
+          "status": "pass",
+          "elapsed_s": 8.790290042001288,
+          "output_shapes": [
+            [
+              1,
+              35,
+              168,
+              280
+            ],
+            [
+              1,
+              35,
+              168,
+              280
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "output_dtypes": [
+            "float32",
+            "float32",
+            "float32",
+            "float32"
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "shape_resource": {
+          "height": 168,
+          "width": 280,
+          "window_size": 35,
+          "patch_grid": [
+            12,
+            20
+          ],
+          "token_count_per_view_with_cls": 241,
+          "global_tokens": 8435,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 71149225,
+          "attention_score_elements_with_heads": 853790700,
+          "attention_score_buffer_gib": {
+            "float16": 1.5903091058135033,
+            "float32": 3.1806182116270065
+          }
+        }
+      },
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_252x392_convert_probe.json",
+        "height": 252,
+        "width": 392,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "pass",
+        "conversion_elapsed_s": 131.7761102499935,
+        "conversion_peak_memory_footprint_bytes": null,
+        "conversion_max_rss_bytes": null,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_252x392_image_only.mlpackage",
+        "package_exists": true,
+        "package_size_bytes": 705333200,
+        "dry_run": {
+          "status": "pass",
+          "elapsed_s": 16.42594074999215,
+          "output_shapes": [
+            [
+              1,
+              35,
+              252,
+              392
+            ],
+            [
+              1,
+              35,
+              252,
+              392
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "output_dtypes": [
+            "float32",
+            "float32",
+            "float32",
+            "float32"
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "shape_resource": {
+          "height": 252,
+          "width": 392,
+          "window_size": 35,
+          "patch_grid": [
+            18,
+            28
+          ],
+          "token_count_per_view_with_cls": 505,
+          "global_tokens": 17675,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 312405625,
+          "attention_score_elements_with_heads": 3748867500,
+          "attention_score_buffer_gib": {
+            "float16": 6.982809863984585,
+            "float32": 13.96561972796917
+          }
+        }
+      },
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_28x28_convert_probe.json",
+        "height": 28,
+        "width": 28,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "pass",
+        "conversion_elapsed_s": 35.44323729199823,
+        "conversion_peak_memory_footprint_bytes": null,
+        "conversion_max_rss_bytes": null,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_28x28_image_only.mlpackage",
+        "package_exists": true,
+        "package_size_bytes": 208404372,
+        "dry_run": {
+          "status": "pass",
+          "elapsed_s": 0.6263543749955716,
+          "output_shapes": [
+            [
+              1,
+              35,
+              28,
+              28
+            ],
+            [
+              1,
+              35,
+              28,
+              28
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "output_dtypes": [
+            "float32",
+            "float32",
+            "float32",
+            "float32"
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "shape_resource": {
+          "height": 28,
+          "width": 28,
+          "window_size": 35,
+          "patch_grid": [
+            2,
+            2
+          ],
+          "token_count_per_view_with_cls": 5,
+          "global_tokens": 175,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 30625,
+          "attention_score_elements_with_heads": 367500,
+          "attention_score_buffer_gib": {
+            "float16": 0.0006845220923423767,
+            "float32": 0.0013690441846847534
+          }
+        }
+      },
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_336x532_convert_probe_failed.json",
+        "height": 336,
+        "width": 532,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "fail",
+        "conversion_elapsed_s": 104.49,
+        "conversion_peak_memory_footprint_bytes": 37624360752,
+        "conversion_max_rss_bytes": 9013411840,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_336x532_image_only.mlpackage",
+        "package_exists": false,
+        "package_size_bytes": null,
+        "dry_run": {
+          "status": "pass",
+          "source_report": "official_da3_image_only_coreml_static_k35_336x532_dry_run.json",
+          "elapsed_s": 38.142336459000944,
+          "output_shapes": [
+            [
+              1,
+              35,
+              336,
+              532
+            ],
+            [
+              1,
+              35,
+              336,
+              532
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "time_l_peak_memory_footprint_bytes": 14991601280,
+          "time_l_maximum_resident_set_size_bytes": 6526943232
+        },
+        "shape_resource": {
+          "height": 336,
+          "width": 532,
+          "window_size": 35,
+          "patch_grid": [
+            24,
+            38
+          ],
+          "token_count_per_view_with_cls": 913,
+          "global_tokens": 31955,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 1021122025,
+          "attention_score_elements_with_heads": 12253464300,
+          "attention_score_buffer_gib": {
+            "float16": 22.823855839669704,
+            "float32": 45.64771167933941
+          }
+        }
+      },
+      {
+        "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_56x56_convert_probe.json",
+        "height": 56,
+        "width": 56,
+        "window_size": 35,
+        "precision": "float16",
+        "conversion_status": "pass",
+        "conversion_elapsed_s": 28.856502332986565,
+        "conversion_peak_memory_footprint_bytes": null,
+        "conversion_max_rss_bytes": null,
+        "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_56x56_image_only.mlpackage",
+        "package_exists": true,
+        "package_size_bytes": 220330644,
+        "dry_run": {
+          "status": "pass",
+          "elapsed_s": 0.9339637080120156,
+          "output_shapes": [
+            [
+              1,
+              35,
+              56,
+              56
+            ],
+            [
+              1,
+              35,
+              56,
+              56
+            ],
+            [
+              1,
+              35,
+              3,
+              4
+            ],
+            [
+              1,
+              35,
+              3,
+              3
+            ]
+          ],
+          "output_dtypes": [
+            "float32",
+            "float32",
+            "float32",
+            "float32"
+          ],
+          "finite": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "shape_resource": {
+          "height": 56,
+          "width": 56,
+          "window_size": 35,
+          "patch_grid": [
+            4,
+            4
+          ],
+          "token_count_per_view_with_cls": 17,
+          "global_tokens": 595,
+          "num_heads": 12,
+          "attention_score_elements_no_heads": 354025,
+          "attention_score_elements_with_heads": 4248300,
+          "attention_score_buffer_gib": {
+            "float16": 0.007913075387477875,
+            "float32": 0.01582615077495575
+          }
+        }
+      }
+    ],
+    "highest_conversion_pass": {
+      "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_252x392_convert_probe.json",
+      "height": 252,
+      "width": 392,
+      "window_size": 35,
+      "precision": "float16",
+      "conversion_status": "pass",
+      "conversion_elapsed_s": 131.7761102499935,
+      "conversion_peak_memory_footprint_bytes": null,
+      "conversion_max_rss_bytes": null,
+      "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_252x392_image_only.mlpackage",
+      "package_exists": true,
+      "package_size_bytes": 705333200,
+      "shape_resource": {
+        "height": 252,
+        "width": 392,
+        "window_size": 35,
+        "patch_grid": [
+          18,
+          28
+        ],
+        "token_count_per_view_with_cls": 505,
+        "global_tokens": 17675,
+        "num_heads": 12,
+        "attention_score_elements_no_heads": 312405625,
+        "attention_score_elements_with_heads": 3748867500,
+        "attention_score_buffer_gib": {
+          "float16": 6.982809863984585,
+          "float32": 13.96561972796917
+        }
+      }
+    },
+    "highest_conversion_fail": {
+      "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_336x532_convert_probe_failed.json",
+      "height": 336,
+      "width": 532,
+      "window_size": 35,
+      "precision": "float16",
+      "conversion_status": "fail",
+      "conversion_elapsed_s": 104.49,
+      "conversion_peak_memory_footprint_bytes": 37624360752,
+      "conversion_max_rss_bytes": 9013411840,
+      "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_336x532_image_only.mlpackage",
+      "package_exists": false,
+      "package_size_bytes": null,
+      "shape_resource": {
+        "height": 336,
+        "width": 532,
+        "window_size": 35,
+        "patch_grid": [
+          24,
+          38
+        ],
+        "token_count_per_view_with_cls": 913,
+        "global_tokens": 31955,
+        "num_heads": 12,
+        "attention_score_elements_no_heads": 1021122025,
+        "attention_score_elements_with_heads": 12253464300,
+        "attention_score_buffer_gib": {
+          "float16": 22.823855839669704,
+          "float32": 45.64771167933941
+        }
+      }
+    }
+  },
+  "target_estimates": {
+    "from_highest_pass": {
+      "attention_elements_ratio": 12.747020880305852,
+      "rough_package_size_bytes": 2518249028.910891,
+      "rough_package_size_gib": 2.3453021691282196
+    },
+    "from_highest_fail": {
+      "attention_elements_ratio": 3.8998679173529727,
+      "rough_conversion_peak_memory_footprint_bytes": 146730037407.63916,
+      "rough_conversion_peak_memory_footprint_gib": 136.65299621190798
+    }
+  },
+  "decision": {
+    "status": "fail_local_target_conversion_preflight",
+    "can_run_image_only_overlap_gate": false,
+    "highest_priority_gap": "DA3BASE_476x742_N35_image_only.mlpackage_or_mlmodelc_missing",
+    "target_coreml_semantics_known": true,
+    "highest_full_conversion_pass": {
+      "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_252x392_convert_probe.json",
+      "height": 252,
+      "width": 392,
+      "window_size": 35,
+      "precision": "float16",
+      "conversion_status": "pass",
+      "conversion_elapsed_s": 131.7761102499935,
+      "conversion_peak_memory_footprint_bytes": null,
+      "conversion_max_rss_bytes": null,
+      "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_252x392_image_only.mlpackage",
+      "package_exists": true,
+      "package_size_bytes": 705333200,
+      "shape_resource": {
+        "height": 252,
+        "width": 392,
+        "window_size": 35,
+        "patch_grid": [
+          18,
+          28
+        ],
+        "token_count_per_view_with_cls": 505,
+        "global_tokens": 17675,
+        "num_heads": 12,
+        "attention_score_elements_no_heads": 312405625,
+        "attention_score_elements_with_heads": 3748867500,
+        "attention_score_buffer_gib": {
+          "float16": 6.982809863984585,
+          "float32": 13.96561972796917
+        }
+      }
+    },
+    "highest_conversion_failure": {
+      "report": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/official_da3_image_only_coreml_static_k35_336x532_convert_probe_failed.json",
+      "height": 336,
+      "width": 532,
+      "window_size": 35,
+      "precision": "float16",
+      "conversion_status": "fail",
+      "conversion_elapsed_s": 104.49,
+      "conversion_peak_memory_footprint_bytes": 37624360752,
+      "conversion_max_rss_bytes": 9013411840,
+      "package_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_static_export_probe_2026_06_04/DA3BASE_static_K35_336x532_image_only.mlpackage",
+      "package_exists": false,
+      "package_size_bytes": null,
+      "shape_resource": {
+        "height": 336,
+        "width": 532,
+        "window_size": 35,
+        "patch_grid": [
+          24,
+          38
+        ],
+        "token_count_per_view_with_cls": 913,
+        "global_tokens": 31955,
+        "num_heads": 12,
+        "attention_score_elements_no_heads": 1021122025,
+        "attention_score_elements_with_heads": 12253464300,
+        "attention_score_buffer_gib": {
+          "float16": 22.823855839669704,
+          "float32": 45.64771167933941
+        }
+      }
+    },
+    "local_memory_insufficient_for_attention_floor": true,
+    "target_fp16_attention_score_buffer_gib": 89.01002313941717,
+    "local_physical_memory_gib": 18.0,
+    "highest_failed_conversion_peak_gib": 35.0404165238142,
+    "rough_target_conversion_peak_from_failed_probe_gib": 136.65299621190798,
+    "do_not_change_dimension": true,
+    "do_not_use_pose_or_arkit_fallback": true,
+    "interpretation": "image-only wrapper 的官方语义已经明确，中等 K35 CoreML 导出也已经通过；但固定目标模型包仍缺失。在没有更大内存导出环境或 memory-efficient attention/conversion 路径之前，本机继续硬转 476x742 不是合适的下一步。"
+  },
+  "next_actions": [
+    "使用更大内存的 Mac/CoreML 导出环境生成固定 476x742 K35 image-only 包，或者等待/获得官方 memory-efficient 导出路径。",
+    "A100/H100 只用于单独关闭官方 PyTorch full-resolution reference gate；CoreML 打包仍需要 CoreML 可用的导出/编译环境。",
+    "不要用更小 probe 包替代目标，也不要为了 official baseline 回退到 _pose/ARKit。"
+  ]
+}

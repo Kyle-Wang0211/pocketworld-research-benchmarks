@@ -1,0 +1,1142 @@
+{
+  "schema_version": "pocketworld_official_loop_sim3_optimizer_from_adjacent_v1",
+  "route": "K35 official-save sequential CoreML -> verified official adjacent dense Sim3 -> SelaVPR++ loop chunks -> official loop dense Sim3 -> Sim3LoopOptimizer",
+  "inputs": {
+    "sequential_capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_official_save_overlap18",
+    "sequential_da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap18_official_postprocess",
+    "adjacent_sim3_json": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_adjacent_dense_sim3_2026_06_04/overlap18/official_k35_adjacent_dense_sim3_diagnostics.json",
+    "vpr_backend_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/loop_vpr_full_414_threshold080_diagnostic/selavprpp",
+    "confidence_mode": "streaming_subtract_one"
+  },
+  "license_notes": {
+    "da3_streaming_code": "Apache-2.0 headers in local DA3-Streaming sources",
+    "selavprpp": "MIT license in local tools/vendor/vpr/SelaVPRplusplus/LICENSE",
+    "caution": "This is not legal advice; mobile production still needs dependency/weights license audit."
+  },
+  "retrieval": {
+    "backend": "selavprpp",
+    "parameters": {
+      "top_k": 5,
+      "similarity_threshold": 0.8,
+      "min_frame_gap": 10,
+      "nms_threshold": 25,
+      "loop_half_window": 8,
+      "window_size": 35
+    },
+    "raw_loop_pair_count": 12,
+    "loop_result_count": 5,
+    "threshold_sweep": [
+      {
+        "threshold": 0.7,
+        "raw_pair_count": 170,
+        "nms_pair_count": 71
+      },
+      {
+        "threshold": 0.75,
+        "raw_pair_count": 83,
+        "nms_pair_count": 45
+      },
+      {
+        "threshold": 0.8,
+        "raw_pair_count": 12,
+        "nms_pair_count": 12
+      },
+      {
+        "threshold": 0.85,
+        "raw_pair_count": 0,
+        "nms_pair_count": 0
+      },
+      {
+        "threshold": 0.9,
+        "raw_pair_count": 0,
+        "nms_pair_count": 0
+      }
+    ]
+  },
+  "sequential_window_count": 24,
+  "loop_window_count": 5,
+  "adjacent": {
+    "edge_count": 23,
+    "estimated_count": 23,
+    "rmse_mean": 0.0737250631263915,
+    "p90_mean": 0.11742986946093777,
+    "scale_mean": 1.0114188521056686,
+    "scale_std": 0.05041606022871378,
+    "scale_min": 0.9145357500713958,
+    "scale_max": 1.0989432159037482,
+    "rotation_angle_deg_max": 4.705758586581265,
+    "translation_norm_max": 0.26475914466197054
+  },
+  "loop": {
+    "edge_count": 5,
+    "estimated_count": 5,
+    "scale_mean": 0.9359128110735204,
+    "scale_std": 0.04212284066568998,
+    "scale_min": 0.8941355659673625,
+    "scale_max": 1.0074252136628281,
+    "rotation_angle_deg_max": 3.01517954481157,
+    "translation_norm_max": 0.25725565479566276,
+    "a_rmse_mean": 0.056014690397834965,
+    "b_rmse_mean": 0.07248504281504171,
+    "a_p90_mean": 0.08778345599804296,
+    "b_p90_mean": 0.11616411527149113
+  },
+  "optimizer": {
+    "status": "completed",
+    "sequential_transform_count": 23,
+    "optimized_transform_count": 23,
+    "loop_constraint_count": 5,
+    "pre_scale_mean": 1.0114188521056686,
+    "post_scale_mean": 1.0075315522110981,
+    "pre_scale_std": 0.05041606022871378,
+    "post_scale_std": 0.05110408594356637,
+    "elapsed_s": 0.461,
+    "optimized_transforms": [
+      {
+        "edgeIndex": 0,
+        "sim3_scale": 1.0797433853149414,
+        "sim3_rotation": [
+          [
+            0.9999956775734575,
+            0.002867010229615065,
+            -0.0006519867674579958
+          ],
+          [
+            -0.0028797884102599396,
+            0.999785207761829,
+            -0.020524257826987004
+          ],
+          [
+            0.0005930034686157269,
+            0.020526046696326773,
+            0.9997891426465415
+          ]
+        ],
+        "sim3_translation": [
+          -0.1519000232219696,
+          0.045770615339279175,
+          -0.1547638177871704
+        ],
+        "sim3_rotation_angle_deg": 1.188093199405763,
+        "sim3_translation_norm": 0.2216312289237976
+      },
+      {
+        "edgeIndex": 1,
+        "sim3_scale": 1.0094716548919678,
+        "sim3_rotation": [
+          [
+            0.9999731712216126,
+            -0.003943987877748401,
+            -0.0061726652762030924
+          ],
+          [
+            0.003964586172903725,
+            0.9999866019917283,
+            0.0033283469643018556
+          ],
+          [
+            0.006159455614702516,
+            -0.003352729732222751,
+            0.999975409852599
+          ]
+        ],
+        "sim3_translation": [
+          -0.015545248985290527,
+          0.0010490324348211288,
+          -0.029361724853515625
+        ],
+        "sim3_rotation_angle_deg": 0.4612836351427588,
+        "sim3_translation_norm": 0.03323952853679657
+      },
+      {
+        "edgeIndex": 2,
+        "sim3_scale": 1.003790259361267,
+        "sim3_rotation": [
+          [
+            0.9997513977187872,
+            -0.019562730736536527,
+            -0.010697771985862666
+          ],
+          [
+            0.019432903361403228,
+            0.9997378434467235,
+            -0.012108123200619771
+          ],
+          [
+            0.010931835448729646,
+            0.011897224324387294,
+            0.9998694669941159
+          ]
+        ],
+        "sim3_translation": [
+          -0.018803492188453674,
+          -0.036070317029953,
+          -0.026003718376159668
+        ],
+        "sim3_rotation_angle_deg": 1.450982233298165,
+        "sim3_translation_norm": 0.048278696835041046
+      },
+      {
+        "edgeIndex": 3,
+        "sim3_scale": 1.0660730600357056,
+        "sim3_rotation": [
+          [
+            0.9996823006157721,
+            -0.024579668743770575,
+            0.005580118278640498
+          ],
+          [
+            0.02445489530384769,
+            0.9994713449422169,
+            0.0214240223831556
+          ],
+          [
+            -0.006103763694226558,
+            -0.021280754776149546,
+            0.9997549067371074
+          ]
+        ],
+        "sim3_translation": [
+          -0.18973089754581451,
+          -0.06896563619375229,
+          -0.11444342136383057
+        ],
+        "sim3_rotation_angle_deg": 1.8929705208831917,
+        "sim3_translation_norm": 0.23205897212028503
+      },
+      {
+        "edgeIndex": 4,
+        "sim3_scale": 0.951825737953186,
+        "sim3_rotation": [
+          [
+            0.9999941144929821,
+            0.002256620540701933,
+            0.0025843070892574496
+          ],
+          [
+            -0.0022651775750719373,
+            0.9999919463821666,
+            0.0033130260124697012
+          ],
+          [
+            -0.0025768100336841697,
+            -0.0033188604280975404,
+            0.9999911725687927
+          ]
+        ],
+        "sim3_translation": [
+          0.1007348895072937,
+          -0.015396784991025925,
+          0.07590731978416443
+        ],
+        "sim3_rotation_angle_deg": 0.2733831315055138,
+        "sim3_translation_norm": 0.1270688772201538
+      },
+      {
+        "edgeIndex": 5,
+        "sim3_scale": 1.0913310050964355,
+        "sim3_rotation": [
+          [
+            0.9997189621758911,
+            0.022471514282914357,
+            -0.007551669470514106
+          ],
+          [
+            -0.022420638105050093,
+            0.9997258012768826,
+            0.006755534638895441
+          ],
+          [
+            0.007701405905514549,
+            -0.006584322829852483,
+            0.999948666202396
+          ]
+        ],
+        "sim3_translation": [
+          -0.16878101229667664,
+          0.04089268296957016,
+          -0.13802224397659302
+        ],
+        "sim3_rotation_angle_deg": 1.4111533016636904,
+        "sim3_translation_norm": 0.22183187305927277
+      },
+      {
+        "edgeIndex": 6,
+        "sim3_scale": 0.9508008360862732,
+        "sim3_rotation": [
+          [
+            0.9997293100791299,
+            0.022118842959963567,
+            0.007215494080079024
+          ],
+          [
+            -0.021952704429602808,
+            0.9995092801939016,
+            -0.022344520010401582
+          ],
+          [
+            -0.007706188223348979,
+            0.02218007196519456,
+            0.9997242915277618
+          ]
+        ],
+        "sim3_translation": [
+          0.1046857237815857,
+          0.07632654905319214,
+          0.12713095545768738
+        ],
+        "sim3_rotation_angle_deg": 1.8452513388467453,
+        "sim3_translation_norm": 0.18151342868804932
+      },
+      {
+        "edgeIndex": 7,
+        "sim3_scale": 0.9700334072113037,
+        "sim3_rotation": [
+          [
+            0.9999705087776072,
+            0.0064363258767279885,
+            -0.004189902655411664
+          ],
+          [
+            -0.006246136141380389,
+            0.9990153578448918,
+            0.04392380417661961
+          ],
+          [
+            0.004468485018057656,
+            -0.043896338107537465,
+            0.9990260978284762
+          ]
+        ],
+        "sim3_translation": [
+          0.06858034431934357,
+          -0.05566924065351486,
+          0.006613433361053467
+        ],
+        "sim3_rotation_angle_deg": 2.554881059207617,
+        "sim3_translation_norm": 0.08857802301645279
+      },
+      {
+        "edgeIndex": 8,
+        "sim3_scale": 0.918402910232544,
+        "sim3_rotation": [
+          [
+            0.9996683939670139,
+            -0.005706789637397441,
+            -0.025110449128715084
+          ],
+          [
+            0.006587416908209949,
+            0.9993610979965545,
+            0.03512836104344354
+          ],
+          [
+            0.02489393584567785,
+            -0.03528212526415586,
+            0.9990672968298762
+          ]
+        ],
+        "sim3_translation": [
+          0.16533060371875763,
+          -0.10699022561311722,
+          0.044353485107421875
+        ],
+        "sim3_rotation_angle_deg": 2.4997729905840784,
+        "sim3_translation_norm": 0.20186220109462738
+      },
+      {
+        "edgeIndex": 9,
+        "sim3_scale": 0.9988606572151184,
+        "sim3_rotation": [
+          [
+            0.9999962738408621,
+            0.0007484733411031077,
+            0.002625279423045392
+          ],
+          [
+            -0.0007783020823960611,
+            0.9999349477866099,
+            0.011379562419448732
+          ],
+          [
+            -0.002616591343703779,
+            -0.011381563277830065,
+            0.9999318044082269
+          ]
+        ],
+        "sim3_translation": [
+          0.021647438406944275,
+          -0.014356888830661774,
+          -0.019294410943984985
+        ],
+        "sim3_rotation_angle_deg": 0.6705700056810372,
+        "sim3_translation_norm": 0.03235747292637825
+      },
+      {
+        "edgeIndex": 10,
+        "sim3_scale": 1.0887333154678345,
+        "sim3_rotation": [
+          [
+            0.9989601739219316,
+            0.018426460053331067,
+            0.04170175641105558
+          ],
+          [
+            -0.01804820963988822,
+            0.9997926585874298,
+            -0.009428783774883895
+          ],
+          [
+            -0.041866849017554046,
+            0.008666337437572018,
+            0.999085612722333
+          ]
+        ],
+        "sim3_translation": [
+          -0.20020818710327148,
+          0.13834884762763977,
+          -0.0528089702129364
+        ],
+        "sim3_rotation_angle_deg": 2.6640653672565486,
+        "sim3_translation_norm": 0.24902310967445374
+      },
+      {
+        "edgeIndex": 11,
+        "sim3_scale": 1.0125290155410767,
+        "sim3_rotation": [
+          [
+            0.9999898139795451,
+            -0.002413243506979745,
+            0.0038142093453902215
+          ],
+          [
+            0.0023700009975293475,
+            0.9999333289446112,
+            0.011301361025087144
+          ],
+          [
+            -0.0038412279841415166,
+            -0.011292206229239213,
+            0.9999288629927879
+          ]
+        ],
+        "sim3_translation": [
+          -0.01141957938671112,
+          -0.0051111578941345215,
+          -0.024465113878250122
+        ],
+        "sim3_rotation_angle_deg": 0.6970236061094973,
+        "sim3_translation_norm": 0.02747858315706253
+      },
+      {
+        "edgeIndex": 12,
+        "sim3_scale": 0.9497032761573792,
+        "sim3_rotation": [
+          [
+            0.9981999299633391,
+            -0.049522345816829946,
+            -0.03382952979252427
+          ],
+          [
+            0.04913436738175628,
+            0.9987175940871612,
+            -0.012205785625963594
+          ],
+          [
+            0.03439060574022484,
+            0.010521621811806433,
+            0.9993530816039293
+          ]
+        ],
+        "sim3_translation": [
+          0.124331034719944,
+          -0.11541622132062912,
+          0.03330150246620178
+        ],
+        "sim3_rotation_angle_deg": 3.4995265693474353,
+        "sim3_translation_norm": 0.17288175225257874
+      },
+      {
+        "edgeIndex": 13,
+        "sim3_scale": 0.9791567921638489,
+        "sim3_rotation": [
+          [
+            0.9999547080344122,
+            -0.007585175116705109,
+            -0.005748651864791824
+          ],
+          [
+            0.007421418603137832,
+            0.9995806201308872,
+            -0.027991184409885614
+          ],
+          [
+            0.0059585590313981605,
+            0.027947253482232225,
+            0.9995916399195571
+          ]
+        ],
+        "sim3_translation": [
+          0.05372220277786255,
+          0.0069969817996025085,
+          0.02776584029197693
+        ],
+        "sim3_rotation_angle_deg": 1.6929864877806904,
+        "sim3_translation_norm": 0.060876715928316116
+      },
+      {
+        "edgeIndex": 14,
+        "sim3_scale": 1.0312784910202026,
+        "sim3_rotation": [
+          [
+            0.9998314274281002,
+            0.005324370751306269,
+            0.01757178998253259
+          ],
+          [
+            -0.005354625558931712,
+            0.999984260749432,
+            0.0016751831349023582
+          ],
+          [
+            -0.017562594119640573,
+            -0.0017689911007295537,
+            0.9998442008424484
+          ]
+        ],
+        "sim3_translation": [
+          -0.11990968883037567,
+          0.025096550583839417,
+          -0.04162207245826721
+        ],
+        "sim3_rotation_angle_deg": 1.0566693576364743,
+        "sim3_translation_norm": 0.1293853521347046
+      },
+      {
+        "edgeIndex": 15,
+        "sim3_scale": 1.0038906335830688,
+        "sim3_rotation": [
+          [
+            0.999878887825479,
+            -0.015479988205355457,
+            -0.001606127655345378
+          ],
+          [
+            0.015466740596179586,
+            0.9998487258610553,
+            -0.007956464626617414
+          ],
+          [
+            0.0017290506683436458,
+            0.007930659442075407,
+            0.9999670569696784
+          ]
+        ],
+        "sim3_translation": [
+          -0.010177955031394958,
+          -0.008252911269664764,
+          0.0013706386089324951
+        ],
+        "sim3_rotation_angle_deg": 1.0011806097033606,
+        "sim3_translation_norm": 0.013174974359571934
+      },
+      {
+        "edgeIndex": 16,
+        "sim3_scale": 1.0019428730010986,
+        "sim3_rotation": [
+          [
+            0.9998326019951216,
+            -0.017818735160024086,
+            0.004154595643597491
+          ],
+          [
+            0.017889887420675828,
+            0.9996820573604046,
+            -0.017768965072405926
+          ],
+          [
+            -0.0038366542377991945,
+            0.017840315831446442,
+            0.9998334877444813
+          ]
+        ],
+        "sim3_translation": [
+          -0.03381958603858948,
+          0.004383154213428497,
+          0.012859731912612915
+        ],
+        "sim3_rotation_angle_deg": 1.4628817763279818,
+        "sim3_translation_norm": 0.036446522921323776
+      },
+      {
+        "edgeIndex": 17,
+        "sim3_scale": 1.0061891078948975,
+        "sim3_rotation": [
+          [
+            0.9999478096102069,
+            -0.00157899081826762,
+            -0.010093802244208744
+          ],
+          [
+            0.0011592797907871697,
+            0.9991398033905466,
+            -0.04145249511267579
+          ],
+          [
+            0.010150572698918984,
+            0.04143863014984406,
+            0.9990894883868954
+          ]
+        ],
+        "sim3_translation": [
+          -0.0053374022245407104,
+          0.07572799175977707,
+          0.008978933095932007
+        ],
+        "sim3_rotation_angle_deg": 2.446453027085889,
+        "sim3_translation_norm": 0.07644499838352203
+      },
+      {
+        "edgeIndex": 18,
+        "sim3_scale": 1.0148422718048096,
+        "sim3_rotation": [
+          [
+            0.9972187237571445,
+            0.07258782468097863,
+            -0.016906350766955944
+          ],
+          [
+            -0.07215006497193069,
+            0.9970752556621243,
+            0.025205211184505697
+          ],
+          [
+            0.018686495463784092,
+            -0.023915314223167953,
+            0.9995393302081159
+          ]
+        ],
+        "sim3_translation": [
+          0.06365595757961273,
+          0.06275583803653717,
+          -0.06599706411361694
+        ],
+        "sim3_rotation_angle_deg": 4.500495762533409,
+        "sim3_translation_norm": 0.11111251264810562
+      },
+      {
+        "edgeIndex": 19,
+        "sim3_scale": 0.999057948589325,
+        "sim3_rotation": [
+          [
+            0.9997807277022495,
+            -0.01042408950211451,
+            0.018161356590643534
+          ],
+          [
+            0.010695348023173429,
+            0.9998317338041167,
+            -0.014903476403747607
+          ],
+          [
+            -0.01800294547633263,
+            0.015094450513541972,
+            0.9997239876675315
+          ]
+        ],
+        "sim3_translation": [
+          -0.04297025501728058,
+          0.02464393898844719,
+          0.03911444544792175
+        ],
+        "sim3_rotation_angle_deg": 1.4759503134239373,
+        "sim3_translation_norm": 0.06311661005020142
+      },
+      {
+        "edgeIndex": 20,
+        "sim3_scale": 1.035828709602356,
+        "sim3_rotation": [
+          [
+            0.9999381418714847,
+            -0.010952304283172176,
+            0.0019389330807179075
+          ],
+          [
+            0.010948572479484608,
+            0.9999382097873823,
+            0.0019249332108828225
+          ],
+          [
+            -0.001959895727880971,
+            -0.0019035855887497698,
+            0.9999962675783556
+          ]
+        ],
+        "sim3_translation": [
+          -0.0697806179523468,
+          -0.02663256600499153,
+          -0.027530133724212646
+        ],
+        "sim3_rotation_angle_deg": 0.6466612837136364,
+        "sim3_translation_norm": 0.07960236817598343
+      },
+      {
+        "edgeIndex": 21,
+        "sim3_scale": 1.0952047109603882,
+        "sim3_rotation": [
+          [
+            0.999770402685857,
+            -0.014983090114737677,
+            0.015318254599431301
+          ],
+          [
+            0.015239633128389852,
+            0.9997432227517935,
+            -0.01677027560804492
+          ],
+          [
+            -0.01506305066948361,
+            0.016999869778070477,
+            0.9997420211894953
+          ]
+        ],
+        "sim3_translation": [
+          -0.2545909583568573,
+          0.054510366171598434,
+          -0.041944682598114014
+        ],
+        "sim3_rotation_angle_deg": 1.56324008625533,
+        "sim3_translation_norm": 0.26371821761131287
+      },
+      {
+        "edgeIndex": 22,
+        "sim3_scale": 0.914535641670227,
+        "sim3_rotation": [
+          [
+            0.999894469754199,
+            -0.008268474552310104,
+            0.01194494384863332
+          ],
+          [
+            0.008009969178261406,
+            0.9997361254100176,
+            0.021529513323086166
+          ],
+          [
+            -0.012119808114508458,
+            -0.021431562676189588,
+            0.9996968532372822
+          ]
+        ],
+        "sim3_translation": [
+          0.17578282952308655,
+          -0.09818244725465775,
+          0.0913780927658081
+        ],
+        "sim3_rotation_angle_deg": 1.4859274581313293,
+        "sim3_translation_norm": 0.22110936045646667
+      }
+    ]
+  },
+  "adjacent_edges": [
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_000",
+      "currentWindowID": "window_001",
+      "overlapFrameCount": 18,
+      "point_count": 6113883,
+      "rmse": 0.10959177769430237,
+      "p90": 0.1812254357529334,
+      "sim3_scale": 1.0797432285158857,
+      "sim3_rotation_angle_deg": 1.1880933969332408,
+      "sim3_translation_norm": 0.22163103111578789
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_001",
+      "currentWindowID": "window_002",
+      "overlapFrameCount": 18,
+      "point_count": 5714658,
+      "rmse": 0.07202706978665908,
+      "p90": 0.09453586222785937,
+      "sim3_scale": 1.0117374363571434,
+      "sim3_rotation_angle_deg": 0.6719699779224347,
+      "sim3_translation_norm": 0.0367564019833028
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_002",
+      "currentWindowID": "window_003",
+      "overlapFrameCount": 18,
+      "point_count": 4962572,
+      "rmse": 0.07079791160338435,
+      "p90": 0.11300374549619162,
+      "sim3_scale": 1.0037902659888442,
+      "sim3_rotation_angle_deg": 1.4509819465023261,
+      "sim3_translation_norm": 0.04827878715338129
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_003",
+      "currentWindowID": "window_004",
+      "overlapFrameCount": 18,
+      "point_count": 5822915,
+      "rmse": 0.05930895756734656,
+      "p90": 0.08593722183044451,
+      "sim3_scale": 1.0660731599638278,
+      "sim3_rotation_angle_deg": 1.8929704427429264,
+      "sim3_translation_norm": 0.23205904286812193
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_004",
+      "currentWindowID": "window_005",
+      "overlapFrameCount": 18,
+      "point_count": 5479634,
+      "rmse": 0.046537838108530426,
+      "p90": 0.0703043232785394,
+      "sim3_scale": 0.947352612134043,
+      "sim3_rotation_angle_deg": 0.3871276519577326,
+      "sim3_translation_norm": 0.15007795873406973
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_005",
+      "currentWindowID": "window_006",
+      "overlapFrameCount": 18,
+      "point_count": 4727878,
+      "rmse": 0.09741687331581635,
+      "p90": 0.154101548666244,
+      "sim3_scale": 1.082960445239089,
+      "sim3_rotation_angle_deg": 1.5831244991187006,
+      "sim3_translation_norm": 0.19839325639401478
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_006",
+      "currentWindowID": "window_007",
+      "overlapFrameCount": 18,
+      "point_count": 4356184,
+      "rmse": 0.05244446245498497,
+      "p90": 0.07956414135725692,
+      "sim3_scale": 0.9525798614876846,
+      "sim3_rotation_angle_deg": 1.9956704055085572,
+      "sim3_translation_norm": 0.15478934377082101
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_007",
+      "currentWindowID": "window_008",
+      "overlapFrameCount": 18,
+      "point_count": 6187928,
+      "rmse": 0.08104775094886732,
+      "p90": 0.1356167070748866,
+      "sim3_scale": 0.976875935380424,
+      "sim3_rotation_angle_deg": 2.258069253910752,
+      "sim3_translation_norm": 0.0902694321316176
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_008",
+      "currentWindowID": "window_009",
+      "overlapFrameCount": 18,
+      "point_count": 6163162,
+      "rmse": 0.08779362673561072,
+      "p90": 0.14761457067217543,
+      "sim3_scale": 0.9253262285895849,
+      "sim3_rotation_angle_deg": 2.575836210397324,
+      "sim3_translation_norm": 0.19428348061309042
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_009",
+      "currentWindowID": "window_010",
+      "overlapFrameCount": 18,
+      "point_count": 6227894,
+      "rmse": 0.037849007151201756,
+      "p90": 0.057209729779572956,
+      "sim3_scale": 1.0086886250393385,
+      "sim3_rotation_angle_deg": 0.8449458316806626,
+      "sim3_translation_norm": 0.05447518523578026
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_010",
+      "currentWindowID": "window_011",
+      "overlapFrameCount": 18,
+      "point_count": 5645397,
+      "rmse": 0.10934865609600826,
+      "p90": 0.1624304826638163,
+      "sim3_scale": 1.0989432159037482,
+      "sim3_rotation_angle_deg": 2.039522931950569,
+      "sim3_translation_norm": 0.26475914466197054
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_011",
+      "currentWindowID": "window_012",
+      "overlapFrameCount": 18,
+      "point_count": 5794645,
+      "rmse": 0.07499252748804397,
+      "p90": 0.12607687620965563,
+      "sim3_scale": 1.0191150539319864,
+      "sim3_rotation_angle_deg": 0.4388120484304297,
+      "sim3_translation_norm": 0.06054135273373381
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_012",
+      "currentWindowID": "window_013",
+      "overlapFrameCount": 18,
+      "point_count": 5926633,
+      "rmse": 0.09763291198907975,
+      "p90": 0.18687612145724655,
+      "sim3_scale": 0.9550678589307672,
+      "sim3_rotation_angle_deg": 3.7462107824846513,
+      "sim3_translation_norm": 0.16603763854446119
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_013",
+      "currentWindowID": "window_014",
+      "overlapFrameCount": 18,
+      "point_count": 4751871,
+      "rmse": 0.06246686185161291,
+      "p90": 0.09232168285342347,
+      "sim3_scale": 0.9865140515019506,
+      "sim3_rotation_angle_deg": 1.9200862729208574,
+      "sim3_translation_norm": 0.050058893776590084
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_014",
+      "currentWindowID": "window_015",
+      "overlapFrameCount": 18,
+      "point_count": 4144766,
+      "rmse": 0.08076338877113641,
+      "p90": 0.11270939564011084,
+      "sim3_scale": 1.040204655668537,
+      "sim3_rotation_angle_deg": 0.44317797670901193,
+      "sim3_translation_norm": 0.14833319348689758
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_015",
+      "currentWindowID": "window_016",
+      "overlapFrameCount": 18,
+      "point_count": 4308792,
+      "rmse": 0.061981891031713296,
+      "p90": 0.08253427177356418,
+      "sim3_scale": 1.0106352598042359,
+      "sim3_rotation_angle_deg": 1.1749303405016094,
+      "sim3_translation_norm": 0.0354507598953088
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_016",
+      "currentWindowID": "window_017",
+      "overlapFrameCount": 18,
+      "point_count": 5118257,
+      "rmse": 0.07413437646501171,
+      "p90": 0.12302733873958914,
+      "sim3_scale": 1.0185031514988498,
+      "sim3_rotation_angle_deg": 1.1812275717185745,
+      "sim3_translation_norm": 0.05169657939857203
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_017",
+      "currentWindowID": "window_018",
+      "overlapFrameCount": 18,
+      "point_count": 5082604,
+      "rmse": 0.06913680889206439,
+      "p90": 0.12734001714547336,
+      "sim3_scale": 1.0072532388247435,
+      "sim3_rotation_angle_deg": 2.1737806345279953,
+      "sim3_translation_norm": 0.06710747468558627
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_018",
+      "currentWindowID": "window_019",
+      "overlapFrameCount": 18,
+      "point_count": 5842662,
+      "rmse": 0.10469467396498139,
+      "p90": 0.17722737434794872,
+      "sim3_scale": 1.0168157132468911,
+      "sim3_rotation_angle_deg": 4.705758586581265,
+      "sim3_translation_norm": 0.12170107981522496
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_019",
+      "currentWindowID": "window_020",
+      "overlapFrameCount": 18,
+      "point_count": 5378162,
+      "rmse": 0.06427005177483391,
+      "p90": 0.09882941280697516,
+      "sim3_scale": 1.0088845202222583,
+      "sim3_rotation_angle_deg": 1.2696160819474138,
+      "sim3_translation_norm": 0.06255487595768414
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_020",
+      "currentWindowID": "window_021",
+      "overlapFrameCount": 18,
+      "point_count": 6020124,
+      "rmse": 0.0709891136770689,
+      "p90": 0.12412939887412011,
+      "sim3_scale": 1.0358286518826676,
+      "sim3_rotation_angle_deg": 0.6466613205959248,
+      "sim3_translation_norm": 0.07960239341088732
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_021",
+      "currentWindowID": "window_022",
+      "overlapFrameCount": 18,
+      "point_count": 6250859,
+      "rmse": 0.061071817201066345,
+      "p90": 0.09053698229892776,
+      "sim3_scale": 1.0952046782464766,
+      "sim3_rotation_angle_deg": 1.5632404812622793,
+      "sim3_translation_norm": 0.26371837426552097
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_022",
+      "currentWindowID": "window_023",
+      "overlapFrameCount": 18,
+      "point_count": 6237037,
+      "rmse": 0.049378097337679346,
+      "p90": 0.07773435665461352,
+      "sim3_scale": 0.9145357500713958,
+      "sim3_rotation_angle_deg": 1.4859275312140936,
+      "sim3_translation_norm": 0.2211093601295066
+    }
+  ],
+  "loop_edges": [
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_000",
+      "chunkIndexA": 17,
+      "chunkIndexB": 6,
+      "rangeA": [
+        289,
+        305
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 4496496,
+      "b_point_count": 4713860,
+      "a_rmse": 0.047969016984326485,
+      "b_rmse": 0.06387066860626066,
+      "a_p90": 0.0791056303313564,
+      "b_p90": 0.095914321622173,
+      "sim3_scale": 0.8941355659673625,
+      "sim3_rotation_angle_deg": 2.946337846453084,
+      "sim3_translation_norm": 0.25725565479566276
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_001",
+      "chunkIndexA": 19,
+      "chunkIndexB": 4,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        70,
+        86
+      ],
+      "status": "estimated",
+      "a_point_count": 5162990,
+      "b_point_count": 5507307,
+      "a_rmse": 0.0943089583504109,
+      "b_rmse": 0.05366672311346786,
+      "a_p90": 0.1485120342388331,
+      "b_p90": 0.08885184535522436,
+      "sim3_scale": 0.9594081935232487,
+      "sim3_rotation_angle_deg": 3.01517954481157,
+      "sim3_translation_norm": 0.17415385137486059
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_002",
+      "chunkIndexA": 2,
+      "chunkIndexB": 1,
+      "rangeA": [
+        34,
+        50
+      ],
+      "rangeB": [
+        17,
+        33
+      ],
+      "status": "estimated",
+      "a_point_count": 5077008,
+      "b_point_count": 5306918,
+      "a_rmse": 0.05005023433457425,
+      "b_rmse": 0.05834425507535476,
+      "a_p90": 0.08241988065047538,
+      "b_p90": 0.09485513749909671,
+      "sim3_scale": 1.0074252136628281,
+      "sim3_rotation_angle_deg": 0.535619607528203,
+      "sim3_translation_norm": 0.035837852430721864
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_003",
+      "chunkIndexA": 20,
+      "chunkIndexB": 6,
+      "rangeA": [
+        340,
+        356
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5098435,
+      "b_point_count": 4767782,
+      "a_rmse": 0.024539583659327784,
+      "b_rmse": 0.06170824212472501,
+      "a_p90": 0.03299953994335003,
+      "b_p90": 0.09463341699704146,
+      "sim3_scale": 0.9139627532538358,
+      "sim3_rotation_angle_deg": 1.796638230531225,
+      "sim3_translation_norm": 0.24915761120179244
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_004",
+      "chunkIndexA": 16,
+      "chunkIndexB": 6,
+      "rangeA": [
+        279,
+        295
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 3771675,
+      "b_point_count": 3916556,
+      "a_rmse": 0.06320565866053536,
+      "b_rmse": 0.12483532515540026,
+      "a_p90": 0.09588019482619986,
+      "b_p90": 0.2065658548839201,
+      "sim3_scale": 0.904632328960327,
+      "sim3_rotation_angle_deg": 2.0619249817378766,
+      "sim3_translation_norm": 0.23592952739860698
+    }
+  ],
+  "elapsed_s": 32.131
+}

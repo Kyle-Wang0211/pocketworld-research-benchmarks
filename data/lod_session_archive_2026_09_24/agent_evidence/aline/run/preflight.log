@@ -1,0 +1,204 @@
+=== PUSH PREFLIGHT CHECK (isolated bash environment) ===
+
+--- Diagnostic Header ---
+Wed Sep 23 13:31:05 UTC 2026
+kaidongwang
+Darwin KaidongdeMacBook-Pro.local 25.1.0 Darwin Kernel Version 25.1.0: Mon Oct 20 19:33:36 PDT 2025; root:xnu-12377.41.6~2/RELEASE_ARM64_T6030 arm64
+SHELL=/bin/zsh
+ZSH_VERSION=<not zsh>
+TERM_PROGRAM=<unset>
+VSCODE_GIT_ASKPASS=<unset>
+git version 2.50.1 (Apple Git-155)
+swift-driver version: 1.127.14.1 Apple Swift version 6.2.3 (swiftlang-6.2.3.3.21 clang-1700.6.3.2)
+Target: arm64-apple-macosx26.0
+Xcode 26.2
+Build version 17C52
+core.hooksPath: <not set or error>
+--- End Diagnostic Header ---
+
+[0/3] SSOT declaration check
+==> SSOT Declaration Check
+    Environment: Local
+    Commit range: HEAD~1..HEAD
+    Commits to check: 1
+
+--- Checking commit: caaf17c ---
+    caaf17c feat(pointcloud_lod_build): optionsForBudget 按实测定手机默认值;测试报告不再依赖实参求值顺序
+    ✅ PASS: SSOT-Change footer present
+
+==> Summary
+✅ SSOT declaration check PASSED
+✅ SSOT declaration check passed
+
+[1/3] YAML static parsing
+✅ YAML parse OK: .github/workflows/ci.yml
+✅ YAML parse OK: .github/workflows/ci-gate.yml
+✅ YAML parse OK: .github/workflows/quality_precheck.yml
+
+[2/3] SwiftPM: package resolve
+Fetching https://github.com/google/GoogleUtilities.git from cache
+Fetching https://github.com/google/gtm-session-fetcher.git from cache
+Fetching https://github.com/apple/swift-nio-transport-services.git from cache
+Fetching https://github.com/apple/swift-asn1.git from cache
+Fetching https://github.com/firebase/firebase-ios-sdk from cache
+Fetching https://github.com/apple/swift-system.git from cache
+Fetching https://github.com/apple/swift-protobuf.git from cache
+Fetching https://github.com/google/grpc-binary.git from cache
+Fetching https://github.com/apple/swift-atomics.git from cache
+Fetched https://github.com/google/gtm-session-fetcher.git from cache (2.51s)
+Fetched https://github.com/google/GoogleUtilities.git from cache (2.51s)
+Fetched https://github.com/apple/swift-asn1.git from cache (2.51s)
+Fetched https://github.com/apple/swift-nio-transport-services.git from cache (2.51s)
+Fetching https://github.com/google/GoogleAppMeasurement.git from cache
+Fetching https://github.com/google/interop-ios-for-google-sdks.git from cache
+Fetching https://github.com/google/abseil-cpp-binary.git from cache
+Fetching https://github.com/scier/spz-swift.git from cache
+Fetched https://github.com/apple/swift-protobuf.git from cache (3.86s)
+Fetched https://github.com/apple/swift-atomics.git from cache (3.86s)
+Fetching https://github.com/google/promises.git from cache
+Fetching https://github.com/google/GoogleDataTransport.git from cache
+Fetched https://github.com/google/interop-ios-for-google-sdks.git from cache (2.28s)
+Fetching https://github.com/firebase/leveldb.git from cache
+Fetched https://github.com/scier/spz-swift.git from cache (2.32s)
+Fetching https://github.com/firebase/nanopb.git from cache
+Fetched https://github.com/google/GoogleAppMeasurement.git from cache (2.82s)
+Fetched https://github.com/google/abseil-cpp-binary.git from cache (2.82s)
+Fetching https://github.com/google/app-check.git from cache
+Fetching https://github.com/apple/swift-nio.git from cache
+Fetched https://github.com/google/GoogleDataTransport.git from cache (2.73s)
+Fetched https://github.com/google/promises.git from cache (2.73s)
+Fetching https://github.com/apple/swift-argument-parser from cache
+Fetching https://github.com/apple/swift-collections.git from cache
+Fetched https://github.com/firebase/leveldb.git from cache (2.04s)
+Fetched https://github.com/firebase/nanopb.git from cache (2.04s)
+Fetched https://github.com/apple/swift-nio.git from cache (3.18s)
+Fetched https://github.com/google/app-check.git from cache (3.18s)
+Fetched https://github.com/apple/swift-system.git from cache (9.36s)
+Fetched https://github.com/google/grpc-binary.git from cache (9.36s)
+Fetched https://github.com/firebase/firebase-ios-sdk from cache (9.36s)
+Fetched https://github.com/apple/swift-argument-parser from cache (2.83s)
+Fetched https://github.com/apple/swift-collections.git from cache (2.83s)
+Computing version for https://github.com/apple/swift-atomics.git
+Computed https://github.com/apple/swift-atomics.git at 1.3.0 (10.08s)
+Computing version for https://github.com/apple/swift-nio.git
+Computed https://github.com/apple/swift-nio.git at 2.96.0 (0.75s)
+Computing version for https://github.com/apple/swift-nio-transport-services.git
+Computed https://github.com/apple/swift-nio-transport-services.git at 1.26.0 (0.64s)
+Computing version for https://github.com/apple/swift-asn1.git
+Computed https://github.com/apple/swift-asn1.git at 1.6.0 (0.76s)
+Computing version for https://github.com/scier/spz-swift.git
+Computed https://github.com/scier/spz-swift.git at 2.1.0 (0.63s)
+Computing version for https://github.com/apple/swift-argument-parser
+Computed https://github.com/apple/swift-argument-parser at 1.7.1 (0.64s)
+Computing version for https://github.com/firebase/firebase-ios-sdk
+Computed https://github.com/firebase/firebase-ios-sdk at 10.29.0 (1.16s)
+Computing version for https://github.com/apple/swift-system.git
+Computed https://github.com/apple/swift-system.git at 1.6.4 (0.66s)
+Computing version for https://github.com/apple/swift-collections.git
+Computed https://github.com/apple/swift-collections.git at 1.4.1 (0.83s)
+Computing version for https://github.com/google/app-check.git
+Computed https://github.com/google/app-check.git at 10.19.2 (0.70s)
+Computing version for https://github.com/google/interop-ios-for-google-sdks.git
+Computed https://github.com/google/interop-ios-for-google-sdks.git at 100.0.0 (0.69s)
+Computing version for https://github.com/firebase/leveldb.git
+Computed https://github.com/firebase/leveldb.git at 1.22.5 (0.68s)
+Computing version for https://github.com/google/grpc-binary.git
+Computed https://github.com/google/grpc-binary.git at 1.62.2 (0.69s)
+Computing version for https://github.com/google/abseil-cpp-binary.git
+Computed https://github.com/google/abseil-cpp-binary.git at 1.2024011602.0 (0.68s)
+Computing version for https://github.com/firebase/nanopb.git
+Computed https://github.com/firebase/nanopb.git at 2.30910.0 (0.70s)
+Computing version for https://github.com/google/gtm-session-fetcher.git
+Computed https://github.com/google/gtm-session-fetcher.git at 3.5.0 (0.70s)
+Computing version for https://github.com/google/GoogleUtilities.git
+Computed https://github.com/google/GoogleUtilities.git at 7.13.3 (0.71s)
+Computing version for https://github.com/google/GoogleDataTransport.git
+Computed https://github.com/google/GoogleDataTransport.git at 9.4.0 (0.72s)
+Computing version for https://github.com/google/GoogleAppMeasurement.git
+Computed https://github.com/google/GoogleAppMeasurement.git at 10.28.0 (0.74s)
+Computing version for https://github.com/apple/swift-protobuf.git
+Computed https://github.com/apple/swift-protobuf.git at 1.37.0 (0.68s)
+Computing version for https://github.com/google/promises.git
+Computed https://github.com/google/promises.git at 2.4.0 (0.70s)
+Creating working copy for https://github.com/google/gtm-session-fetcher.git
+Working copy of https://github.com/google/gtm-session-fetcher.git resolved at 3.5.0
+Creating working copy for https://github.com/apple/swift-asn1.git
+Working copy of https://github.com/apple/swift-asn1.git resolved at 1.6.0
+Creating working copy for https://github.com/google/GoogleUtilities.git
+Working copy of https://github.com/google/GoogleUtilities.git resolved at 7.13.3
+Creating working copy for https://github.com/google/promises.git
+Working copy of https://github.com/google/promises.git resolved at 2.4.0
+Creating working copy for https://github.com/google/interop-ios-for-google-sdks.git
+Working copy of https://github.com/google/interop-ios-for-google-sdks.git resolved at 100.0.0
+Creating working copy for https://github.com/firebase/firebase-ios-sdk
+Working copy of https://github.com/firebase/firebase-ios-sdk resolved at 10.29.0
+Creating working copy for https://github.com/apple/swift-argument-parser
+Working copy of https://github.com/apple/swift-argument-parser resolved at 1.7.1
+Creating working copy for https://github.com/google/abseil-cpp-binary.git
+Working copy of https://github.com/google/abseil-cpp-binary.git resolved at 1.2024011602.0
+Creating working copy for https://github.com/google/app-check.git
+Working copy of https://github.com/google/app-check.git resolved at 10.19.2
+Creating working copy for https://github.com/google/grpc-binary.git
+Working copy of https://github.com/google/grpc-binary.git resolved at 1.62.2
+Creating working copy for https://github.com/firebase/leveldb.git
+Working copy of https://github.com/firebase/leveldb.git resolved at 1.22.5
+Creating working copy for https://github.com/firebase/nanopb.git
+Working copy of https://github.com/firebase/nanopb.git resolved at 2.30910.0
+Creating working copy for https://github.com/apple/swift-collections.git
+Working copy of https://github.com/apple/swift-collections.git resolved at 1.4.1
+Creating working copy for https://github.com/google/GoogleDataTransport.git
+Working copy of https://github.com/google/GoogleDataTransport.git resolved at 9.4.0
+Creating working copy for https://github.com/apple/swift-system.git
+Working copy of https://github.com/apple/swift-system.git resolved at 1.6.4
+Creating working copy for https://github.com/google/GoogleAppMeasurement.git
+Working copy of https://github.com/google/GoogleAppMeasurement.git resolved at 10.28.0
+Creating working copy for https://github.com/apple/swift-atomics.git
+Working copy of https://github.com/apple/swift-atomics.git resolved at 1.3.0
+Creating working copy for https://github.com/apple/swift-nio.git
+Working copy of https://github.com/apple/swift-nio.git resolved at 2.96.0
+Creating working copy for https://github.com/scier/spz-swift.git
+Working copy of https://github.com/scier/spz-swift.git resolved at 2.1.0
+Creating working copy for https://github.com/apple/swift-nio-transport-services.git
+Working copy of https://github.com/apple/swift-nio-transport-services.git resolved at 1.26.0
+Creating working copy for https://github.com/apple/swift-protobuf.git
+Working copy of https://github.com/apple/swift-protobuf.git resolved at 1.37.0
+Fetching binary artifact https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/grpcpp.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/swiftpm/10.28.0/FirebaseAnalytics.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/grpc.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/openssl_grpc.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/bin/firestore/10.27.0/rc0/FirebaseFirestoreInternal.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/bin/abseil/1.2024011602.0/rc1/absl.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurement.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurementIdentitySupport.zip from cache
+Fetching binary artifact https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurementOnDeviceConversion.zip from cache
+Fetched https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurementOnDeviceConversion.zip from cache (0.67s)
+Fetched https://dl.google.com/firebase/ios/swiftpm/10.28.0/FirebaseAnalytics.zip from cache (0.73s)
+Fetched https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurement.zip from cache (0.91s)
+Fetched https://dl.google.com/firebase/ios/swiftpm/10.28.0/GoogleAppMeasurementIdentitySupport.zip from cache (1.74s)
+Fetched https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/openssl_grpc.zip from cache (1.80s)
+Fetched https://dl.google.com/firebase/ios/bin/abseil/1.2024011602.0/rc1/absl.zip from cache (2.15s)
+Fetched https://dl.google.com/firebase/ios/bin/firestore/10.27.0/rc0/FirebaseFirestoreInternal.zip from cache (2.56s)
+Fetched https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/grpcpp.zip from cache (6.58s)
+Fetched https://dl.google.com/firebase/ios/bin/grpc/1.62.2/rc0/grpc.zip from cache (8.91s)
+✅ swift package resolve passed
+
+[3/3] SSOT integrity verification
+==> SSOT Integrity Verification
+[1/3] Verifying constitution document hashes...
+   ✅ 6 documents verified, 56 without hash files (acceptable)
+[2/3] Verifying constants file headers...
+   ✅ 0 constants files have proper headers
+[3/3] Verifying SSOT registry consistency...
+   ✅ SSOT_CONSTANTS.md has all required section markers
+
+==> SSOT integrity verification PASSED
+✅ SSOT integrity check passed
+
+[Optional] actionlint check
+⚠️  actionlint not found, skipping (non-blocking)
+
+=== Git Status Summary ===
+## feat/pointcloud-lod-build
+
+
+✅ ALL PREFLIGHT CHECKS PASSED

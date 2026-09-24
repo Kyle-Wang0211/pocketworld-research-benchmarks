@@ -1,0 +1,128 @@
+Sim3solve of C++ Version failed, Will using Python Version.
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[resume] LoopDetector.find_loop_closures patched to NumPy exact IP search
+[resume] DA3_Streaming.process_single_chunk patched to load cached unaligned chunks
+[resume] DepthAnything3.inference pinned to process_res=406
+[resume] DA3_Streaming.get_chunk_indices patched with last-chunk clamp
+oracle_frame_count 414
+oracle_input_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/input_manifest_ordered_414
+oracle_output_dir /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10
+oracle_da3_base_snapshot /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE
+oracle_salad_ckpt /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+oracle_align_lib numpy
+Using cache found in /Users/kaidongwang/.cache/torch/hub/facebookresearch_dinov2_main
+Loading model...
+[97m[INFO ] using MLP layer as FFN[0m
+Model loaded: /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_official_streaming_k35_overlap18_full414_mac_2026_06_05/weights/dino_salad.ckpt
+init done.
+oracle_da3_device mps
+Loading images from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/input_manifest_ordered_414...
+Found 414 images
+[resume] clamped last chunk to (324, 414) (static K=90 window, matches iPhone chunking)
+Processing 414 images in 9                 chunks of size 90 with 45 overlap
+[Progress]: 0/9
+[resume] load cached chunk_0 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_0.npy
+[Progress]: 1/9
+[resume] load cached chunk_1 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_1.npy
+Aligning 0 and 1 (Total 8)
+The number of corresponding points matched: 2860848
+Residuals: 0.13464611768722534
+Residuals: 0.13450458645820618
+Residuals: 0.13456697762012482
+Residuals: 0.13457611203193665
+Residuals: 0.13457727432250977
+Alignment error statistics [using 2860848 points]: mean=0.1346, std=0.1035, median=0.1042, max=0.8736
+Mean error: 0.1345774531364441
+Estimated Scale: 0.8950175
+Estimated Rotation:
+ [[ 0.96863544  0.17475393  0.17665344]
+ [-0.22884423  0.35034314  0.9082346 ]
+ [ 0.09682825 -0.9201743   0.3793462 ]]
+Estimated Translation: [-0.01300469 -0.23596796  0.31379902]
+[Progress]: 2/9
+[resume] load cached chunk_2 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_2.npy
+Aligning 1 and 2 (Total 8)
+The number of corresponding points matched: 3126992
+Residuals: 0.547826886177063
+Residuals: 0.5509259104728699
+Residuals: 0.548242449760437
+Residuals: 0.5459831953048706
+Residuals: 0.5447385311126709
+Alignment error statistics [using 3126992 points]: mean=0.5442, std=0.4436, median=0.3701, max=2.4815
+Mean error: 0.5442119836807251
+Estimated Scale: 1.1085856
+Estimated Rotation:
+ [[ 0.9193388   0.17345889  0.35316896]
+ [-0.3576063   0.74273336  0.56609625]
+ [-0.16411595 -0.64672965  0.7448535 ]]
+Estimated Translation: [-0.27590877 -0.25166416  0.17418998]
+[Progress]: 3/9
+[resume] load cached chunk_3 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_3.npy
+Aligning 2 and 3 (Total 8)
+The number of corresponding points matched: 2432368
+Residuals: 0.5955758690834045
+Residuals: 0.5839625597000122
+Residuals: 0.5836942791938782
+Residuals: 0.5841137170791626
+Residuals: 0.5844047665596008
+Alignment error statistics [using 2432368 points]: mean=0.5845, std=0.3869, median=0.5843, max=1.6905
+Mean error: 0.5845441222190857
+Estimated Scale: 1.2497412
+Estimated Rotation:
+ [[ 0.85686433  0.04088135  0.5139185 ]
+ [-0.47238997 -0.3369765   0.8144289 ]
+ [ 0.20647347 -0.9406251  -0.26943117]]
+Estimated Translation: [-0.24370012 -0.68667233  0.8264131 ]
+[Progress]: 4/9
+[resume] load cached chunk_4 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_4.npy
+Aligning 3 and 4 (Total 8)
+The number of corresponding points matched: 2994163
+Residuals: 0.06652720272541046
+Residuals: 0.06649243831634521
+Residuals: 0.0664903074502945
+Residuals: 0.06649018824100494
+Residuals: 0.06649015843868256
+Alignment error statistics [using 2994163 points]: mean=0.0665, std=0.0376, median=0.0590, max=0.2990
+Mean error: 0.06649020314216614
+Estimated Scale: 1.082123
+Estimated Rotation:
+ [[ 0.9615934   0.19673656 -0.19139738]
+ [-0.17566955  0.9769118   0.12158786]
+ [ 0.21089917 -0.08329538  0.97395253]]
+Estimated Translation: [ 0.15316057 -0.01842711 -0.09930253]
+[Progress]: 5/9
+[resume] load cached chunk_5 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_5.npy
+Aligning 4 and 5 (Total 8)
+The number of corresponding points matched: 3368419
+Residuals: 0.05619350075721741
+Residuals: 0.056221526116132736
+Residuals: 0.05622284486889839
+Residuals: 0.05622290447354317
+Residuals: 0.05622290447354317
+Alignment error statistics [using 3368419 points]: mean=0.0562, std=0.0258, median=0.0538, max=0.2648
+Mean error: 0.05622290447354317
+Estimated Scale: 0.6833293
+Estimated Rotation:
+ [[ 0.77335167 -0.11877972  0.62275076]
+ [-0.3050747   0.7913603   0.52979076]
+ [-0.55574864 -0.5997001   0.5757632 ]]
+Estimated Translation: [-0.21435924 -0.20185849  0.5532931 ]
+[Progress]: 6/9
+[resume] load cached chunk_6 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_6.npy
+Aligning 5 and 6 (Total 8)
+The number of corresponding points matched: 2692756
+Residuals: 0.14969342947006226
+Residuals: 0.1496094912290573
+Residuals: 0.14984986186027527
+Residuals: 0.14994707703590393
+Residuals: 0.14997975528240204
+Alignment error statistics [using 2692756 points]: mean=0.1500, std=0.0779, median=0.1341, max=0.5695
+Mean error: 0.14999037981033325
+Estimated Scale: 1.2113409
+Estimated Rotation:
+ [[ 0.9914694   0.00439186  0.1302661 ]
+ [-0.12801194 -0.15524447  0.9795469 ]
+ [ 0.02452512 -0.98786634 -0.1533579 ]]
+Estimated Translation: [ 0.03663614 -0.5422239   0.5685896 ]
+[Progress]: 7/9
+[resume] load cached chunk_7 from /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/da3base_iphone_k90_224x406_oracle_2026_06_10/_tmp_results_unaligned/chunk_7.npy

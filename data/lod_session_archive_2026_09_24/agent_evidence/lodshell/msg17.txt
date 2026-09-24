@@ -1,0 +1,14 @@
+LOD 查看器(十七):引用行号跟上修订后的 v2 头;lowest_spacing 说明改为新定义(只改注释)
+
+- 修订版头(4b047f1f)第 6 行加了一行、lowest_spacing 注释多了两行 ⇒ 此前引用的
+  pwlod_viewer.h 行号(Dart、ios/Runner/PwLod*、测试注释)按「≤5 不变、6–114 +1、原 115–118 → 116–121、
+  ≥119 +3」重排,33 处逐条对过内容(状态枚举 38-46、camera 82-91、params 93-103、point_budget 94、
+  cache_bytes 98、frame_stats 105-122、lowest_spacing 116-121、target 124-126、回调 132-138、
+  acquire 167-173、build_report 194-200、C1 197、峰值内存 204-205、verify_report 220-228 等)。
+- lowest_spacing 的文档照新头改为「本帧每个出队节点都算,在预算 break 与可见性判断之前;
+  队列为空时 <= 0」。
+- 顺带修一处放错位置:potreeLowestSpacingFromStats 此前插在 potreeNearFar 的文档注释与声明之间,
+  导致文档挂错函数;现在各自归位。
+行为不变:test/point_cloud_lod/ 49/49 过,analyze 零问题,iphoneos arm64 冒烟通过。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

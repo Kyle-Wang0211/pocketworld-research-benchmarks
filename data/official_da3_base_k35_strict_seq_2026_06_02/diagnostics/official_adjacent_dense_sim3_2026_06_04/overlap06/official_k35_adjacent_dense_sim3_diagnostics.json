@@ -1,0 +1,1119 @@
+{
+  "schema_version": "pocketworld_official_k35_adjacent_dense_sim3_diagnostics_v1",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_official_save_overlap06",
+    "da3_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_official_save_overlap06_official_postprocess",
+    "confidence_mode": "streaming_subtract_one"
+  },
+  "official_reference": {
+    "source": "Depth-Anything-3 da3_streaming.py align_2pcds + weighted_align_point_maps",
+    "adjacent_rule": "previous chunk tail overlap aligns current chunk head overlap",
+    "confidence_threshold": "min(median(conf1), median(conf2)) * 0.1",
+    "irls": {
+      "delta": 0.1,
+      "max_iters": 5,
+      "tol": 1e-09,
+      "align_method": "sim3"
+    },
+    "note": "This Mac diagnostic reimplements the official numpy/numba branch math because official sim3utils imports Triton eagerly; no point cloud output is modified."
+  },
+  "windowing": {
+    "policy": "official_da3_streaming_save_depth_conf_fixed_k35",
+    "chunkSize": 35,
+    "overlap": 6,
+    "step": 29,
+    "officialSaveSemantics": "save local slots 0..step-1 for non-final chunks; save all real slots for final chunk; never save padding slots",
+    "tailPaddingPolicy": "repeat_last_real_frame_for_fixed_k35_shape_not_saved",
+    "officialReference": {
+      "chunkSize": 120,
+      "overlap": 60,
+      "source": "Depth-Anything-3 da3_streaming.py save_depth_conf_result"
+    }
+  },
+  "edge_count": 14,
+  "estimated_edge_count": 14,
+  "summary": {
+    "edge_count": 14,
+    "estimated_count": 14,
+    "point_count_mean": 1787223.357142857,
+    "rmse_mean": 0.09059908240460202,
+    "rmse_max": 0.18883437104437095,
+    "p90_mean": 0.14172411662600942,
+    "p95_mean": 0.20478223165481185,
+    "scale_mean": 1.023875306959467,
+    "scale_std": 0.058709576261503034,
+    "scale_min": 0.9443807489456207,
+    "scale_max": 1.1348413045335692,
+    "rotation_angle_deg_mean": 2.3903789340657604,
+    "rotation_angle_deg_max": 4.3835578474251236,
+    "translation_norm_mean": 0.16624716208723864,
+    "translation_norm_max": 0.38864329808771797
+  },
+  "edges": [
+    {
+      "edgeIndex": 0,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_000",
+      "currentWindowID": "window_001",
+      "parentChunkStartIndex": 0,
+      "currentChunkStartIndex": 29,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-118",
+        "cap-122",
+        "cap-124",
+        "cap-126",
+        "cap-128",
+        "cap-131"
+      ],
+      "sourceFrameIDs": [
+        "cap-118",
+        "cap-122",
+        "cap-124",
+        "cap-126",
+        "cap-128",
+        "cap-131"
+      ],
+      "status": "estimated",
+      "point_count": 1972502,
+      "confidence_threshold": 0.20273437500000002,
+      "confidence_median_min": 2.02734375,
+      "rmse": 0.18883437104437095,
+      "mean": 0.12454262196568336,
+      "median": 0.0710708100296405,
+      "p90": 0.37081145484078265,
+      "p95": 0.5032027379903935,
+      "p99": 0.5661545414614385,
+      "sim3_scale": 1.1348413045335692,
+      "sim3_rotation_angle_deg": 3.0865016805256116,
+      "sim3_translation_norm": 0.38864329808771797,
+      "sim3_rotation": [
+        [
+          0.9999797606887787,
+          -0.006022100206000687,
+          -0.0020524429154607617
+        ],
+        [
+          0.005903747928234338,
+          0.9985518312247452,
+          -0.053473228050188504
+        ],
+        [
+          0.002371491769374118,
+          0.05346002868327375,
+          0.9985671741850778
+        ]
+      ],
+      "sim3_translation": [
+        -0.2879628003523247,
+        0.11886135626726468,
+        -0.23236397472080816
+      ]
+    },
+    {
+      "edgeIndex": 1,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_001",
+      "currentWindowID": "window_002",
+      "parentChunkStartIndex": 29,
+      "currentChunkStartIndex": 58,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-235",
+        "cap-257",
+        "cap-260",
+        "cap-263",
+        "cap-272",
+        "cap-274"
+      ],
+      "sourceFrameIDs": [
+        "cap-235",
+        "cap-257",
+        "cap-260",
+        "cap-263",
+        "cap-272",
+        "cap-274"
+      ],
+      "status": "estimated",
+      "point_count": 1485918,
+      "confidence_threshold": 0.17929687500000002,
+      "confidence_median_min": 1.79296875,
+      "rmse": 0.07256456622432733,
+      "mean": 0.04843884623304814,
+      "median": 0.028534613975056373,
+      "p90": 0.11464948723792436,
+      "p95": 0.16854715113473104,
+      "p99": 0.25538695720631066,
+      "sim3_scale": 1.0152245058744966,
+      "sim3_rotation_angle_deg": 3.0837246660714617,
+      "sim3_translation_norm": 0.08862351247799159,
+      "sim3_rotation": [
+        [
+          0.9991115523046633,
+          -0.019727714945715607,
+          -0.037241419339042396
+        ],
+        [
+          0.01847072141904677,
+          0.9992579170497401,
+          -0.03380011336775945
+        ],
+        [
+          0.037880582118359596,
+          0.03308220785307506,
+          0.9987345137832878
+        ]
+      ],
+      "sim3_translation": [
+        -0.010591406754598243,
+        0.004555977995602478,
+        -0.08787031427848069
+      ]
+    },
+    {
+      "edgeIndex": 2,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_002",
+      "currentWindowID": "window_003",
+      "parentChunkStartIndex": 58,
+      "currentChunkStartIndex": 87,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-411",
+        "cap-413",
+        "cap-418",
+        "cap-420",
+        "cap-422",
+        "cap-424"
+      ],
+      "sourceFrameIDs": [
+        "cap-411",
+        "cap-413",
+        "cap-418",
+        "cap-420",
+        "cap-422",
+        "cap-424"
+      ],
+      "status": "estimated",
+      "point_count": 2082996,
+      "confidence_threshold": 0.1556640625,
+      "confidence_median_min": 1.556640625,
+      "rmse": 0.07082049746238905,
+      "mean": 0.04383149002021736,
+      "median": 0.026746015102362634,
+      "p90": 0.1025404699863888,
+      "p95": 0.16142248662808997,
+      "p99": 0.3001168499359942,
+      "sim3_scale": 1.0464389517879742,
+      "sim3_rotation_angle_deg": 2.764317978197733,
+      "sim3_translation_norm": 0.16706207390613542,
+      "sim3_rotation": [
+        [
+          0.9999160376904955,
+          0.010201372296795503,
+          0.007990592756626575
+        ],
+        [
+          -0.010561578032074193,
+          0.9988664091865691,
+          0.04641497245720066
+        ],
+        [
+          -0.007508038279902638,
+          -0.046495468617839986,
+          0.9988902846455141
+        ]
+      ],
+      "sim3_translation": [
+        -0.11360319489532333,
+        -0.056459921616808684,
+        -0.10870293417575283
+      ]
+    },
+    {
+      "edgeIndex": 3,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_003",
+      "currentWindowID": "window_004",
+      "parentChunkStartIndex": 87,
+      "currentChunkStartIndex": 116,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-608",
+        "cap-612",
+        "cap-619",
+        "cap-621",
+        "cap-630",
+        "cap-635"
+      ],
+      "sourceFrameIDs": [
+        "cap-608",
+        "cap-612",
+        "cap-619",
+        "cap-621",
+        "cap-630",
+        "cap-635"
+      ],
+      "status": "estimated",
+      "point_count": 1491041,
+      "confidence_threshold": 0.04560546875,
+      "confidence_median_min": 0.4560546875,
+      "rmse": 0.08304516477340647,
+      "mean": 0.06287533447846742,
+      "median": 0.04555146962724728,
+      "p90": 0.13684235921148422,
+      "p95": 0.16423065042333115,
+      "p99": 0.26203217570856807,
+      "sim3_scale": 0.9634851965601504,
+      "sim3_rotation_angle_deg": 1.0836622073847206,
+      "sim3_translation_norm": 0.10369225279303085,
+      "sim3_rotation": [
+        [
+          0.9999959900711876,
+          -0.0013598074506547765,
+          0.002484102502508091
+        ],
+        [
+          0.001406020359004538,
+          0.9998241992097103,
+          -0.018697427133483165
+        ],
+        [
+          -0.00245824089460099,
+          0.018700844856823745,
+          0.9998221019028064
+        ]
+      ],
+      "sim3_translation": [
+        0.0704667692183869,
+        -0.005358311856450193,
+        0.07588020966803821
+      ]
+    },
+    {
+      "edgeIndex": 4,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_004",
+      "currentWindowID": "window_005",
+      "parentChunkStartIndex": 116,
+      "currentChunkStartIndex": 145,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-799",
+        "cap-805",
+        "cap-809",
+        "cap-815",
+        "cap-817",
+        "cap-821"
+      ],
+      "sourceFrameIDs": [
+        "cap-799",
+        "cap-805",
+        "cap-809",
+        "cap-815",
+        "cap-817",
+        "cap-821"
+      ],
+      "status": "estimated",
+      "point_count": 1994838,
+      "confidence_threshold": 0.283203125,
+      "confidence_median_min": 2.83203125,
+      "rmse": 0.07803872847049267,
+      "mean": 0.0500765438599423,
+      "median": 0.029649199572183052,
+      "p90": 0.11353492059366734,
+      "p95": 0.16029756686141072,
+      "p99": 0.3437076821057962,
+      "sim3_scale": 0.9581494618942088,
+      "sim3_rotation_angle_deg": 1.2106289806470083,
+      "sim3_translation_norm": 0.09504041111317216,
+      "sim3_rotation": [
+        [
+          0.9997976678586666,
+          0.019296419635924416,
+          -0.005680803957675568
+        ],
+        [
+          -0.019259298585587482,
+          0.9997932747024282,
+          0.006518226582835943
+        ],
+        [
+          0.005805408027211638,
+          -0.006407499436466894,
+          0.9999626198956683
+        ]
+      ],
+      "sim3_translation": [
+        0.08424368238302149,
+        0.030092832492875532,
+        0.03209522013735233
+      ]
+    },
+    {
+      "edgeIndex": 5,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_005",
+      "currentWindowID": "window_006",
+      "parentChunkStartIndex": 145,
+      "currentChunkStartIndex": 174,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-905",
+        "cap-909",
+        "cap-914",
+        "cap-918",
+        "cap-923",
+        "cap-935"
+      ],
+      "sourceFrameIDs": [
+        "cap-905",
+        "cap-909",
+        "cap-914",
+        "cap-918",
+        "cap-923",
+        "cap-935"
+      ],
+      "status": "estimated",
+      "point_count": 2061066,
+      "confidence_threshold": 0.2451171875,
+      "confidence_median_min": 2.451171875,
+      "rmse": 0.07314141339509575,
+      "mean": 0.05330850135356975,
+      "median": 0.03752250369530398,
+      "p90": 0.10361288254966186,
+      "p95": 0.1400872645774855,
+      "p99": 0.2934194593697217,
+      "sim3_scale": 0.9861711208650216,
+      "sim3_rotation_angle_deg": 2.667807440630879,
+      "sim3_translation_norm": 0.12065997395144074,
+      "sim3_rotation": [
+        [
+          0.9993671302150815,
+          0.012845845515312409,
+          -0.033171121456296845
+        ],
+        [
+          -0.011843827187512361,
+          0.999472815787647,
+          0.030229360877541647
+        ],
+        [
+          0.03354195586461839,
+          -0.029817356598280494,
+          0.9989924236160486
+        ]
+      ],
+      "sim3_translation": [
+        0.08583798990062697,
+        -0.023566263015098676,
+        -0.08145735111876284
+      ]
+    },
+    {
+      "edgeIndex": 6,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_006",
+      "currentWindowID": "window_007",
+      "parentChunkStartIndex": 174,
+      "currentChunkStartIndex": 203,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1047",
+        "cap-1052",
+        "cap-1054",
+        "cap-1056",
+        "cap-1059",
+        "cap-1066"
+      ],
+      "sourceFrameIDs": [
+        "cap-1047",
+        "cap-1052",
+        "cap-1054",
+        "cap-1056",
+        "cap-1059",
+        "cap-1066"
+      ],
+      "status": "estimated",
+      "point_count": 1603551,
+      "confidence_threshold": 0.15976562500000002,
+      "confidence_median_min": 1.59765625,
+      "rmse": 0.12156196845043607,
+      "mean": 0.0807246475008095,
+      "median": 0.05550730905726265,
+      "p90": 0.15311735319933006,
+      "p95": 0.2674622050671783,
+      "p99": 0.5281084951450319,
+      "sim3_scale": 1.0110076777558683,
+      "sim3_rotation_angle_deg": 2.549627803645363,
+      "sim3_translation_norm": 0.06737640077169188,
+      "sim3_rotation": [
+        [
+          0.9991030500427336,
+          -0.04212189159759821,
+          0.004340696205350094
+        ],
+        [
+          0.04217717945699266,
+          0.9990182834685575,
+          -0.013548240793164985
+        ],
+        [
+          -0.003765757342099331,
+          0.013719167021985905,
+          0.9998987966428721
+        ]
+      ],
+      "sim3_translation": [
+        -0.011472668849262568,
+        -0.06525081802033494,
+        -0.012259200548972782
+      ]
+    },
+    {
+      "edgeIndex": 7,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_007",
+      "currentWindowID": "window_008",
+      "parentChunkStartIndex": 203,
+      "currentChunkStartIndex": 232,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1215",
+        "cap-1217",
+        "cap-1220",
+        "cap-1222",
+        "cap-1224",
+        "cap-1227"
+      ],
+      "sourceFrameIDs": [
+        "cap-1215",
+        "cap-1217",
+        "cap-1220",
+        "cap-1222",
+        "cap-1224",
+        "cap-1227"
+      ],
+      "status": "estimated",
+      "point_count": 1801778,
+      "confidence_threshold": 0.28554687500000003,
+      "confidence_median_min": 2.85546875,
+      "rmse": 0.08399455967244887,
+      "mean": 0.061485579466589384,
+      "median": 0.0405897537659065,
+      "p90": 0.1468537128036604,
+      "p95": 0.1931483523478678,
+      "p99": 0.27183657678787665,
+      "sim3_scale": 0.9662740179479069,
+      "sim3_rotation_angle_deg": 4.3835578474251236,
+      "sim3_translation_norm": 0.09985885345086773,
+      "sim3_rotation": [
+        [
+          0.9987111745158516,
+          -0.04517375046990833,
+          -0.0231370301821913
+        ],
+        [
+          0.04377624239852798,
+          0.9973730913539781,
+          -0.057710980276495426
+        ],
+        [
+          0.025683272739946774,
+          0.056623748652762464,
+          0.9980651885472587
+        ]
+      ],
+      "sim3_translation": [
+        0.07911059249187868,
+        -0.04745269592889889,
+        0.03823017678726126
+      ]
+    },
+    {
+      "edgeIndex": 8,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_008",
+      "currentWindowID": "window_009",
+      "parentChunkStartIndex": 232,
+      "currentChunkStartIndex": 261,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1311",
+        "cap-1313",
+        "cap-1314",
+        "cap-1319",
+        "cap-1326",
+        "cap-1328"
+      ],
+      "sourceFrameIDs": [
+        "cap-1311",
+        "cap-1313",
+        "cap-1314",
+        "cap-1319",
+        "cap-1326",
+        "cap-1328"
+      ],
+      "status": "estimated",
+      "point_count": 1331357,
+      "confidence_threshold": 0.0494140625,
+      "confidence_median_min": 0.494140625,
+      "rmse": 0.12103700772310164,
+      "mean": 0.06303678729442579,
+      "median": 0.026408527884738593,
+      "p90": 0.16091343447399808,
+      "p95": 0.2910598949243048,
+      "p99": 0.5734132908266995,
+      "sim3_scale": 1.0337369432796206,
+      "sim3_rotation_angle_deg": 2.8214074270932596,
+      "sim3_translation_norm": 0.18989568621109393,
+      "sim3_rotation": [
+        [
+          0.9987930566381559,
+          -0.04351967605057382,
+          -0.02276988818292503
+        ],
+        [
+          0.04359318788147278,
+          0.9990456025844482,
+          0.002741883842827824
+        ],
+        [
+          0.022628830763882828,
+          -0.0037311865579229284,
+          0.9997369725408426
+        ]
+      ],
+      "sim3_translation": [
+        -0.10703829774580553,
+        -0.09418799984430348,
+        -0.1254264531213094
+      ]
+    },
+    {
+      "edgeIndex": 9,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_009",
+      "currentWindowID": "window_010",
+      "parentChunkStartIndex": 261,
+      "currentChunkStartIndex": 290,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1455",
+        "cap-1457",
+        "cap-1459",
+        "cap-1488",
+        "cap-1492",
+        "cap-1494"
+      ],
+      "sourceFrameIDs": [
+        "cap-1455",
+        "cap-1457",
+        "cap-1459",
+        "cap-1488",
+        "cap-1492",
+        "cap-1494"
+      ],
+      "status": "estimated",
+      "point_count": 1478041,
+      "confidence_threshold": 0.09189453125000001,
+      "confidence_median_min": 0.9189453125,
+      "rmse": 0.10479164594850975,
+      "mean": 0.07026587336096672,
+      "median": 0.042475943716676685,
+      "p90": 0.15005191688227743,
+      "p95": 0.2522772827069763,
+      "p99": 0.39970283350514263,
+      "sim3_scale": 1.040763069037629,
+      "sim3_rotation_angle_deg": 3.3289213979013854,
+      "sim3_translation_norm": 0.11807888900294991,
+      "sim3_rotation": [
+        [
+          0.9996953117615551,
+          -0.022628306592786963,
+          -0.009861205946032622
+        ],
+        [
+          0.02207858593729145,
+          0.9983672716221929,
+          -0.052681372387854655
+        ],
+        [
+          0.011037195521366294,
+          0.05244759951037809,
+          0.9985626818686054
+        ]
+      ],
+      "sim3_translation": [
+        -0.10792925715151158,
+        0.0403141909536856,
+        -0.025858566987434273
+      ]
+    },
+    {
+      "edgeIndex": 10,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_010",
+      "currentWindowID": "window_011",
+      "parentChunkStartIndex": 290,
+      "currentChunkStartIndex": 319,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1610",
+        "cap-1620",
+        "cap-1624",
+        "cap-1633",
+        "cap-1646",
+        "cap-1659"
+      ],
+      "sourceFrameIDs": [
+        "cap-1610",
+        "cap-1620",
+        "cap-1624",
+        "cap-1633",
+        "cap-1646",
+        "cap-1659"
+      ],
+      "status": "estimated",
+      "point_count": 1934415,
+      "confidence_threshold": 0.31171875000000004,
+      "confidence_median_min": 3.1171875,
+      "rmse": 0.058822646253642294,
+      "mean": 0.04941535047091554,
+      "median": 0.04161042098812573,
+      "p90": 0.08933039368079529,
+      "p95": 0.11425853338736923,
+      "p99": 0.17475437277247885,
+      "sim3_scale": 1.1137688429868637,
+      "sim3_rotation_angle_deg": 2.360368077012085,
+      "sim3_translation_norm": 0.3088185469328365,
+      "sim3_rotation": [
+        [
+          0.9996643695043052,
+          0.024079257815717223,
+          -0.009557075211801179
+        ],
+        [
+          -0.024372963063682203,
+          0.9991936105229497,
+          -0.03190748127958903
+        ],
+        [
+          0.00878106001893764,
+          0.032129706396965114,
+          0.9994451335374988
+        ]
+      ],
+      "sim3_translation": [
+        -0.2500344838120254,
+        0.0931161398067053,
+        -0.15550252841050738
+      ]
+    },
+    {
+      "edgeIndex": 11,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_011",
+      "currentWindowID": "window_012",
+      "parentChunkStartIndex": 319,
+      "currentChunkStartIndex": 348,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1847",
+        "cap-1853",
+        "cap-1851",
+        "cap-1855",
+        "cap-1860",
+        "cap-1865"
+      ],
+      "sourceFrameIDs": [
+        "cap-1847",
+        "cap-1853",
+        "cap-1851",
+        "cap-1855",
+        "cap-1860",
+        "cap-1865"
+      ],
+      "status": "estimated",
+      "point_count": 1697967,
+      "confidence_threshold": 0.053125000000000006,
+      "confidence_median_min": 0.53125,
+      "rmse": 0.06773934001528306,
+      "mean": 0.052238555799147275,
+      "median": 0.03515807145323881,
+      "p90": 0.11820592816889007,
+      "p95": 0.1431154738168552,
+      "p99": 0.18244305833058358,
+      "sim3_scale": 1.009545927980386,
+      "sim3_rotation_angle_deg": 2.759652939081484,
+      "sim3_translation_norm": 0.15609050572394503,
+      "sim3_rotation": [
+        [
+          0.9992277698562648,
+          0.0365531518814842,
+          -0.014412877422809695
+        ],
+        [
+          -0.03694024888984956,
+          0.9989369675935953,
+          -0.027574495224159674
+        ],
+        [
+          0.013389621355055763,
+          0.028085616646966672,
+          0.9995158408837385
+        ]
+      ],
+      "sim3_translation": [
+        0.02980325945381601,
+        0.14913065379980428,
+        -0.03515764213266248
+      ]
+    },
+    {
+      "edgeIndex": 12,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_012",
+      "currentWindowID": "window_013",
+      "parentChunkStartIndex": 348,
+      "currentChunkStartIndex": 377,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-1988",
+        "cap-1996",
+        "cap-2002",
+        "cap-2009",
+        "cap-2020",
+        "cap-2026"
+      ],
+      "sourceFrameIDs": [
+        "cap-1988",
+        "cap-1996",
+        "cap-2002",
+        "cap-2009",
+        "cap-2020",
+        "cap-2026"
+      ],
+      "status": "estimated",
+      "point_count": 2055848,
+      "confidence_threshold": 0.17207031250000002,
+      "confidence_median_min": 1.720703125,
+      "rmse": 0.07611621707335801,
+      "mean": 0.05781248544492685,
+      "median": 0.04313947310336931,
+      "p90": 0.11374482435041908,
+      "p95": 0.15412398137838368,
+      "p99": 0.2598286544150223,
+      "sim3_scale": 1.1104665279832202,
+      "sim3_rotation_angle_deg": 1.122489921397913,
+      "sim3_translation_norm": 0.2896361201135216,
+      "sim3_rotation": [
+        [
+          0.9998146622992451,
+          -0.010183822873928435,
+          0.016338017110971558
+        ],
+        [
+          0.010124562660840076,
+          0.9999418785960383,
+          0.0037057604823626375
+        ],
+        [
+          -0.016374806330844864,
+          -0.0035396583872412037,
+          0.9998596584201853
+        ]
+      ],
+      "sim3_translation": [
+        -0.2831391337822424,
+        0.030797604448491778,
+        -0.05265757833104323
+      ]
+    },
+    {
+      "edgeIndex": 13,
+      "edgeType": "adjacent_dense_sim3",
+      "parentWindowID": "window_013",
+      "currentWindowID": "window_014",
+      "parentChunkStartIndex": 377,
+      "currentChunkStartIndex": 406,
+      "overlapFrameCount": 6,
+      "parentSlots": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "currentSlots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sharedFrameIDs": [
+        "cap-2165",
+        "cap-2168",
+        "cap-2177",
+        "cap-2190",
+        "cap-2198",
+        "cap-2211"
+      ],
+      "sourceFrameIDs": [
+        "cap-2165",
+        "cap-2168",
+        "cap-2177",
+        "cap-2190",
+        "cap-2198",
+        "cap-2211"
+      ],
+      "status": "estimated",
+      "point_count": 2029809,
+      "confidence_threshold": 0.225390625,
+      "confidence_median_min": 2.25390625,
+      "rmse": 0.06787902715756626,
+      "mean": 0.04483326494900368,
+      "median": 0.026931022376343424,
+      "p90": 0.10992849478485206,
+      "p95": 0.15371766192298872,
+      "p99": 0.25404482867739825,
+      "sim3_scale": 0.9443807489456207,
+      "sim3_rotation_angle_deg": 0.24263670990661335,
+      "sim3_translation_norm": 0.13398374468494584,
+      "sim3_rotation": [
+        [
+          0.9999952676371451,
+          -0.0018616209342883004,
+          0.002449300065750121
+        ],
+        [
+          0.0018687408347618241,
+          0.9999940261129501,
+          -0.0029078421735763272
+        ],
+        [
+          -0.0024438721340443092,
+          0.002912405519661788,
+          0.9999927726654245
+        ]
+      ],
+      "sim3_translation": [
+        0.11901296642570047,
+        -0.026218701719262327,
+        0.055678876986808845
+      ]
+    }
+  ],
+  "elapsed_s": 17.55
+}

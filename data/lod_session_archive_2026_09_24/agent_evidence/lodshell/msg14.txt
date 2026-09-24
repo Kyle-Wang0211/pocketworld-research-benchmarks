@@ -1,0 +1,20 @@
+LOD 查看器(十四):setParams 显式传 cache_bytes = 3 × 15 × point_budget(照 Mac 台架 cache_mult=3)
+
+- lod_bridge.dart:LodParams.toWire 永远带 point_budget 与 cache_bytes:
+  point_budget = 调用方值 ?? 3630000(pwlod_viewer.h:93 默认,= pw_splat_ab_bench
+  Sources/lod/pw_lod_bench.cpp:60 @2f83c6b5 Args.budget);
+  cache_bytes  = 调用方值 ?? 3 × 15 × point_budget —— 15 是头文件 :97 的「默认兼下限 15 * point_budget」,
+  3 是 pw_lod_bench.cpp:61 @2f83c6b5 `cache_mult = 3.0`(Mac 台架所有测量跑的就是它,45 B/预算点)。
+  ⇒ 引擎不会再退回头文件的 15× 默认。调用方显式给 cacheBytes 时照传(留给测量臂)。
+- 顺带:v2 头多了 5 行,此前按 v1 写的 pwlod_viewer.h 行号引用(Dart 与 ios/Runner/PwLod*)全部
+  改成 v2 行号(逐条对过内容)。
+
+判据(test/point_cloud_lod/ 49/49 过,analyze 零问题;iphoneos arm64 冒烟重跑通过):
+- 默认参数 → point_budget 3630000、cache_bytes 163350000;预算 1e6 → 45000000;检查器用字面量 3 × 15
+  (不引用库里的常数);头文件里确有「default and minimum 15 * point_budget」「default 3630000」。
+- 阴性:15 × budget(3630000 与 1e6 两例)被同一检查器判失败;页面 widget 测试核它自己发出的
+  setParams = 3 × 15 × 3630000 且 ≠ 15 × 3630000。
+  一次性阴性(改完即还原,未入库):kLodBenchCacheMult 改成 1 → cache 判据与页面判据两条失败。
+- 部分参数:只给 target_frame_ms 时发出 {target_frame_ms, point_budget, cache_bytes}。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,157 @@
+{
+  "schema_version": "pocketworld_coreml_official_postprocess_export_v1",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "raw_coreml_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window021_cpu_2026_06_05",
+    "official_src": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src"
+  },
+  "outputs": {
+    "out_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window021_cpu_official_save_postprocess_2026_06_05",
+    "depth_index": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window021_cpu_official_save_postprocess_2026_06_05/depth_index.json",
+    "runner_report": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window021_cpu_official_save_postprocess_2026_06_05/depth_runner_report.json"
+  },
+  "official_postprocess": {
+    "algorithm": [
+      "align_poses_umeyama(raw_pred_extrinsics, input_extrinsics)",
+      "depth = raw_depth / pose_scale",
+      "intrinsics = input_intrinsics",
+      "extrinsics = input_extrinsics[:3,:]"
+    ],
+    "note": "This does not modify CoreML inference; it changes only the postprocess/export semantics to match the official PyTorch API."
+  },
+  "windows": [
+    {
+      "windowID": "window_021",
+      "frameCount": 35,
+      "alignFrameCount": 35,
+      "paddingFrameCount": 0,
+      "ransac": true,
+      "randomState": 42,
+      "poseScale": 0.6466292404559536,
+      "rotation": [
+        [
+          0.11681214859328183,
+          -0.9675640395476307,
+          -0.22399721274000695
+        ],
+        [
+          0.8494514785985934,
+          0.21419373924103827,
+          -0.48223772931678177
+        ],
+        [
+          0.5145746859763747,
+          -0.13394353826972366,
+          0.8469191349285375
+        ]
+      ],
+      "translation": [
+        -0.37161587674997876,
+        -0.6653661545422022,
+        -1.0162526122245337
+      ],
+      "rawDepth": {
+        "count": 12361720,
+        "min": 0.1025390625,
+        "p05": 0.2015380859375,
+        "median": 0.94287109375,
+        "mean": 0.8563496189879833,
+        "p95": 1.341796875,
+        "max": 1.712890625,
+        "std": 0.36984398958986847
+      },
+      "postDepth": {
+        "count": 12361720,
+        "min": 0.15857474505901337,
+        "p05": 0.31167489290237427,
+        "median": 1.4581325054168701,
+        "mean": 1.3243286884529668,
+        "p95": 2.075063705444336,
+        "max": 2.648953437805176,
+        "std": 0.5719568210147952
+      },
+      "rawConfidence": {
+        "count": 12361720,
+        "min": 1.0,
+        "p05": 1.515625,
+        "median": 4.4609375,
+        "mean": 5.251832289756578,
+        "p95": 11.984375,
+        "max": 21.5625,
+        "std": 3.221934210507353
+      },
+      "rawPredPoseVsInput": {
+        "camera_center_distance": {
+          "count": 35,
+          "min": 1.928955857988078,
+          "p05": 1.938534833813894,
+          "median": 2.3557895612071778,
+          "mean": 2.3703034403363925,
+          "p95": 2.7514239271060426,
+          "max": 2.8007894180409747,
+          "std": 0.23205915868086
+        },
+        "rotation_angle_deg": {
+          "count": 35,
+          "min": 82.24256260423581,
+          "p05": 82.37183750302269,
+          "median": 84.12357047158284,
+          "mean": 83.79772031343686,
+          "p95": 85.3378133543361,
+          "max": 86.01195909675579,
+          "std": 0.9417429363166278
+        }
+      },
+      "alignedInputVsRawPredPose": {
+        "camera_center_distance": {
+          "count": 35,
+          "min": 0.0016639889575210925,
+          "p05": 0.0017885374501780346,
+          "median": 0.00823493433904775,
+          "mean": 0.011094794502185533,
+          "p95": 0.03382725830370248,
+          "max": 0.03933253447927707,
+          "std": 0.009181667200961285
+        },
+        "rotation_angle_deg": {
+          "count": 35,
+          "min": 0.0,
+          "p05": 0.39162534212641975,
+          "median": 3.039538976207797,
+          "mean": 3.082157995049553,
+          "p95": 5.083715096907875,
+          "max": 5.693393686566574,
+          "std": 1.2514467333617985
+        }
+      },
+      "postPoseVsInput": {
+        "camera_center_distance": {
+          "count": 35,
+          "min": 0.0,
+          "p05": 0.0,
+          "median": 0.0,
+          "mean": 0.0,
+          "p95": 0.0,
+          "max": 0.0,
+          "std": 0.0
+        },
+        "rotation_angle_deg": {
+          "count": 35,
+          "min": 0.0,
+          "p05": 0.0,
+          "median": 0.0,
+          "mean": 0.0006121086177046034,
+          "p95": 0.0,
+          "max": 0.021423801619661117,
+          "std": 0.0035691759042557948
+        }
+      },
+      "rawPredIntrinsicsVsInput": {
+        "mae": 9.09231451125372,
+        "rmse": 19.089337250915992,
+        "max_abs": 50.313079833984375
+      }
+    }
+  ],
+  "preserve_window_duplicates": false
+}

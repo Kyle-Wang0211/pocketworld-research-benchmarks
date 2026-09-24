@@ -1,0 +1,30 @@
+LOD v3 参考数据:真实 SparseCloudPainter 出的画家参照(parity_fixture_v3 生成器)+ heightRampOf 只读暴露
+
+给 GPU 查看器(pwlod_viewer.h v3,sha256 4e867aa3…,pwlod_style / set_points)的参照,取自产品画家本身,
+不是重推公式。
+
+- lib/ui/official_capture/sparse_cloud_view.dart:SparseCloudPainter.heightRampOf(xyz)(@visibleForTesting),
+  只把 _ensureFit 已算好的 _minY/_invYSpan 读出来(pwlod_style.uncolored_min_y / uncolored_inv_y_span 要用),
+  行为不变。
+- test/point_cloud_lod/painter_parity_fixture_v3_test.dart:
+  · 先 pump 一个真 SparseCloudView,从它的 CustomPaint 取回画家实际用的 16×16 圆点精灵;
+  · 画到一个只记录 drawRawAtlas 参数的 Canvas 上 ⇒ 逐实例 RSTransform / rect / modulate 颜色(画家远→近顺序);
+  · 逐点值:同一个画家、只留一个点的可见性遮罩(画家自己的 L2 遮罩路径)再画一次,核对全体逐点记录的多重集
+    与整帧 atlas 逐位相同(否则测试失败);
+  · PNG:黑底(视图 Container)+ 画家,1× 与 3×(canvas.scale(3),手机 dpr)。
+  · 1536 点(球壳 / 地面 / 亮墙 / 近处杂点 + 0.25% 远飞点),有色与无色(高度灰阶)两份;
+    相机 7 组:正交默认 / 正交缩放平移 / 透视(拍摄起始,camDistOverride)/ ortho_mix=0.5 / 正交带 roll /
+    透视带 roll 近距 / 透视最大点径(Potree maxSize 50/16 触顶 170 点);
+    外观:plain / TINT(编辑,框外 0xFFE05252)/ CULL(浏览)/ 可见性遮罩 / 长度不符的遮罩(画家忽略)。
+  · 只有设 PW_PARITY_FIXTURE_OUT 才写出;否则在临时目录跑同一套生成当自检。
+  自检判据(都能失败):每组都画出点;CULL < TINT = plain;遮罩 < plain;长度不符遮罩 = plain;TINT 有红点、
+  plain 没有;无色云三通道相等、有色云不相等;正交 scale 恒为 3/16、透视 scale 有 >10 个不同值;
+  最大点径组既有触顶也有未触顶。
+
+产物(不入库):~/Developer/pw_lod_data/parity_fixture_v3/,26 组 × (json + png + png_3x) + 两份点云 + index.json,
+84 个文件,12 MB;SHA256SUMS 自身 sha256 c4070a6a…,index.json c8e2ac52…。
+flutter test(本文件)1/1 过;flutter analyze(两文件)无问题。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

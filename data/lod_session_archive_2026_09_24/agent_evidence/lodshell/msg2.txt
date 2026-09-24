@@ -1,0 +1,23 @@
+LOD 查看器(二):相机 = 旧查看器 CloudCamera 原样 → pwlod_camera(行主序 WebGPU clip)
+
+lib/point_cloud_lod/lod_camera.dart(纯 Dart,零平台类型)只组合,不新推数学:
+- 相机本体直接调用 lib/ui/official_capture/cloud_camera.dart(旧查看器 SparseCloudView
+  作画用的唯一事实源),默认正交(sparse_cloud_view.dart:199 kCloudOrthographic = true);
+  近裁剪 = 旧 painter 的 `depth <= _radius * 0.02`(sparse_cloud_view.dart:1479)。
+- 视图矩阵 = LOD 库自己的测试相机 lookAt(Aether3D tests/pointcloud_lod/test_select.cpp:51-61
+  @d251451),eye = pivot − camDist·row3,up 按 roll 旋转。
+- 投影 = three.js Matrix4.makeOrthographic / makePerspective 的 WebGPU 分支(src/math/Matrix4.js
+  :1200-1242 / :1140-1183 @6101189ee28b,即 LOD 库 DEVIATIONS.md:21 钉的版本),平移=偏心视锥。
+  旧查看器不是 GL 矩阵(CPU painter),所以没有 [-1,1]→[0,1] 的换算;z 直接按 WebGPU 分支。
+- product_adapter:A1 远平面(旧查看器没有)= camDist + 2·radius;A2 pivot/radius 取
+  metadata.json 的 position min/max(lod_scene_fit.dart),旧查看器那套逐点稳健拟合做不到。
+
+判据(test/point_cloud_lod/lod_camera_test.dart,13/13 过):
+- 正交:60 组随机相机×40 点,矩阵投到屏幕与 CloudProjection.project 最大差 2.9e-11 px;
+  与「旧公式直接写成 4×4」逐元素最大相对差 1.5e-15;clip z = 旧 depth 线性映到 [0,1](1e-12)。
+  阴性:透视矩阵冒充正交 → 最大差 541 px;转置 → 被同一把尺抓到;透视矩阵逐元素差 > 1e-3。
+- 引擎视锥(照抄 select.cpp:40-52)对屏内点全收、屏外点全拒;阴性:转置后大量不一致。
+- 透视开关:与旧查看器透视最大差 4.1e-10 px,fov = 2·atan((H/2)/f);阴性:正交冒充透视报错。
+- ortho_width/height_world = 视口宽/高 × 旧查看器每像素世界尺寸 ⇒ Cesium pixelSize 与旧查看器一致。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

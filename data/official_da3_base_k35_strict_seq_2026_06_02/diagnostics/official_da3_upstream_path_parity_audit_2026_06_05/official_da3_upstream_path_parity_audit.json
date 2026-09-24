@@ -1,0 +1,121 @@
+{
+  "schema_version": "aether_da3_official_upstream_path_parity_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "product_image_only_coreml_path_ready_for_same_capture_regression",
+    "goal_complete": false,
+    "official_algorithm_blame_supported": false,
+    "current_thickness_authority": "product_image_only_coreml_ready_but_same_capture_regression_not_rerun",
+    "highest_priority_gap": null,
+    "conclusion": "The APP/Dart path now selects official image-only K35 semantics and feeds native from a pre-normalized image tensor. DA3BASE_280x504_N35_image_only CoreML now exists, so the next authority gap is not model packaging; it is the same-capture product image-only regression output. Old pose-conditioned outputs remain compatibility evidence.",
+    "next_best_action": "Rerun the same capture/window through the product image-only CoreML path, then compare official core-frame NPZ downstream."
+  },
+  "inputs": {
+    "dataset_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "official_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "dart_package": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter"
+  },
+  "checks": [
+    {
+      "id": "official_streaming_call_image_only",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/da3_streaming/da3_streaming.py",
+      "line": 273,
+      "needle": "predictions = self.model.inference(images, ref_view_strategy=ref_view_strategy)",
+      "evidence": "官方 DA3-Streaming 默认调用只传 images/ref_view_strategy，没有传 extrinsics/intrinsics。"
+    },
+    {
+      "id": "official_forward_uses_cam_enc_only_when_external_camera_exists",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 126,
+      "needle": "if extrinsics is not None:",
+      "evidence": "官方模型只有在外部 camera 存在时才创建 cam_enc token；image-only baseline 不走这个条件分支。"
+    },
+    {
+      "id": "official_image_only_cam_dec_predicts_camera",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/model/da3.py",
+      "line": 216,
+      "needle": "pose_enc = self.cam_dec(feats[-1][1])",
+      "evidence": "官方 image-only 路径用 cam_dec 从图像特征预测 pose encoding。"
+    },
+    {
+      "id": "official_external_camera_normalize_and_umeyama_path",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/api.py",
+      "line": 204,
+      "needle": "ex_t_norm = self._normalize_extrinsics",
+      "evidence": "外部 camera 路径还包含首帧归一化、median-distance normalization 和后续 Umeyama 对齐。"
+    },
+    {
+      "id": "official_default_preprocess_upper_bound_resize",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/src/depth_anything_3/utils/io/input_processor.py",
+      "line": 71,
+      "needle": "process_res_method: str = \"upper_bound_resize\"",
+      "evidence": "官方默认 preprocess 是 upper_bound_resize，再处理为 patch-size divisible。"
+    },
+    {
+      "id": "product_policy_selects_image_only_model",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+      "line": 69,
+      "needle": "resourceName: 'DA3BASE_280x504_N35_image_only'",
+      "evidence": "当前 APP/Dart 主线默认选择官方 image-only K35 CoreML 包。"
+    },
+    {
+      "id": "current_dart_camera_tensors_are_metadata_only",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart",
+      "line": 840,
+      "needle": "camera tensors are metadata/compat fields that must not be DA3 image-only inputs",
+      "evidence": "Dart manifest 仍保留 camera tensors，但 image-only runner contract 声明它们不是 DA3 输入。"
+    },
+    {
+      "id": "current_dart_preprocess_is_official_process_res",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart",
+      "line": 939,
+      "needle": "mode: 'upper_bound_resize_patch_align'",
+      "evidence": "Dart 默认 DA3 input 生成走官方 process_res=504 upper_bound_resize + patch-align。"
+    },
+    {
+      "id": "current_dart_runtime_input_is_normalized_tensor",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_derivation_service.dart",
+      "line": 722,
+      "needle": "imageTensorFloat32ChwRelativePath",
+      "evidence": "Dart 现在把官方预处理终点推进到 normalized float32 CHW tensor。"
+    },
+    {
+      "id": "app_swift_image_only_refuses_png_decode_fallback",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "line": 589,
+      "needle": "official image-only DA3 requires imageTensorFloat32ChwPath",
+      "evidence": "Swift image-only 分支强制消费 Dart tensor，不再回退 PNG decode。"
+    },
+    {
+      "id": "legacy_pose_coreml_package_exists_for_compat_only",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+      "exists": true,
+      "evidence": "旧 pose-conditioned CoreML 包仍存在，但不再是 official mainline。"
+    },
+    {
+      "id": "current_image_only_coreml_package_exists",
+      "status": "pass",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+      "exists": true,
+      "evidence": "官方 image-only CoreML 包存在才可把 APP/CoreML 输出当成官方 image-only 路径证据。"
+    }
+  ],
+  "plain_language": [
+    "官方默认 DA3-Streaming 是 image-only；当前 APP policy/native allowlist 已指向 image-only K35。",
+    "Dart 已把官方 preprocess 终点推进到 normalized float32 CHW tensor，Swift image-only 分支不再 PNG decode fallback。",
+    "DA3BASE_280x504_N35_image_only CoreML artifact/signature 现在已落地。",
+    "旧 pose-conditioned 输出只能当 compatibility/research 证据，不能当产品 official authority。"
+  ]
+}

@@ -1,0 +1,12 @@
+LOD 查看器(十五):注释写明相机距离/正交视锥保持旧查看器 CloudCamera 的出处与理由
+
+只改注释(协调会话裁定:保持旧查看器,不换 Potree 的 R/sin(fov/2)):
+- 保留:cloud_camera.dart:48-58 @875fe67 projectionFor(camDist = radius·8,f = 半短边·6.5·zoom,
+  常数 :283-284,用户 2026-07-28 定,:275-282)⇒ 包围球占半短边 ≈81%。
+- 理由:用户定的是「与现有查看器一致、保持正交」。
+- 刻意不用:Potree @5636cd4 zoomTo 距离 R/sin(fovr/2)·factor、竖屏 fovr 乘宽高比
+  (src/extensions/PerspectiveCamera.js:28-38,fov 60 在 viewer.js:130)与正交半宽 = view.radius
+  (viewer.js:2097-2101);390×844 竖屏上是 4.17 R,球只占半宽 ≈24%。
+与旧查看器逐像素一致已由现有判据锁住(正交最大差 2.9e-11 px)。49/49 过,analyze 零问题。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

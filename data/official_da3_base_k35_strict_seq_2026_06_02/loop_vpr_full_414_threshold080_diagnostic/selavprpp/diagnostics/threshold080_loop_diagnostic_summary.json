@@ -1,0 +1,137 @@
+{
+  "schema_version": "pocketworld_sela_threshold080_loop_diagnostic_summary_v1",
+  "route": "SelaVPR++ threshold=0.80 diagnostic only -> official process_loop_list -> CoreML K35 loop chunks -> official postprocess -> dense Sim3/Sim3LoopOptimizer",
+  "production_note": "This does not change production threshold. Default threshold 0.85 still produced zero loop candidates.",
+  "raw_loop_pair_count": 12,
+  "loop_result_count": 5,
+  "loop_window_count": 5,
+  "loop_constraint_count": 5,
+  "optimizer": {
+    "status": "completed",
+    "sequential_transform_count": 23,
+    "optimized_transform_count": 23,
+    "loop_constraint_count": 5,
+    "pre_scale_mean": 1.0150456023339993,
+    "post_scale_mean": 1.0111186089723005,
+    "pre_scale_std": 0.04980804874612453,
+    "post_scale_std": 0.05099610962209054,
+    "elapsed_s": 0.474
+  },
+  "loop_summary": {
+    "edge_count": 5,
+    "estimated_count": 5,
+    "rmse_mean": NaN,
+    "p90_mean": NaN,
+    "scale_mean": 0.9262533009750685,
+    "scale_std": 0.047845583556542975,
+    "a_rmse_mean": 0.09601102012927412,
+    "b_rmse_mean": 0.11209861384336905
+  },
+  "loop_windows": [
+    {
+      "loopWindowID": "loop_window_000",
+      "chunkIndexA": 17,
+      "chunkIndexB": 6,
+      "chunk_gap": 11,
+      "rangeA": [
+        289,
+        305
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "a_p90": 0.17008479406802637,
+      "b_p90": 0.1084536644731204,
+      "a_rmse": 0.10448061968377369,
+      "b_rmse": 0.0817508344805682,
+      "sim3_scale": 0.8815695511514454,
+      "verdict": "geometry plausible diagnostic"
+    },
+    {
+      "loopWindowID": "loop_window_001",
+      "chunkIndexA": 19,
+      "chunkIndexB": 4,
+      "chunk_gap": 15,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        70,
+        86
+      ],
+      "a_p90": 0.15811798982025024,
+      "b_p90": 0.09835478573764271,
+      "a_rmse": 0.10273157025968013,
+      "b_rmse": 0.060184566897393516,
+      "sim3_scale": 0.9639468164357762,
+      "verdict": "geometry plausible diagnostic"
+    },
+    {
+      "loopWindowID": "loop_window_002",
+      "chunkIndexA": 2,
+      "chunkIndexB": 1,
+      "chunk_gap": 1,
+      "rangeA": [
+        34,
+        50
+      ],
+      "rangeB": [
+        17,
+        33
+      ],
+      "a_p90": 0.0986078639570475,
+      "b_p90": 0.11313645035480961,
+      "a_rmse": 0.08511656984321664,
+      "b_rmse": 0.08805545860019648,
+      "sim3_scale": 0.9882512406174159,
+      "verdict": "near-neighbor duplicate"
+    },
+    {
+      "loopWindowID": "loop_window_003",
+      "chunkIndexA": 20,
+      "chunkIndexB": 6,
+      "chunk_gap": 14,
+      "rangeA": [
+        340,
+        356
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "a_p90": 0.06319752847293239,
+      "b_p90": 0.15530373820222274,
+      "a_rmse": 0.05567062179303906,
+      "b_rmse": 0.10783505331391594,
+      "sim3_scale": 0.9353000460274108,
+      "verdict": "geometry plausible diagnostic"
+    },
+    {
+      "loopWindowID": "loop_window_004",
+      "chunkIndexA": 16,
+      "chunkIndexB": 6,
+      "chunk_gap": 10,
+      "rangeA": [
+        279,
+        295
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "a_p90": 0.23177238884515525,
+      "b_p90": 0.3671875001842695,
+      "a_rmse": 0.13205571906666108,
+      "b_rmse": 0.22266715592477118,
+      "sim3_scale": 0.8621988506432945,
+      "verdict": "risky high residual"
+    }
+  ],
+  "contact_sheets": {
+    "raw_pair_contact_sheet": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/loop_vpr_full_414_threshold080_diagnostic/selavprpp/diagnostics/threshold080_raw_pair_contact_sheet.png",
+    "loop_window_contact_sheet": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/loop_vpr_full_414_threshold080_diagnostic/selavprpp/diagnostics/threshold080_loop_window_contact_sheet.png"
+  },
+  "implementation_note": "loop_capture loopChunk.candidateSimilarity is null because the helper looked up range starts rather than the raw VPR pair indices; retrieval top_loop_pairs retains the actual similarities."
+}

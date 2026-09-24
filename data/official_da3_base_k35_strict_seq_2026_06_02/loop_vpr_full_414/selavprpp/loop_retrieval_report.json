@@ -1,0 +1,165 @@
+{
+  "schema_version": "aether_official_da3_k35_vpr_loop_retrieval_v1",
+  "backend": "selavprpp",
+  "license": "MIT (SelaVPR++ repo) + DINOv2 weights/code license must stay documented",
+  "commercial_safe": true,
+  "official_route": [
+    "DA3-BASE K35@476x742 sequential chunks already exported",
+    "VPR loop retrieval backend proposes loop pairs",
+    "official process_loop_list maps loop pairs to chunk-local ranges",
+    "fixed K35 CoreML loop capture is generated for official loop chunk forward"
+  ],
+  "fixed_coreml_k35_note": "Official Python DA3 can forward variable loop chunks. The production CoreML model is fixed at K=35, so loopHalfWindow is capped so the two official ranges fit into one K35 loop chunk; any unused slots are explicit duplicate padding and excluded from Sim3 range metadata.",
+  "parameters": {
+    "top_k": 5,
+    "similarity_threshold": 0.85,
+    "min_frame_gap": 10,
+    "nms_threshold": 25,
+    "loop_half_window": 8,
+    "window_size": 35
+  },
+  "descriptor_meta": {
+    "backend": "selavprpp",
+    "device": "mps",
+    "frame_count": 414,
+    "descriptor_shape": [
+      414,
+      2048
+    ],
+    "descriptor_dtype": "float32",
+    "elapsed_s": 19.252
+  },
+  "frame_count": 414,
+  "base_window_count": 24,
+  "chunk_indices": [
+    [
+      0,
+      35
+    ],
+    [
+      17,
+      52
+    ],
+    [
+      34,
+      69
+    ],
+    [
+      51,
+      86
+    ],
+    [
+      68,
+      103
+    ],
+    [
+      85,
+      120
+    ],
+    [
+      102,
+      137
+    ],
+    [
+      119,
+      154
+    ],
+    [
+      136,
+      171
+    ],
+    [
+      153,
+      188
+    ],
+    [
+      170,
+      205
+    ],
+    [
+      187,
+      222
+    ],
+    [
+      204,
+      239
+    ],
+    [
+      221,
+      256
+    ],
+    [
+      238,
+      273
+    ],
+    [
+      255,
+      290
+    ],
+    [
+      272,
+      307
+    ],
+    [
+      289,
+      324
+    ],
+    [
+      306,
+      341
+    ],
+    [
+      323,
+      358
+    ],
+    [
+      340,
+      375
+    ],
+    [
+      357,
+      392
+    ],
+    [
+      374,
+      409
+    ],
+    [
+      379,
+      414
+    ]
+  ],
+  "raw_loop_pair_count": 0,
+  "loop_result_count": 0,
+  "loop_window_count": 0,
+  "threshold_sweep": [
+    {
+      "threshold": 0.7,
+      "raw_pair_count": 170,
+      "nms_pair_count": 71
+    },
+    {
+      "threshold": 0.75,
+      "raw_pair_count": 83,
+      "nms_pair_count": 45
+    },
+    {
+      "threshold": 0.8,
+      "raw_pair_count": 12,
+      "nms_pair_count": 12
+    },
+    {
+      "threshold": 0.85,
+      "raw_pair_count": 0,
+      "nms_pair_count": 0
+    },
+    {
+      "threshold": 0.9,
+      "raw_pair_count": 0,
+      "nms_pair_count": 0
+    }
+  ],
+  "top_loop_pairs": [],
+  "loop_capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/loop_vpr_full_414/selavprpp/loop_capture",
+  "elapsed_s": 19.284
+}

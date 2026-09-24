@@ -1,0 +1,21 @@
+出包配方:tool/pw_ios_release_build.sh —— XDG settings 放对位置 + SwiftPM 关闭闸 + 构建前后工作树闸
+
+配方来源 = 台账 157/159/169/170 出包记录(manifest / PW_DIAGNOSTIC_BUILD_ID / PW_VIO_SHADOW_MODE=off /
+flutter build ios --release --no-codesign --no-pub / XDG_CONFIG_HOME 隔离),只做两处更正:
+
+1) XDG:Flutter 3.47.1 flutter_tools/lib/src/base/config.dart:200-207 在设了 XDG_CONFIG_HOME 时读
+   `$XDG_CONFIG_HOME/settings`。169/170 把 settings 复制到了 `$XDG_CONFIG_HOME/flutter/settings`
+   ⇒ 设置全 Not set ⇒ enable-swift-package-manager 默认开 ⇒ 插件迁 SwiftPM(2026-09-24 从 86a45cf
+   复现:Podfile.lock −113 行、pbxproj 删「[CP] Copy Pods Resources」、资源包改名 161→186 文件)。
+   现在 settings 放 `$XDG_CONFIG_HOME/settings`,并先过闸:`flutter config --list` 必须出现
+   `enable-swift-package-manager: false`,否则 exit 65 不编。
+2) 构建前已跟踪文件必须干净;构建后已跟踪文件有改动 ⇒ exit 67(产物不可信),改动原样留给人看。
+
+闸的判据(PW_RELEASE_GATE_ONLY=1):
+  阴性 1 旧布局 xdg/flutter/settings → 「(Not set)」rc=65
+  阴性 2 settings 里写 true → 「true」rc=65
+  阳性   xdg/settings(原 settings 复制)→ rc=0,config --list 显示 false
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

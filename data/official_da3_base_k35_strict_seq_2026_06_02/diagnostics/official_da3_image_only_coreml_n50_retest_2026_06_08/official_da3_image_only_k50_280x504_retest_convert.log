@@ -1,0 +1,35 @@
+scikit-learn version 1.8.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[97m[INFO ] using MLP layer as FFN[0m
+Loading weights from local directory
+[export] torch.jit.trace begin check_trace=True
+[export] torch.jit.trace done
+[export] coremltools convert begin
+Tuple detected at graph output. This will be flattened in the converted model.
+Converting PyTorch Frontend ==> MIL Ops:   0%|          | 0/1814 [00:00<?, ? ops/s]Saving value type of int64 into a builtin type of int32, might lose precision!
+Saving value type of int64 into a builtin type of int32, might lose precision!
+Converting PyTorch Frontend ==> MIL Ops:  13%|█▎        | 232/1814 [00:00<00:00, 2310.78 ops/s]Saving value type of int64 into a builtin type of int32, might lose precision!
+Saving value type of int64 into a builtin type of int32, might lose precision!
+Converting PyTorch Frontend ==> MIL Ops:  33%|███▎      | 602/1814 [00:00<00:00, 3125.71 ops/s]Saving value type of int64 into a builtin type of int32, might lose precision!
+Saving value type of int64 into a builtin type of int32, might lose precision!
+Converting PyTorch Frontend ==> MIL Ops:  50%|█████     | 915/1814 [00:00<00:00, 2975.92 ops/s]Saving value type of int64 into a builtin type of int32, might lose precision!
+Saving value type of int64 into a builtin type of int32, might lose precision!
+Converting PyTorch Frontend ==> MIL Ops:  75%|███████▌  | 1362/1814 [00:00<00:00, 3547.39 ops/s]Saving value type of int64 into a builtin type of int32, might lose precision!
+Saving value type of int64 into a builtin type of int32, might lose precision!
+Converting PyTorch Frontend ==> MIL Ops:  95%|█████████▍| 1720/1814 [00:01<00:00, 1134.29 ops/s]Converting PyTorch Frontend ==> MIL Ops: 100%|█████████▉| 1812/1814 [00:01<00:00, 1603.11 ops/s]
+Running MIL frontend_pytorch pipeline:   0%|          | 0/5 [00:00<?, ? passes/s]Running MIL frontend_pytorch pipeline:  80%|████████  | 4/5 [00:00<00:00, 37.64 passes/s]Running MIL frontend_pytorch pipeline: 100%|██████████| 5/5 [00:00<00:00, 39.01 passes/s]
+Running MIL default pipeline:   0%|          | 0/95 [00:00<?, ? passes/s]Running MIL default pipeline:   4%|▍         | 4/95 [00:00<00:13,  6.87 passes/s]Running MIL default pipeline:  11%|█         | 10/95 [00:00<00:05, 16.75 passes/s]Running MIL default pipeline:  15%|█▍        | 14/95 [00:00<00:03, 21.43 passes/s]Running MIL default pipeline:  19%|█▉        | 18/95 [00:01<00:04, 18.52 passes/s]Running MIL default pipeline:  22%|██▏       | 21/95 [00:01<00:04, 16.99 passes/s]Running MIL default pipeline:  27%|██▋       | 26/95 [00:01<00:03, 22.36 passes/s]Running MIL default pipeline:  35%|███▍      | 33/95 [00:01<00:01, 31.10 passes/s]Running MIL default pipeline:  39%|███▉      | 37/95 [00:01<00:02, 23.05 passes/s]Running MIL default pipeline:  44%|████▍     | 42/95 [00:01<00:01, 27.24 passes/s]Running MIL default pipeline:  51%|█████     | 48/95 [00:02<00:01, 32.16 passes/s]Running MIL default pipeline:  57%|█████▋    | 54/95 [00:02<00:01, 37.00 passes/s]Running MIL default pipeline:  57%|█████▋    | 54/95 [00:18<00:01, 37.00 passes/s]Running MIL default pipeline:  62%|██████▏   | 59/95 [00:59<01:58,  3.28s/ passes]Running MIL default pipeline:  65%|██████▌   | 62/95 [00:59<01:27,  2.64s/ passes]Running MIL default pipeline:  69%|██████▉   | 66/95 [00:59<00:56,  1.94s/ passes]Running MIL default pipeline:  77%|███████▋  | 73/95 [00:59<00:25,  1.16s/ passes]Running MIL default pipeline:  84%|████████▍ | 80/95 [00:59<00:11,  1.35 passes/s]Running MIL default pipeline:  92%|█████████▏| 87/95 [00:59<00:03,  2.04 passes/s]Running MIL default pipeline:  98%|█████████▊| 93/95 [01:02<00:00,  2.01 passes/s]Running MIL default pipeline: 100%|██████████| 95/95 [01:02<00:00,  1.51 passes/s]
+Running MIL backend_mlprogram pipeline:   0%|          | 0/12 [00:00<?, ? passes/s]Running MIL backend_mlprogram pipeline:  58%|█████▊    | 7/12 [00:00<00:00, 67.13 passes/s]Running MIL backend_mlprogram pipeline: 100%|██████████| 12/12 [00:00<00:00, 68.33 passes/s]
+[export] coremltools convert done
+[export] saved /Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_n50_retest_2026_06_08/DA3BASE_280x504_N50_image_only.mlpackage
+{
+  "schema_version": "aether_da3_image_only_coreml_export_v1",
+  "dry_run": null,
+  "conversion": {
+    "status": "pass",
+    "elapsed_s": 365.56258524999976,
+    "out_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_n50_retest_2026_06_08/DA3BASE_280x504_N50_image_only.mlpackage"
+  },
+  "elapsed_s": 370.36498674999893
+}

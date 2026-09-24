@@ -1,0 +1,58 @@
+{
+  "bench": "pw_points",
+  "date": "2026-09-23",
+  "tag": "pc7m",
+  "adapter": "Apple A16 GPU | Metal driver on iOS Version 26.6.1 (Build 23G83) | ",
+  "width": 1179, "height": 2556,
+  "timestamp_query": true,
+  "max_storage_binding_bytes": 3221225472,
+  "max_buffer_bytes": 3221225472,
+  "quad_radius_px": 1.50,
+  "point_record_bytes": 16, "splat_record_bytes": 36,
+  "points_wgsl_sha256": "cb42161e8a3d397cbf1be4e08e6bcf8d9da269cf705c55464c7796b451fa48c3",
+  "gauss_wgsl_sha256": "1137838e9b2a4a3d2b2d65a8c86f7097e3adb7d11f10eb941f5a033556249440",
+  "K": 15, "R": 5, "warmup": 5, "cell_sel": 2,
+  "dropped_labels_mask": 0,
+  "cells": [
+    {
+      "cell": "N6.92M_real",
+      "n": 6922990,
+      "labels": ["P","P2","PT","PB"],
+      "P_wall_ms": {"n":75,"mean":149.1913,"p01":137.3776,"p50":150.7761,"p90":158.0350,"p99":159.7843,"min":137.2830,"max":162.6567},
+      "P_gpu_ms": {"n":75,"mean":147.5609,"p01":135.9872,"p50":149.2255,"p90":156.6966,"p99":158.5316,"min":135.8561,"max":160.2355},
+      "P2_wall_ms": {"n":75,"mean":149.4285,"p01":137.5977,"p50":151.3425,"p90":158.9207,"p99":161.8709,"min":137.2467,"max":162.8806},
+      "P2_gpu_ms": {"n":75,"mean":147.9314,"p01":136.2493,"p50":149.9464,"p90":157.4175,"p99":160.5632,"min":135.8561,"max":161.4152},
+      "PT_wall_ms": {"n":75,"mean":127.5665,"p01":121.5242,"p50":126.9740,"p90":135.0621,"p99":138.0818,"min":121.4237,"max":138.1823},
+      "PT_gpu_ms": {"n":75,"mean":126.0624,"p01":120.1275,"p50":125.4359,"p90":133.5624,"p99":136.5770,"min":119.9309,"max":136.6426},
+      "PB_wall_ms": {"n":75,"mean":185.4304,"p01":177.3350,"p50":184.6538,"p90":192.6687,"p99":196.1659,"min":175.7738,"max":196.4709},
+      "PB_gpu_ms": {"n":75,"mean":183.8687,"p01":174.5224,"p50":183.1731,"p90":191.2340,"p99":194.5764,"min":174.1292,"max":194.9041},
+      "round_gpu_p50_P": [136.6426,151.1260,149.2255,156.6966,143.3928],
+      "round_wall_p50_P": [138.3182,152.5239,150.7761,158.0350,144.8686],
+      "round_gpu_p50_P2": [138.2154,157.4175,150.0774,151.1916,142.6063],
+      "round_wall_p50_P2": [139.8866,158.9207,151.4910,152.5991,144.0360],
+      "round_gpu_p50_PT": [121.3071,133.5624,126.8777,126.2223,122.4212],
+      "round_wall_p50_PT": [122.8837,135.0621,128.4002,127.6403,123.8627],
+      "round_gpu_p50_PB": [179.9619,187.5640,181.4036,190.2510,179.6997],
+      "round_wall_p50_PB": [181.4814,189.1131,182.9960,191.9330,180.9795],
+      "positive_control_P_halfN_gpu_ms": {"n":15,"mean":82.9511,"p01":81.0680,"p50":82.0511,"p90":86.6386,"p99":89.4566,"min":81.0680,"max":89.4566},
+      "positive_control_P_halfN_wall_ms": {"n":15,"mean":84.2828,"p01":81.8292,"p50":83.4919,"p90":88.1027,"p99":90.4779,"min":81.8292,"max":90.4779},
+      "empty_pass_gpu_ms": {"n":15,"mean":0.1922,"p01":0.1311,"p50":0.1966,"p90":0.1966,"p99":0.1966,"min":0.1311,"max":0.1966},
+      "empty_pass_wall_ms": {"n":15,"mean":1.3273,"p01":1.1285,"p50":1.1939,"p90":1.4320,"p99":2.6371,"min":1.1285,"max":2.6371},
+      "cell_elapsed_ms": 51014.5
+    }
+  ],
+  "correctness_order_independence": {
+    "n": 1000000,
+    "order1": {"sha256":"4b83f89b6b36b4b82255efd8244a5e84a344acb22af152a24cd07b41e95b06c0","coverage":0.949501,"mean_rgb":[140.107,140.068,140.020],"sd_rgb":[68.760,68.883,68.757]},
+    "order2": {"sha256":"4b83f89b6b36b4b82255efd8244a5e84a344acb22af152a24cd07b41e95b06c0","coverage":0.949501,"mean_rgb":[140.107,140.068,140.020],"sd_rgb":[68.760,68.883,68.757]},
+    "identical": true, "differing_bytes": 0, "max_abs_diff": 0,
+    "expected_coverage": 0.949538
+  },
+  "negative_control_blended_order": {
+    "note": "blend+no-depth must be order dependent; identical here would mean the ruler cannot fail",
+    "order1": {"sha256":"5abc9370fc57ba58de80d75deae557cd32c6e6cc54c96734c01602d5c1968dc9","coverage":0.949501,"mean_rgb":[114.531,114.462,114.514],"sd_rgb":[48.687,48.656,48.681]},
+    "order2": {"sha256":"07b5da7ef5b7a94a51930bc2628f31bd5130850ec3ba83321d4909ffa8d82718","coverage":0.949501,"mean_rgb":[114.489,114.473,114.528],"sd_rgb":[48.675,48.664,48.664]},
+    "identical": false, "differing_bytes": 5682445, "max_abs_diff": 159
+  },
+  "wgpu_errors": ""
+}

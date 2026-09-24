@@ -1,0 +1,494 @@
+{
+  "schema_version": "aether_official_da3_k35_loop_sim3_eval_v1",
+  "backend": "selavprpp",
+  "route": "DA3-BASE K35 sequential -> VPR loop retrieval -> official loop chunks -> dense Sim3 -> Sim3LoopOptimizer",
+  "note": "Dense Sim3 uses the same weighted Sim3/IRLS math as the official DA3-Streaming path. The official Triton module is not imported on this Mac because Triton is not available; the optimizer itself is the official Sim3LoopOptimizer.",
+  "sequential_window_count": 24,
+  "loop_window_count": 5,
+  "adjacent_edge_count": 23,
+  "loop_constraint_count": 5,
+  "retrieval": {
+    "raw_loop_pair_count": 12,
+    "loop_result_count": 5,
+    "threshold_sweep": [
+      {
+        "threshold": 0.7,
+        "raw_pair_count": 170,
+        "nms_pair_count": 71
+      },
+      {
+        "threshold": 0.75,
+        "raw_pair_count": 83,
+        "nms_pair_count": 45
+      },
+      {
+        "threshold": 0.8,
+        "raw_pair_count": 12,
+        "nms_pair_count": 12
+      },
+      {
+        "threshold": 0.85,
+        "raw_pair_count": 0,
+        "nms_pair_count": 0
+      },
+      {
+        "threshold": 0.9,
+        "raw_pair_count": 0,
+        "nms_pair_count": 0
+      }
+    ],
+    "parameters": {
+      "top_k": 5,
+      "similarity_threshold": 0.8,
+      "min_frame_gap": 10,
+      "nms_threshold": 25,
+      "loop_half_window": 8,
+      "window_size": 35
+    }
+  },
+  "adjacent": {
+    "edge_count": 23,
+    "estimated_count": 23,
+    "rmse_mean": 0.11288263261260958,
+    "p90_mean": 0.1863858415894024,
+    "scale_mean": 1.0150456023339993,
+    "scale_std": 0.04980804874612453,
+    "a_rmse_mean": NaN,
+    "b_rmse_mean": NaN
+  },
+  "loop": {
+    "edge_count": 5,
+    "estimated_count": 5,
+    "rmse_mean": NaN,
+    "p90_mean": NaN,
+    "scale_mean": 0.9262533009750685,
+    "scale_std": 0.047845583556542975,
+    "a_rmse_mean": 0.09601102012927412,
+    "b_rmse_mean": 0.11209861384336905
+  },
+  "optimizer": {
+    "status": "completed",
+    "sequential_transform_count": 23,
+    "optimized_transform_count": 23,
+    "loop_constraint_count": 5,
+    "pre_scale_mean": 1.0150456023339993,
+    "post_scale_mean": 1.0111186089723005,
+    "pre_scale_std": 0.04980804874612453,
+    "post_scale_std": 0.05099610962209054,
+    "elapsed_s": 0.474
+  },
+  "adjacent_edges": [
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_000",
+      "currentWindowID": "window_001",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.302734375,
+      "rmse": 0.11051810295189352,
+      "median": 0.05063236568232754,
+      "p90": 0.187144790213649,
+      "sim3_scale": 1.0707010008506517
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_001",
+      "currentWindowID": "window_002",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.3443359375,
+      "rmse": 0.10231190326304937,
+      "median": 0.030936882485826378,
+      "p90": 0.13586309426483537,
+      "sim3_scale": 0.9978633604509144
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_002",
+      "currentWindowID": "window_003",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.24296875,
+      "rmse": 0.11590116710810737,
+      "median": 0.03410323923461685,
+      "p90": 0.20376797659672574,
+      "sim3_scale": 1.000134768175312
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_003",
+      "currentWindowID": "window_004",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.3501953125,
+      "rmse": 0.07891989775772873,
+      "median": 0.038853338312915334,
+      "p90": 0.11155538748054852,
+      "sim3_scale": 1.072109630696551
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_004",
+      "currentWindowID": "window_005",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.11083984375,
+      "rmse": 0.07852726726683634,
+      "median": 0.0300198422093669,
+      "p90": 0.11132962553358419,
+      "sim3_scale": 0.9393030175306049
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_005",
+      "currentWindowID": "window_006",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.11289062500000001,
+      "rmse": 0.1659696955187534,
+      "median": 0.06605895899484648,
+      "p90": 0.28380983727000364,
+      "sim3_scale": 1.0782680321168856
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_006",
+      "currentWindowID": "window_007",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.15449218750000002,
+      "rmse": 0.17435555287786514,
+      "median": 0.0524964568519216,
+      "p90": 0.346300103783177,
+      "sim3_scale": 1.0170566767376517
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_007",
+      "currentWindowID": "window_008",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.29296875,
+      "rmse": 0.0833747876632754,
+      "median": 0.0486939857007868,
+      "p90": 0.13374160221652698,
+      "sim3_scale": 0.972830363937351
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_008",
+      "currentWindowID": "window_009",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.31953125000000004,
+      "rmse": 0.0914255815437462,
+      "median": 0.05066826823134764,
+      "p90": 0.15082160430437835,
+      "sim3_scale": 0.9268131012841776
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_009",
+      "currentWindowID": "window_010",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.432421875,
+      "rmse": 0.040022995604626826,
+      "median": 0.02399518065078618,
+      "p90": 0.05840661102753207,
+      "sim3_scale": 1.0077208385455998
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_010",
+      "currentWindowID": "window_011",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.20664062500000002,
+      "rmse": 0.13374349856207227,
+      "median": 0.04489964216564721,
+      "p90": 0.21281387291276932,
+      "sim3_scale": 1.0934023819211656
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_011",
+      "currentWindowID": "window_012",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.25078125,
+      "rmse": 0.0849218244855811,
+      "median": 0.031057838726008466,
+      "p90": 0.14637220445452082,
+      "sim3_scale": 1.0086499589118487
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_012",
+      "currentWindowID": "window_013",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.48828125,
+      "rmse": 0.1037810443361147,
+      "median": 0.04391635420973085,
+      "p90": 0.1922255667409388,
+      "sim3_scale": 0.9506488423241171
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_013",
+      "currentWindowID": "window_014",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.3076171875,
+      "rmse": 0.09112612132870426,
+      "median": 0.04155501212672212,
+      "p90": 0.1668671585093126,
+      "sim3_scale": 0.9412561275917576
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_014",
+      "currentWindowID": "window_015",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.14472656250000002,
+      "rmse": 0.20062245773987994,
+      "median": 0.05384123208058637,
+      "p90": 0.3648798298486906,
+      "sim3_scale": 0.9774937433386945
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_015",
+      "currentWindowID": "window_016",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.176171875,
+      "rmse": 0.19880043304249434,
+      "median": 0.04838175120049907,
+      "p90": 0.3523744072674271,
+      "sim3_scale": 1.0912484655552963
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_016",
+      "currentWindowID": "window_017",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.20273437500000002,
+      "rmse": 0.17956513542336436,
+      "median": 0.03522195853509996,
+      "p90": 0.3130029494208319,
+      "sim3_scale": 1.0016980869258811
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_017",
+      "currentWindowID": "window_018",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.40273437500000003,
+      "rmse": 0.1357339978151689,
+      "median": 0.03180511499938178,
+      "p90": 0.17903935149717365,
+      "sim3_scale": 1.015020528134357
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_018",
+      "currentWindowID": "window_019",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.11220703125,
+      "rmse": 0.11710001407499573,
+      "median": 0.07093826320771178,
+      "p90": 0.18884315006224142,
+      "sim3_scale": 1.0300171695845635
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_019",
+      "currentWindowID": "window_020",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1326171875,
+      "rmse": 0.135650926580262,
+      "median": 0.046913225954783144,
+      "p90": 0.17873691136133238,
+      "sim3_scale": 1.025994274627595
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_020",
+      "currentWindowID": "window_021",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.2302734375,
+      "rmse": 0.07371378019206709,
+      "median": 0.03778920703881436,
+      "p90": 0.12835295975804406,
+      "sim3_scale": 1.0339391198584422
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_021",
+      "currentWindowID": "window_022",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.32343750000000004,
+      "rmse": 0.0691660770446095,
+      "median": 0.03791209873475118,
+      "p90": 0.09339299150815092,
+      "sim3_scale": 1.0965683727012572
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_022",
+      "currentWindowID": "window_023",
+      "sharedFrameCount": 30,
+      "status": "estimated",
+      "point_count": 10595760,
+      "confidence_threshold": 0.26992187500000003,
+      "rmse": 0.03104828790882449,
+      "median": 0.016955280372192693,
+      "p90": 0.04723237052386149,
+      "sim3_scale": 0.9973109918813091
+    }
+  ],
+  "loop_edges": [
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_000",
+      "chunkIndexA": 17,
+      "chunkIndexB": 6,
+      "rangeA": [
+        289,
+        305
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10448061968377369,
+      "b_rmse": 0.0817508344805682,
+      "a_p90": 0.17008479406802637,
+      "b_p90": 0.1084536644731204,
+      "sim3_scale": 0.8815695511514454
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_001",
+      "chunkIndexA": 19,
+      "chunkIndexB": 4,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        70,
+        86
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10273157025968013,
+      "b_rmse": 0.060184566897393516,
+      "a_p90": 0.15811798982025024,
+      "b_p90": 0.09835478573764271,
+      "sim3_scale": 0.9639468164357762
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_002",
+      "chunkIndexA": 2,
+      "chunkIndexB": 1,
+      "rangeA": [
+        34,
+        50
+      ],
+      "rangeB": [
+        17,
+        33
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.08511656984321664,
+      "b_rmse": 0.08805545860019648,
+      "a_p90": 0.0986078639570475,
+      "b_p90": 0.11313645035480961,
+      "sim3_scale": 0.9882512406174159
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_003",
+      "chunkIndexA": 20,
+      "chunkIndexB": 6,
+      "rangeA": [
+        340,
+        356
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05567062179303906,
+      "b_rmse": 0.10783505331391594,
+      "a_p90": 0.06319752847293239,
+      "b_p90": 0.15530373820222274,
+      "sim3_scale": 0.9353000460274108
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_004",
+      "chunkIndexA": 16,
+      "chunkIndexB": 6,
+      "rangeA": [
+        279,
+        295
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.13205571906666108,
+      "b_rmse": 0.22266715592477118,
+      "a_p90": 0.23177238884515525,
+      "b_p90": 0.3671875001842695,
+      "sim3_scale": 0.8621988506432945
+    }
+  ],
+  "elapsed_s": 123.397
+}

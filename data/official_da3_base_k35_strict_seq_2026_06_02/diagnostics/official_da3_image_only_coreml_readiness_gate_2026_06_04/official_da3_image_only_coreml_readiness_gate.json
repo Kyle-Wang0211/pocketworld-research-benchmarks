@@ -1,0 +1,124 @@
+{
+  "schema_version": "aether_official_da3_image_only_coreml_readiness_gate_v1",
+  "date": "2026-06-04",
+  "purpose": "Verify whether the APP can claim parity with the official DA3-Streaming default image-only input contract.",
+  "inputs": {
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "capture_services_dir": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "local_runner": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+    "native_adapter": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+    "policy_source": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart"
+  },
+  "official_baseline_contract": {
+    "mode": "image_only",
+    "required_model_inputs": [
+      "image"
+    ],
+    "forbidden_model_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "expected_outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ],
+    "official_streaming_call": "model.inference(images, ref_view_strategy=...)",
+    "arkit_vio_role": "metadata_only_not_da3_input"
+  },
+  "model_signatures": {
+    "models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "model_count": 1,
+    "models": [
+      {
+        "model_path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+        "resource_name": "DA3BASE_476x742_N35_pose",
+        "available": true,
+        "generated_class_name": "DA3BASE_476x742_N35_pose",
+        "input_names": [
+          "image",
+          "extrinsics",
+          "intrinsics"
+        ],
+        "output_names": [
+          "depth",
+          "depth_conf",
+          "pred_extrinsics",
+          "pred_intrinsics"
+        ],
+        "required_inputs": [
+          "image",
+          "extrinsics",
+          "intrinsics"
+        ],
+        "input_shapes": {
+          "image": "[1, 35, 3, 476, 742]",
+          "extrinsics": "[1, 35, 4, 4]",
+          "intrinsics": "[1, 35, 3, 3]"
+        },
+        "output_shapes": {
+          "depth": "[1, 35, 476, 742]",
+          "depth_conf": "[1, 35, 476, 742]",
+          "pred_extrinsics": "[1, 35, 3, 4]",
+          "pred_intrinsics": "[1, 35, 3, 3]"
+        },
+        "requires_external_camera_inputs": true,
+        "is_official_streaming_image_only_signature": false,
+        "is_pose_conditioned_coreml_signature": true
+      }
+    ],
+    "image_only_model_count": 0,
+    "pose_conditioned_model_count": 1,
+    "has_image_only_model": false,
+    "has_pose_conditioned_model": true
+  },
+  "policy_evidence": {
+    "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+    "available": true,
+    "selected_resource_name": "DA3BASE_476x742_N35_pose",
+    "default_da3_input_contract": "pose_conditioned_coreml_requires_image_extrinsics_intrinsics",
+    "default_official_streaming_baseline_false": true,
+    "blocked_until_image_only_coreml_signature": true,
+    "pose_conditioned_compat_tag_present": true,
+    "camera_fields_marked_compat_only": true,
+    "official_streaming_default_match_false": true
+  },
+  "app_evidence": {
+    "local_runner": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+      "available": true,
+      "official_image_only_gate_present": true,
+      "pose_conditioned_detection_present": true,
+      "image_only_resource_allowlist_present": true
+    },
+    "native_adapter": {
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "available": true,
+      "image_only_resource_allowlist_present": true,
+      "pose_conditioned_branch_present": true,
+      "image_only_provider_branch_present": true,
+      "input_contract_telemetry_present": true
+    }
+  },
+  "decision": {
+    "status": "fail",
+    "official_baseline_ready": false,
+    "has_image_only_coreml_signature": false,
+    "current_bundle_is_pose_conditioned_only": true,
+    "app_contract_ready_for_future_image_only_model": true,
+    "policy_blocks_current_pose_model_from_official_baseline": true,
+    "selected_policy_resource": "DA3BASE_476x742_N35_pose",
+    "highest_priority_gap": "missing_image_only_da3_base_coreml_signature",
+    "do_not_use_arkit_vio_as_da3_input_for_official_baseline": true,
+    "do_not_add_downstream_cleanup_to_hide_this_gap": true
+  },
+  "next_actions": [
+    "Current APP bundle contains only pose-conditioned DA3 CoreML; treat it as comparison data, not baseline.",
+    "Export or obtain DA3-BASE K35@476x742 CoreML with required inputs exactly: image.",
+    "Keep pred_extrinsics/pred_intrinsics outputs from DA3; do not replace them with ARKit/VIO camera inputs.",
+    "After the image-only package exists, switch selectedDepthModel/resourceName to that package and set officialStreamingBaseline=true.",
+    "Rerun this readiness gate, then rerun official core-frame npz downstream before judging thickness."
+  ]
+}

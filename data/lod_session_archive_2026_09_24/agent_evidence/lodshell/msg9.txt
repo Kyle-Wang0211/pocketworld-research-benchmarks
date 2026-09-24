@@ -1,0 +1,9 @@
+LOD 查看器(九):外壳回给 Dart 的 UInt64 计数统一走 Int64(clamping:)
+
+帧号、完成帧号、PLY/树点数、octree.bin 字节数、外壳取帧计数在 C 头里是 uint64_t;
+经 MethodChannel 交给 Dart 前先夹成有符号 Int64 再装 NSNumber,标准编解码器只走普通 int64 路径
+(实际数值远小于 2^63,行为不变)。iphoneos arm64 冒烟(-warnings-as-errors)重跑通过,
+并在冒烟里编过拟给台架 AppDelegate 的注册代码(FlutterImplicitEngineBridge.pluginRegistry
+.registrar(forPlugin: "PwLodTexturePlugin"))。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

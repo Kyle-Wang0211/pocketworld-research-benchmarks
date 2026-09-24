@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>K × 分辨率 2×2 因子矩阵 — 外部 ARKit pose（2026-06-10 同日同管线）</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: -apple-system, sans-serif; }
+  .lbl { position: fixed; z-index: 10; pointer-events: none; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.45; width: 50%; }
+  #l0 { top: 8px; left: 0; color: #9f9; }
+  #l1 { top: 8px; left: 50%; color: #ffc97f; }
+  #l2 { bottom: 26px; left: 0; color: #7fdcff; }
+  #l3 { bottom: 26px; left: 50%; color: #f9a; }
+  #hint { position: fixed; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 12px; color: #888; z-index: 10; }
+</style>
+</head>
+<body>
+<div class="lbl" id="l0">K=5 @ 420×742（chunked smoke ≡ 6/5 冻结版）<br>残差中位 0.26% · conf 9.66</div>
+<div class="lbl" id="l1">K=35 @ 420×742（历史首跑 · chunked）<br>残差中位 0.45% · conf 4.34 · 1,000,000 点</div>
+<div class="lbl" id="l2">K=5 @ 280×504<br>残差中位 0.27% · conf 6.66 · 423,360 点</div>
+<div class="lbl" id="l3">K=35 @ 280×504（手机可跑 25,235 token）<br>残差中位 0.52% · conf 3.83 · 1,000,000 点</div>
+<div id="hint">在本目录 python3 -m http.server 后打开 · 左键旋转 · 滚轮缩放 · 右键平移 · 四视图相机联动</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+const views = [];
+for (let i = 0; i < 4; i++) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+  const cam = new THREE.PerspectiveCamera(50, (W/2)/(H/2), 0.01, 100);
+  cam.position.set(0, -2.0, 1.4);
+  cam.up.set(0, 0, 1);
+  views.push({ scene, cam });
+}
+const controls = new OrbitControls(views[0].cam, renderer.domElement);
+controls.target.set(0, 0, 0.4);
+views[0].cam.lookAt(controls.target);
+
+const loader = new PLYLoader();
+function addCloud(view, url, size) {
+  loader.load(url, geo => {
+    geo.computeBoundingBox();
+    const c = new THREE.Vector3();
+    geo.boundingBox.getCenter(c);
+    geo.translate(-c.x, -c.y, -c.z);
+    const ext = new THREE.Vector3();
+    geo.boundingBox.getSize(ext);
+    const s = 1.4 / Math.max(ext.x, ext.y, ext.z);
+    geo.scale(s, s, s);
+    geo.translate(0, 0, 0.4);
+    view.scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ size: size, vertexColors: true })));
+  });
+}
+addCloud(views[0], 'k05_res742_chunked_smoke/k05_res742_smoke_pytorch_rgb.ply', 0.0035);
+addCloud(views[1], 'k35_res742_chunked/k35_res742_chunked_pytorch_rgb.ply', 0.0035);
+addCloud(views[2], 'k05_res504_fresh/k05_res504_fresh_pytorch_rgb.ply', 0.0035);
+addCloud(views[3], 'k35_res504_fresh/k35_res504_fresh_pytorch_rgb.ply', 0.0035);
+
+const rects = [
+  [0, H/2, W/2, H/2],
+  [W/2, H/2, W/2, H/2],
+  [0, 0, W/2, H/2],
+  [W/2, 0, W/2, H/2],
+];
+function render() {
+  requestAnimationFrame(render);
+  controls.update();
+  for (let i = 1; i < 4; i++) {
+    views[i].cam.position.copy(views[0].cam.position);
+    views[i].cam.quaternion.copy(views[0].cam.quaternion);
+    views[i].cam.updateMatrixWorld();
+  }
+  for (let i = 0; i < 4; i++) {
+    const [x, y, w, h] = rects[i];
+    renderer.setViewport(x, y, w, h);
+    renderer.setScissor(x, y, w, h);
+    renderer.render(views[i].scene, views[i].cam);
+  }
+}
+render();
+</script>
+</body>
+</html>

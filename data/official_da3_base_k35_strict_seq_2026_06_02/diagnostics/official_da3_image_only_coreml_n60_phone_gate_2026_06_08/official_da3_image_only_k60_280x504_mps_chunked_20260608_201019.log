@@ -1,0 +1,19 @@
+[93m[WARN ] Dependency `gsplat` is required for rendering 3DGS. Install via: pip install git+https://github.com/nerfstudio-project/gsplat.git@0b4dddf04cb687367602c01196913cde6a743d70[0m
+[97m[INFO ] using MLP layer as FFN[0m
+Loading weights from local directory
+[export] chunked SDPA installed before trace (query_chunk=720, min_gib=0.5)
+[export] trace device moved to mps
+scikit-learn version 1.8.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Torch version 2.12.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.
+[export] torch.jit.trace begin check_trace=True
+[chunked_sdpa] query_shape=(60, 12, 721, 64) key_tokens=721 score_buffer_gib=1.39 query_chunk=720
+{
+  "schema_version": "aether_da3_image_only_coreml_export_v1",
+  "dry_run": null,
+  "conversion": {
+    "status": "fail",
+    "elapsed_s": 28.517642583028646,
+    "reason": "RuntimeError: MPS backend out of memory (MPS allocated: 21.14 GiB, other allocations: 2.72 MiB, max allowed: 22.64 GiB). Tried to allocate 1.39 GiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure)."
+  },
+  "elapsed_s": 34.153686208010186
+}

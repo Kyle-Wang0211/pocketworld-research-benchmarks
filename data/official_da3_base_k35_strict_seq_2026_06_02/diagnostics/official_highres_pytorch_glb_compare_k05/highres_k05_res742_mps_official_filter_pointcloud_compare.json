@@ -1,0 +1,189 @@
+{
+  "schema_version": "pocketworld_coreml_pytorch_official_filter_pointcloud_compare_v1",
+  "inputs": {
+    "capture_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "coreml_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict_official_postprocess",
+    "pytorch_case_dir": "data/official_da3_base_k35_strict_seq_2026_06_02/pytorch_vs_coreml_window_000/official_pytorch_highres_k_sweep_mps/k05_res742_mps",
+    "window_id": "window_000",
+    "case_name": "highres_k05_res742_mps"
+  },
+  "parameters": {
+    "glb_conf_thresh": 1.05,
+    "glb_conf_percentile": 40.0,
+    "glb_ensure_percentile": 90.0,
+    "glb_num_max_points": 1000000,
+    "seed": 8120
+  },
+  "outputs": {
+    "comparison_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_coreml_vs_pytorch_glb_style.png"
+  },
+  "datasets": {
+    "coreml": {
+      "outputs": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_coreml_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_coreml_views.png"
+      },
+      "filter": {
+        "conf_threshold": 3.857421875,
+        "valid_point_count_before_downsample": 1059998,
+        "sampled_point_count": 1000000,
+        "valid_fraction_of_pixels": 0.6002389635099322
+      },
+      "point_cloud": {
+        "point_count": 1000000,
+        "bbox_p01": [
+          -1.6792070353031159,
+          -0.6284393191337585,
+          -0.7094052767753601
+        ],
+        "bbox_p99": [
+          0.4016149386763573,
+          0.7812430524826051,
+          0.31456996709108354
+        ],
+        "bbox_extent_p01_p99": [
+          2.0808219739794733,
+          1.4096823716163636,
+          1.0239752438664436
+        ],
+        "bbox_diag_p01_p99": 2.713954637847344,
+        "bbox_extent_p05_p95": [
+          1.71053941398859,
+          1.1594072639942161,
+          0.8278203308582305
+        ],
+        "bbox_diag_p05_p95": 2.2260855308799825,
+        "std_xyz": [
+          0.5122524499893188,
+          0.38527530431747437,
+          0.26223060488700867
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.31707866675788454,
+          0.11907897840570285,
+          0.04363007725890391
+        ],
+        "extent_p01_p99_desc": [
+          2.3111695030665387,
+          1.483399575465192,
+          0.955185409777213
+        ],
+        "major_extent": 2.3111695030665387,
+        "middle_extent": 1.483399575465192,
+        "minor_extent": 0.955185409777213,
+        "minor_to_major_ratio": 0.4132909371250531
+      },
+      "confidence": {
+        "count": 1765960,
+        "min": 1.0,
+        "p05": 1.75,
+        "p40": 3.857421875,
+        "median": 4.6484375,
+        "mean": 4.246812835356725,
+        "p90": 6.015625,
+        "p95": 6.25,
+        "max": 12.625
+      },
+      "depth": {
+        "count": 1765960,
+        "min": 1.0617033243179321,
+        "p05": 1.1502634286880493,
+        "p40": 1.5513287782669067,
+        "median": 1.7223412990570068,
+        "mean": 1.7464586112898266,
+        "p90": 2.329028844833374,
+        "p95": 2.434893846511841,
+        "max": 2.7870984077453613
+      }
+    },
+    "pytorch": {
+      "outputs": {
+        "ply": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_pytorch_rgb.ply",
+        "views_png": "data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_highres_pytorch_glb_compare_k05/highres_k05_res742_mps_pytorch_views.png"
+      },
+      "filter": {
+        "conf_threshold": 8.706880569458008,
+        "valid_point_count_before_downsample": 934921,
+        "sampled_point_count": 934921,
+        "valid_fraction_of_pixels": 0.6000006417661404
+      },
+      "point_cloud": {
+        "point_count": 934921,
+        "bbox_p01": [
+          -1.7164546251296997,
+          -0.6457190752029419,
+          -0.8908759236335755
+        ],
+        "bbox_p99": [
+          0.3700451254844666,
+          0.6864371299743652,
+          0.36083831787109377
+        ],
+        "bbox_extent_p01_p99": [
+          2.0864997506141663,
+          1.332156205177307,
+          1.2517142415046694
+        ],
+        "bbox_diag_p01_p99": 2.773970062327817,
+        "bbox_extent_p05_p95": [
+          1.897076040506363,
+          1.1583182215690613,
+          1.045764833688736
+        ],
+        "bbox_diag_p05_p95": 2.4564654879037566,
+        "std_xyz": [
+          0.6088858246803284,
+          0.3687848448753357,
+          0.33413177728652954
+        ]
+      },
+      "pca": {
+        "eigenvalues_desc": [
+          0.46185585902045295,
+          0.11699465681372935,
+          0.0397615517480939
+        ],
+        "extent_p01_p99_desc": [
+          2.2527012215831417,
+          1.4654828150663048,
+          0.927785906059674
+        ],
+        "major_extent": 2.2527012215831417,
+        "middle_extent": 1.4654828150663048,
+        "minor_extent": 0.927785906059674,
+        "minor_to_major_ratio": 0.4118548421648431
+      },
+      "confidence": {
+        "count": 1558200,
+        "min": 1.0005970001220703,
+        "p05": 4.485386705398559,
+        "p40": 8.706880569458008,
+        "median": 9.660607814788818,
+        "mean": 11.822438938214987,
+        "p90": 19.63636016845703,
+        "p95": 20.245141983032227,
+        "max": 23.39419174194336
+      },
+      "depth": {
+        "count": 1558200,
+        "min": 0.9231224060058594,
+        "p05": 1.0909296810626983,
+        "p40": 1.4673613548278808,
+        "median": 1.640843152999878,
+        "mean": 1.6551008033543966,
+        "p90": 2.2108084201812748,
+        "p95": 2.3046019077301025,
+        "max": 2.7178711891174316
+      }
+    }
+  },
+  "comparison": {
+    "bbox_diag_ratio_coreml_over_pytorch": 0.9783647901267867,
+    "pca_minor_ratio_coreml_over_pytorch": 1.0295321404847646,
+    "valid_fraction_ratio_coreml_over_pytorch": 1.0003972024814678,
+    "conf_threshold_ratio_coreml_over_pytorch": 0.4430314444108792
+  },
+  "interpretation": "同 K、同图、同 official GLB-style filter 下比较点云。CoreML/PyTorch valid fraction=0.600239/0.600001，bbox diag=2.71395/2.77397，PCA minor=0.955185/0.927786。如果两边都出现类似厚层/暗部片状保留，漂浮更像官方模型/导出规则在这组图上的表现；如果 PyTorch 明显干净而 CoreML 更厚，再回头查 CoreML export parity。"
+}

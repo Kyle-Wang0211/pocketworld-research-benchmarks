@@ -1,0 +1,11 @@
+LOD 查看器(一):逐字节引入冻结 C 接口头 pwlod_viewer.h 与 pw_lod_bench.h
+
+- vendor/aether_lod/include/pwlod_viewer.h:协调会话 2026-09-24 冻结的引擎/外壳 C ABI v1
+  (sha256 a1e1bcff…,与 ~/Developer/pw_lod_data/contract/ 逐字节相同,cmp 通过)。
+- vendor/aether_lod/include/pw_lod_bench.h:M1 测量入口 pwlod_run 的头,原样取自
+  pw_splat_ab_bench Sources/lod/pw_lod_bench.h @ fbfdb545(sha256 d5a349a2…)。
+- SHA256SUMS:两份头的校验;阴性对照(往副本末尾加一个空格)shasum -c 报 FAILED、退出 1。
+
+本分支 feat/lod-viewer 永不上生产;本提交不改任何已有文件。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

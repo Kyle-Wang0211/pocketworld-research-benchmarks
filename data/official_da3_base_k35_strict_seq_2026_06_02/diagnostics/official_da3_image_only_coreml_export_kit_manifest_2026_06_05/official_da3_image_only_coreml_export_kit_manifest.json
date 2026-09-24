@@ -1,0 +1,218 @@
+{
+  "schema_version": "aether_da3_image_only_coreml_export_kit_manifest_v1",
+  "date": "2026-06-05",
+  "purpose": "Prepare the minimum transfer kit for exporting DA3BASE_280x504_N35_image_only.mlpackage in a larger-memory macOS/CoreML environment.",
+  "fixed_target": {
+    "resource": "DA3BASE_280x504_N35_image_only",
+    "pose_compat_resource": "DA3BASE_476x742_N35_pose",
+    "window_size": 35,
+    "height": 280,
+    "width": 504,
+    "process_res": 504,
+    "process_res_method": "upper_bound_resize",
+    "patch_size": 14,
+    "coreml_inputs": [
+      "image"
+    ],
+    "forbidden_inputs": [
+      "extrinsics",
+      "intrinsics"
+    ],
+    "outputs": [
+      "depth",
+      "depth_conf",
+      "pred_extrinsics",
+      "pred_intrinsics"
+    ]
+  },
+  "recommended_environment": {
+    "preferred_unified_memory_gib": 64,
+    "risky_minimum_unified_memory_gib": 32,
+    "current_local_unified_memory_gib": 18.0,
+    "requires_macos_coreml": true,
+    "a100_h100_role": "PyTorch reference gate only, not CoreML packaging or mobile runtime",
+    "note": "This is a CoreML conversion/export envelope, not the product runtime memory requirement. Current local 18 GiB Mac has failed/preflighted as risky."
+  },
+  "paths": {
+    "research_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks",
+    "app_repo": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter",
+    "official_da3_repo": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+    "capture_services_dir": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+    "capture_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "dataset_root": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02",
+    "diagnostics_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics",
+    "research_tools_python": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python",
+    "da3_base_model_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+    "coreml_models_dir": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+    "target_coreml_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage",
+    "pose_coreml_model": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_476x742_N35_pose.mlpackage",
+    "swift_plugin": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+    "local_runner": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+    "capture_policy": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+    "target_export_runbook": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/official_da3_image_only_coreml_target_export_runbook_zh.md",
+    "target_export_gate": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_gate_2026_06_05/official_da3_image_only_coreml_target_export_gate.json"
+  },
+  "kit_items": [
+    {
+      "id": "research_tools_python",
+      "role": "all Python export/gate scripts",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 2260992
+    },
+    {
+      "id": "capture_dir",
+      "role": "same capture used for window_016 overlap regression",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 898564096
+    },
+    {
+      "id": "official_da3_repo",
+      "role": "official DA3 source for wrapper import and parity audit",
+      "path": "/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 49819648
+    },
+    {
+      "id": "da3_base_model_dir",
+      "role": "DA3-BASE checkpoint/config; commercial-safe model",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 541560832
+    },
+    {
+      "id": "coreml_models_dir",
+      "role": "CoreML output directory and current pose compat package",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 843489280
+    },
+    {
+      "id": "swift_plugin",
+      "role": "APP native CoreML adapter evidence",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift",
+      "exists": true,
+      "is_dir": false,
+      "size_bytes": 40960
+    },
+    {
+      "id": "local_runner",
+      "role": "APP local pipeline gate evidence",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart",
+      "exists": true,
+      "is_dir": false,
+      "size_bytes": 122880
+    },
+    {
+      "id": "capture_services_dir",
+      "role": "capture service package for policy/readiness source",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services",
+      "exists": true,
+      "is_dir": true,
+      "size_bytes": 10584064
+    },
+    {
+      "id": "capture_policy",
+      "role": "Dart policy source used by readiness gate",
+      "path": "/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/lib/src/photo_bundle_pipeline_policy_service.dart",
+      "exists": true,
+      "is_dir": false,
+      "size_bytes": 69632
+    },
+    {
+      "id": "target_export_runbook",
+      "role": "human runbook for fixed target export",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/official_da3_image_only_coreml_target_export_runbook_zh.md",
+      "exists": true,
+      "is_dir": false,
+      "size_bytes": 8192
+    },
+    {
+      "id": "target_export_gate",
+      "role": "local resource preflight evidence",
+      "path": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_gate_2026_06_05/official_da3_image_only_coreml_target_export_gate.json",
+      "exists": true,
+      "is_dir": false,
+      "size_bytes": 28672
+    }
+  ],
+  "commands": {
+    "transfer_from_current_mac": [
+      "export DA3_EXPORT_KIT_ROOT=/path/to/da3_export_kit",
+      "mkdir -p \"$DA3_EXPORT_KIT_ROOT\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/tools/python/\" \"$DA3_EXPORT_KIT_ROOT/research/tools/python/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/\" \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/\" \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_gate_2026_06_05/\" \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_gate_2026_06_05/\"",
+      "rsync -a \"/Users/kaidongwang/Documents/progecttwo/aether_cpp/third_party/Depth-Anything-3/\" \"$DA3_EXPORT_KIT_ROOT/official/Depth-Anything-3/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE/\" \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/\" \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE-CoreML/\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Da3DepthPlugin.swift\" \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Da3DepthPlugin.swift\"",
+      "rsync -a \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/lib/pipeline/local_pipeline_runner.dart\" \"$DA3_EXPORT_KIT_ROOT/app/lib/pipeline/local_pipeline_runner.dart\"",
+      "rsync -a \"/Users/kaidongwang/Documents/progecttwo/packages/aether_capture_services/\" \"$DA3_EXPORT_KIT_ROOT/packages/aether_capture_services/\""
+    ],
+    "run_on_large_memory_mac": [
+      "export DA3_EXPORT_KIT_ROOT=/path/to/da3_export_kit",
+      "cd \"$DA3_EXPORT_KIT_ROOT/research\"",
+      "mkdir -p data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04",
+      "python3.11 tools/python/export_da3_image_only_coreml.py \\",
+      "  --official-da3-repo \"$DA3_EXPORT_KIT_ROOT/official/Depth-Anything-3\" \\",
+      "  --model-dir \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE\" \\",
+      "  --out-model \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage\" \\",
+      "  --window-size 35 \\",
+      "  --height 280 \\",
+      "  --width 504 \\",
+      "  --dry-run \\",
+      "  --convert \\",
+      "  --compute-precision float16 \\",
+      "  --minimum-deployment-target iOS18 \\",
+      "  --static-shape-export-patches \\",
+      "  --allow-duplicate-openmp \\",
+      "  --out-report data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/target_280x504_image_only_export_report.json"
+    ],
+    "verify_on_large_memory_mac": [
+      "export DA3_EXPORT_KIT_ROOT=/path/to/da3_export_kit",
+      "cd \"$DA3_EXPORT_KIT_ROOT/research\"",
+      "python3.11 tools/python/da3_image_only_coreml_readiness_gate.py \\",
+      "  --app-repo \"$DA3_EXPORT_KIT_ROOT/app\" \\",
+      "  --capture-services-dir \"$DA3_EXPORT_KIT_ROOT/packages/aether_capture_services\" \\",
+      "  --out-dir data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_readiness_gate_2026_06_05 \\",
+      "  --date 2026-06-05",
+      "python3.11 tools/python/da3_mac_window_export.py \\",
+      "  --capture-dir data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict \\",
+      "  --out-dir data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline \\",
+      "  --model \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage\" \\",
+      "  --compute-unit all \\",
+      "  --resume",
+      "python3.11 tools/python/da3_image_only_overlap_regression_gate.py \\",
+      "  --capture-dir data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict \\",
+      "  --pose-da3-dir data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_strict \\",
+      "  --image-only-da3-dir data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline \\",
+      "  --out-dir data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_overlap_regression_gate_2026_06_05 \\",
+      "  --window-id window_016 \\",
+      "  --npz-conf-threshold-coef 0.5"
+    ],
+    "return_artifacts_to_current_mac": [
+      "export DA3_EXPORT_KIT_ROOT=/path/to/da3_export_kit",
+      "rsync -a \"$DA3_EXPORT_KIT_ROOT/app/ios/Runner/Models/DA3-BASE-CoreML/DA3BASE_280x504_N35_image_only.mlpackage\" \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_flutter/ios/Runner/Models/DA3-BASE-CoreML/\"",
+      "rsync -a \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/target_280x504_image_only_export_report.json\" \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_target_export_runbook_2026_06_04/\"",
+      "rsync -a \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline/\" \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_image_only_official_baseline/\"",
+      "rsync -a \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_readiness_gate_2026_06_05/\" \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_coreml_readiness_gate_2026_06_05/\"",
+      "rsync -a \"$DA3_EXPORT_KIT_ROOT/research/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_overlap_regression_gate_2026_06_05/\" \"/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/official_da3_image_only_overlap_regression_gate_2026_06_05/\""
+    ]
+  },
+  "decision": {
+    "status": "ready_to_transfer_export_kit",
+    "missing_required_items": [],
+    "target_image_only_coreml_exists": false,
+    "pose_compat_coreml_exists": true,
+    "goal_complete": false,
+    "why_not_complete": "DA3BASE_280x504_N35_image_only.mlpackage is still missing; this manifest only prepares transfer/export."
+  }
+}

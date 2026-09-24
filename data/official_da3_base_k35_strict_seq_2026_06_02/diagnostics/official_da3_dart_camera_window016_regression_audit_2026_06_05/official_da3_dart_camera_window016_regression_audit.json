@@ -1,0 +1,89 @@
+{
+  "schema_version": "aether_da3_dart_camera_window016_regression_audit_v1",
+  "date": "2026-06-05",
+  "decision": {
+    "status": "thickness_persists_after_dart_camera_contract_pose_coreml",
+    "goal_complete": false,
+    "product_path": "DA3BASE_476x742_N35_pose CoreML CPU rerun with Dart-owned camera tensors",
+    "conclusion": "Single-window thickness still persists after Dart camera contract, current runnable CoreML rerun, and official postprocess.",
+    "next_best_action": "Inspect DA3 upstream pose/depth/scale consistency inside window_016, especially later slots; do not route this back to A100/large-memory image-only export as product blocker."
+  },
+  "paths": {
+    "capture": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/capture_seq_k35_strict",
+    "raw_coreml": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_2026_06_05",
+    "official_postprocess": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/da3_seq_k35_coreml_pose_dart_camera_contract_window016_cpu_official_postprocess_2026_06_05",
+    "micro_audit": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_dart_camera_contract_official_postprocess_2026_06_05/window_000_official_filter_micro_audit_report.json",
+    "pose_depth_scale_audit": "/Users/kaidongwang/Developer/Aether3D-cross/pocketworld_research_benchmarks/data/official_da3_base_k35_strict_seq_2026_06_02/diagnostics/window_016_dart_camera_contract_pose_depth_scale_2026_06_05/window_016_pose_depth_scale_audit.json"
+  },
+  "field_counts": {
+    "frame_count": 414,
+    "cameraExtrinsicOpenCvW2c4x4_count": 414,
+    "cameraIntrinsic3x3_count": 414,
+    "camera_contract_schema": "aether_da3_camera_contract_v1"
+  },
+  "runtime": {
+    "compute_unit": "cpu",
+    "predict_ms": 50407.526750001125,
+    "rss_after_predict_mb": 3015.625,
+    "frame_count": 35
+  },
+  "official_postprocess": {
+    "pose_scale": 0.7230838815049764,
+    "raw_depth_mean": 0.9608982358592127,
+    "post_depth_mean": 1.3288890778822544
+  },
+  "thickness": {
+    "glb_style_k35_over_k10": {
+      "bbox_ratio_vs_k10": 1.2851005362588945,
+      "minor_ratio_vs_k10": 1.1056677606420262,
+      "conf_threshold_ratio_vs_k10": 1.095505617977528,
+      "valid_fraction_delta_vs_k10": -8.089489164864183e-06
+    },
+    "npz_streaming_style_k35_over_k10": {
+      "bbox_ratio_vs_k10": 1.488606262113268,
+      "minor_ratio_vs_k10": 1.7197910200308661,
+      "conf_threshold_ratio_vs_k10": 0.7941071332215579,
+      "valid_fraction_delta_vs_k10": 0.03252840219645814
+    },
+    "pose_span_k35_over_k10": 4.595407034684719,
+    "depth_p95_k35_over_k10": 1.0735751338938337
+  },
+  "checks": [
+    {
+      "id": "dart_camera_fields_present",
+      "status": "pass",
+      "evidence": "All 414 frames carry Dart-owned OpenCV w2c and 3x3 intrinsics."
+    },
+    {
+      "id": "single_window_coreml_rerun_completed",
+      "status": "pass",
+      "evidence": "window_016 CoreML CPU rerun wrote 35 frames."
+    },
+    {
+      "id": "official_postprocess_completed",
+      "status": "pass",
+      "evidence": "official postprocess poseScale=0.7230838815049764"
+    },
+    {
+      "id": "npz_streaming_thickness_persists",
+      "status": "fail",
+      "evidence": "npz k35/k10 bbox=1.489, minor=1.720"
+    },
+    {
+      "id": "glb_style_thickness_persists",
+      "status": "warning",
+      "evidence": "glb k35/k10 bbox=1.285, minor=1.106"
+    },
+    {
+      "id": "pose_span_expands_more_than_depth",
+      "status": "pass",
+      "evidence": "pose span=4.595x, depth p95=1.074x"
+    }
+  ],
+  "plain_language": [
+    "当前能在 Mac/Apple 路线跑的 DA3-BASE pose CoreML 已经按 Dart camera contract 重跑了 window_016。",
+    "官方 postprocess 之后，npz downstream 风格下 first35 仍比 first10 明显变厚。",
+    "这说明厚层不是大内存导出问题，也不是官方 downstream 里有一个隐藏去厚步骤没跑。",
+    "下一步应该继续查 DA3 上游几何一致性：同一 K35 window 后段 slot 的 pose/depth/scale 是否互相打架。"
+  ]
+}

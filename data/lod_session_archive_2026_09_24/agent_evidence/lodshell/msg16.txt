@@ -1,0 +1,10 @@
+LOD 查看器(十六):接口头 v2 注释修订(lowest_spacing 按 Potree 原文定义),布局/ABI 不变
+
+- vendor/aether_lod/include/pwlod_viewer.h 逐字节 = ~/Developer/pw_lod_data/contract/pwlod_viewer.h
+  (sha256 4b047f1f…,cmp 通过)。相对上一版 v2(fb6459d6…)只有注释:第 6 行加修订说明;
+  lowest_spacing 注释改为「照 Potree_update_visibility.js :114, :276-280, :413 @5636cd4:本帧每个
+  出队节点都算,在预算 break(:282)与可见性判断(:286)之前;队列为空时 <= 0」。
+- SHA256SUMS 更新(校验 OK,上一版 sha 记在注释里)。
+近/远平面代码不因此改(<= 0 仍当「未知」)。test/point_cloud_lod/ 49/49 过;iphoneos arm64 冒烟通过。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,2122 @@
+{
+  "schema_version": "aether_official_da3_k35_loop_sim3_eval_v1",
+  "backend": "boq-dinov2",
+  "route": "DA3-BASE K35 sequential -> VPR loop retrieval -> official loop chunks -> dense Sim3 -> Sim3LoopOptimizer",
+  "note": "Dense Sim3 uses the same weighted Sim3/IRLS math as the official DA3-Streaming path. The official Triton module is not imported on this Mac because Triton is not available; the optimizer itself is the official Sim3LoopOptimizer.",
+  "sequential_window_count": 24,
+  "loop_window_count": 79,
+  "adjacent_edge_count": 23,
+  "loop_constraint_count": 79,
+  "retrieval": {
+    "raw_loop_pair_count": 99,
+    "loop_result_count": 79,
+    "threshold_sweep": [
+      {
+        "threshold": 0.7,
+        "raw_pair_count": 729,
+        "nms_pair_count": 311
+      },
+      {
+        "threshold": 0.75,
+        "raw_pair_count": 514,
+        "nms_pair_count": 275
+      },
+      {
+        "threshold": 0.8,
+        "raw_pair_count": 295,
+        "nms_pair_count": 207
+      },
+      {
+        "threshold": 0.85,
+        "raw_pair_count": 107,
+        "nms_pair_count": 99
+      },
+      {
+        "threshold": 0.9,
+        "raw_pair_count": 17,
+        "nms_pair_count": 16
+      }
+    ],
+    "parameters": {
+      "top_k": 5,
+      "similarity_threshold": 0.85,
+      "min_frame_gap": 10,
+      "nms_threshold": 25,
+      "loop_half_window": 8,
+      "window_size": 35
+    }
+  },
+  "adjacent": {
+    "edge_count": 23,
+    "estimated_count": 23,
+    "rmse_mean": 0.18374690970759822,
+    "p90_mean": 0.28614580590330874,
+    "scale_mean": 1.0145871543823284,
+    "scale_std": 0.17317879609650771,
+    "a_rmse_mean": NaN,
+    "b_rmse_mean": NaN
+  },
+  "loop": {
+    "edge_count": 79,
+    "estimated_count": 79,
+    "rmse_mean": NaN,
+    "p90_mean": NaN,
+    "scale_mean": 1.0114632592804744,
+    "scale_std": 0.1873639905055631,
+    "a_rmse_mean": 0.1279272778470483,
+    "b_rmse_mean": 0.1916901804948358
+  },
+  "optimizer": {
+    "status": "completed",
+    "sequential_transform_count": 23,
+    "optimized_transform_count": 23,
+    "loop_constraint_count": 79,
+    "pre_scale_mean": 1.0145871543823284,
+    "post_scale_mean": 1.0157791168793389,
+    "pre_scale_std": 0.17317879609650771,
+    "post_scale_std": 0.1901140006718832,
+    "elapsed_s": 0.594
+  },
+  "adjacent_edges": [
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_000",
+      "currentWindowID": "window_001",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10244140625,
+      "rmse": 0.07592903633306856,
+      "median": 0.038950486348206095,
+      "p90": 0.11007670995114455,
+      "sim3_scale": 0.9843997098904453
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_001",
+      "currentWindowID": "window_002",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10673828125000001,
+      "rmse": 0.21850242410550047,
+      "median": 0.1457462172399973,
+      "p90": 0.36627893714407844,
+      "sim3_scale": 1.031145960755791
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_002",
+      "currentWindowID": "window_003",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.102734375,
+      "rmse": 0.20186203424246527,
+      "median": 0.1178984450828259,
+      "p90": 0.2956486879790663,
+      "sim3_scale": 1.1027824337163632
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_003",
+      "currentWindowID": "window_004",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1017578125,
+      "rmse": 0.2008040466031353,
+      "median": 0.14225260978061832,
+      "p90": 0.3146577035764175,
+      "sim3_scale": 0.9791225363696432
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_004",
+      "currentWindowID": "window_005",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1017578125,
+      "rmse": 0.2054102999735457,
+      "median": 0.14315235197955417,
+      "p90": 0.31602535749221405,
+      "sim3_scale": 1.030336910777221
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_005",
+      "currentWindowID": "window_006",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10039062500000001,
+      "rmse": 0.22286174692423372,
+      "median": 0.1411277443822469,
+      "p90": 0.37341325133739417,
+      "sim3_scale": 0.8188591893845465
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_006",
+      "currentWindowID": "window_007",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10136718750000001,
+      "rmse": 0.2587685810430806,
+      "median": 0.16240376790254282,
+      "p90": 0.39260204264996235,
+      "sim3_scale": 1.403425624948783
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_007",
+      "currentWindowID": "window_008",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.107421875,
+      "rmse": 0.10274400526203453,
+      "median": 0.04530805951015948,
+      "p90": 0.14342477778297272,
+      "sim3_scale": 0.7745485588424857
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_008",
+      "currentWindowID": "window_009",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10029296875,
+      "rmse": 0.11189145492655016,
+      "median": 0.05921264771006174,
+      "p90": 0.19076847773969818,
+      "sim3_scale": 1.2738798535191915
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_009",
+      "currentWindowID": "window_010",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10048828125,
+      "rmse": 0.1552446658905122,
+      "median": 0.0781128789808938,
+      "p90": 0.23382115640022855,
+      "sim3_scale": 0.716505305034796
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_010",
+      "currentWindowID": "window_011",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10039062500000001,
+      "rmse": 0.23389727328041043,
+      "median": 0.1610244197323766,
+      "p90": 0.36843459899024134,
+      "sim3_scale": 1.158750932647966
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_011",
+      "currentWindowID": "window_012",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10322265625,
+      "rmse": 0.1411583181328989,
+      "median": 0.06912743096186882,
+      "p90": 0.20784713415461287,
+      "sim3_scale": 0.9414811249814091
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_012",
+      "currentWindowID": "window_013",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10478515625000001,
+      "rmse": 0.13955779475864044,
+      "median": 0.07889439693032166,
+      "p90": 0.17106774231888927,
+      "sim3_scale": 1.1174756130428904
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_013",
+      "currentWindowID": "window_014",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10009765625,
+      "rmse": 0.2271015302821794,
+      "median": 0.1096929861368927,
+      "p90": 0.33031660909478,
+      "sim3_scale": 0.854842706858343
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_014",
+      "currentWindowID": "window_015",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10029296875,
+      "rmse": 0.19715714867856393,
+      "median": 0.11029191000340838,
+      "p90": 0.346594178031916,
+      "sim3_scale": 1.1644727130387929
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_015",
+      "currentWindowID": "window_016",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.101953125,
+      "rmse": 0.26165783805514076,
+      "median": 0.13558300143521268,
+      "p90": 0.4653944747477362,
+      "sim3_scale": 0.9330309392730584
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_016",
+      "currentWindowID": "window_017",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1,
+      "rmse": 0.2416215988484122,
+      "median": 0.12475158186800095,
+      "p90": 0.308737270951688,
+      "sim3_scale": 1.0356210874473384
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_017",
+      "currentWindowID": "window_018",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10146484375,
+      "rmse": 0.1507357771179704,
+      "median": 0.0934564957681415,
+      "p90": 0.2541073933411875,
+      "sim3_scale": 0.9418863222518469
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_018",
+      "currentWindowID": "window_019",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1,
+      "rmse": 0.25069344385930104,
+      "median": 0.15344862252340724,
+      "p90": 0.37228147931264216,
+      "sim3_scale": 1.333135797125875
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_019",
+      "currentWindowID": "window_020",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.1064453125,
+      "rmse": 0.171113933990382,
+      "median": 0.06752136415295942,
+      "p90": 0.2664845880314587,
+      "sim3_scale": 0.8237131249009879
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_020",
+      "currentWindowID": "window_021",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.12763671875000002,
+      "rmse": 0.1479656818097216,
+      "median": 0.0942821937137574,
+      "p90": 0.24379973902532626,
+      "sim3_scale": 0.9310663193604385
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_021",
+      "currentWindowID": "window_022",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10009765625,
+      "rmse": 0.12932621737345307,
+      "median": 0.054799105546400884,
+      "p90": 0.2149378231349366,
+      "sim3_scale": 0.8637114847093204
+    },
+    {
+      "edgeType": "adjacent",
+      "parentWindowID": "window_022",
+      "currentWindowID": "window_023",
+      "sharedFrameCount": 18,
+      "status": "estimated",
+      "point_count": 6357456,
+      "confidence_threshold": 0.10009765625,
+      "rmse": 0.18017407178355768,
+      "median": 0.0762112362404693,
+      "p90": 0.2946334025875097,
+      "sim3_scale": 1.1213103019160187
+    }
+  ],
+  "loop_edges": [
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_000",
+      "chunkIndexA": 9,
+      "chunkIndexB": 8,
+      "rangeA": [
+        158,
+        174
+      ],
+      "rangeB": [
+        136,
+        152
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.16568658712147297,
+      "b_rmse": 0.24103584643529558,
+      "a_p90": 0.27041380529319203,
+      "b_p90": 0.3752629090256363,
+      "sim3_scale": 1.3442253405418498
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_001",
+      "chunkIndexA": 16,
+      "chunkIndexB": 9,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05911301450718885,
+      "b_rmse": 0.0813319261702573,
+      "a_p90": 0.09855590602762838,
+      "b_p90": 0.15057585859218417,
+      "sim3_scale": 0.7462606243811344
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_002",
+      "chunkIndexA": 15,
+      "chunkIndexB": 3,
+      "rangeA": [
+        255,
+        271
+      ],
+      "rangeB": [
+        51,
+        67
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.11203490553503044,
+      "b_rmse": 0.10428934093666922,
+      "a_p90": 0.11515219094081176,
+      "b_p90": 0.16122177837482762,
+      "sim3_scale": 0.9781514182273462
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_003",
+      "chunkIndexA": 16,
+      "chunkIndexB": 14,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        238,
+        254
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07356604164246056,
+      "b_rmse": 0.2672294196377579,
+      "a_p90": 0.13043655356306474,
+      "b_p90": 0.39303232420521084,
+      "sim3_scale": 1.0458760511128584
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_004",
+      "chunkIndexA": 3,
+      "chunkIndexB": 2,
+      "rangeA": [
+        59,
+        75
+      ],
+      "rangeB": [
+        39,
+        55
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2151640197370846,
+      "b_rmse": 0.19960143353975715,
+      "a_p90": 0.34698124185878787,
+      "b_p90": 0.32798795312584816,
+      "sim3_scale": 1.0913941708140635
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_005",
+      "chunkIndexA": 23,
+      "chunkIndexB": 14,
+      "rangeA": [
+        394,
+        410
+      ],
+      "rangeB": [
+        244,
+        260
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.20143763478379148,
+      "b_rmse": 0.13315544610871927,
+      "a_p90": 0.3984347426152077,
+      "b_p90": 0.2167005857313017,
+      "sim3_scale": 1.068493946248517
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_006",
+      "chunkIndexA": 5,
+      "chunkIndexB": 2,
+      "rangeA": [
+        85,
+        101
+      ],
+      "rangeB": [
+        34,
+        50
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06345492489801782,
+      "b_rmse": 0.14155096442857024,
+      "a_p90": 0.10644032859335739,
+      "b_p90": 0.21747704597131606,
+      "sim3_scale": 1.0681357990119325
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_007",
+      "chunkIndexA": 18,
+      "chunkIndexB": 3,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        51,
+        67
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05659890006742535,
+      "b_rmse": 0.21222570352196515,
+      "a_p90": 0.08526127796972835,
+      "b_p90": 0.37063497477647217,
+      "sim3_scale": 0.8987069570103218
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_008",
+      "chunkIndexA": 14,
+      "chunkIndexB": 12,
+      "rangeA": [
+        240,
+        256
+      ],
+      "rangeB": [
+        204,
+        220
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.26156628171441965,
+      "b_rmse": 0.11129670261960785,
+      "a_p90": 0.37129711480205685,
+      "b_p90": 0.15350739755983978,
+      "sim3_scale": 0.9292289617923278
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_009",
+      "chunkIndexA": 14,
+      "chunkIndexB": 2,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        39,
+        55
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.12215985419987717,
+      "b_rmse": 0.0708942730439495,
+      "a_p90": 0.148033339109423,
+      "b_p90": 0.10282318752589803,
+      "sim3_scale": 0.9612364308351004
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_010",
+      "chunkIndexA": 23,
+      "chunkIndexB": 6,
+      "rangeA": [
+        398,
+        414
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2286263250887085,
+      "b_rmse": 0.2845476560359986,
+      "a_p90": 0.36380043494351666,
+      "b_p90": 0.3996956583145265,
+      "sim3_scale": 1.0455761504365055
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_011",
+      "chunkIndexA": 23,
+      "chunkIndexB": 0,
+      "rangeA": [
+        379,
+        395
+      ],
+      "rangeB": [
+        0,
+        16
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10629407486283311,
+      "b_rmse": 0.20575892877141327,
+      "a_p90": 0.18793695021014162,
+      "b_p90": 0.3286087215699104,
+      "sim3_scale": 0.9647250764807469
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_012",
+      "chunkIndexA": 18,
+      "chunkIndexB": 16,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        272,
+        288
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05920415627252177,
+      "b_rmse": 0.2182536529987492,
+      "a_p90": 0.08823540346164065,
+      "b_p90": 0.3627786460188074,
+      "sim3_scale": 0.9839889619620236
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_013",
+      "chunkIndexA": 14,
+      "chunkIndexB": 3,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        59,
+        75
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.11154030597717025,
+      "b_rmse": 0.1937723016155254,
+      "a_p90": 0.09848191680368039,
+      "b_p90": 0.3195773591301051,
+      "sim3_scale": 0.8762420469839493
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_014",
+      "chunkIndexA": 22,
+      "chunkIndexB": 16,
+      "rangeA": [
+        374,
+        390
+      ],
+      "rangeB": [
+        272,
+        288
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06299257301403471,
+      "b_rmse": 0.259118025208574,
+      "a_p90": 0.10038300423438773,
+      "b_p90": 0.4327828646078441,
+      "sim3_scale": 0.8954066380108883
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_015",
+      "chunkIndexA": 18,
+      "chunkIndexB": 9,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.08448204855505331,
+      "b_rmse": 0.18744254132717567,
+      "a_p90": 0.1372597508363118,
+      "b_p90": 0.2980440616974817,
+      "sim3_scale": 0.7170666274981661
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_016",
+      "chunkIndexA": 14,
+      "chunkIndexB": 9,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10433917866500585,
+      "b_rmse": 0.16265780841655497,
+      "a_p90": 0.12726562866771068,
+      "b_p90": 0.2636593288428121,
+      "sim3_scale": 0.6678745547692857
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_017",
+      "chunkIndexA": 11,
+      "chunkIndexB": 9,
+      "rangeA": [
+        192,
+        208
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.14272709268470957,
+      "b_rmse": 0.16099452922110366,
+      "a_p90": 0.23170096619818936,
+      "b_p90": 0.2537107476975599,
+      "sim3_scale": 0.822405751488522
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_018",
+      "chunkIndexA": 7,
+      "chunkIndexB": 5,
+      "rangeA": [
+        119,
+        135
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.038162121107995106,
+      "b_rmse": 0.20317056379928877,
+      "a_p90": 0.059160574768088135,
+      "b_p90": 0.31376470225970077,
+      "sim3_scale": 1.3890192282861928
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_019",
+      "chunkIndexA": 17,
+      "chunkIndexB": 12,
+      "rangeA": [
+        296,
+        312
+      ],
+      "rangeB": [
+        207,
+        223
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2413091883485846,
+      "b_rmse": 0.1592355148142141,
+      "a_p90": 0.3095938934214626,
+      "b_p90": 0.16333460928401497,
+      "sim3_scale": 1.0077954643458906
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_020",
+      "chunkIndexA": 18,
+      "chunkIndexB": 14,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        238,
+        254
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05341418723257812,
+      "b_rmse": 0.20981849392664367,
+      "a_p90": 0.08388141371105297,
+      "b_p90": 0.3145106151406631,
+      "sim3_scale": 1.0254851687984097
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_021",
+      "chunkIndexA": 6,
+      "chunkIndexB": 0,
+      "rangeA": [
+        110,
+        126
+      ],
+      "rangeB": [
+        2,
+        18
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2649378938711976,
+      "b_rmse": 0.21956766727162033,
+      "a_p90": 0.45915417180889045,
+      "b_p90": 0.35394204037221133,
+      "sim3_scale": 0.926519981532167
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_022",
+      "chunkIndexA": 23,
+      "chunkIndexB": 18,
+      "rangeA": [
+        396,
+        412
+      ],
+      "rangeB": [
+        311,
+        327
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2594103449891511,
+      "b_rmse": 0.2073284925002742,
+      "a_p90": 0.4612950940281478,
+      "b_p90": 0.338591651381143,
+      "sim3_scale": 1.0761292172045365
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_023",
+      "chunkIndexA": 16,
+      "chunkIndexB": 2,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        39,
+        55
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.11038278225898927,
+      "b_rmse": 0.28454885922769735,
+      "a_p90": 0.16147383265988194,
+      "b_p90": 0.505887745515355,
+      "sim3_scale": 1.1174322289046938
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_024",
+      "chunkIndexA": 11,
+      "chunkIndexB": 0,
+      "rangeA": [
+        187,
+        203
+      ],
+      "rangeB": [
+        5,
+        21
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05280745705716129,
+      "b_rmse": 0.2050985106139312,
+      "a_p90": 0.06151312047277982,
+      "b_p90": 0.28917905682859407,
+      "sim3_scale": 1.017380043353968
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_025",
+      "chunkIndexA": 18,
+      "chunkIndexB": 6,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        104,
+        120
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06210345010646112,
+      "b_rmse": 0.2383484382092893,
+      "a_p90": 0.0955582080883984,
+      "b_p90": 0.39114853880836276,
+      "sim3_scale": 1.1223570913383023
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_026",
+      "chunkIndexA": 21,
+      "chunkIndexB": 9,
+      "rangeA": [
+        357,
+        373
+      ],
+      "rangeB": [
+        159,
+        175
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07383491137438172,
+      "b_rmse": 0.15642388866205276,
+      "a_p90": 0.1336209698918741,
+      "b_p90": 0.24873044850760168,
+      "sim3_scale": 0.7220505829376311
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_027",
+      "chunkIndexA": 21,
+      "chunkIndexB": 5,
+      "rangeA": [
+        359,
+        375
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.23631587692200498,
+      "b_rmse": 0.2394352861104753,
+      "a_p90": 0.39965202904710606,
+      "b_p90": 0.36150516772350216,
+      "sim3_scale": 1.0468306530275844
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_028",
+      "chunkIndexA": 18,
+      "chunkIndexB": 11,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        187,
+        203
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06626089075052811,
+      "b_rmse": 0.17829380375191337,
+      "a_p90": 0.09707739083407597,
+      "b_p90": 0.25637576055979794,
+      "sim3_scale": 0.8978541651187724
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_029",
+      "chunkIndexA": 21,
+      "chunkIndexB": 17,
+      "rangeA": [
+        357,
+        373
+      ],
+      "rangeB": [
+        289,
+        305
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.04314644766425706,
+      "b_rmse": 0.18534579157216707,
+      "a_p90": 0.07314294344955778,
+      "b_p90": 0.3127469464815553,
+      "sim3_scale": 0.9856509724926558
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_030",
+      "chunkIndexA": 20,
+      "chunkIndexB": 10,
+      "rangeA": [
+        340,
+        356
+      ],
+      "rangeB": [
+        170,
+        186
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06442790267013244,
+      "b_rmse": 0.251554934303149,
+      "a_p90": 0.10858629603747258,
+      "b_p90": 0.4012232187758502,
+      "sim3_scale": 1.1486978889436703
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_031",
+      "chunkIndexA": 16,
+      "chunkIndexB": 3,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        59,
+        75
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.08425589912426885,
+      "b_rmse": 0.2678924642598173,
+      "a_p90": 0.11615530354200665,
+      "b_p90": 0.39505606499733914,
+      "sim3_scale": 1.0094073914826207
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_032",
+      "chunkIndexA": 7,
+      "chunkIndexB": 4,
+      "rangeA": [
+        119,
+        135
+      ],
+      "rangeB": [
+        72,
+        88
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.03694868544881065,
+      "b_rmse": 0.1652600922011271,
+      "a_p90": 0.05781849531941472,
+      "b_p90": 0.25708009795998793,
+      "sim3_scale": 1.3977271875645791
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_033",
+      "chunkIndexA": 21,
+      "chunkIndexB": 15,
+      "rangeA": [
+        357,
+        373
+      ],
+      "rangeB": [
+        255,
+        271
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07908498483633591,
+      "b_rmse": 0.10823170365603278,
+      "a_p90": 0.12677737836339975,
+      "b_p90": 0.11500240401405853,
+      "sim3_scale": 0.9555803338727074
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_034",
+      "chunkIndexA": 18,
+      "chunkIndexB": 7,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        119,
+        135
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.08604780592402289,
+      "b_rmse": 0.16105588122590728,
+      "a_p90": 0.14563744027083414,
+      "b_p90": 0.2515493472310497,
+      "sim3_scale": 0.7372296803757499
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_035",
+      "chunkIndexA": 9,
+      "chunkIndexB": 5,
+      "rangeA": [
+        153,
+        169
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06135869920852103,
+      "b_rmse": 0.1984151956650801,
+      "a_p90": 0.10351445046388326,
+      "b_p90": 0.3088721462911739,
+      "sim3_scale": 1.3535305068965449
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_036",
+      "chunkIndexA": 14,
+      "chunkIndexB": 6,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        104,
+        120
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.13121569368093472,
+      "b_rmse": 0.22581340758650467,
+      "a_p90": 0.16034650429833527,
+      "b_p90": 0.35629228352703046,
+      "sim3_scale": 1.1044316493628907
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_037",
+      "chunkIndexA": 23,
+      "chunkIndexB": 5,
+      "rangeA": [
+        396,
+        412
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.26994948736274665,
+      "b_rmse": 0.22177808776376906,
+      "a_p90": 0.47998374695767193,
+      "b_p90": 0.3807810007515808,
+      "sim3_scale": 1.0585639837959437
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_038",
+      "chunkIndexA": 17,
+      "chunkIndexB": 15,
+      "rangeA": [
+        289,
+        305
+      ],
+      "rangeB": [
+        255,
+        271
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06816045736561452,
+      "b_rmse": 0.18624957463394082,
+      "a_p90": 0.11335886058116867,
+      "b_p90": 0.3077197479179805,
+      "sim3_scale": 0.950473323327847
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_039",
+      "chunkIndexA": 22,
+      "chunkIndexB": 9,
+      "rangeA": [
+        374,
+        390
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07534789350580462,
+      "b_rmse": 0.16719454586406013,
+      "a_p90": 0.1252475315181975,
+      "b_p90": 0.273782904413332,
+      "sim3_scale": 0.6232282103474227
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_040",
+      "chunkIndexA": 11,
+      "chunkIndexB": 5,
+      "rangeA": [
+        192,
+        208
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.16402346597190887,
+      "b_rmse": 0.10860283736028367,
+      "a_p90": 0.26611416238898056,
+      "b_p90": 0.15809800435808563,
+      "sim3_scale": 1.0903631719609506
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_041",
+      "chunkIndexA": 14,
+      "chunkIndexB": 4,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        69,
+        85
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.14630494194605453,
+      "b_rmse": 0.2150404050179042,
+      "a_p90": 0.19253533985390262,
+      "b_p90": 0.33884738322561525,
+      "sim3_scale": 0.9467490570858744
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_042",
+      "chunkIndexA": 21,
+      "chunkIndexB": 7,
+      "rangeA": [
+        359,
+        375
+      ],
+      "rangeB": [
+        119,
+        135
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.22266514207695784,
+      "b_rmse": 0.19008399037518192,
+      "a_p90": 0.40238902056205733,
+      "b_p90": 0.28558588183883127,
+      "sim3_scale": 0.7935612998427604
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_043",
+      "chunkIndexA": 18,
+      "chunkIndexB": 10,
+      "rangeA": [
+        306,
+        322
+      ],
+      "rangeB": [
+        177,
+        193
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06432469146616529,
+      "b_rmse": 0.13909888770269593,
+      "a_p90": 0.09742957026303965,
+      "b_p90": 0.2383363528782231,
+      "sim3_scale": 0.9991991100212798
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_044",
+      "chunkIndexA": 18,
+      "chunkIndexB": 5,
+      "rangeA": [
+        311,
+        327
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.20595555439173352,
+      "b_rmse": 0.12584241262586068,
+      "a_p90": 0.3306093465747459,
+      "b_p90": 0.18053738719890033,
+      "sim3_scale": 0.9601096548415617
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_045",
+      "chunkIndexA": 23,
+      "chunkIndexB": 12,
+      "rangeA": [
+        389,
+        405
+      ],
+      "rangeB": [
+        211,
+        227
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.28411562060808826,
+      "b_rmse": 0.2861358007994457,
+      "a_p90": 0.5026218622356035,
+      "b_p90": 0.4623622451177069,
+      "sim3_scale": 1.0358279537568142
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_046",
+      "chunkIndexA": 19,
+      "chunkIndexB": 2,
+      "rangeA": [
+        325,
+        341
+      ],
+      "rangeB": [
+        34,
+        50
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.09397935029077119,
+      "b_rmse": 0.25194270331455954,
+      "a_p90": 0.16141160571601432,
+      "b_p90": 0.42144983783051354,
+      "sim3_scale": 1.3579419412696854
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_047",
+      "chunkIndexA": 19,
+      "chunkIndexB": 17,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        296,
+        312
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0652235628910116,
+      "b_rmse": 0.25325081898400953,
+      "a_p90": 0.0909220880810583,
+      "b_p90": 0.3298822738836665,
+      "sim3_scale": 1.2798120209529824
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_048",
+      "chunkIndexA": 13,
+      "chunkIndexB": 10,
+      "rangeA": [
+        229,
+        245
+      ],
+      "rangeB": [
+        174,
+        190
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.199083509090963,
+      "b_rmse": 0.23507847275455618,
+      "a_p90": 0.31364084228553196,
+      "b_p90": 0.38456797364383094,
+      "sim3_scale": 1.2020645765746074
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_049",
+      "chunkIndexA": 9,
+      "chunkIndexB": 1,
+      "rangeA": [
+        158,
+        174
+      ],
+      "rangeB": [
+        25,
+        41
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.15533455998040424,
+      "b_rmse": 0.17392948575831474,
+      "a_p90": 0.2374218155760768,
+      "b_p90": 0.2786792183081037,
+      "sim3_scale": 1.5257196272157605
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_050",
+      "chunkIndexA": 23,
+      "chunkIndexB": 17,
+      "rangeA": [
+        385,
+        401
+      ],
+      "rangeB": [
+        289,
+        305
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.19403609115896983,
+      "b_rmse": 0.24578393606791984,
+      "a_p90": 0.3255736609146607,
+      "b_p90": 0.35030945257267926,
+      "sim3_scale": 0.862050347453125
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_051",
+      "chunkIndexA": 11,
+      "chunkIndexB": 7,
+      "rangeA": [
+        187,
+        203
+      ],
+      "rangeB": [
+        119,
+        135
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.055117143322276636,
+      "b_rmse": 0.156759540392379,
+      "a_p90": 0.07200205886335247,
+      "b_p90": 0.24646815689390827,
+      "sim3_scale": 0.800382381494867
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_052",
+      "chunkIndexA": 23,
+      "chunkIndexB": 1,
+      "rangeA": [
+        387,
+        403
+      ],
+      "rangeB": [
+        25,
+        41
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.20134517235122698,
+      "b_rmse": 0.21133836632424316,
+      "a_p90": 0.3332476852870834,
+      "b_p90": 0.33541059822639235,
+      "sim3_scale": 1.0357595753424507
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_053",
+      "chunkIndexA": 15,
+      "chunkIndexB": 1,
+      "rangeA": [
+        260,
+        276
+      ],
+      "rangeB": [
+        23,
+        39
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2013296482788784,
+      "b_rmse": 0.20203903688293648,
+      "a_p90": 0.2969634404868411,
+      "b_p90": 0.3202445522639564,
+      "sim3_scale": 1.1393574067509138
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_054",
+      "chunkIndexA": 17,
+      "chunkIndexB": 9,
+      "rangeA": [
+        291,
+        307
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.18845243840048603,
+      "b_rmse": 0.17786164880698582,
+      "a_p90": 0.35575082647313083,
+      "b_p90": 0.26851983773541976,
+      "sim3_scale": 0.7785315183804401
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_055",
+      "chunkIndexA": 16,
+      "chunkIndexB": 11,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        187,
+        203
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.055735183093902935,
+      "b_rmse": 0.17451232174597447,
+      "a_p90": 0.09153225699305712,
+      "b_p90": 0.27940317220064004,
+      "sim3_scale": 0.9270837475200192
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_056",
+      "chunkIndexA": 15,
+      "chunkIndexB": 2,
+      "rangeA": [
+        261,
+        277
+      ],
+      "rangeB": [
+        34,
+        50
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.18331940421851695,
+      "b_rmse": 0.144440150322319,
+      "a_p90": 0.2962068527418138,
+      "b_p90": 0.23283116778823515,
+      "sim3_scale": 1.1253458911551235
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_057",
+      "chunkIndexA": 17,
+      "chunkIndexB": 10,
+      "rangeA": [
+        290,
+        306
+      ],
+      "rangeB": [
+        170,
+        186
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.15168036339061006,
+      "b_rmse": 0.12202516939847595,
+      "a_p90": 0.25453893005077716,
+      "b_p90": 0.20211184103707447,
+      "sim3_scale": 1.0506492820942963
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_058",
+      "chunkIndexA": 23,
+      "chunkIndexB": 22,
+      "rangeA": [
+        393,
+        409
+      ],
+      "rangeB": [
+        374,
+        390
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.1978452291460756,
+      "b_rmse": 0.23008262970201765,
+      "a_p90": 0.33517146600555925,
+      "b_p90": 0.3591882274370351,
+      "sim3_scale": 1.1258153429182847
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_059",
+      "chunkIndexA": 8,
+      "chunkIndexB": 1,
+      "rangeA": [
+        136,
+        152
+      ],
+      "rangeB": [
+        25,
+        41
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06436811695813849,
+      "b_rmse": 0.22883549344822143,
+      "a_p90": 0.09402448367554053,
+      "b_p90": 0.37143824527734604,
+      "sim3_scale": 1.1005683701999225
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_060",
+      "chunkIndexA": 14,
+      "chunkIndexB": 5,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        85,
+        101
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.11633599425749686,
+      "b_rmse": 0.20544276464759975,
+      "a_p90": 0.18145310497643302,
+      "b_p90": 0.3236553574549942,
+      "sim3_scale": 0.8846022495116438
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_061",
+      "chunkIndexA": 12,
+      "chunkIndexB": 8,
+      "rangeA": [
+        207,
+        223
+      ],
+      "rangeB": [
+        136,
+        152
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.1948291075608873,
+      "b_rmse": 0.17794520239282158,
+      "a_p90": 0.2904827375687358,
+      "b_p90": 0.24766619499468842,
+      "sim3_scale": 0.9305916900017281
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_062",
+      "chunkIndexA": 17,
+      "chunkIndexB": 14,
+      "rangeA": [
+        292,
+        308
+      ],
+      "rangeB": [
+        238,
+        254
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.18412628089737632,
+      "b_rmse": 0.21949472297392827,
+      "a_p90": 0.3013481418828306,
+      "b_p90": 0.38961762727929883,
+      "sim3_scale": 1.1036298401886073
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_063",
+      "chunkIndexA": 14,
+      "chunkIndexB": 11,
+      "rangeA": [
+        238,
+        254
+      ],
+      "rangeB": [
+        192,
+        208
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10199427786025775,
+      "b_rmse": 0.18816014120681357,
+      "a_p90": 0.14327331603151938,
+      "b_p90": 0.3066137910015887,
+      "sim3_scale": 0.8323290960870213
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_064",
+      "chunkIndexA": 10,
+      "chunkIndexB": 9,
+      "rangeA": [
+        177,
+        193
+      ],
+      "rangeB": [
+        153,
+        169
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0664657652930218,
+      "b_rmse": 0.1689647350253111,
+      "a_p90": 0.10530938185187615,
+      "b_p90": 0.2679087631373726,
+      "sim3_scale": 0.7156093853540388
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_065",
+      "chunkIndexA": 12,
+      "chunkIndexB": 0,
+      "rangeA": [
+        204,
+        220
+      ],
+      "rangeB": [
+        0,
+        16
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.052302151871059466,
+      "b_rmse": 0.19261041164162987,
+      "a_p90": 0.0758902625344525,
+      "b_p90": 0.30294958481322587,
+      "sim3_scale": 0.9747530337426001
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_066",
+      "chunkIndexA": 19,
+      "chunkIndexB": 8,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        136,
+        152
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.04509969173186847,
+      "b_rmse": 0.1493126262631418,
+      "a_p90": 0.07293137862377329,
+      "b_p90": 0.23400061335171338,
+      "sim3_scale": 1.2601548496590058
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_067",
+      "chunkIndexA": 8,
+      "chunkIndexB": 6,
+      "rangeA": [
+        144,
+        160
+      ],
+      "rangeB": [
+        102,
+        118
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.18806408655268478,
+      "b_rmse": 0.1958085119047786,
+      "a_p90": 0.29154978924761077,
+      "b_p90": 0.31597017542274114,
+      "sim3_scale": 1.2479857642930345
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_068",
+      "chunkIndexA": 15,
+      "chunkIndexB": 11,
+      "rangeA": [
+        255,
+        271
+      ],
+      "rangeB": [
+        193,
+        209
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.12769133756897577,
+      "b_rmse": 0.15513733663579038,
+      "a_p90": 0.17054121616499013,
+      "b_p90": 0.248110689504109,
+      "sim3_scale": 0.9086785409664855
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_069",
+      "chunkIndexA": 8,
+      "chunkIndexB": 3,
+      "rangeA": [
+        139,
+        155
+      ],
+      "rangeB": [
+        51,
+        67
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2130424041988207,
+      "b_rmse": 0.2317711062166029,
+      "a_p90": 0.30848362389494555,
+      "b_p90": 0.42175804653171994,
+      "sim3_scale": 0.9335738844779227
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_070",
+      "chunkIndexA": 20,
+      "chunkIndexB": 8,
+      "rangeA": [
+        341,
+        357
+      ],
+      "rangeB": [
+        141,
+        157
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.18694719694892306,
+      "b_rmse": 0.09736585796503514,
+      "a_p90": 0.2733442735934643,
+      "b_p90": 0.16575361947871547,
+      "sim3_scale": 1.0620486720232416
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_071",
+      "chunkIndexA": 21,
+      "chunkIndexB": 20,
+      "rangeA": [
+        357,
+        373
+      ],
+      "rangeB": [
+        340,
+        356
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.07675428920218777,
+      "b_rmse": 0.18445728880699844,
+      "a_p90": 0.11697865093900917,
+      "b_p90": 0.3157697899500711,
+      "sim3_scale": 0.8972237118159584
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_072",
+      "chunkIndexA": 13,
+      "chunkIndexB": 0,
+      "rangeA": [
+        226,
+        242
+      ],
+      "rangeB": [
+        1,
+        17
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.19388701580821058,
+      "b_rmse": 0.1958811633280482,
+      "a_p90": 0.30838782711718343,
+      "b_p90": 0.3338406153969202,
+      "sim3_scale": 1.1994044982506873
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_073",
+      "chunkIndexA": 19,
+      "chunkIndexB": 14,
+      "rangeA": [
+        323,
+        339
+      ],
+      "rangeB": [
+        239,
+        255
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.0381571999201775,
+      "b_rmse": 0.248735321390864,
+      "a_p90": 0.05769172922738844,
+      "b_p90": 0.34733487410294744,
+      "sim3_scale": 1.42439238902301
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_074",
+      "chunkIndexA": 6,
+      "chunkIndexB": 3,
+      "rangeA": [
+        104,
+        120
+      ],
+      "rangeB": [
+        51,
+        67
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.2128935630106001,
+      "b_rmse": 0.218418468172242,
+      "a_p90": 0.357719932955128,
+      "b_p90": 0.4006813148960577,
+      "sim3_scale": 0.7936501312611586
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_075",
+      "chunkIndexA": 16,
+      "chunkIndexB": 13,
+      "rangeA": [
+        272,
+        288
+      ],
+      "rangeB": [
+        229,
+        245
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.09935757950007738,
+      "b_rmse": 0.08693020059940715,
+      "a_p90": 0.15897851117990977,
+      "b_p90": 0.1309295245283187,
+      "sim3_scale": 0.9190827076856347
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_076",
+      "chunkIndexA": 15,
+      "chunkIndexB": 12,
+      "rangeA": [
+        255,
+        271
+      ],
+      "rangeB": [
+        204,
+        220
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.10253528277448525,
+      "b_rmse": 0.20156580180311476,
+      "a_p90": 0.16964954547596126,
+      "b_p90": 0.31521308046788665,
+      "sim3_scale": 1.001170230835562
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_077",
+      "chunkIndexA": 23,
+      "chunkIndexB": 19,
+      "rangeA": [
+        379,
+        395
+      ],
+      "rangeB": [
+        325,
+        341
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.05232421842470691,
+      "b_rmse": 0.16427002933210355,
+      "a_p90": 0.08343559831056242,
+      "b_p90": 0.24813469072305572,
+      "sim3_scale": 0.6613012864886576
+    },
+    {
+      "edgeType": "loop",
+      "loopWindowID": "loop_window_078",
+      "chunkIndexA": 11,
+      "chunkIndexB": 6,
+      "rangeA": [
+        187,
+        203
+      ],
+      "rangeB": [
+        108,
+        124
+      ],
+      "status": "estimated",
+      "a_point_count": 5651072,
+      "b_point_count": 5651072,
+      "a_rmse": 0.06933733736456976,
+      "b_rmse": 0.31335076334491285,
+      "a_p90": 0.1203194251686037,
+      "b_p90": 0.4962995585948562,
+      "sim3_scale": 1.2401527837434612
+    }
+  ],
+  "elapsed_s": 668.565
+}

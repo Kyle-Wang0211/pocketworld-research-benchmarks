@@ -1,0 +1,23 @@
+LOD 查看器(十三):stats.lowest_spacing 喂进 Potree 近/远平面的「已知」分支
+
+- lod_camera.dart:potreeLowestSpacingFromStats —— v2 头 :115-118「<= 0 = 本帧没画节点」即 Potree
+  result.lowestSpacing 保持初值 Infinity 的情形(Potree_update_visibility.js:114);非有限值同样视作 ∞。
+  lodCameraFrame 增加 previousNear/previousFar,原样交给 potreeNearFar 的「不改」分支。
+- lod_cloud_view.dart:
+  · stats 轮询改为常开(近/远平面要用;面板是否显示仍由 showStats 决定);
+  · 新的 lowest_spacing 与当前不同就重发相机(Potree 每帧按本帧 lowestSpacing 重算);
+  · 未知分支保留「当前那台相机」的上次值:Potree 有 cameraP、cameraO 两个对象
+    (Scene.js:21-22,初值都是 0.1 / 1000*1000),Viewer.update 只改 getActiveCamera 选中的那台
+    (Scene.js:339-350)⇒ 页面按正交/透视各存一份。
+
+判据(test/point_cloud_lod/ 47/47 过,analyze 零问题):
+- 映射:0、−1、NaN → ∞;0.002 → 0.002。
+- 未知分支保留上次值:透视 (5, 20000)、正交 (−20000, 20000);阴性:已知分支不看上次值 → (20, 10020)。
+- lodCameraFrame:∞ → (−1e6, 1e6);0.002 → (−10000.02, 10000.02);再给 ∞ + 上次值 → 与上次逐元素相同;
+  阴性:两分支矩阵确实不同。
+- widget(mock 通道,真 250 ms 计时器):拿到 stats 前发的矩阵 = 未知分支(1e-12);
+  lowest_spacing = 0.002 的 stats 之后 = 已知分支(1e-12);阴性:lowest_spacing = 0 仍是未知分支,
+  且与已知分支矩阵不同。
+  一次性阴性(改完即还原,未入库):页面写死 lowestSpacing = ∞ → 「已知分支」那条失败。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

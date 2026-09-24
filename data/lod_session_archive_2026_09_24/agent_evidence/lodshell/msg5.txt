@@ -1,0 +1,34 @@
+LOD 查看器(五):iOS 外壳 Swift 半边(FlutterTexture = 官方相机插件形状 B1)
+
+只进台架与本分支;生产 AppDelegate 不注册、生产 pbxproj 不编。
+- PwLodTexture.swift(文件头照原样保留 flutter/packages 版权 + BSD-3 全文,
+  来源 @fbc80a62002 camera_avfoundation):
+  · QueueUtils.swift:17-25 ensureToRunOnMainQueue 逐字(改名);
+  · CameraPlugin.swift:297-303:pwlod_frame_ready_fn 只做「回主线程 textureFrameAvailable」;
+  · DefaultCamera.swift:28-31 + :1518-1529:copyPixelBuffer 在专用串行队列里
+    pwlod_viewer_acquire_latest,取对应 CVPixelBuffer passRetained,不等任何东西;
+  · 拆除顺序:viewer(stop+join)→ 回调 sink → 三目标环 → GPU(头文件 :64)。
+  · setParams 在当前参数(初值 pwlod_params_default)上合并;stats 用 C 字段名,另附外壳计数
+    (copy_calls/copy_empty/last_acquired_frame_number/copy_max_us/frames_ready),供 3b 判据。
+- PwLodTexturePlugin.swift:通道 'pw_lod_texture';create 在后台建、主线程注册
+  (CameraPlugin.swift:259-268),dispose 主线程注销后在纹理自己的队列关闭(:341-348);
+  loadOctree 走纹理 ioQueue;buildFromPly/verifyOctree 走 buildQueue(阻塞调用,头 :195);
+  runBench 走 benchQueue,照台架 App.swift:76/:88/:101-106 建目录、跑期间常亮、
+  pwlod_run(dir, out, args, probe, NULL);前后台切换 stop/start(AetherTexturePlugin.swift:107-112)。
+  launchArgs 收集 -PWLod* 启动参数(读法照 PwBenchReplay.swift:84-92)。
+- PwLodProbe.swift:探针逐字照抄 pw_splat_ab_bench Sources/App.swift:29-43 @00b020db;
+  建树峰值内存 = 10 ms 采样 phys_footprint 的最大值 + 内核 ledger_phys_footprint_peak 前后值
+  (两者都报,不做推断)。
+
+偏离任务说明(理由见报告):pwlod_* 不用 @_silgen_name,而是经桥接头导入 PwLodSurface.h
+(它 include 两份冻结头)。@_silgen_name 只适合纯标量/指针签名;pwlod 的 camera/params/stats/
+report/probe 都是 C 结构体,手抄布局没有编译期检查。先例:产品桥接头导入 vendor/pw_af/pw_af_c.h、
+台架 Bridging.h 导入 pw_lod_bench.h。仍不走 DynamicLibrary.process()。
+
+冒烟(桩只在 scratchpad,不入库):iphoneos arm64,swiftc -swift-version 5 -warnings-as-errors,
+3 个 Swift + PwLodSurface.m + 桩(18 个 pwlod_* 空壳,include 冻结头)+ 真 iOS Release Dawn
+(Aether3D build-ios-device-dawn Release-iphoneos/libwebgpu_dawn.a)+ Flutter.framework 链成
+Mach-O arm64,无未定义符号。阴性:桩少 pwlod_viewer_acquire_latest → 链接失败;
+头里 fov_y_degrees 改名 → Swift 编译失败;viewport_width_px 改成 double → Swift 编译失败。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

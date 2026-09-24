@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>重影定位 — 单窗口 vs K90 fusion vs K35 PyTorch 基准</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: -apple-system, sans-serif; }
+  #labels { position: fixed; top: 10px; left: 0; right: 0; display: flex; z-index: 10; pointer-events: none; }
+  #labels div { flex: 1; text-align: center; font-size: 15px; font-weight: 600; }
+  #hint { position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 13px; color: #999; }
+</style>
+</head>
+<body>
+<div id="labels">
+  <div style="color:#9f9">单窗口 window_0 (K90@392)<br>窗内一致性</div>
+  <div style="color:#7fdcff">K90 fusion (392)<br>跨窗对齐后</div>
+  <div style="color:#f9a">K35 PyTorch 基准 (6/5)<br>管线上限参考</div>
+</div>
+<div id="hint">左键旋转 · 滚轮缩放 · 三视图相机联动</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+const N = 3;
+const views = [];
+for (let i = 0; i < N; i++) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+  const cam = new THREE.PerspectiveCamera(50, (W/N)/H, 0.01, 100);
+  cam.position.set(0, -1.8, 1.3);
+  cam.up.set(0, 0, 1);
+  views.push({ scene, cam });
+}
+const controls = new OrbitControls(views[0].cam, renderer.domElement);
+controls.target.set(0, 0, 0.45);
+views[0].cam.lookAt(controls.target);
+
+const loader = new PLYLoader();
+function addCloud(view, url, size) {
+  loader.load(url, geo => {
+    geo.computeBoundingBox();
+    const c = new THREE.Vector3();
+    geo.boundingBox.getCenter(c);
+    geo.translate(-c.x, -c.y, -c.z + 0.45);
+    const mat = new THREE.PointsMaterial({ size: size, vertexColors: true });
+    view.scene.add(new THREE.Points(geo, mat));
+  });
+}
+addCloud(views[0], 'single_window0_392.ply', 0.006);
+addCloud(views[1], 'fusion_392.ply', 0.004);
+addCloud(views[2], 'k35_pytorch_reference.ply', 0.004);
+
+function render() {
+  requestAnimationFrame(render);
+  controls.update();
+  for (let i = 1; i < N; i++) {
+    views[i].cam.position.copy(views[0].cam.position);
+    views[i].cam.quaternion.copy(views[0].cam.quaternion);
+    views[i].cam.updateMatrixWorld();
+  }
+  for (let i = 0; i < N; i++) {
+    const x = Math.floor(i * W / N);
+    const w = Math.floor(W / N);
+    renderer.setViewport(x, 0, w, H);
+    renderer.setScissor(x, 0, w, H);
+    renderer.render(views[i].scene, views[i].cam);
+  }
+}
+render();
+</script>
+</body>
+</html>
