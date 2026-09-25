@@ -1,0 +1,74 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 901 行 ↔ 相机 100 帧;配上 100,配不上 0
+  轨迹 arkit: 98 帧配上  {"rows": 901, "zero_translation_dropped": 26, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-73538ad6-8418-4eaf-8b75-a63c9d32af46/ruler_subset/arkit_poses.tum"}
+  轨迹 new_m5_final: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler/7353_all_m5_final.tum"}
+  轨迹 as16new_m4_final: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler/7353_as16new_m4_final.tum"}
+  轨迹 old_p0_final: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler/7353_none_p0_final.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):97 / 录制帧 100 / 深度 298 张
+帧对 90(间隔 ~0.5s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 0.9997  ⇒ 轨迹比米制 -0.03%   有效帧对 52/90
+  深度侧 95%(不重叠帧对 29 个,顺序统计量): k ∈ [0.9904, 1.0081]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0362  帧对内 0.0351
+  分段 k [0.9989447367274291, 1.0068608364398244, 1.0004721691483451, 0.9998295006220638]
+  PC ×1.05:比值 1.05001 ✅
+  NC 深度洗牌:k=1.1346 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.08007683331112675, '-1': 0.0498808610620366, '1': 0.058607515242229374, '2': 0.07019935372442099, '0': 0.03620610635360534}
+
+── new_m5_final ── verdict: valid
+  k(轨迹/米) = 1.0002  ⇒ 轨迹比米制 +0.02%   有效帧对 48/90
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9728, 1.0246]   NC sd 1.29%   PC k0=1.05 恢复 1.0527 ✅
+  深度侧 95%(不重叠帧对 29 个,顺序统计量): k ∈ [0.9875, 1.0233]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0627  帧对内 0.0317
+  分段 k [0.9899568466643571, 0.9973165900296509, 1.0146926199536883, 1.0314929676205546]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1257 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.09950380812500008, '-1': 0.07356206807058985, '1': 0.07449961549128008, '2': 0.09121583765241877, '0': 0.06273730757462245}
+
+── as16new_m4_final ── verdict: valid
+  k(轨迹/米) = 0.9960  ⇒ 轨迹比米制 -0.40%   有效帧对 52/90
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9793, 1.0127]   NC sd 0.86%   PC k0=1.05 恢复 1.0531 ✅
+  深度侧 95%(不重叠帧对 30 个,顺序统计量): k ∈ [0.9718, 1.0088]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0458  帧对内 0.0369
+  分段 k [0.9908294719245628, 0.9730309041625846, 0.9951663678712496, 1.0242646352938103]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.2400 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.06848743136089591, '-1': 0.06227881567014826, '1': 0.07585231606324543, '2': 0.10379250954514684, '0': 0.04577542885469827}
+
+── old_p0_final ── verdict: valid
+  k(轨迹/米) = 0.9944  ⇒ 轨迹比米制 -0.56%   有效帧对 48/90
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9718, 1.0195]   NC sd 1.22%   PC k0=1.05 恢复 1.0544 ✅
+  深度侧 95%(不重叠帧对 27 个,顺序统计量): k ∈ [0.9758, 1.0103]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0668  帧对内 0.0363
+  分段 k [0.9762590738586182, 0.9860057266187999, 1.0399005391052747, 1.0098018259097479]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1379 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.0912492996755857, '-1': 0.07844728680834392, '1': 0.0693696938205372, '2': 0.11245066947076077, '0': 0.06675973026159089}
+
+交叉核对 arkit/new_m5_final:尺子比值 0.9995 vs 规范 Sim3 0.9745(差 +2.56%,Sim3 ATE 3.62 cm)
+
+交叉核对 arkit/as16new_m4_final:尺子比值 1.0037 vs 规范 Sim3 0.9955(差 +0.83%,Sim3 ATE 2.63 cm)
+
+交叉核对 arkit/old_p0_final:尺子比值 1.0054 vs 规范 Sim3 0.9772(差 +2.88%,Sim3 ATE 3.25 cm)
+
+交叉核对 new_m5_final/arkit:尺子比值 1.0005 vs 规范 Sim3 1.0289(差 -2.76%,Sim3 ATE 3.52 cm)
+
+交叉核对 new_m5_final/as16new_m4_final:尺子比值 1.0042 vs 规范 Sim3 1.0218(差 -1.72%,Sim3 ATE 1.42 cm)
+
+交叉核对 new_m5_final/old_p0_final:尺子比值 1.0059 vs 规范 Sim3 1.0029(差 +0.30%,Sim3 ATE 0.48 cm)
+
+交叉核对 as16new_m4_final/arkit:尺子比值 0.9963 vs 规范 Sim3 1.0060(差 -0.97%,Sim3 ATE 2.62 cm)
+
+交叉核对 as16new_m4_final/new_m5_final:尺子比值 0.9958 vs 规范 Sim3 0.9791(差 +1.71%,Sim3 ATE 1.46 cm)
+
+交叉核对 as16new_m4_final/old_p0_final:尺子比值 1.0016 vs 规范 Sim3 0.9818(差 +2.02%,Sim3 ATE 1.17 cm)
+
+交叉核对 old_p0_final/arkit:尺子比值 0.9947 vs 规范 Sim3 1.0255(差 -3.01%,Sim3 ATE 3.17 cm)
+
+交叉核对 old_p0_final/new_m5_final:尺子比值 0.9942 vs 规范 Sim3 0.9972(差 -0.30%,Sim3 ATE 0.48 cm)
+
+交叉核对 old_p0_final/as16new_m4_final:尺子比值 0.9984 vs 规范 Sim3 1.0188(差 -2.01%,Sim3 ATE 1.15 cm)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler/out2_7353/lidar_ruler_report.json

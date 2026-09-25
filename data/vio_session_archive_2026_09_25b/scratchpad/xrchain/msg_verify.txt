@@ -1,0 +1,14 @@
+bench(xr-recon-chain): VERIFY —— 台架包构建核验与还原 + Mac 链路回放 / 外推逐位对照 / 录制器兼容 / Dart 全量(仅台架,未装机)
+
+- 包:~/Developer/arloopbench_builds/xr_recon_chain_20260925/Runner.app(源 371e2ad,PW_XRSLAM_ARM=xrchain);本臂指纹 1、
+  其它臂 0;引擎外推接口是引擎强定义;其余嵌入框架对 any43default 包去签名逐字节相同;签名 valid。
+- 台架目录:备份 → 四段同源同步 → 换 5 份自有文件 → pod install → 构建 → 按备份还原(1031/1031 文件、332/332 链接一致,
+  pw_full_chain 指回 bench-unified-20260924)。
+- 数字见文件:外推接口 66/66 与参照逐字段相同;链路回放 66/66 与自检逐位相同;常规照片等定稿中位 476 ms / 最大 573 ms;
+  录制器单测 16/16、装载器 24/24、旧格式推送序列 sha 改前改后相同;Dart 全量 0 条变化 + 新增 2 条全过。
+
+未装机、未碰生产 App;未推送。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,32 @@
+feat(xr-recon-chain): 后端帧状态沿引擎缓存的 IMU 外推到任意时刻的最小 C 接口(只调官方 propagate_state_okvis2)
+
+用户 2026-09-25 拍板台架 XRSLAM → SfM 重建链:照片位姿 = 拍照时刻之前最近一个后端帧的定稿状态,用引擎官方
+(已改 OKVIS2 离散的)propagate_state_okvis2 外推到拍照时刻;不插值、不平滑、不补偿。predict_pose 只能往前推且
+frontal_imus 随最新状态前移而弹掉旧样本,而后端帧定稿比最新状态晚约 0.5–1 s,外推它要的那段 IMU 早已不在
+frontal_imus 里 ⇒ 在引擎里按时间留底 IMU,并加一个只做外推的接口。照离线工具 offline_sfm/tools/xr_propagate2.cc
+(原样 #include detail.cpp、调 propagate_state_okvis2)的做法搬进引擎。
+
+- core/detail.{h,cpp}:
+  · imu_history_:track_imu 收到的同一个样本另存一份(独立一把锁;上限 16384 条丢最旧,100 Hz 约 164 s)。
+    frontal_imus / imus / 预积分一个字不动。
+  · propagate_state_with_history():规则与 predict_pose 逐句相同(留状态时刻处(含)之前最后一个样本;积到
+    min(t, 已缓存最新样本);只调 propagate_state_okvis2)。另外如实拒绝三种情况、状态不动:缓存里没有状态时刻
+    之前的样本(-2,predict_pose 此时会让 OKVIS2 在起点外插)、t 早于状态时刻(-3)、OKVIS2 积分拒绝(-4);
+    IMU 还没到 t 时按 predict_pose 规则积到最新样本并返回 1。
+- interface/include/XRSLAMBackendPose.h:XRSLAMPropagatedState(176 字节,static_assert 钉住)+
+  XRSLAMPropagateBackendState(const XRSLAMBackendState *, double t, XRSLAMPropagatedState *) + 状态码枚举。
+  输入取 XRSLAMBackendState 的 body 位姿原值 / 速度 / 零偏 / 帧时刻;输出 body 位姿 + 相机位姿(与
+  XRSLAMBackendPose、XRSLAM_RESULT_CAMERA_POSE 同一条两步式)+ 速度 + 用到的 IMU 首末时刻与条数。
+- interface/src/XRSLAMManager.{h,cpp}、XRSLAMInternal.cpp:读取方法与 extern "C" 入口(同后端出口的做法)。
+  XRSLAM.h 一个字节不动,已有结构体 / 函数布局与行为不动。
+
+验证(Mac 单线程,手机同款喂法:box/3、30 Hz 闸、首个 IMU 前相机帧丢弃、逐帧 K、曝光中点 + c 3 ms + 台架 Δ −5 ms,
+三场 13f5 / 6d18 / 7353,各 22 张模拟照片含初始化前 / 收尾后边界):
+  · 接口输出 vs 参照 xr_propagate2(源码逐字节拷贝、#include 4e8dda2 的 detail.cpp、读录制 imu.csv)
+    在同一批作业上 66/66 逐字段(%.17g,即逐位)相同,含 IMU 未覆盖到目标时刻的部分外推 3 例(返回 1,两边同)。
+  · 本提交 vs 4e8dda2(原引擎 + 原回放器):13f5 前端 CAMERA/BODY/STATE 全精度十六进制逐帧轨迹、后端 CSV
+    (除墙钟两列)、按帧键控 CSV 逐位相同 ⇒ IMU 留底与新接口对引擎输出零影响。
+跨端自证:本提交新增行里 __APPLE__ / TARGET_OS / __ANDROID__ / OHOS / 任何厂商 API 均为 0 处;不新增 include。
+仅台架;未推送。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

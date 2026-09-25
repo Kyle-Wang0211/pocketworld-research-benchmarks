@@ -1,0 +1,57 @@
+== Info.plist
+  CFBundleIdentifier       base=com.kyle.arloopbench new=com.kyle.arloopbench
+  CFBundleVersion          base=1 new=1
+  PWXrslamBuildEngine      base=official_rules new=official_rules
+  PWXrslamEngineArm        base=official_rules new=official_rules
+  PWXrslamSHA256           base=89042cd5d5be844801a40b914cd8742119f8a9b4c3f6e3a9deef115bd4e7942f new=89042cd5d5be844801a40b914cd8742119f8a9b4c3f6e3a9deef115bd4e7942f
+  PWXrslamBuildRules       base=official new=official
+== PWOfficialSfm(嵌入包内的去签名后 vs 分支提交的二进制)
+  __text base=c71529ad797ddd6c new=c781295174fdc7f5 committed=c781295174fdc7f5
+  新包嵌入的 vs 提交的:字节不同(看 __text)
+  export _pwofficial_photo_size_status_v1       base=0 new=1
+  export _pwofficial_add_jpeg_frame_v2          base=1 new=1
+  export _pwofficial_add_frame_v2               base=1 new=1
+  exports total base=39 new=40
+  string ENTRY-ANY-4X3] jpeg rejected         base=0 new=1
+== Runner(Swift)
+  T _pw_camera_slot_photo_dims_for_format    base=0 new=1
+  T _pw_camera_slot_request_photo_dims       base=0 new=1
+  T _pw_camera_slot_start                    base=1 new=1
+  T _pw_camera_slot_capture_photo            base=1 new=1
+  _pw_camera_slot_ 符号数 base=17 new=19
+  string highResPhotoDimensions           base=0 new=1
+  string pwofficial_photo_size_status_v1  base=0 new=1
+  string dart_rule_largest_4x3            base=0 new=1
+  string photo_supported_dims             base=0 new=1
+  string photo_dims_source                base=0 new=1
+  string rejected by entry rule           base=0 new=1
+  string expected 4032x3024               base=1 new=0
+  string hires_photo_dims_query           base=0 new=1
+== Dart AOT (App.framework/App)
+  highResPhotoDimensions                   base=0 new=1
+  photoMaxWidth                            base=0 new=1
+  pw_camera_slot_photo_dims_for_format     base=0 new=1
+  pw_camera_slot_request_photo_dims        base=0 new=1
+  photoNotFourByThree                      base=0 new=1
+  photoLongSideBelowMin                    base=0 new=1
+  photoNotSensorOrientation                base=0 new=1
+  BenchFullChainPage                       base=3 new=3
+  BenchHomePage                            base=3 new=3
+  ZeroArkitCaptureProbePage                base=4 new=4
+== 其它嵌入二进制(去签名 __text)
+  PWDense        SAME
+  PWOnnxRuntime  SAME
+  PWVIOBenchKit  SAME
+  PWXRSLAMEngine SAME
+  PWBasaltEngine SAME
+  thermion_dart  SAME
+  Flutter        SAME
+== Frameworks 目录
+  同一集合: App.framework Flutter.framework PWBasaltEngine.framework PWDense.framework PWOfficialSfm.framework PWOnnxRuntime.framework PWVIOBenchKit.framework PWXRSLAMEngine.framework thermion_dart.framework 
+== 签名
+  valid
+Identifier=com.kyle.arloopbench
+TeamIdentifier=26AH7V448L
+== 主二进制 sha256
+98f19ad1ce96fb596d49c0265b7dd9e48300e1075183dfef3cfe13fd0d1c1f73  Runner
+9d41da196bbd85c811493f6c50639b19ae638c13270945997ef6e0e313822ebf  App

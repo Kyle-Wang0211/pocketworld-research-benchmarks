@@ -1,0 +1,101 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 897 行 ↔ 相机 99 帧;配上 99,配不上 0
+  轨迹 arkit: 96 帧配上  {"rows": 897, "zero_translation_dropped": 31, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-13f53d2f-5935-4b1a-a499-4dc8367ea935/ruler_subset/arkit_poses.tum"}
+  轨迹 scall_ap0_swm4: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler3/13f5_scall_ap0_swm4_final.tum"}
+  轨迹 scall_am16_swm4: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler3/13f5_scall_am16_swm4_final.tum"}
+  轨迹 scnone_ap0_swp0: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler3/13f5_scnone_ap0_swp0_final.tum"}
+  轨迹 scnone_am16_swp0: 99 帧配上  {"rows": 99, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler3/13f5_scnone_am16_swp0_final.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):96 / 录制帧 99 / 深度 296 张
+帧对 94(间隔 ~0.5s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 0.9881  ⇒ 轨迹比米制 -1.19%   有效帧对 49/94
+  深度侧 95%(不重叠帧对 27 个,顺序统计量): k ∈ [0.9701, 1.0006]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0434  帧对内 0.0387
+  分段 k [0.9784934688016608, 0.9629694549140739, 0.9927971980999294, 1.0013216481908191]
+  PC ×1.05:比值 1.05001 ✅
+  NC 深度洗牌:k=1.0869 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.05581287246124682, '-1': 0.06256256069820004, '1': 0.04732854931691608, '2': 0.06578401359593743, '0': 0.04344100002082511}
+
+── scall_ap0_swm4 ── verdict: invalid
+  k(轨迹/米) = 0.9696  ⇒ 轨迹比米制 -3.04%   有效帧对 55/94
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9410, 0.9913]   NC sd 1.38%   PC k0=1.05 恢复 1.0457 ✅
+  深度侧 95%(不重叠帧对 29 个,顺序统计量): k ∈ [0.9478, 0.9893]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': False}  帧对间 IQR/中位 0.0609  帧对内 0.0367
+  分段 k [0.9596193238956342, 0.9829330439573898, 0.9443932914093366, 0.9962254852465737]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1323 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.05780175980187389, '-1': 0.06917681670094429, '1': 0.059144650400659755, '2': 0.08454501186207353, '0': 0.06088811983629618}
+
+── scall_am16_swm4 ── verdict: valid
+  k(轨迹/米) = 0.9586  ⇒ 轨迹比米制 -4.14%   有效帧对 57/94
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9305, 0.9718]   NC sd 1.00%   PC k0=1.05 恢复 1.0390 🔴
+  深度侧 95%(不重叠帧对 31 个,顺序统计量): k ∈ [0.9533, 0.9770]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0400  帧对内 0.0359
+  分段 k [0.942729000569191, 0.9581596056318942, 0.9538736652801438, 0.9875965006297528]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1345 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.04752860259638284, '-1': 0.04710296465357721, '1': 0.06033613785152168, '2': 0.0734438631349197, '0': 0.04003909606119446}
+
+── scnone_ap0_swp0 ── verdict: valid
+  k(轨迹/米) = 0.9691  ⇒ 轨迹比米制 -3.09%   有效帧对 58/94
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9434, 0.9830]   NC sd 1.26%   PC k0=1.05 恢复 1.0414 🔴
+  深度侧 95%(不重叠帧对 31 个,顺序统计量): k ∈ [0.9544, 0.9852]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0440  帧对内 0.0371
+  分段 k [0.95583409001936, 0.9544783949026835, 0.9662486672598544, 0.9900107102269319]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1146 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.059149920697001215, '-1': 0.06285052669693278, '1': 0.05765610714949311, '2': 0.07287036179230687, '0': 0.044037965097154234}
+
+── scnone_am16_swp0 ── verdict: valid
+  k(轨迹/米) = 0.9631  ⇒ 轨迹比米制 -3.69%   有效帧对 57/94
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9378, 0.9780]   NC sd 1.01%   PC k0=1.05 恢复 1.0402 🔴
+  深度侧 95%(不重叠帧对 31 个,顺序统计量): k ∈ [0.9536, 0.9766]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0407  帧对内 0.0361
+  分段 k [0.9417159418146921, 0.9525734762964282, 0.9621101692283837, 0.9815275915111621]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1481 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.05373844278156397, '-1': 0.048526937153032405, '1': 0.05701674236097573, '2': 0.059700425148149834, '0': 0.04066661427658477}
+
+交叉核对 arkit/scall_ap0_swm4:尺子比值 1.0192 vs 规范 Sim3 0.9945(差 +2.48%,Sim3 ATE 1.97 cm)
+
+交叉核对 arkit/scall_am16_swm4:尺子比值 1.0308 vs 规范 Sim3 1.0130(差 +1.75%,Sim3 ATE 1.16 cm)
+
+交叉核对 arkit/scnone_ap0_swp0:尺子比值 1.0196 vs 规范 Sim3 1.0014(差 +1.82%,Sim3 ATE 1.60 cm)
+
+交叉核对 arkit/scnone_am16_swp0:尺子比值 1.0260 vs 规范 Sim3 1.0184(差 +0.75%,Sim3 ATE 1.04 cm)
+
+交叉核对 scall_ap0_swm4/arkit:尺子比值 0.9812 vs 规范 Sim3 1.0069(差 -2.56%,Sim3 ATE 1.96 cm)
+
+交叉核对 scall_ap0_swm4/scall_am16_swm4:尺子比值 1.0114 vs 规范 Sim3 1.0189(差 -0.74%,Sim3 ATE 1.48 cm)
+
+交叉核对 scall_ap0_swm4/scnone_ap0_swp0:尺子比值 1.0005 vs 规范 Sim3 1.0070(差 -0.65%,Sim3 ATE 0.67 cm)
+
+交叉核对 scall_ap0_swm4/scnone_am16_swp0:尺子比值 1.0067 vs 规范 Sim3 1.0242(差 -1.71%,Sim3 ATE 1.78 cm)
+
+交叉核对 scall_am16_swm4/arkit:尺子比值 0.9701 vs 规范 Sim3 0.9876(差 -1.77%,Sim3 ATE 1.17 cm)
+
+交叉核对 scall_am16_swm4/scall_ap0_swm4:尺子比值 0.9887 vs 规范 Sim3 0.9822(差 +0.66%,Sim3 ATE 1.50 cm)
+
+交叉核对 scall_am16_swm4/scnone_ap0_swp0:尺子比值 0.9892 vs 规范 Sim3 0.9889(差 +0.02%,Sim3 ATE 1.26 cm)
+
+交叉核对 scall_am16_swm4/scnone_am16_swp0:尺子比值 0.9954 vs 规范 Sim3 1.0050(差 -0.96%,Sim3 ATE 0.43 cm)
+
+交叉核对 scnone_ap0_swp0/arkit:尺子比值 0.9807 vs 规范 Sim3 0.9996(差 -1.88%,Sim3 ATE 1.60 cm)
+
+交叉核对 scnone_ap0_swp0/scall_ap0_swm4:尺子比值 0.9995 vs 规范 Sim3 0.9932(差 +0.64%,Sim3 ATE 0.68 cm)
+
+交叉核对 scnone_ap0_swp0/scall_am16_swm4:尺子比值 1.0110 vs 规范 Sim3 1.0118(差 -0.08%,Sim3 ATE 1.25 cm)
+
+交叉核对 scnone_ap0_swp0/scnone_am16_swp0:尺子比值 1.0063 vs 规范 Sim3 1.0169(差 -1.05%,Sim3 ATE 1.45 cm)
+
+交叉核对 scnone_am16_swp0/arkit:尺子比值 0.9746 vs 规范 Sim3 0.9823(差 -0.79%,Sim3 ATE 1.06 cm)
+
+交叉核对 scnone_am16_swp0/scall_ap0_swm4:尺子比值 0.9933 vs 规范 Sim3 0.9775(差 +1.61%,Sim3 ATE 1.83 cm)
+
+交叉核对 scnone_am16_swp0/scall_am16_swm4:尺子比值 1.0047 vs 规范 Sim3 0.9951(差 +0.96%,Sim3 ATE 0.43 cm)
+
+交叉核对 scnone_am16_swp0/scnone_ap0_swp0:尺子比值 0.9938 vs 规范 Sim3 0.9841(差 +0.98%,Sim3 ATE 1.47 cm)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/preint/ruler3/out_13f5_dt0.5/lidar_ruler_report.json

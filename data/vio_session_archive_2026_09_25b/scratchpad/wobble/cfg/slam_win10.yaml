@@ -1,0 +1,25 @@
+%YAML:1.0
+# GENERATED at runtime by XrslamConfigBuilder(台架默认 = 官方 iOS slam_params.yaml @4beb1a9)。
+output:
+  q_bo: [ 0, 0, 0, 1 ]
+  p_bo: [ 0, 0, 0 ]
+feature_tracker:
+  min_keypoint_distance: 25.0
+  max_keypoint_detection: 300
+  max_frames: 100
+solver:
+  time_limit: 0.1
+  iteration_limit: 10
+sliding_window:
+  size: 10
+  tracker_frequent: 3
+visual_localization:
+  # 官方 yaml 是 true(需再开全局定位开关才生效);这里显式关死:开启会把图像明文外发。
+  enable: false
+  port: 12345
+parsac:
+  parsac_flag: false
+  dynamic_probability: 0.15
+  threshold: 1.0
+  norm_scale: 1.0
+  keyframe_check_size: 1

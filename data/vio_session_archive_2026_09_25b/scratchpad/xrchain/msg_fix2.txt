@@ -1,0 +1,13 @@
+bench(xr-recon-chain): 照片请求号每场唯一(免得覆盖上一场 pw_photos/<id>.jpg)+ 重建链拉取脚本(仅台架)
+
+- lib/bench_xrchain/xr_recon_chain_page.dart:PwCameraSlot 按请求号把照片落在 Documents/pw_photos/<id>.jpg,原先每场
+  从 1 起会覆盖上一场的照片(上一场 SfM 已喂完不受影响,但拉回 Mac 时拿到的是新照片)。请求号基数改成本页启动时的
+  epoch 秒 × 1000(约 1.8e12,在 double 精确整数范围内,链路结果摊平成 double 不丢位)。
+- tool/bench/pull_xrchain_run.sh(新):照 pull_zero_arkit_run.sh 的 devicectl 用法拉 Documents/xrchain_run_<ts>/ 与它
+  引用的 pw_photos/<id>.{jpg,json},并自检(来源 / 可信 / 等待 / 外推 / SfM 产物)。只做过 bash -n,没在真机 run 上跑过。
+
+仅台架;未装机;未推送。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

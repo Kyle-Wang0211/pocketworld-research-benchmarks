@@ -1,0 +1,3443 @@
+{
+ "schema": "pw.bench.lidar-ruler/1",
+ "bench_only_notice": "🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分",
+ "recording": "/Users/kaidongwang/Developer/viobench-recordings/run-73538ad6-8418-4eaf-8b75-a63c9d32af46/ruler_subset",
+ "opencv_version": "4.13.0",
+ "depth_resolution": [
+  256,
+  192
+ ],
+ "image_resolution": [
+  1920,
+  1440
+ ],
+ "k_definition": "k = trajectory scale / metres (k>1 ⇒ trajectory bigger than the world)",
+ "args": {
+  "recording": "/Users/kaidongwang/Developer/viobench-recordings/run-73538ad6-8418-4eaf-8b75-a63c9d32af46/ruler_subset",
+  "arkit": "",
+  "xrslam_camera": [
+   "front=runs/7353_tap_r1.keyed.csv"
+  ],
+  "xrslam": [],
+  "xrslam_ledger": [],
+  "xrslam_yaml": null,
+  "xrslam_td": 0.008,
+  "xrslam_exposure_half": false,
+  "camera": [],
+  "out": "ruler/7353",
+  "detector": "sift",
+  "features": 4000,
+  "ratio": 0.8,
+  "pairs": 90,
+  "pair_dt": 0.33,
+  "depth_tol_ms": 0.5,
+  "min_points": 20,
+  "min_pairs": 8,
+  "min_baseline": 0.02,
+  "max_reproj_px": 2.0,
+  "min_angle_deg": 1.0,
+  "min_confidence": 2,
+  "max_between": 0.15,
+  "max_within": 0.25,
+  "seed": 20260924
+ },
+ "provenance": {
+  "arkit": {
+   "rows": 901,
+   "zero_translation_dropped": 26,
+   "not_normal_dropped": 0,
+   "tracking_key_present": true,
+   "path": "/Users/kaidongwang/Developer/viobench-recordings/run-73538ad6-8418-4eaf-8b75-a63c9d32af46/ruler_subset/arkit_poses.tum"
+  },
+  "front": {
+   "rows": 862,
+   "mapping": "exact_recording_t_ns (integer equality, no interpolation)",
+   "duplicate_t_ns": 0,
+   "recording_frames": 100,
+   "recording_frames_with_pose": 96,
+   "recording_frames_without_pose": 4,
+   "engine_t_minus_t_ns_s": [
+    0.007504504930693656,
+    0.011196720995940268
+   ],
+   "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/bkpose/runs/7353_tap_r1.keyed.csv"
+  }
+ },
+ "pairs": 90,
+ "trajectories": {
+  "arkit": {
+   "name": "arkit",
+   "estimate": {
+    "pairs_attempted": 90,
+    "pairs_with_scale": 69,
+    "s_traj_to_metric": 1.006204323226191,
+    "k": 0.9938339330462246,
+    "k_minus_1_pct": -0.6166066953775418,
+    "k_median_of_ratios": 0.9882248514638837,
+    "between_pair_rel_iqr": 0.05389235345056458,
+    "within_pair_rel_iqr_median": 0.04728319591748817,
+    "pairs_needed": 45,
+    "gates": {
+     "G1_pairs": true,
+     "G2_between_rel_iqr": true,
+     "G3_within_rel_iqr": true,
+     "G4_alignment_minimum_at_0": true
+    },
+    "passed": true
+   },
+   "pairs": [
+    {
+     "t_a": 268541.385469083,
+     "t_b": 268541.6854975,
+     "matches": 901,
+     "baseline_traj_units": 0.04318602141382126,
+     "cheirality_ok": 861,
+     "depth_high_conf_ok": 473,
+     "valid_points": 332,
+     "conf_hist": [
+      140,
+      288,
+      473
+     ],
+     "scale_to_metric": 1.031398941490474,
+     "scale_median_of_ratios": 1.0586984945338869,
+     "within_rel_iqr": 0.08155638107946583,
+     "median_lidar_m": 1.29248046875,
+     "median_triangulated": 1.253133406247477,
+     "triangulation_angle_deg_median": 1.6374381313158501
+    },
+    {
+     "t_a": 268541.6854975,
+     "t_b": 268541.985525958,
+     "matches": 906,
+     "baseline_traj_units": 0.07443627983857849,
+     "cheirality_ok": 875,
+     "depth_high_conf_ok": 434,
+     "valid_points": 361,
+     "conf_hist": [
+      123,
+      349,
+      434
+     ],
+     "scale_to_metric": 1.0771568980491122,
+     "scale_median_of_ratios": 1.0702796890729762,
+     "within_rel_iqr": 0.04926997371876038,
+     "median_lidar_m": 1.314453125,
+     "median_triangulated": 1.2202986652925547,
+     "triangulation_angle_deg_median": 2.752874624407225
+    },
+    {
+     "t_a": 268541.985525958,
+     "t_b": 268542.285554166,
+     "matches": 957,
+     "baseline_traj_units": 0.07489477203977121,
+     "cheirality_ok": 908,
+     "depth_high_conf_ok": 649,
+     "valid_points": 297,
+     "conf_hist": [
+      47,
+      261,
+      649
+     ],
+     "scale_to_metric": 1.023150194162552,
+     "scale_median_of_ratios": 1.011042304425473,
+     "within_rel_iqr": 0.05557312085392785,
+     "median_lidar_m": 1.3330078125,
+     "median_triangulated": 1.3028466593715171,
+     "triangulation_angle_deg_median": 2.847509945918151
+    },
+    {
+     "t_a": 268542.285554166,
+     "t_b": 268542.585582416,
+     "matches": 548,
+     "baseline_traj_units": 0.16221642853616317,
+     "cheirality_ok": 495,
+     "depth_high_conf_ok": 344,
+     "valid_points": 80,
+     "conf_hist": [
+      36,
+      168,
+      344
+     ],
+     "scale_to_metric": 1.0231242958273252,
+     "scale_median_of_ratios": 1.0268441021460766,
+     "within_rel_iqr": 0.04680645913907468,
+     "median_lidar_m": 1.25048828125,
+     "median_triangulated": 1.2222251845156529,
+     "triangulation_angle_deg_median": 6.9660451119609075
+    },
+    {
+     "t_a": 268542.585582416,
+     "t_b": 268542.885610541,
+     "matches": 666,
+     "baseline_traj_units": 0.08189710819444988,
+     "cheirality_ok": 639,
+     "depth_high_conf_ok": 404,
+     "valid_points": 73,
+     "conf_hist": [
+      53,
+      209,
+      404
+     ],
+     "scale_to_metric": 0.9712574704932673,
+     "scale_median_of_ratios": 0.9750717810602316,
+     "within_rel_iqr": 0.03396256000195425,
+     "median_lidar_m": 1.291015625,
+     "median_triangulated": 1.3292207928597335,
+     "triangulation_angle_deg_median": 3.2792198339786385
+    },
+    {
+     "t_a": 268542.885610541,
+     "t_b": 268543.185638625,
+     "matches": 759,
+     "baseline_traj_units": 0.052267757810198254,
+     "cheirality_ok": 676,
+     "depth_high_conf_ok": 473,
+     "valid_points": 364,
+     "conf_hist": [
+      65,
+      221,
+      473
+     ],
+     "scale_to_metric": 1.0468490350923074,
+     "scale_median_of_ratios": 1.0371158654653685,
+     "within_rel_iqr": 0.09395105622012687,
+     "median_lidar_m": 1.25390625,
+     "median_triangulated": 1.197790901999002,
+     "triangulation_angle_deg_median": 2.2845772228654924
+    },
+    {
+     "t_a": 268543.185638625,
+     "t_b": 268543.485666666,
+     "matches": 589,
+     "baseline_traj_units": 0.06672962302485728,
+     "cheirality_ok": 546,
+     "depth_high_conf_ok": 430,
+     "valid_points": 302,
+     "conf_hist": [
+      14,
+      145,
+      430
+     ],
+     "scale_to_metric": 1.0206192092612847,
+     "scale_median_of_ratios": 1.032369026984572,
+     "within_rel_iqr": 0.09725774772272143,
+     "median_lidar_m": 1.10400390625,
+     "median_triangulated": 1.0817001054184239,
+     "triangulation_angle_deg_median": 2.8959842040891335
+    },
+    {
+     "t_a": 268543.485666666,
+     "t_b": 268543.785694833,
+     "matches": 501,
+     "baseline_traj_units": 0.1061051540054246,
+     "cheirality_ok": 480,
+     "depth_high_conf_ok": 348,
+     "valid_points": 265,
+     "conf_hist": [
+      41,
+      112,
+      348
+     ],
+     "scale_to_metric": 1.0042566360332394,
+     "scale_median_of_ratios": 1.0049962630215374,
+     "within_rel_iqr": 0.027001858534417545,
+     "median_lidar_m": 1.0537109375,
+     "median_triangulated": 1.0492446847671353,
+     "triangulation_angle_deg_median": 5.064802231805024
+    },
+    {
+     "t_a": 268543.785694833,
+     "t_b": 268544.085722791,
+     "matches": 359,
+     "baseline_traj_units": 0.11859791742460882,
+     "cheirality_ok": 330,
+     "depth_high_conf_ok": 268,
+     "valid_points": 151,
+     "conf_hist": [
+      27,
+      64,
+      268
+     ],
+     "scale_to_metric": 1.0018821888930693,
+     "scale_median_of_ratios": 1.016037067470264,
+     "within_rel_iqr": 0.0419673677333144,
+     "median_lidar_m": 1.0166015625,
+     "median_triangulated": 1.0146917210128203,
+     "triangulation_angle_deg_median": 5.647868690000684
+    },
+    {
+     "t_a": 268544.385750708,
+     "t_b": 268544.68577875,
+     "matches": 737,
+     "baseline_traj_units": 0.09261175349360953,
+     "cheirality_ok": 693,
+     "depth_high_conf_ok": 552,
+     "valid_points": 415,
+     "conf_hist": [
+      69,
+      116,
+      552
+     ],
+     "scale_to_metric": 1.0272887173526084,
+     "scale_median_of_ratios": 1.0310909639026746,
+     "within_rel_iqr": 0.023182900224217186,
+     "median_lidar_m": 1.150390625,
+     "median_triangulated": 1.1198318501585742,
+     "triangulation_angle_deg_median": 3.851596186765813
+    },
+    {
+     "t_a": 268544.68577875,
+     "t_b": 268544.985806791,
+     "matches": 807,
+     "baseline_traj_units": 0.06912573487264309,
+     "cheirality_ok": 755,
+     "depth_high_conf_ok": 563,
+     "valid_points": 468,
+     "conf_hist": [
+      70,
+      174,
+      563
+     ],
+     "scale_to_metric": 0.9511559370831657,
+     "scale_median_of_ratios": 0.9523374217769973,
+     "within_rel_iqr": 0.03027580881284473,
+     "median_lidar_m": 1.2236328125,
+     "median_triangulated": 1.2864691947909377,
+     "triangulation_angle_deg_median": 2.4513641946275166
+    },
+    {
+     "t_a": 268544.985806791,
+     "t_b": 268545.285834583,
+     "matches": 466,
+     "baseline_traj_units": 0.12068800060078487,
+     "cheirality_ok": 432,
+     "depth_high_conf_ok": 319,
+     "valid_points": 233,
+     "conf_hist": [
+      56,
+      91,
+      319
+     ],
+     "scale_to_metric": 0.9868165301988774,
+     "scale_median_of_ratios": 0.9947952453119283,
+     "within_rel_iqr": 0.03728358618588947,
+     "median_lidar_m": 1.1875,
+     "median_triangulated": 1.203364519806613,
+     "triangulation_angle_deg_median": 4.71785854739565
+    },
+    {
+     "t_a": 268545.285834583,
+     "t_b": 268545.585862416,
+     "matches": 552,
+     "baseline_traj_units": 0.14033020999548543,
+     "cheirality_ok": 512,
+     "depth_high_conf_ok": 390,
+     "valid_points": 307,
+     "conf_hist": [
+      55,
+      107,
+      390
+     ],
+     "scale_to_metric": 0.9980271807254213,
+     "scale_median_of_ratios": 0.9898290952040215,
+     "within_rel_iqr": 0.030155927951099955,
+     "median_lidar_m": 1.24609375,
+     "median_triangulated": 1.2485569271713324,
+     "triangulation_angle_deg_median": 4.724706308827517
+    },
+    {
+     "t_a": 268545.585862416,
+     "t_b": 268545.88589025,
+     "matches": 774,
+     "baseline_traj_units": 0.09535446241491434,
+     "cheirality_ok": 724,
+     "depth_high_conf_ok": 626,
+     "valid_points": 440,
+     "conf_hist": [
+      28,
+      120,
+      626
+     ],
+     "scale_to_metric": 0.9867672295245931,
+     "scale_median_of_ratios": 0.979573373236727,
+     "within_rel_iqr": 0.04770361437989596,
+     "median_lidar_m": 1.34765625,
+     "median_triangulated": 1.3657286234052146,
+     "triangulation_angle_deg_median": 3.3153236897283
+    },
+    {
+     "t_a": 268545.88589025,
+     "t_b": 268546.185918041,
+     "matches": 722,
+     "baseline_traj_units": 0.11548965123647227,
+     "cheirality_ok": 696,
+     "depth_high_conf_ok": 602,
+     "valid_points": 482,
+     "conf_hist": [
+      30,
+      90,
+      602
+     ],
+     "scale_to_metric": 1.0036653161164435,
+     "scale_median_of_ratios": 0.9987203120950683,
+     "within_rel_iqr": 0.03199020958804625,
+     "median_lidar_m": 1.42724609375,
+     "median_triangulated": 1.4220338900148,
+     "triangulation_angle_deg_median": 4.156963283283017
+    },
+    {
+     "t_a": 268546.185918041,
+     "t_b": 268546.485945666,
+     "matches": 932,
+     "baseline_traj_units": 0.16825043478508572,
+     "cheirality_ok": 908,
+     "depth_high_conf_ok": 780,
+     "valid_points": 629,
+     "conf_hist": [
+      59,
+      93,
+      780
+     ],
+     "scale_to_metric": 0.9713317341978883,
+     "scale_median_of_ratios": 0.9745742682508446,
+     "within_rel_iqr": 0.02811439814432889,
+     "median_lidar_m": 1.4306640625,
+     "median_triangulated": 1.4728892428099465,
+     "triangulation_angle_deg_median": 5.8381760159313005
+    },
+    {
+     "t_a": 268546.485945666,
+     "t_b": 268546.785973416,
+     "matches": 907,
+     "baseline_traj_units": 0.1393969454859858,
+     "cheirality_ok": 870,
+     "depth_high_conf_ok": 746,
+     "valid_points": 533,
+     "conf_hist": [
+      68,
+      93,
+      746
+     ],
+     "scale_to_metric": 0.9971178727697155,
+     "scale_median_of_ratios": 0.9939282385974045,
+     "within_rel_iqr": 0.02969337299962351,
+     "median_lidar_m": 1.4853515625,
+     "median_triangulated": 1.4896449086546883,
+     "triangulation_angle_deg_median": 4.595709113154004
+    },
+    {
+     "t_a": 268546.785973416,
+     "t_b": 268547.086001041,
+     "matches": 959,
+     "baseline_traj_units": 0.09673239647774673,
+     "cheirality_ok": 914,
+     "depth_high_conf_ok": 790,
+     "valid_points": 619,
+     "conf_hist": [
+      55,
+      114,
+      790
+     ],
+     "scale_to_metric": 1.0155195066993512,
+     "scale_median_of_ratios": 1.011915454786098,
+     "within_rel_iqr": 0.03842698345303863,
+     "median_lidar_m": 1.529296875,
+     "median_triangulated": 1.5059256517588044,
+     "triangulation_angle_deg_median": 2.9087233714639105
+    },
+    {
+     "t_a": 268547.086001041,
+     "t_b": 268547.386028625,
+     "matches": 750,
+     "baseline_traj_units": 0.110636271941816,
+     "cheirality_ok": 682,
+     "depth_high_conf_ok": 564,
+     "valid_points": 438,
+     "conf_hist": [
+      93,
+      93,
+      564
+     ],
+     "scale_to_metric": 0.9847955314126856,
+     "scale_median_of_ratios": 0.9818556998101061,
+     "within_rel_iqr": 0.05139733958649041,
+     "median_lidar_m": 1.53955078125,
+     "median_triangulated": 1.5633202346496435,
+     "triangulation_angle_deg_median": 3.3496833514683364
+    },
+    {
+     "t_a": 268547.386028625,
+     "t_b": 268547.686056291,
+     "matches": 368,
+     "baseline_traj_units": 0.09507379293106136,
+     "cheirality_ok": 322,
+     "depth_high_conf_ok": 282,
+     "valid_points": 131,
+     "conf_hist": [
+      29,
+      57,
+      282
+     ],
+     "scale_to_metric": 0.9084644049169202,
+     "scale_median_of_ratios": 0.8989826749078357,
+     "within_rel_iqr": 0.15097446763249225,
+     "median_lidar_m": 1.630859375,
+     "median_triangulated": 1.795182470742091,
+     "triangulation_angle_deg_median": 2.1922961418714997
+    },
+    {
+     "t_a": 268547.686056291,
+     "t_b": 268547.986083833,
+     "matches": 178,
+     "baseline_traj_units": 0.09243339750396165,
+     "cheirality_ok": 166,
+     "depth_high_conf_ok": 129,
+     "valid_points": 70,
+     "conf_hist": [
+      15,
+      34,
+      129
+     ],
+     "scale_to_metric": 1.120892357651401,
+     "scale_median_of_ratios": 1.1159056101430065,
+     "within_rel_iqr": 0.06141961140500009,
+     "median_lidar_m": 1.748046875,
+     "median_triangulated": 1.5595135992029352,
+     "triangulation_angle_deg_median": 2.9857249290344465
+    },
+    {
+     "t_a": 268547.986083833,
+     "t_b": 268548.286111333,
+     "matches": 137,
+     "baseline_traj_units": 0.08687193367670759,
+     "cheirality_ok": 101,
+     "depth_high_conf_ok": 95,
+     "valid_points": 12,
+     "conf_hist": [
+      2,
+      40,
+      95
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268548.286111333,
+     "t_b": 268548.586230083,
+     "matches": 136,
+     "baseline_traj_units": 0.05583666765422019,
+     "cheirality_ok": 126,
+     "depth_high_conf_ok": 84,
+     "valid_points": 3,
+     "conf_hist": [
+      19,
+      33,
+      84
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268548.586230083,
+     "t_b": 268548.886255458,
+     "matches": 213,
+     "baseline_traj_units": 0.02460819879802405,
+     "cheirality_ok": 206,
+     "depth_high_conf_ok": 124,
+     "valid_points": 25,
+     "conf_hist": [
+      59,
+      30,
+      124
+     ],
+     "scale_to_metric": 1.2030236533416654,
+     "scale_median_of_ratios": 1.1939404908186118,
+     "within_rel_iqr": 0.08444567899529933,
+     "median_lidar_m": 0.20947265625,
+     "median_triangulated": 0.17412181021390824,
+     "triangulation_angle_deg_median": 7.599892823297657
+    },
+    {
+     "t_a": 268548.886255458,
+     "t_b": 268549.18628075,
+     "matches": 92,
+     "baseline_traj_units": 0.05907044180078549,
+     "cheirality_ok": 82,
+     "depth_high_conf_ok": 63,
+     "valid_points": 1,
+     "conf_hist": [
+      13,
+      16,
+      63
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268549.18628075,
+     "t_b": 268549.486106041,
+     "matches": 133,
+     "baseline_traj_units": 0.04721211537392208,
+     "cheirality_ok": 131,
+     "depth_high_conf_ok": 96,
+     "valid_points": 22,
+     "conf_hist": [
+      18,
+      19,
+      96
+     ],
+     "scale_to_metric": 0.9309443049927189,
+     "scale_median_of_ratios": 0.9023776241926476,
+     "within_rel_iqr": 0.0517503895844321,
+     "median_lidar_m": 1.96240234375,
+     "median_triangulated": 2.1079696532064274,
+     "triangulation_angle_deg_median": 1.155848019203209
+    },
+    {
+     "t_a": 268549.486106041,
+     "t_b": 268549.786133458,
+     "matches": 585,
+     "baseline_traj_units": 0.055022750309614024,
+     "cheirality_ok": 567,
+     "depth_high_conf_ok": 499,
+     "valid_points": 36,
+     "conf_hist": [
+      24,
+      62,
+      499
+     ],
+     "scale_to_metric": 0.7898658055268173,
+     "scale_median_of_ratios": 0.7539863577345163,
+     "within_rel_iqr": 0.0788664369610859,
+     "median_lidar_m": 1.8115234375,
+     "median_triangulated": 2.2934572237771036,
+     "triangulation_angle_deg_median": 1.071250327611335
+    },
+    {
+     "t_a": 268550.086160875,
+     "t_b": 268550.386188125,
+     "matches": 241,
+     "baseline_traj_units": 0.09751945286632648,
+     "cheirality_ok": 229,
+     "depth_high_conf_ok": 189,
+     "valid_points": 98,
+     "conf_hist": [
+      13,
+      39,
+      189
+     ],
+     "scale_to_metric": 1.0292448568203252,
+     "scale_median_of_ratios": 1.021503759648354,
+     "within_rel_iqr": 0.055579350875841295,
+     "median_lidar_m": 1.9873046875,
+     "median_triangulated": 1.9308376178234554,
+     "triangulation_angle_deg_median": 2.7071425672169402
+    },
+    {
+     "t_a": 268550.386188125,
+     "t_b": 268550.6862155,
+     "matches": 256,
+     "baseline_traj_units": 0.13287125581938936,
+     "cheirality_ok": 248,
+     "depth_high_conf_ok": 223,
+     "valid_points": 140,
+     "conf_hist": [
+      3,
+      30,
+      223
+     ],
+     "scale_to_metric": 1.021837525595224,
+     "scale_median_of_ratios": 1.0123059306935935,
+     "within_rel_iqr": 0.023675730538806904,
+     "median_lidar_m": 1.93505859375,
+     "median_triangulated": 1.8937047674216327,
+     "triangulation_angle_deg_median": 3.7071406973072447
+    },
+    {
+     "t_a": 268550.6862155,
+     "t_b": 268550.986242916,
+     "matches": 219,
+     "baseline_traj_units": 0.12638287832520304,
+     "cheirality_ok": 201,
+     "depth_high_conf_ok": 185,
+     "valid_points": 65,
+     "conf_hist": [
+      1,
+      33,
+      185
+     ],
+     "scale_to_metric": 0.9824726957705434,
+     "scale_median_of_ratios": 0.9819151593492622,
+     "within_rel_iqr": 0.04405887870907969,
+     "median_lidar_m": 1.982421875,
+     "median_triangulated": 2.017788263769719,
+     "triangulation_angle_deg_median": 3.441124697548161
+    },
+    {
+     "t_a": 268550.986242916,
+     "t_b": 268551.286270166,
+     "matches": 139,
+     "baseline_traj_units": 0.0961434560454821,
+     "cheirality_ok": 127,
+     "depth_high_conf_ok": 110,
+     "valid_points": 79,
+     "conf_hist": [
+      15,
+      14,
+      110
+     ],
+     "scale_to_metric": 1.0566700159235733,
+     "scale_median_of_ratios": 1.0657734400318113,
+     "within_rel_iqr": 0.052342192699744494,
+     "median_lidar_m": 1.9755859375,
+     "median_triangulated": 1.8696337624128154,
+     "triangulation_angle_deg_median": 2.845115409498605
+    },
+    {
+     "t_a": 268551.286270166,
+     "t_b": 268551.5862975,
+     "matches": 745,
+     "baseline_traj_units": 0.08900741921496567,
+     "cheirality_ok": 668,
+     "depth_high_conf_ok": 497,
+     "valid_points": 393,
+     "conf_hist": [
+      85,
+      163,
+      497
+     ],
+     "scale_to_metric": 1.027005876723248,
+     "scale_median_of_ratios": 1.0080757154959292,
+     "within_rel_iqr": 0.03281863762995717,
+     "median_lidar_m": 1.9384765625,
+     "median_triangulated": 1.8875028920816685,
+     "triangulation_angle_deg_median": 2.2903778208243106
+    },
+    {
+     "t_a": 268551.5862975,
+     "t_b": 268551.886324583,
+     "matches": 320,
+     "baseline_traj_units": 0.17187048468470217,
+     "cheirality_ok": 285,
+     "depth_high_conf_ok": 240,
+     "valid_points": 181,
+     "conf_hist": [
+      27,
+      53,
+      240
+     ],
+     "scale_to_metric": 1.0550556905559823,
+     "scale_median_of_ratios": 1.0527717213566485,
+     "within_rel_iqr": 0.03330839644879169,
+     "median_lidar_m": 1.98046875,
+     "median_triangulated": 1.877122475834762,
+     "triangulation_angle_deg_median": 4.655153736631213
+    },
+    {
+     "t_a": 268551.886324583,
+     "t_b": 268552.186351833,
+     "matches": 268,
+     "baseline_traj_units": 0.1299798212620151,
+     "cheirality_ok": 252,
+     "depth_high_conf_ok": 206,
+     "valid_points": 163,
+     "conf_hist": [
+      6,
+      56,
+      206
+     ],
+     "scale_to_metric": 1.0381428833019557,
+     "scale_median_of_ratios": 1.0490474597398463,
+     "within_rel_iqr": 0.06289718009222586,
+     "median_lidar_m": 1.884765625,
+     "median_triangulated": 1.8155165876639683,
+     "triangulation_angle_deg_median": 3.734610596221902
+    },
+    {
+     "t_a": 268552.186351833,
+     "t_b": 268552.486378916,
+     "matches": 434,
+     "baseline_traj_units": 0.10978159645175473,
+     "cheirality_ok": 399,
+     "depth_high_conf_ok": 350,
+     "valid_points": 232,
+     "conf_hist": [
+      16,
+      68,
+      350
+     ],
+     "scale_to_metric": 1.006336893389433,
+     "scale_median_of_ratios": 1.0049222336560084,
+     "within_rel_iqr": 0.0423694082402207,
+     "median_lidar_m": 1.755859375,
+     "median_triangulated": 1.744802746012926,
+     "triangulation_angle_deg_median": 3.1337816298609154
+    },
+    {
+     "t_a": 268552.486378916,
+     "t_b": 268552.786406166,
+     "matches": 302,
+     "baseline_traj_units": 0.14614920256781067,
+     "cheirality_ok": 276,
+     "depth_high_conf_ok": 182,
+     "valid_points": 128,
+     "conf_hist": [
+      55,
+      65,
+      182
+     ],
+     "scale_to_metric": 0.9854191345704133,
+     "scale_median_of_ratios": 0.990758250641309,
+     "within_rel_iqr": 0.044385881904182474,
+     "median_lidar_m": 1.59375,
+     "median_triangulated": 1.6173321017302797,
+     "triangulation_angle_deg_median": 4.262774608363005
+    },
+    {
+     "t_a": 268552.786406166,
+     "t_b": 268553.086433333,
+     "matches": 195,
+     "baseline_traj_units": 0.14741127100473256,
+     "cheirality_ok": 167,
+     "depth_high_conf_ok": 102,
+     "valid_points": 71,
+     "conf_hist": [
+      30,
+      63,
+      102
+     ],
+     "scale_to_metric": 0.9987714032636146,
+     "scale_median_of_ratios": 0.9971915706201446,
+     "within_rel_iqr": 0.024479418449828403,
+     "median_lidar_m": 1.5947265625,
+     "median_triangulated": 1.5966882484710965,
+     "triangulation_angle_deg_median": 4.506004246029769
+    },
+    {
+     "t_a": 268553.086433333,
+     "t_b": 268553.386551666,
+     "matches": 155,
+     "baseline_traj_units": 0.09108815699406203,
+     "cheirality_ok": 132,
+     "depth_high_conf_ok": 70,
+     "valid_points": 41,
+     "conf_hist": [
+      37,
+      48,
+      70
+     ],
+     "scale_to_metric": 0.9811681911915299,
+     "scale_median_of_ratios": 0.9772821296902303,
+     "within_rel_iqr": 0.05755399898112734,
+     "median_lidar_m": 0.8525390625,
+     "median_triangulated": 0.8689020599665764,
+     "triangulation_angle_deg_median": 4.92571215192481
+    },
+    {
+     "t_a": 268553.386551666,
+     "t_b": 268553.686576708,
+     "matches": 146,
+     "baseline_traj_units": 0.07553390053690151,
+     "cheirality_ok": 118,
+     "depth_high_conf_ok": 62,
+     "valid_points": 34,
+     "conf_hist": [
+      32,
+      52,
+      62
+     ],
+     "scale_to_metric": 0.7976399771313967,
+     "scale_median_of_ratios": 1.0087368847317284,
+     "within_rel_iqr": 0.06550741317075537,
+     "median_lidar_m": 0.856689453125,
+     "median_triangulated": 1.074030236305315,
+     "triangulation_angle_deg_median": 3.6620797140566053
+    },
+    {
+     "t_a": 268553.686576708,
+     "t_b": 268553.986601666,
+     "matches": 74,
+     "baseline_traj_units": 0.07324865850098715,
+     "cheirality_ok": 70,
+     "depth_high_conf_ok": 48,
+     "valid_points": 34,
+     "conf_hist": [
+      10,
+      16,
+      48
+     ],
+     "scale_to_metric": 1.0861712545593096,
+     "scale_median_of_ratios": 1.0648169066815805,
+     "within_rel_iqr": 0.03408007501609846,
+     "median_lidar_m": 1.151123046875,
+     "median_triangulated": 1.059798850359047,
+     "triangulation_angle_deg_median": 3.839910442803049
+    },
+    {
+     "t_a": 268553.986601666,
+     "t_b": 268554.286626625,
+     "matches": 69,
+     "baseline_traj_units": 0.05641754782204569,
+     "cheirality_ok": 65,
+     "depth_high_conf_ok": 48,
+     "valid_points": 28,
+     "conf_hist": [
+      4,
+      17,
+      48
+     ],
+     "scale_to_metric": 1.1913913633054913,
+     "scale_median_of_ratios": 1.032339528993952,
+     "within_rel_iqr": 0.08045222061330284,
+     "median_lidar_m": 1.153076171875,
+     "median_triangulated": 0.9678399620724237,
+     "triangulation_angle_deg_median": 3.0916008431413893
+    },
+    {
+     "t_a": 268554.286626625,
+     "t_b": 268554.586651583,
+     "matches": 93,
+     "baseline_traj_units": 0.06095298069532851,
+     "cheirality_ok": 91,
+     "depth_high_conf_ok": 46,
+     "valid_points": 22,
+     "conf_hist": [
+      6,
+      41,
+      46
+     ],
+     "scale_to_metric": 1.2753930209103508,
+     "scale_median_of_ratios": 1.0651015016925336,
+     "within_rel_iqr": 0.04886264196175028,
+     "median_lidar_m": 1.41748046875,
+     "median_triangulated": 1.1114067942274217,
+     "triangulation_angle_deg_median": 2.9177277542252775
+    },
+    {
+     "t_a": 268554.586651583,
+     "t_b": 268554.886676458,
+     "matches": 104,
+     "baseline_traj_units": 0.08490733324641134,
+     "cheirality_ok": 97,
+     "depth_high_conf_ok": 45,
+     "valid_points": 29,
+     "conf_hist": [
+      10,
+      49,
+      45
+     ],
+     "scale_to_metric": 1.0169695224086954,
+     "scale_median_of_ratios": 1.0231617743743,
+     "within_rel_iqr": 0.0388294046117729,
+     "median_lidar_m": 1.412109375,
+     "median_triangulated": 1.3885464056537453,
+     "triangulation_angle_deg_median": 3.087807560419617
+    },
+    {
+     "t_a": 268554.886676458,
+     "t_b": 268555.186701416,
+     "matches": 129,
+     "baseline_traj_units": 0.049046306153326044,
+     "cheirality_ok": 125,
+     "depth_high_conf_ok": 58,
+     "valid_points": 37,
+     "conf_hist": [
+      20,
+      51,
+      58
+     ],
+     "scale_to_metric": 1.0350405691783295,
+     "scale_median_of_ratios": 1.0444134268719938,
+     "within_rel_iqr": 0.07338379693298913,
+     "median_lidar_m": 0.73486328125,
+     "median_triangulated": 0.7099850026490978,
+     "triangulation_angle_deg_median": 3.1861367100403517
+    },
+    {
+     "t_a": 268555.186701416,
+     "t_b": 268555.48672625,
+     "matches": 113,
+     "baseline_traj_units": 0.053396892468358305,
+     "cheirality_ok": 112,
+     "depth_high_conf_ok": 78,
+     "valid_points": 60,
+     "conf_hist": [
+      6,
+      29,
+      78
+     ],
+     "scale_to_metric": 0.9883473921126975,
+     "scale_median_of_ratios": 1.014888693044103,
+     "within_rel_iqr": 0.048189010893782414,
+     "median_lidar_m": 1.2138671875,
+     "median_triangulated": 1.2281786719801324,
+     "triangulation_angle_deg_median": 2.222318137934919
+    },
+    {
+     "t_a": 268555.786751125,
+     "t_b": 268556.086775916,
+     "matches": 153,
+     "baseline_traj_units": 0.11933530575830247,
+     "cheirality_ok": 134,
+     "depth_high_conf_ok": 104,
+     "valid_points": 47,
+     "conf_hist": [
+      21,
+      28,
+      104
+     ],
+     "scale_to_metric": 0.9561552283786332,
+     "scale_median_of_ratios": 0.9894213307747949,
+     "within_rel_iqr": 0.05381879946301117,
+     "median_lidar_m": 1.1142578125,
+     "median_triangulated": 1.1653524233606543,
+     "triangulation_angle_deg_median": 3.8256938203103275
+    },
+    {
+     "t_a": 268556.086775916,
+     "t_b": 268556.38680075,
+     "matches": 102,
+     "baseline_traj_units": 0.06547444385068271,
+     "cheirality_ok": 101,
+     "depth_high_conf_ok": 84,
+     "valid_points": 48,
+     "conf_hist": [
+      3,
+      15,
+      84
+     ],
+     "scale_to_metric": 0.9943866136106234,
+     "scale_median_of_ratios": 1.0022419092305088,
+     "within_rel_iqr": 0.024105803206043094,
+     "median_lidar_m": 0.69677734375,
+     "median_triangulated": 0.7007107036769105,
+     "triangulation_angle_deg_median": 4.697003656756669
+    },
+    {
+     "t_a": 268556.38680075,
+     "t_b": 268556.686825541,
+     "matches": 135,
+     "baseline_traj_units": 0.11836434365525111,
+     "cheirality_ok": 118,
+     "depth_high_conf_ok": 107,
+     "valid_points": 53,
+     "conf_hist": [
+      11,
+      17,
+      107
+     ],
+     "scale_to_metric": 1.006204323226191,
+     "scale_median_of_ratios": 0.9877437251295749,
+     "within_rel_iqr": 0.026147631654756465,
+     "median_lidar_m": 0.640625,
+     "median_triangulated": 0.6366748633577376,
+     "triangulation_angle_deg_median": 9.683894453784704
+    },
+    {
+     "t_a": 268556.686825541,
+     "t_b": 268556.986850208,
+     "matches": 115,
+     "baseline_traj_units": 0.10296813690100647,
+     "cheirality_ok": 107,
+     "depth_high_conf_ok": 71,
+     "valid_points": 54,
+     "conf_hist": [
+      21,
+      23,
+      71
+     ],
+     "scale_to_metric": 1.0069429929592961,
+     "scale_median_of_ratios": 0.991798945661188,
+     "within_rel_iqr": 0.02381786538937167,
+     "median_lidar_m": 0.566162109375,
+     "median_triangulated": 0.5622583535847556,
+     "triangulation_angle_deg_median": 9.469033842768996
+    },
+    {
+     "t_a": 268556.986850208,
+     "t_b": 268557.286875041,
+     "matches": 148,
+     "baseline_traj_units": 0.0939475951380111,
+     "cheirality_ok": 140,
+     "depth_high_conf_ok": 128,
+     "valid_points": 89,
+     "conf_hist": [
+      7,
+      13,
+      128
+     ],
+     "scale_to_metric": 1.0021338910336166,
+     "scale_median_of_ratios": 1.0034039824156282,
+     "within_rel_iqr": 0.012960165669553091,
+     "median_lidar_m": 0.47216796875,
+     "median_triangulated": 0.47116255918956956,
+     "triangulation_angle_deg_median": 10.235820791053907
+    },
+    {
+     "t_a": 268557.286875041,
+     "t_b": 268557.586899708,
+     "matches": 120,
+     "baseline_traj_units": 0.10272070873171206,
+     "cheirality_ok": 104,
+     "depth_high_conf_ok": 117,
+     "valid_points": 20,
+     "conf_hist": [
+      2,
+      1,
+      117
+     ],
+     "scale_to_metric": 0.9396231479769632,
+     "scale_median_of_ratios": 0.9520707777884541,
+     "within_rel_iqr": 0.026288021363330534,
+     "median_lidar_m": 0.571533203125,
+     "median_triangulated": 0.6082579003673207,
+     "triangulation_angle_deg_median": 9.518562797841797
+    },
+    {
+     "t_a": 268557.586899708,
+     "t_b": 268557.886924583,
+     "matches": 76,
+     "baseline_traj_units": 0.11669770084606523,
+     "cheirality_ok": 65,
+     "depth_high_conf_ok": 57,
+     "valid_points": 19,
+     "conf_hist": [
+      14,
+      5,
+      57
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268557.886924583,
+     "t_b": 268558.186949125,
+     "matches": 73,
+     "baseline_traj_units": 0.07845074183986375,
+     "cheirality_ok": 68,
+     "depth_high_conf_ok": 67,
+     "valid_points": 25,
+     "conf_hist": [
+      2,
+      4,
+      67
+     ],
+     "scale_to_metric": 0.934827901303191,
+     "scale_median_of_ratios": 0.9464284402668454,
+     "within_rel_iqr": 0.03717538315252911,
+     "median_lidar_m": 0.436767578125,
+     "median_triangulated": 0.46721709687540014,
+     "triangulation_angle_deg_median": 6.603467299268485
+    },
+    {
+     "t_a": 268558.186949125,
+     "t_b": 268558.486973791,
+     "matches": 29,
+     "baseline_traj_units": 0.13515510406974085,
+     "cheirality_ok": 24,
+     "depth_high_conf_ok": 24,
+     "valid_points": 4,
+     "conf_hist": [
+      3,
+      2,
+      24
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268558.486973791,
+     "t_b": 268558.786998416,
+     "matches": 87,
+     "baseline_traj_units": 0.10124621831683753,
+     "cheirality_ok": 87,
+     "depth_high_conf_ok": 72,
+     "valid_points": 52,
+     "conf_hist": [
+      3,
+      12,
+      72
+     ],
+     "scale_to_metric": 0.948514402920225,
+     "scale_median_of_ratios": 0.9389728621631606,
+     "within_rel_iqr": 0.0678877198481768,
+     "median_lidar_m": 1.11767578125,
+     "median_triangulated": 1.1783434999078262,
+     "triangulation_angle_deg_median": 3.2552317214864956
+    },
+    {
+     "t_a": 268558.786998416,
+     "t_b": 268559.087023083,
+     "matches": 110,
+     "baseline_traj_units": 0.09584936310311559,
+     "cheirality_ok": 79,
+     "depth_high_conf_ok": 100,
+     "valid_points": 21,
+     "conf_hist": [
+      3,
+      7,
+      100
+     ],
+     "scale_to_metric": 1.0947618150781726,
+     "scale_median_of_ratios": 1.016859732176147,
+     "within_rel_iqr": 0.03150928650259763,
+     "median_lidar_m": 0.75341796875,
+     "median_triangulated": 0.6882026376634277,
+     "triangulation_angle_deg_median": 7.034511317240338
+    },
+    {
+     "t_a": 268559.087023083,
+     "t_b": 268559.387047583,
+     "matches": 49,
+     "baseline_traj_units": 0.06596438162751016,
+     "cheirality_ok": 43,
+     "depth_high_conf_ok": 47,
+     "valid_points": 23,
+     "conf_hist": [
+      1,
+      1,
+      47
+     ],
+     "scale_to_metric": 1.1587732034032683,
+     "scale_median_of_ratios": 1.0192550922166588,
+     "within_rel_iqr": 0.08302106723775309,
+     "median_lidar_m": 0.88916015625,
+     "median_triangulated": 0.7673288902768669,
+     "triangulation_angle_deg_median": 4.6295005021709565
+    },
+    {
+     "t_a": 268559.387047583,
+     "t_b": 268559.687072166,
+     "matches": 376,
+     "baseline_traj_units": 0.012769580140558009,
+     "skipped": "small_baseline"
+    },
+    {
+     "t_a": 268559.687072166,
+     "t_b": 268559.986915583,
+     "matches": 226,
+     "baseline_traj_units": 0.024304857228453068,
+     "cheirality_ok": 215,
+     "depth_high_conf_ok": 178,
+     "valid_points": 97,
+     "conf_hist": [
+      14,
+      34,
+      178
+     ],
+     "scale_to_metric": 1.077979312528144,
+     "scale_median_of_ratios": 1.0647108463909316,
+     "within_rel_iqr": 0.03836877658580904,
+     "median_lidar_m": 0.92724609375,
+     "median_triangulated": 0.8601705830285044,
+     "triangulation_angle_deg_median": 1.1937134576750057
+    },
+    {
+     "t_a": 268559.986915583,
+     "t_b": 268560.286942166,
+     "matches": 545,
+     "baseline_traj_units": 0.007722233115331863,
+     "skipped": "small_baseline"
+    },
+    {
+     "t_a": 268560.286942166,
+     "t_b": 268560.586968833,
+     "matches": 162,
+     "baseline_traj_units": 0.021975137874630433,
+     "cheirality_ok": 95,
+     "depth_high_conf_ok": 107,
+     "valid_points": 0,
+     "conf_hist": [
+      14,
+      41,
+      107
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268560.586968833,
+     "t_b": 268560.8869955,
+     "matches": 30,
+     "baseline_traj_units": 0.09795343798368565,
+     "cheirality_ok": 26,
+     "depth_high_conf_ok": 18,
+     "valid_points": 4,
+     "conf_hist": [
+      7,
+      5,
+      18
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268560.8869955,
+     "t_b": 268561.187022,
+     "matches": 126,
+     "baseline_traj_units": 0.16487118009268287,
+     "cheirality_ok": 104,
+     "depth_high_conf_ok": 60,
+     "valid_points": 9,
+     "conf_hist": [
+      38,
+      28,
+      60
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268561.487048708,
+     "t_b": 268561.787075166,
+     "matches": 85,
+     "baseline_traj_units": 0.1858426623694468,
+     "cheirality_ok": 72,
+     "depth_high_conf_ok": 42,
+     "valid_points": 20,
+     "conf_hist": [
+      27,
+      16,
+      42
+     ],
+     "scale_to_metric": 1.0006457952399994,
+     "scale_median_of_ratios": 1.0155654788303208,
+     "within_rel_iqr": 0.0566644880843622,
+     "median_lidar_m": 0.7099609375,
+     "median_triangulated": 0.709502744005155,
+     "triangulation_angle_deg_median": 11.678269189253397
+    },
+    {
+     "t_a": 268561.787075166,
+     "t_b": 268562.087101666,
+     "matches": 172,
+     "baseline_traj_units": 0.15207757354948684,
+     "cheirality_ok": 150,
+     "depth_high_conf_ok": 114,
+     "valid_points": 38,
+     "conf_hist": [
+      32,
+      26,
+      114
+     ],
+     "scale_to_metric": 1.1074581336081326,
+     "scale_median_of_ratios": 1.0160992995654328,
+     "within_rel_iqr": 0.021079127875118956,
+     "median_lidar_m": 0.7626953125,
+     "median_triangulated": 0.6886899733311951,
+     "triangulation_angle_deg_median": 9.76383377367551
+    },
+    {
+     "t_a": 268562.087101666,
+     "t_b": 268562.387128125,
+     "matches": 156,
+     "baseline_traj_units": 0.0927567076217144,
+     "cheirality_ok": 142,
+     "depth_high_conf_ok": 95,
+     "valid_points": 56,
+     "conf_hist": [
+      35,
+      26,
+      95
+     ],
+     "scale_to_metric": 0.8608973743936853,
+     "scale_median_of_ratios": 1.0399400847606632,
+     "within_rel_iqr": 0.09379182079233934,
+     "median_lidar_m": 0.7197265625,
+     "median_triangulated": 0.8360190005305692,
+     "triangulation_angle_deg_median": 5.49441338234454
+    },
+    {
+     "t_a": 268562.387128125,
+     "t_b": 268562.687154625,
+     "matches": 507,
+     "baseline_traj_units": 0.10640368462457568,
+     "cheirality_ok": 486,
+     "depth_high_conf_ok": 176,
+     "valid_points": 106,
+     "conf_hist": [
+      263,
+      68,
+      176
+     ],
+     "scale_to_metric": 0.9386018227834604,
+     "scale_median_of_ratios": 1.0232725906625881,
+     "within_rel_iqr": 0.054952323651631246,
+     "median_lidar_m": 0.913330078125,
+     "median_triangulated": 0.9730751165776388,
+     "triangulation_angle_deg_median": 3.702801640713961
+    },
+    {
+     "t_a": 268562.687154625,
+     "t_b": 268562.987181125,
+     "matches": 353,
+     "baseline_traj_units": 0.0809998425319678,
+     "cheirality_ok": 320,
+     "depth_high_conf_ok": 191,
+     "valid_points": 107,
+     "conf_hist": [
+      92,
+      70,
+      191
+     ],
+     "scale_to_metric": 0.9087077572446742,
+     "scale_median_of_ratios": 1.0285412747440046,
+     "within_rel_iqr": 0.05067099991237615,
+     "median_lidar_m": 1.0751953125,
+     "median_triangulated": 1.1832135292430415,
+     "triangulation_angle_deg_median": 3.1947486702123276
+    },
+    {
+     "t_a": 268562.987181125,
+     "t_b": 268563.2872075,
+     "matches": 375,
+     "baseline_traj_units": 0.0887183661807769,
+     "cheirality_ok": 348,
+     "depth_high_conf_ok": 162,
+     "valid_points": 48,
+     "conf_hist": [
+      99,
+      114,
+      162
+     ],
+     "scale_to_metric": 1.0212524286150324,
+     "scale_median_of_ratios": 1.028135734857457,
+     "within_rel_iqr": 0.04759899332719341,
+     "median_lidar_m": 0.93408203125,
+     "median_triangulated": 0.9146436327370617,
+     "triangulation_angle_deg_median": 5.130162968702628
+    },
+    {
+     "t_a": 268563.2872075,
+     "t_b": 268563.587233958,
+     "matches": 312,
+     "baseline_traj_units": 0.1033830221081527,
+     "cheirality_ok": 297,
+     "depth_high_conf_ok": 185,
+     "valid_points": 145,
+     "conf_hist": [
+      35,
+      92,
+      185
+     ],
+     "scale_to_metric": 1.0921869193830778,
+     "scale_median_of_ratios": 1.0686425066962715,
+     "within_rel_iqr": 0.042439849832068395,
+     "median_lidar_m": 1.3681640625,
+     "median_triangulated": 1.2526830693713198,
+     "triangulation_angle_deg_median": 4.519784610766226
+    },
+    {
+     "t_a": 268563.587233958,
+     "t_b": 268563.887260291,
+     "matches": 799,
+     "baseline_traj_units": 0.10346733789266706,
+     "cheirality_ok": 763,
+     "depth_high_conf_ok": 472,
+     "valid_points": 392,
+     "conf_hist": [
+      93,
+      234,
+      472
+     ],
+     "scale_to_metric": 0.9485304225734089,
+     "scale_median_of_ratios": 0.9647710698997921,
+     "within_rel_iqr": 0.050918077385092915,
+     "median_lidar_m": 1.4228515625,
+     "median_triangulated": 1.5000589634644874,
+     "triangulation_angle_deg_median": 3.525858246918979
+    },
+    {
+     "t_a": 268563.887260291,
+     "t_b": 268564.187286791,
+     "matches": 347,
+     "baseline_traj_units": 0.10096247766535527,
+     "cheirality_ok": 295,
+     "depth_high_conf_ok": 184,
+     "valid_points": 118,
+     "conf_hist": [
+      71,
+      92,
+      184
+     ],
+     "scale_to_metric": 1.0662142135937012,
+     "scale_median_of_ratios": 1.0465363340718388,
+     "within_rel_iqr": 0.04259647013824179,
+     "median_lidar_m": 1.1376953125,
+     "median_triangulated": 1.0670419677349545,
+     "triangulation_angle_deg_median": 4.707073038787341
+    },
+    {
+     "t_a": 268564.187286791,
+     "t_b": 268564.487313208,
+     "matches": 247,
+     "baseline_traj_units": 0.10901207603816107,
+     "cheirality_ok": 202,
+     "depth_high_conf_ok": 148,
+     "valid_points": 48,
+     "conf_hist": [
+      45,
+      54,
+      148
+     ],
+     "scale_to_metric": 1.036705351459733,
+     "scale_median_of_ratios": 1.0109449272726163,
+     "within_rel_iqr": 0.07793764677392465,
+     "median_lidar_m": 1.068359375,
+     "median_triangulated": 1.0305332884562586,
+     "triangulation_angle_deg_median": 3.0512258781591983
+    },
+    {
+     "t_a": 268564.487313208,
+     "t_b": 268564.787339583,
+     "matches": 177,
+     "baseline_traj_units": 0.13032572661987188,
+     "cheirality_ok": 149,
+     "depth_high_conf_ok": 111,
+     "valid_points": 55,
+     "conf_hist": [
+      25,
+      41,
+      111
+     ],
+     "scale_to_metric": 0.9279778253997518,
+     "scale_median_of_ratios": 0.9477163530937615,
+     "within_rel_iqr": 0.04782157865372713,
+     "median_lidar_m": 1.033203125,
+     "median_triangulated": 1.1133920409735216,
+     "triangulation_angle_deg_median": 3.3468911244949364
+    },
+    {
+     "t_a": 268564.787339583,
+     "t_b": 268565.087366,
+     "matches": 85,
+     "baseline_traj_units": 0.13691088560848605,
+     "cheirality_ok": 79,
+     "depth_high_conf_ok": 67,
+     "valid_points": 5,
+     "conf_hist": [
+      4,
+      14,
+      67
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268565.087366,
+     "t_b": 268565.387392333,
+     "matches": 576,
+     "baseline_traj_units": 0.05402558167019265,
+     "cheirality_ok": 526,
+     "depth_high_conf_ok": 381,
+     "valid_points": 103,
+     "conf_hist": [
+      79,
+      116,
+      381
+     ],
+     "scale_to_metric": 1.01787422887199,
+     "scale_median_of_ratios": 1.0173745479164764,
+     "within_rel_iqr": 0.051974032379312404,
+     "median_lidar_m": 1.076171875,
+     "median_triangulated": 1.057273918991559,
+     "triangulation_angle_deg_median": 2.6522599676444685
+    },
+    {
+     "t_a": 268565.387392333,
+     "t_b": 268565.687418666,
+     "matches": 227,
+     "baseline_traj_units": 0.09697526996390751,
+     "cheirality_ok": 191,
+     "depth_high_conf_ok": 187,
+     "valid_points": 99,
+     "conf_hist": [
+      9,
+      31,
+      187
+     ],
+     "scale_to_metric": 1.0353949102223219,
+     "scale_median_of_ratios": 1.0436976432465335,
+     "within_rel_iqr": 0.04728319591748817,
+     "median_lidar_m": 1.0126953125,
+     "median_triangulated": 0.9780763866055245,
+     "triangulation_angle_deg_median": 5.060927388060369
+    },
+    {
+     "t_a": 268565.687418666,
+     "t_b": 268565.987445083,
+     "matches": 128,
+     "baseline_traj_units": 0.12246962539433327,
+     "cheirality_ok": 103,
+     "depth_high_conf_ok": 92,
+     "valid_points": 48,
+     "conf_hist": [
+      13,
+      23,
+      92
+     ],
+     "scale_to_metric": 1.0177439300394706,
+     "scale_median_of_ratios": 1.0476124433023677,
+     "within_rel_iqr": 0.040635163372292026,
+     "median_lidar_m": 0.862548828125,
+     "median_triangulated": 0.8475106582964815,
+     "triangulation_angle_deg_median": 7.131855926894212
+    },
+    {
+     "t_a": 268565.987445083,
+     "t_b": 268566.287471291,
+     "matches": 60,
+     "baseline_traj_units": 0.12613335465718073,
+     "cheirality_ok": 52,
+     "depth_high_conf_ok": 42,
+     "valid_points": 1,
+     "conf_hist": [
+      5,
+      13,
+      42
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268566.287471291,
+     "t_b": 268566.587588416,
+     "matches": 118,
+     "baseline_traj_units": 0.061760978757832576,
+     "cheirality_ok": 99,
+     "depth_high_conf_ok": 83,
+     "valid_points": 28,
+     "conf_hist": [
+      15,
+      20,
+      83
+     ],
+     "scale_to_metric": 0.9861830962226186,
+     "scale_median_of_ratios": 1.010117460094726,
+     "within_rel_iqr": 0.037333032848116864,
+     "median_lidar_m": 0.6123046875,
+     "median_triangulated": 0.6208833733262245,
+     "triangulation_angle_deg_median": 4.259909376325879
+    },
+    {
+     "t_a": 268566.587588416,
+     "t_b": 268566.887612541,
+     "matches": 328,
+     "baseline_traj_units": 0.1141615575234241,
+     "cheirality_ok": 81,
+     "depth_high_conf_ok": 316,
+     "valid_points": 8,
+     "conf_hist": [
+      0,
+      12,
+      316
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268567.187636791,
+     "t_b": 268567.487660791,
+     "matches": 164,
+     "baseline_traj_units": 0.05241478373758072,
+     "cheirality_ok": 149,
+     "depth_high_conf_ok": 126,
+     "valid_points": 60,
+     "conf_hist": [
+      13,
+      25,
+      126
+     ],
+     "scale_to_metric": 0.9304211166576782,
+     "scale_median_of_ratios": 0.9524446070149533,
+     "within_rel_iqr": 0.09659374160959157,
+     "median_lidar_m": 0.74560546875,
+     "median_triangulated": 0.8013634422103557,
+     "triangulation_angle_deg_median": 2.847152112162788
+    },
+    {
+     "t_a": 268567.487660791,
+     "t_b": 268567.787684916,
+     "matches": 71,
+     "baseline_traj_units": 0.08181083799204149,
+     "cheirality_ok": 62,
+     "depth_high_conf_ok": 55,
+     "valid_points": 19,
+     "conf_hist": [
+      4,
+      12,
+      55
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268567.787684916,
+     "t_b": 268568.087709041,
+     "matches": 13,
+     "skipped": "too_few_matches"
+    },
+    {
+     "t_a": 268568.087709041,
+     "t_b": 268568.387733166,
+     "matches": 3,
+     "skipped": "too_few_matches"
+    },
+    {
+     "t_a": 268568.387733166,
+     "t_b": 268568.687757208,
+     "matches": 72,
+     "baseline_traj_units": 0.14995712760758573,
+     "cheirality_ok": 55,
+     "depth_high_conf_ok": 49,
+     "valid_points": 10,
+     "conf_hist": [
+      8,
+      15,
+      49
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268568.687757208,
+     "t_b": 268568.987781125,
+     "matches": 48,
+     "baseline_traj_units": 0.18208425876295495,
+     "cheirality_ok": 35,
+     "depth_high_conf_ok": 33,
+     "valid_points": 3,
+     "conf_hist": [
+      6,
+      9,
+      33
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268568.987781125,
+     "t_b": 268569.28780525,
+     "matches": 43,
+     "baseline_traj_units": 0.1739117505774984,
+     "cheirality_ok": 37,
+     "depth_high_conf_ok": 34,
+     "valid_points": 9,
+     "conf_hist": [
+      7,
+      2,
+      34
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268569.28780525,
+     "t_b": 268569.587829083,
+     "matches": 42,
+     "baseline_traj_units": 0.15350640862897247,
+     "cheirality_ok": 34,
+     "depth_high_conf_ok": 38,
+     "valid_points": 16,
+     "conf_hist": [
+      2,
+      2,
+      38
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268569.587829083,
+     "t_b": 268569.887853333,
+     "matches": 39,
+     "baseline_traj_units": 0.13703296139336613,
+     "cheirality_ok": 36,
+     "depth_high_conf_ok": 36,
+     "valid_points": 15,
+     "conf_hist": [
+      2,
+      1,
+      36
+     ],
+     "skipped": "too_few_valid_points"
+    }
+   ],
+   "depth_side_median_ci": {
+    "n_nonoverlapping": 69,
+    "k_ci": [
+     0.9791898378701005,
+     1.0028904578976994
+    ],
+    "order_stat_ranks_1based": [
+     27,
+     43
+    ]
+   },
+   "segments_k": [
+    0.9960546513567413,
+    0.9937030099650925,
+    0.9938339330462246,
+    0.9825654277900902
+   ],
+   "control_pc_x1_05": {
+    "k": 1.0435258381101187,
+    "ratio": 1.0500002097046357,
+    "recovered": true,
+    "passed_gates": true
+   },
+   "control_nc_shuffled_depth": {
+    "k": 1.2117164731600458,
+    "gates": {
+     "G1_pairs": true,
+     "G2_between_rel_iqr": false,
+     "G3_within_rel_iqr": false
+    },
+    "passed_gates": false,
+    "between_pair_rel_iqr": 0.6902461702368183,
+    "within_pair_rel_iqr_median": 0.45280600366420154,
+    "rejected_as_required": true
+   },
+   "alignment_curve_between_rel_iqr_by_depth_row_offset": {
+    "-2": 0.08802205477388839,
+    "-1": 0.07867631245428168,
+    "1": 0.08895208140044245,
+    "2": 0.10686803569822349,
+    "0": 0.05389235345056458
+   },
+   "verdict": "valid"
+  },
+  "front": {
+   "name": "front",
+   "estimate": {
+    "pairs_attempted": 90,
+    "pairs_with_scale": 45,
+    "s_traj_to_metric": 0.9908276932189559,
+    "k": 1.009257216813597,
+    "k_minus_1_pct": 0.9257216813596925,
+    "k_median_of_ratios": 1.0088860041540542,
+    "between_pair_rel_iqr": 0.11407391354781103,
+    "within_pair_rel_iqr_median": 0.05068978630429914,
+    "pairs_needed": 45,
+    "gates": {
+     "G1_pairs": true,
+     "G2_between_rel_iqr": true,
+     "G3_within_rel_iqr": true,
+     "G4_alignment_minimum_at_0": false
+    },
+    "passed": false
+   },
+   "pairs": [
+    {
+     "t_a": 268541.385469083,
+     "t_b": 268541.6854975,
+     "matches": 901,
+     "baseline_traj_units": 0.03777245593699782,
+     "cheirality_ok": 862,
+     "depth_high_conf_ok": 473,
+     "valid_points": 8,
+     "conf_hist": [
+      140,
+      288,
+      473
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268541.6854975,
+     "t_b": 268541.985525958,
+     "matches": 906,
+     "baseline_traj_units": 0.09093882091769993,
+     "cheirality_ok": 874,
+     "depth_high_conf_ok": 434,
+     "valid_points": 34,
+     "conf_hist": [
+      123,
+      349,
+      434
+     ],
+     "scale_to_metric": 1.006124008178585,
+     "scale_median_of_ratios": 0.9381866273390955,
+     "within_rel_iqr": 0.07626102651304498,
+     "median_lidar_m": 1.146484375,
+     "median_triangulated": 1.1395060307481515,
+     "triangulation_angle_deg_median": 2.593266788090537
+    },
+    {
+     "t_a": 268541.985525958,
+     "t_b": 268542.285554166,
+     "matches": 957,
+     "baseline_traj_units": 0.08013947395287667,
+     "cheirality_ok": 908,
+     "depth_high_conf_ok": 649,
+     "valid_points": 247,
+     "conf_hist": [
+      47,
+      261,
+      649
+     ],
+     "scale_to_metric": 1.0565464072409114,
+     "scale_median_of_ratios": 1.0379382723437731,
+     "within_rel_iqr": 0.04280061830580699,
+     "median_lidar_m": 1.421875,
+     "median_triangulated": 1.3457761914245827,
+     "triangulation_angle_deg_median": 2.964233673568349
+    },
+    {
+     "t_a": 268542.285554166,
+     "t_b": 268542.585582416,
+     "matches": 548,
+     "baseline_traj_units": 0.17606609308628485,
+     "cheirality_ok": 497,
+     "depth_high_conf_ok": 344,
+     "valid_points": 205,
+     "conf_hist": [
+      36,
+      168,
+      344
+     ],
+     "scale_to_metric": 1.0164325046261535,
+     "scale_median_of_ratios": 1.0091002971685206,
+     "within_rel_iqr": 0.03230011171797503,
+     "median_lidar_m": 1.2509765625,
+     "median_triangulated": 1.2307522209358235,
+     "triangulation_angle_deg_median": 7.554383577468139
+    },
+    {
+     "t_a": 268542.585582416,
+     "t_b": 268542.885610541,
+     "matches": 666,
+     "baseline_traj_units": 0.0749489991938366,
+     "cheirality_ok": 639,
+     "depth_high_conf_ok": 404,
+     "valid_points": 70,
+     "conf_hist": [
+      53,
+      209,
+      404
+     ],
+     "scale_to_metric": 1.0201435965173673,
+     "scale_median_of_ratios": 0.9911922614473129,
+     "within_rel_iqr": 0.07621811976822788,
+     "median_lidar_m": 1.2001953125,
+     "median_triangulated": 1.1764964428510898,
+     "triangulation_angle_deg_median": 3.1148485018443406
+    },
+    {
+     "t_a": 268542.885610541,
+     "t_b": 268543.185638625,
+     "matches": 759,
+     "baseline_traj_units": 0.05192747544565133,
+     "cheirality_ok": 675,
+     "depth_high_conf_ok": 473,
+     "valid_points": 50,
+     "conf_hist": [
+      65,
+      221,
+      473
+     ],
+     "scale_to_metric": 1.011623908287602,
+     "scale_median_of_ratios": 1.0077716169707827,
+     "within_rel_iqr": 0.12609146175540906,
+     "median_lidar_m": 1.12548828125,
+     "median_triangulated": 1.1125560319695673,
+     "triangulation_angle_deg_median": 2.104723037154155
+    },
+    {
+     "t_a": 268543.185638625,
+     "t_b": 268543.485666666,
+     "matches": 589,
+     "baseline_traj_units": 0.07171205704323719,
+     "cheirality_ok": 545,
+     "depth_high_conf_ok": 430,
+     "valid_points": 32,
+     "conf_hist": [
+      14,
+      145,
+      430
+     ],
+     "scale_to_metric": 1.0721857143227778,
+     "scale_median_of_ratios": 1.0584512370760415,
+     "within_rel_iqr": 0.16317731000776395,
+     "median_lidar_m": 1.40380859375,
+     "median_triangulated": 1.3092961181978482,
+     "triangulation_angle_deg_median": 2.984048241989025
+    },
+    {
+     "t_a": 268543.485666666,
+     "t_b": 268543.785694833,
+     "matches": 501,
+     "baseline_traj_units": 0.10732221009361936,
+     "cheirality_ok": 482,
+     "depth_high_conf_ok": 348,
+     "valid_points": 280,
+     "conf_hist": [
+      41,
+      112,
+      348
+     ],
+     "scale_to_metric": 0.9727422894865146,
+     "scale_median_of_ratios": 0.9720020225643838,
+     "within_rel_iqr": 0.014572175350433434,
+     "median_lidar_m": 1.05322265625,
+     "median_triangulated": 1.0827355483906933,
+     "triangulation_angle_deg_median": 4.9552261516534175
+    },
+    {
+     "t_a": 268543.785694833,
+     "t_b": 268544.085722791,
+     "matches": 359,
+     "baseline_traj_units": 0.12484343055236813,
+     "cheirality_ok": 331,
+     "depth_high_conf_ok": 268,
+     "valid_points": 151,
+     "conf_hist": [
+      27,
+      64,
+      268
+     ],
+     "scale_to_metric": 0.9753767008998707,
+     "scale_median_of_ratios": 0.9698290344831698,
+     "within_rel_iqr": 0.0445108992362374,
+     "median_lidar_m": 1.0166015625,
+     "median_triangulated": 1.042265579608469,
+     "triangulation_angle_deg_median": 5.770539951690927
+    },
+    {
+     "t_a": 268544.385750708,
+     "t_b": 268544.68577875,
+     "matches": 737,
+     "baseline_traj_units": 0.09577867979714644,
+     "cheirality_ok": 695,
+     "depth_high_conf_ok": 552,
+     "valid_points": 13,
+     "conf_hist": [
+      69,
+      116,
+      552
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268544.68577875,
+     "t_b": 268544.985806791,
+     "matches": 807,
+     "baseline_traj_units": 0.06580246149761317,
+     "cheirality_ok": 754,
+     "depth_high_conf_ok": 563,
+     "valid_points": 394,
+     "conf_hist": [
+      70,
+      174,
+      563
+     ],
+     "scale_to_metric": 1.0150670036640175,
+     "scale_median_of_ratios": 1.0126907944188464,
+     "within_rel_iqr": 0.03391005584710682,
+     "median_lidar_m": 1.2197265625,
+     "median_triangulated": 1.2016217235879376,
+     "triangulation_angle_deg_median": 2.504699292794391
+    },
+    {
+     "t_a": 268544.985806791,
+     "t_b": 268545.285834583,
+     "matches": 466,
+     "baseline_traj_units": 0.12304733069794963,
+     "cheirality_ok": 432,
+     "depth_high_conf_ok": 319,
+     "valid_points": 199,
+     "conf_hist": [
+      56,
+      91,
+      319
+     ],
+     "scale_to_metric": 0.9456074344816892,
+     "scale_median_of_ratios": 0.9540454012444152,
+     "within_rel_iqr": 0.04912555404631792,
+     "median_lidar_m": 1.1630859375,
+     "median_triangulated": 1.229988148451388,
+     "triangulation_angle_deg_median": 4.660637123855073
+    },
+    {
+     "t_a": 268545.285834583,
+     "t_b": 268545.585862416,
+     "matches": 552,
+     "baseline_traj_units": 0.1435636891404844,
+     "cheirality_ok": 513,
+     "depth_high_conf_ok": 390,
+     "valid_points": 266,
+     "conf_hist": [
+      55,
+      107,
+      390
+     ],
+     "scale_to_metric": 1.0416626589506963,
+     "scale_median_of_ratios": 1.0388637110209418,
+     "within_rel_iqr": 0.05192326068473769,
+     "median_lidar_m": 1.251953125,
+     "median_triangulated": 1.2018796241204774,
+     "triangulation_angle_deg_median": 5.037912569961319
+    },
+    {
+     "t_a": 268545.585862416,
+     "t_b": 268545.88589025,
+     "matches": 774,
+     "baseline_traj_units": 0.09797944698297514,
+     "cheirality_ok": 724,
+     "depth_high_conf_ok": 626,
+     "valid_points": 200,
+     "conf_hist": [
+      28,
+      120,
+      626
+     ],
+     "scale_to_metric": 0.958097287098224,
+     "scale_median_of_ratios": 0.9415481355504964,
+     "within_rel_iqr": 0.04969032009039353,
+     "median_lidar_m": 1.42431640625,
+     "median_triangulated": 1.486609371960344,
+     "triangulation_angle_deg_median": 2.9152267018104148
+    },
+    {
+     "t_a": 268545.88589025,
+     "t_b": 268546.185918041,
+     "matches": 722,
+     "baseline_traj_units": 0.11517357910655801,
+     "cheirality_ok": 698,
+     "depth_high_conf_ok": 602,
+     "valid_points": 358,
+     "conf_hist": [
+      30,
+      90,
+      602
+     ],
+     "scale_to_metric": 1.0881177408014284,
+     "scale_median_of_ratios": 1.0952222173261514,
+     "within_rel_iqr": 0.05128489125227367,
+     "median_lidar_m": 1.4453125,
+     "median_triangulated": 1.3282684821731587,
+     "triangulation_angle_deg_median": 4.411576451726695
+    },
+    {
+     "t_a": 268546.185918041,
+     "t_b": 268546.485945666,
+     "matches": 932,
+     "baseline_traj_units": 0.17473272664701983,
+     "cheirality_ok": 908,
+     "depth_high_conf_ok": 780,
+     "valid_points": 628,
+     "conf_hist": [
+      59,
+      93,
+      780
+     ],
+     "scale_to_metric": 0.9050132537883698,
+     "scale_median_of_ratios": 0.9070312753768476,
+     "within_rel_iqr": 0.025424059718553313,
+     "median_lidar_m": 1.43359375,
+     "median_triangulated": 1.5840582930680864,
+     "triangulation_angle_deg_median": 5.621133386495784
+    },
+    {
+     "t_a": 268546.485945666,
+     "t_b": 268546.785973416,
+     "matches": 907,
+     "baseline_traj_units": 0.13456261576275036,
+     "cheirality_ok": 869,
+     "depth_high_conf_ok": 746,
+     "valid_points": 83,
+     "conf_hist": [
+      68,
+      93,
+      746
+     ],
+     "scale_to_metric": 1.1286667226121037,
+     "scale_median_of_ratios": 1.0986079919935685,
+     "within_rel_iqr": 0.04741667226710256,
+     "median_lidar_m": 1.416015625,
+     "median_triangulated": 1.2545914543514467,
+     "triangulation_angle_deg_median": 4.600443729685306
+    },
+    {
+     "t_a": 268546.785973416,
+     "t_b": 268547.086001041,
+     "matches": 959,
+     "baseline_traj_units": 0.09787606567229486,
+     "cheirality_ok": 914,
+     "depth_high_conf_ok": 790,
+     "valid_points": 134,
+     "conf_hist": [
+      55,
+      114,
+      790
+     ],
+     "scale_to_metric": 1.0437553867889897,
+     "scale_median_of_ratios": 1.0339323477812274,
+     "within_rel_iqr": 0.04889667211261988,
+     "median_lidar_m": 1.55029296875,
+     "median_triangulated": 1.4853029631006964,
+     "triangulation_angle_deg_median": 3.2009086856354347
+    },
+    {
+     "t_a": 268547.086001041,
+     "t_b": 268547.386028625,
+     "matches": 750,
+     "baseline_traj_units": 0.11662623256662814,
+     "cheirality_ok": 683,
+     "depth_high_conf_ok": 564,
+     "valid_points": 37,
+     "conf_hist": [
+      93,
+      93,
+      564
+     ],
+     "scale_to_metric": 0.871292302509488,
+     "scale_median_of_ratios": 0.8727482814592754,
+     "within_rel_iqr": 0.10187341195550575,
+     "median_lidar_m": 1.59375,
+     "median_triangulated": 1.829179479044743,
+     "triangulation_angle_deg_median": 2.709438870097328
+    },
+    {
+     "t_a": 268547.386028625,
+     "t_b": 268547.686056291,
+     "matches": 368,
+     "baseline_traj_units": 0.09722990200881546,
+     "cheirality_ok": 326,
+     "depth_high_conf_ok": 282,
+     "valid_points": 2,
+     "conf_hist": [
+      29,
+      57,
+      282
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268547.686056291,
+     "t_b": 268547.986083833,
+     "matches": 178,
+     "baseline_traj_units": 0.09178312009537391,
+     "cheirality_ok": 166,
+     "depth_high_conf_ok": 129,
+     "valid_points": 28,
+     "conf_hist": [
+      15,
+      34,
+      129
+     ],
+     "scale_to_metric": 1.062815082265679,
+     "scale_median_of_ratios": 1.1034991505015914,
+     "within_rel_iqr": 0.09459076987327815,
+     "median_lidar_m": 1.431640625,
+     "median_triangulated": 1.347027012401884,
+     "triangulation_angle_deg_median": 3.7674508936036433
+    },
+    {
+     "t_a": 268547.986083833,
+     "t_b": 268548.286111333,
+     "matches": 137,
+     "baseline_traj_units": 0.07262799187092428,
+     "cheirality_ok": 104,
+     "depth_high_conf_ok": 95,
+     "valid_points": 44,
+     "conf_hist": [
+      2,
+      40,
+      95
+     ],
+     "scale_to_metric": 1.2337129872551293,
+     "scale_median_of_ratios": 1.2591485273127456,
+     "within_rel_iqr": 0.06317296759594591,
+     "median_lidar_m": 1.68505859375,
+     "median_triangulated": 1.365843280534043,
+     "triangulation_angle_deg_median": 2.2614249689422343
+    },
+    {
+     "t_a": 268548.286111333,
+     "t_b": 268548.586230083,
+     "matches": 136,
+     "baseline_traj_units": 0.05726840762475679,
+     "cheirality_ok": 126,
+     "depth_high_conf_ok": 84,
+     "valid_points": 8,
+     "conf_hist": [
+      19,
+      33,
+      84
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268548.586230083,
+     "t_b": 268548.886255458,
+     "matches": 213,
+     "baseline_traj_units": 0.035860719616754515,
+     "cheirality_ok": 205,
+     "depth_high_conf_ok": 124,
+     "valid_points": 27,
+     "conf_hist": [
+      59,
+      30,
+      124
+     ],
+     "scale_to_metric": 1.1321865328598264,
+     "scale_median_of_ratios": 1.1626477055429731,
+     "within_rel_iqr": 0.22872063828674416,
+     "median_lidar_m": 0.8603515625,
+     "median_triangulated": 0.7599026640308204,
+     "triangulation_angle_deg_median": 1.7147455208688425
+    },
+    {
+     "t_a": 268548.886255458,
+     "t_b": 268549.18628075,
+     "matches": 92,
+     "baseline_traj_units": 0.06264451580613006,
+     "cheirality_ok": 78,
+     "depth_high_conf_ok": 63,
+     "valid_points": 0,
+     "conf_hist": [
+      13,
+      16,
+      63
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268549.18628075,
+     "t_b": 268549.486106041,
+     "matches": 133,
+     "baseline_traj_units": 0.05839508205063463,
+     "cheirality_ok": 131,
+     "depth_high_conf_ok": 96,
+     "valid_points": 9,
+     "conf_hist": [
+      18,
+      19,
+      96
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268549.486106041,
+     "t_b": 268549.786133458,
+     "matches": 585,
+     "baseline_traj_units": 0.059578998505092705,
+     "cheirality_ok": 566,
+     "depth_high_conf_ok": 499,
+     "valid_points": 16,
+     "conf_hist": [
+      24,
+      62,
+      499
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268550.086160875,
+     "t_b": 268550.386188125,
+     "matches": 241,
+     "baseline_traj_units": 0.11001180667298811,
+     "cheirality_ok": 231,
+     "depth_high_conf_ok": 189,
+     "valid_points": 100,
+     "conf_hist": [
+      13,
+      39,
+      189
+     ],
+     "scale_to_metric": 0.9441812087110993,
+     "scale_median_of_ratios": 0.9319946655597788,
+     "within_rel_iqr": 0.04981081925522873,
+     "median_lidar_m": 1.98486328125,
+     "median_triangulated": 2.10220587206934,
+     "triangulation_angle_deg_median": 2.796270364786205
+    },
+    {
+     "t_a": 268550.386188125,
+     "t_b": 268550.6862155,
+     "matches": 256,
+     "baseline_traj_units": 0.14697871413991648,
+     "cheirality_ok": 248,
+     "depth_high_conf_ok": 223,
+     "valid_points": 3,
+     "conf_hist": [
+      3,
+      30,
+      223
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268550.6862155,
+     "t_b": 268550.986242916,
+     "matches": 219,
+     "baseline_traj_units": 0.13786009488099513,
+     "cheirality_ok": 201,
+     "depth_high_conf_ok": 185,
+     "valid_points": 3,
+     "conf_hist": [
+      1,
+      33,
+      185
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268550.986242916,
+     "t_b": 268551.286270166,
+     "matches": 139,
+     "baseline_traj_units": 0.10542261659258871,
+     "cheirality_ok": 127,
+     "depth_high_conf_ok": 110,
+     "valid_points": 63,
+     "conf_hist": [
+      15,
+      14,
+      110
+     ],
+     "scale_to_metric": 0.9802112856515888,
+     "scale_median_of_ratios": 1.0059516656495695,
+     "within_rel_iqr": 0.07208365626655926,
+     "median_lidar_m": 1.857421875,
+     "median_triangulated": 1.8949199036871847,
+     "triangulation_angle_deg_median": 3.0356678931007877
+    },
+    {
+     "t_a": 268551.286270166,
+     "t_b": 268551.5862975,
+     "matches": 745,
+     "baseline_traj_units": 0.09797997940690772,
+     "cheirality_ok": 667,
+     "depth_high_conf_ok": 497,
+     "valid_points": 393,
+     "conf_hist": [
+      85,
+      163,
+      497
+     ],
+     "scale_to_metric": 0.9908276932189559,
+     "scale_median_of_ratios": 0.9705810124399188,
+     "within_rel_iqr": 0.0411762979018907,
+     "median_lidar_m": 1.943359375,
+     "median_triangulated": 1.9613494740811115,
+     "triangulation_angle_deg_median": 2.3862520421855935
+    },
+    {
+     "t_a": 268551.5862975,
+     "t_b": 268551.886324583,
+     "matches": 320,
+     "baseline_traj_units": 0.171021064933368,
+     "cheirality_ok": 285,
+     "depth_high_conf_ok": 240,
+     "valid_points": 12,
+     "conf_hist": [
+      27,
+      53,
+      240
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268551.886324583,
+     "t_b": 268552.186351833,
+     "matches": 268,
+     "baseline_traj_units": 0.15843307768222276,
+     "cheirality_ok": 253,
+     "depth_high_conf_ok": 206,
+     "valid_points": 132,
+     "conf_hist": [
+      6,
+      56,
+      206
+     ],
+     "scale_to_metric": 0.9073343411367659,
+     "scale_median_of_ratios": 0.9105896451729494,
+     "within_rel_iqr": 0.06297656961970868,
+     "median_lidar_m": 1.859375,
+     "median_triangulated": 2.049272154375263,
+     "triangulation_angle_deg_median": 4.049346568414244
+    },
+    {
+     "t_a": 268552.186351833,
+     "t_b": 268552.486378916,
+     "matches": 434,
+     "baseline_traj_units": 0.10228282814336162,
+     "cheirality_ok": 400,
+     "depth_high_conf_ok": 350,
+     "valid_points": 224,
+     "conf_hist": [
+      16,
+      68,
+      350
+     ],
+     "scale_to_metric": 1.1030047128169427,
+     "scale_median_of_ratios": 1.1027210429719316,
+     "within_rel_iqr": 0.051500861885721956,
+     "median_lidar_m": 1.7578125,
+     "median_triangulated": 1.5936581952680478,
+     "triangulation_angle_deg_median": 3.193709831243049
+    },
+    {
+     "t_a": 268552.486378916,
+     "t_b": 268552.786406166,
+     "matches": 302,
+     "baseline_traj_units": 0.15192084424845145,
+     "cheirality_ok": 276,
+     "depth_high_conf_ok": 182,
+     "valid_points": 24,
+     "conf_hist": [
+      55,
+      65,
+      182
+     ],
+     "scale_to_metric": 0.9471234729948258,
+     "scale_median_of_ratios": 0.9343468896944456,
+     "within_rel_iqr": 0.06228206568564329,
+     "median_lidar_m": 1.20654296875,
+     "median_triangulated": 1.273902509178538,
+     "triangulation_angle_deg_median": 4.694466696883008
+    },
+    {
+     "t_a": 268552.786406166,
+     "t_b": 268553.086433333,
+     "matches": 195,
+     "baseline_traj_units": 0.14597784190333157,
+     "cheirality_ok": 167,
+     "depth_high_conf_ok": 102,
+     "valid_points": 8,
+     "conf_hist": [
+      30,
+      63,
+      102
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268553.086433333,
+     "t_b": 268553.386551666,
+     "matches": 155,
+     "baseline_traj_units": 0.0811422466494824,
+     "cheirality_ok": 132,
+     "depth_high_conf_ok": 70,
+     "valid_points": 20,
+     "conf_hist": [
+      37,
+      48,
+      70
+     ],
+     "scale_to_metric": 1.020539608825563,
+     "scale_median_of_ratios": 0.9955750625889257,
+     "within_rel_iqr": 0.08112929338681833,
+     "median_lidar_m": 0.76513671875,
+     "median_triangulated": 0.7497374057147271,
+     "triangulation_angle_deg_median": 5.848588529583417
+    },
+    {
+     "t_a": 268553.386551666,
+     "t_b": 268553.686576708,
+     "matches": 146,
+     "baseline_traj_units": 0.0806098674056888,
+     "cheirality_ok": 118,
+     "depth_high_conf_ok": 62,
+     "valid_points": 34,
+     "conf_hist": [
+      32,
+      52,
+      62
+     ],
+     "scale_to_metric": 0.7649293014967593,
+     "scale_median_of_ratios": 0.9669482648478905,
+     "within_rel_iqr": 0.06403377531472293,
+     "median_lidar_m": 0.856689453125,
+     "median_triangulated": 1.1199589967970778,
+     "triangulation_angle_deg_median": 3.730440344706321
+    },
+    {
+     "t_a": 268553.686576708,
+     "t_b": 268553.986601666,
+     "matches": 74,
+     "baseline_traj_units": 0.07950786036861694,
+     "cheirality_ok": 69,
+     "depth_high_conf_ok": 48,
+     "valid_points": 34,
+     "conf_hist": [
+      10,
+      16,
+      48
+     ],
+     "scale_to_metric": 0.9524452114280374,
+     "scale_median_of_ratios": 0.9535976951932139,
+     "within_rel_iqr": 0.05068978630429914,
+     "median_lidar_m": 1.4970703125,
+     "median_triangulated": 1.5718177744370045,
+     "triangulation_angle_deg_median": 2.6617057145853633
+    },
+    {
+     "t_a": 268553.986601666,
+     "t_b": 268554.286626625,
+     "matches": 69,
+     "baseline_traj_units": 0.06415759603178357,
+     "cheirality_ok": 65,
+     "depth_high_conf_ok": 48,
+     "valid_points": 6,
+     "conf_hist": [
+      4,
+      17,
+      48
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268554.286626625,
+     "t_b": 268554.586651583,
+     "matches": 93,
+     "baseline_traj_units": 0.06430194511551954,
+     "cheirality_ok": 92,
+     "depth_high_conf_ok": 46,
+     "valid_points": 0,
+     "conf_hist": [
+      6,
+      41,
+      46
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268554.586651583,
+     "t_b": 268554.886676458,
+     "matches": 104,
+     "baseline_traj_units": 0.08911806043166487,
+     "cheirality_ok": 97,
+     "depth_high_conf_ok": 45,
+     "valid_points": 25,
+     "conf_hist": [
+      10,
+      49,
+      45
+     ],
+     "scale_to_metric": 1.0524007210016297,
+     "scale_median_of_ratios": 1.0557507465585394,
+     "within_rel_iqr": 0.02134274897765844,
+     "median_lidar_m": 1.4150390625,
+     "median_triangulated": 1.3445819964406966,
+     "triangulation_angle_deg_median": 3.314077106184208
+    },
+    {
+     "t_a": 268554.886676458,
+     "t_b": 268555.186701416,
+     "matches": 129,
+     "baseline_traj_units": 0.0498052795533513,
+     "cheirality_ok": 125,
+     "depth_high_conf_ok": 58,
+     "valid_points": 34,
+     "conf_hist": [
+      20,
+      51,
+      58
+     ],
+     "scale_to_metric": 0.880043084160726,
+     "scale_median_of_ratios": 0.8951457296784767,
+     "within_rel_iqr": 0.0973267252375245,
+     "median_lidar_m": 0.72998046875,
+     "median_triangulated": 0.8294826490752589,
+     "triangulation_angle_deg_median": 2.9234041614351343
+    },
+    {
+     "t_a": 268555.186701416,
+     "t_b": 268555.48672625,
+     "matches": 113,
+     "baseline_traj_units": 0.05998099264405162,
+     "cheirality_ok": 112,
+     "depth_high_conf_ok": 78,
+     "valid_points": 47,
+     "conf_hist": [
+      6,
+      29,
+      78
+     ],
+     "scale_to_metric": 0.9011164257296106,
+     "scale_median_of_ratios": 0.9020704830326324,
+     "within_rel_iqr": 0.02888629687875757,
+     "median_lidar_m": 1.2421875,
+     "median_triangulated": 1.378498343312556,
+     "triangulation_angle_deg_median": 2.222059292645502
+    },
+    {
+     "t_a": 268555.786751125,
+     "t_b": 268556.086775916,
+     "matches": 153,
+     "baseline_traj_units": 0.12365618417926445,
+     "cheirality_ok": 137,
+     "depth_high_conf_ok": 104,
+     "valid_points": 0,
+     "conf_hist": [
+      21,
+      28,
+      104
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268556.086775916,
+     "t_b": 268556.38680075,
+     "matches": 102,
+     "baseline_traj_units": 0.06402761680669102,
+     "cheirality_ok": 100,
+     "depth_high_conf_ok": 84,
+     "valid_points": 14,
+     "conf_hist": [
+      3,
+      15,
+      84
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268556.38680075,
+     "t_b": 268556.686825541,
+     "matches": 135,
+     "baseline_traj_units": 0.12125155192659058,
+     "cheirality_ok": 118,
+     "depth_high_conf_ok": 107,
+     "valid_points": 1,
+     "conf_hist": [
+      11,
+      17,
+      107
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268556.686825541,
+     "t_b": 268556.986850208,
+     "matches": 115,
+     "baseline_traj_units": 0.1055833996867499,
+     "cheirality_ok": 107,
+     "depth_high_conf_ok": 71,
+     "valid_points": 21,
+     "conf_hist": [
+      21,
+      23,
+      71
+     ],
+     "scale_to_metric": 0.9307277941719535,
+     "scale_median_of_ratios": 0.9594786872614531,
+     "within_rel_iqr": 0.022058099522020674,
+     "median_lidar_m": 0.87548828125,
+     "median_triangulated": 0.9406491207549047,
+     "triangulation_angle_deg_median": 5.228139914345047
+    },
+    {
+     "t_a": 268556.986850208,
+     "t_b": 268557.286875041,
+     "matches": 148,
+     "baseline_traj_units": 0.0988673132831184,
+     "cheirality_ok": 140,
+     "depth_high_conf_ok": 128,
+     "valid_points": 2,
+     "conf_hist": [
+      7,
+      13,
+      128
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268557.286875041,
+     "t_b": 268557.586899708,
+     "matches": 120,
+     "baseline_traj_units": 0.10946377335422576,
+     "cheirality_ok": 105,
+     "depth_high_conf_ok": 117,
+     "valid_points": 0,
+     "conf_hist": [
+      2,
+      1,
+      117
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268557.586899708,
+     "t_b": 268557.886924583,
+     "matches": 76,
+     "baseline_traj_units": 0.12296700438907325,
+     "cheirality_ok": 64,
+     "depth_high_conf_ok": 57,
+     "valid_points": 20,
+     "conf_hist": [
+      14,
+      5,
+      57
+     ],
+     "scale_to_metric": 0.9041181638004006,
+     "scale_median_of_ratios": 0.8980772118082523,
+     "within_rel_iqr": 0.01764933027523995,
+     "median_lidar_m": 0.556640625,
+     "median_triangulated": 0.6156724278828756,
+     "triangulation_angle_deg_median": 11.345510339473302
+    },
+    {
+     "t_a": 268557.886924583,
+     "t_b": 268558.186949125,
+     "matches": 73,
+     "baseline_traj_units": 0.07801446892496808,
+     "cheirality_ok": 68,
+     "depth_high_conf_ok": 67,
+     "valid_points": 5,
+     "conf_hist": [
+      2,
+      4,
+      67
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268558.186949125,
+     "t_b": 268558.486973791,
+     "matches": 29,
+     "baseline_traj_units": 0.1501058693456773,
+     "cheirality_ok": 25,
+     "depth_high_conf_ok": 24,
+     "valid_points": 0,
+     "conf_hist": [
+      3,
+      2,
+      24
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268558.486973791,
+     "t_b": 268558.786998416,
+     "matches": 87,
+     "baseline_traj_units": 0.11273593330141783,
+     "cheirality_ok": 86,
+     "depth_high_conf_ok": 72,
+     "valid_points": 28,
+     "conf_hist": [
+      3,
+      12,
+      72
+     ],
+     "scale_to_metric": 0.760806013374786,
+     "scale_median_of_ratios": 0.7608107483439798,
+     "within_rel_iqr": 0.09243758283546989,
+     "median_lidar_m": 0.850830078125,
+     "median_triangulated": 1.1183272255576489,
+     "triangulation_angle_deg_median": 3.8215895764606183
+    },
+    {
+     "t_a": 268558.786998416,
+     "t_b": 268559.087023083,
+     "matches": 110,
+     "baseline_traj_units": 0.09888325992536495,
+     "cheirality_ok": 82,
+     "depth_high_conf_ok": 100,
+     "valid_points": 0,
+     "conf_hist": [
+      3,
+      7,
+      100
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268559.087023083,
+     "t_b": 268559.387047583,
+     "matches": 49,
+     "baseline_traj_units": 0.07943991023918451,
+     "cheirality_ok": 44,
+     "depth_high_conf_ok": 47,
+     "valid_points": 1,
+     "conf_hist": [
+      1,
+      1,
+      47
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268559.387047583,
+     "t_b": 268559.687072166,
+     "matches": 376,
+     "baseline_traj_units": 0.017963120499347847,
+     "skipped": "small_baseline"
+    },
+    {
+     "t_a": 268559.687072166,
+     "t_b": 268559.986915583,
+     "matches": 226,
+     "baseline_traj_units": 0.02308677686536375,
+     "cheirality_ok": 200,
+     "depth_high_conf_ok": 178,
+     "valid_points": 0,
+     "conf_hist": [
+      14,
+      34,
+      178
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268559.986915583,
+     "t_b": 268560.286942166,
+     "matches": 545,
+     "baseline_traj_units": 0.012338734177939972,
+     "skipped": "small_baseline"
+    },
+    {
+     "t_a": 268560.286942166,
+     "t_b": 268560.586968833,
+     "matches": 162,
+     "baseline_traj_units": 0.035191151246390204,
+     "cheirality_ok": 102,
+     "depth_high_conf_ok": 107,
+     "valid_points": 0,
+     "conf_hist": [
+      14,
+      41,
+      107
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268560.586968833,
+     "t_b": 268560.8869955,
+     "matches": 30,
+     "baseline_traj_units": 0.08254340955557542,
+     "cheirality_ok": 26,
+     "depth_high_conf_ok": 18,
+     "valid_points": 0,
+     "conf_hist": [
+      7,
+      5,
+      18
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268560.8869955,
+     "t_b": 268561.187022,
+     "matches": 126,
+     "baseline_traj_units": 0.1554273894931586,
+     "cheirality_ok": 94,
+     "depth_high_conf_ok": 60,
+     "valid_points": 5,
+     "conf_hist": [
+      38,
+      28,
+      60
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268561.487048708,
+     "t_b": 268561.787075166,
+     "matches": 85,
+     "baseline_traj_units": 0.1886424074533153,
+     "cheirality_ok": 72,
+     "depth_high_conf_ok": 42,
+     "valid_points": 10,
+     "conf_hist": [
+      27,
+      16,
+      42
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268561.787075166,
+     "t_b": 268562.087101666,
+     "matches": 172,
+     "baseline_traj_units": 0.1769749338522506,
+     "cheirality_ok": 148,
+     "depth_high_conf_ok": 114,
+     "valid_points": 0,
+     "conf_hist": [
+      32,
+      26,
+      114
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268562.087101666,
+     "t_b": 268562.387128125,
+     "matches": 156,
+     "baseline_traj_units": 0.09014775123378346,
+     "cheirality_ok": 142,
+     "depth_high_conf_ok": 95,
+     "valid_points": 21,
+     "conf_hist": [
+      35,
+      26,
+      95
+     ],
+     "scale_to_metric": 1.0293152461249537,
+     "scale_median_of_ratios": 1.0428457624303502,
+     "within_rel_iqr": 0.0732505243192341,
+     "median_lidar_m": 0.88720703125,
+     "median_triangulated": 0.8619390751181951,
+     "triangulation_angle_deg_median": 5.392118382938093
+    },
+    {
+     "t_a": 268562.387128125,
+     "t_b": 268562.687154625,
+     "matches": 507,
+     "baseline_traj_units": 0.11499190033686857,
+     "cheirality_ok": 486,
+     "depth_high_conf_ok": 176,
+     "valid_points": 34,
+     "conf_hist": [
+      263,
+      68,
+      176
+     ],
+     "scale_to_metric": 0.821332724393887,
+     "scale_median_of_ratios": 1.011823855254502,
+     "within_rel_iqr": 0.4341661642416095,
+     "median_lidar_m": 0.78662109375,
+     "median_triangulated": 0.9577374313564543,
+     "triangulation_angle_deg_median": 4.0638442914179524
+    },
+    {
+     "t_a": 268562.687154625,
+     "t_b": 268562.987181125,
+     "matches": 353,
+     "baseline_traj_units": 0.09041592277819993,
+     "cheirality_ok": 321,
+     "depth_high_conf_ok": 191,
+     "valid_points": 45,
+     "conf_hist": [
+      92,
+      70,
+      191
+     ],
+     "scale_to_metric": 1.08510305728824,
+     "scale_median_of_ratios": 1.0910723624020053,
+     "within_rel_iqr": 0.031317282755100324,
+     "median_lidar_m": 1.296875,
+     "median_triangulated": 1.1951629767231464,
+     "triangulation_angle_deg_median": 3.337458224146884
+    },
+    {
+     "t_a": 268562.987181125,
+     "t_b": 268563.2872075,
+     "matches": 375,
+     "baseline_traj_units": 0.0913531543075311,
+     "cheirality_ok": 349,
+     "depth_high_conf_ok": 162,
+     "valid_points": 72,
+     "conf_hist": [
+      99,
+      114,
+      162
+     ],
+     "scale_to_metric": 0.9359435050272862,
+     "scale_median_of_ratios": 0.9303816338477839,
+     "within_rel_iqr": 0.049463943699247614,
+     "median_lidar_m": 1.31640625,
+     "median_triangulated": 1.406501827224734,
+     "triangulation_angle_deg_median": 3.505990634590999
+    },
+    {
+     "t_a": 268563.2872075,
+     "t_b": 268563.587233958,
+     "matches": 312,
+     "baseline_traj_units": 0.10571774461428966,
+     "cheirality_ok": 297,
+     "depth_high_conf_ok": 185,
+     "valid_points": 57,
+     "conf_hist": [
+      35,
+      92,
+      185
+     ],
+     "scale_to_metric": 1.0693848336609852,
+     "scale_median_of_ratios": 1.073872121746172,
+     "within_rel_iqr": 0.02759937215403444,
+     "median_lidar_m": 2.185546875,
+     "median_triangulated": 2.043742164846204,
+     "triangulation_angle_deg_median": 2.5508753201013845
+    },
+    {
+     "t_a": 268563.587233958,
+     "t_b": 268563.887260291,
+     "matches": 799,
+     "baseline_traj_units": 0.10560488616094374,
+     "cheirality_ok": 762,
+     "depth_high_conf_ok": 472,
+     "valid_points": 319,
+     "conf_hist": [
+      93,
+      234,
+      472
+     ],
+     "scale_to_metric": 0.8781086455640108,
+     "scale_median_of_ratios": 0.9042960558886628,
+     "within_rel_iqr": 0.07619362081718009,
+     "median_lidar_m": 2.08203125,
+     "median_triangulated": 2.371040600178475,
+     "triangulation_angle_deg_median": 2.2165221577869265
+    },
+    {
+     "t_a": 268563.887260291,
+     "t_b": 268564.187286791,
+     "matches": 347,
+     "baseline_traj_units": 0.11678435861035284,
+     "cheirality_ok": 295,
+     "depth_high_conf_ok": 184,
+     "valid_points": 49,
+     "conf_hist": [
+      71,
+      92,
+      184
+     ],
+     "scale_to_metric": 0.8978037605762769,
+     "scale_median_of_ratios": 0.8977482317581262,
+     "within_rel_iqr": 0.023765972830278814,
+     "median_lidar_m": 1.201171875,
+     "median_triangulated": 1.3379002491914258,
+     "triangulation_angle_deg_median": 4.448432434068923
+    },
+    {
+     "t_a": 268564.187286791,
+     "t_b": 268564.487313208,
+     "matches": 247,
+     "baseline_traj_units": 0.12026738023246866,
+     "cheirality_ok": 205,
+     "depth_high_conf_ok": 148,
+     "valid_points": 16,
+     "conf_hist": [
+      45,
+      54,
+      148
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268564.487313208,
+     "t_b": 268564.787339583,
+     "matches": 177,
+     "baseline_traj_units": 0.13059512219303718,
+     "cheirality_ok": 148,
+     "depth_high_conf_ok": 111,
+     "valid_points": 17,
+     "conf_hist": [
+      25,
+      41,
+      111
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268564.787339583,
+     "t_b": 268565.087366,
+     "matches": 85,
+     "baseline_traj_units": 0.14743983733236085,
+     "cheirality_ok": 79,
+     "depth_high_conf_ok": 67,
+     "valid_points": 1,
+     "conf_hist": [
+      4,
+      14,
+      67
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268565.087366,
+     "t_b": 268565.387392333,
+     "matches": 576,
+     "baseline_traj_units": 0.04487287303541842,
+     "cheirality_ok": 536,
+     "depth_high_conf_ok": 381,
+     "valid_points": 0,
+     "conf_hist": [
+      79,
+      116,
+      381
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268565.387392333,
+     "t_b": 268565.687418666,
+     "matches": 227,
+     "baseline_traj_units": 0.09874874213969913,
+     "cheirality_ok": 192,
+     "depth_high_conf_ok": 187,
+     "valid_points": 73,
+     "conf_hist": [
+      9,
+      31,
+      187
+     ],
+     "scale_to_metric": 1.0092626859253433,
+     "scale_median_of_ratios": 1.01332076424617,
+     "within_rel_iqr": 0.03886479816746637,
+     "median_lidar_m": 1.0087890625,
+     "median_triangulated": 0.9995307233369982,
+     "triangulation_angle_deg_median": 5.131554151182552
+    },
+    {
+     "t_a": 268565.687418666,
+     "t_b": 268565.987445083,
+     "matches": 128,
+     "baseline_traj_units": 0.1257393936526082,
+     "cheirality_ok": 103,
+     "depth_high_conf_ok": 92,
+     "valid_points": 47,
+     "conf_hist": [
+      13,
+      23,
+      92
+     ],
+     "scale_to_metric": 1.0178201059395624,
+     "scale_median_of_ratios": 0.9992059964492831,
+     "within_rel_iqr": 0.03406210226414704,
+     "median_lidar_m": 0.94677734375,
+     "median_triangulated": 0.9302010622751631,
+     "triangulation_angle_deg_median": 6.720522830896238
+    },
+    {
+     "t_a": 268565.987445083,
+     "t_b": 268566.287471291,
+     "matches": 60,
+     "baseline_traj_units": 0.13184285981461677,
+     "cheirality_ok": 53,
+     "depth_high_conf_ok": 42,
+     "valid_points": 2,
+     "conf_hist": [
+      5,
+      13,
+      42
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268566.287471291,
+     "t_b": 268566.587588416,
+     "matches": 118,
+     "baseline_traj_units": 0.06123752963083745,
+     "cheirality_ok": 99,
+     "depth_high_conf_ok": 83,
+     "valid_points": 0,
+     "conf_hist": [
+      15,
+      20,
+      83
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268566.587588416,
+     "t_b": 268566.887612541,
+     "matches": 328,
+     "baseline_traj_units": 0.12804264805219925,
+     "cheirality_ok": 115,
+     "depth_high_conf_ok": 316,
+     "valid_points": 4,
+     "conf_hist": [
+      0,
+      12,
+      316
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268567.187636791,
+     "t_b": 268567.487660791,
+     "matches": 164,
+     "baseline_traj_units": 0.050300807516585874,
+     "cheirality_ok": 147,
+     "depth_high_conf_ok": 126,
+     "valid_points": 71,
+     "conf_hist": [
+      13,
+      25,
+      126
+     ],
+     "scale_to_metric": 0.9544514349861767,
+     "scale_median_of_ratios": 0.962906235041128,
+     "within_rel_iqr": 0.14437906430333644,
+     "median_lidar_m": 0.625,
+     "median_triangulated": 0.6548264029893275,
+     "triangulation_angle_deg_median": 2.922442588215252
+    },
+    {
+     "t_a": 268567.487660791,
+     "t_b": 268567.787684916,
+     "matches": 71,
+     "baseline_traj_units": 0.08734842986955492,
+     "cheirality_ok": 62,
+     "depth_high_conf_ok": 55,
+     "valid_points": 4,
+     "conf_hist": [
+      4,
+      12,
+      55
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268567.787684916,
+     "t_b": 268568.087709041,
+     "matches": 13,
+     "skipped": "too_few_matches"
+    },
+    {
+     "t_a": 268568.087709041,
+     "t_b": 268568.387733166,
+     "matches": 3,
+     "skipped": "too_few_matches"
+    },
+    {
+     "t_a": 268568.387733166,
+     "t_b": 268568.687757208,
+     "matches": 72,
+     "baseline_traj_units": 0.13973545493821535,
+     "cheirality_ok": 55,
+     "depth_high_conf_ok": 49,
+     "valid_points": 1,
+     "conf_hist": [
+      8,
+      15,
+      49
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268568.687757208,
+     "t_b": 268568.987781125,
+     "matches": 48,
+     "baseline_traj_units": 0.17646485560322533,
+     "cheirality_ok": 35,
+     "depth_high_conf_ok": 33,
+     "valid_points": 3,
+     "conf_hist": [
+      6,
+      9,
+      33
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268568.987781125,
+     "t_b": 268569.28780525,
+     "matches": 43,
+     "baseline_traj_units": 0.17920661249114755,
+     "cheirality_ok": 37,
+     "depth_high_conf_ok": 34,
+     "valid_points": 0,
+     "conf_hist": [
+      7,
+      2,
+      34
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268569.28780525,
+     "t_b": 268569.587829083,
+     "matches": 42,
+     "baseline_traj_units": 0.15700264126665436,
+     "cheirality_ok": 34,
+     "depth_high_conf_ok": 38,
+     "valid_points": 0,
+     "conf_hist": [
+      2,
+      2,
+      38
+     ],
+     "skipped": "too_few_valid_points"
+    },
+    {
+     "t_a": 268569.587829083,
+     "t_b": 268569.887853333,
+     "matches": 39,
+     "baseline_traj_units": 0.1289656674857336,
+     "cheirality_ok": 36,
+     "depth_high_conf_ok": 36,
+     "valid_points": 2,
+     "conf_hist": [
+      2,
+      1,
+      36
+     ],
+     "skipped": "too_few_valid_points"
+    }
+   ],
+   "depth_side_median_ci": {
+    "n_nonoverlapping": 45,
+    "k_ci": [
+     0.9824918904278154,
+     1.0499291591803606
+    ],
+    "order_stat_ranks_1based": [
+     17,
+     29
+    ]
+   },
+   "segments_k": [
+    0.9868302996800251,
+    0.9580788876945595,
+    1.0744279973820663,
+    1.047722244782924
+   ],
+   "control_pc_x1_05": {
+    "k": 1.0597291719012787,
+    "ratio": 1.0500090108317786,
+    "recovered": true,
+    "passed_gates": true
+   },
+   "control_nc_shuffled_depth": {
+    "k": 1.3405618075540333,
+    "gates": {
+     "G1_pairs": true,
+     "G2_between_rel_iqr": false,
+     "G3_within_rel_iqr": false
+    },
+    "passed_gates": false,
+    "between_pair_rel_iqr": 0.6099115980913746,
+    "within_pair_rel_iqr_median": 0.45993665766929276,
+    "rejected_as_required": true
+   },
+   "alignment_curve_between_rel_iqr_by_depth_row_offset": {
+    "-2": 0.13269014789433392,
+    "-1": 0.11155592770016586,
+    "1": 0.12010073088739127,
+    "2": 0.13711824508224543,
+    "0": 0.11407391354781103
+   },
+   "verdict": "invalid",
+   "noise_floor": {
+    "method": "noise_floor.py circular shift of the real Sim3 residual, re-estimated through the ruler",
+    "sim3_ate_cm": 3.3492406779592705,
+    "nc_mean": 1.0029111595900524,
+    "nc_sd": 0.013894584036047626,
+    "nc_band_95": [
+     0.9763251369785281,
+     1.030560118642132
+    ],
+    "pc_mean": 1.0547004826802322,
+    "pc_sd": 0.014338715886147227,
+    "pc_recovered": true,
+    "n_shifts": 100,
+    "valid_resamples": [
+     100,
+     100
+    ],
+    "k_95_noise_floor": [
+     0.9853631904521031,
+     1.0401002370998484
+    ]
+   }
+  }
+ },
+ "cross_check_vs_canonical_sim3": [
+  {
+   "est": "arkit",
+   "ref": "front",
+   "k_sim3_canonical": 0.9751067347463328,
+   "sim3_ate_cm": 3.438843566190561,
+   "k_ratio_from_ruler": 0.984718183322913,
+   "diff_pct": 0.9856816935102541
+  },
+  {
+   "est": "front",
+   "ref": "arkit",
+   "k_sim3_canonical": 1.0279790920522665,
+   "sim3_ate_cm": 3.3492406779592705,
+   "k_ratio_from_ruler": 1.0155189748050744,
+   "diff_pct": -1.2120983144040975
+  }
+ ]
+}

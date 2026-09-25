@@ -1,0 +1,59 @@
+diff --git a/xrslam/src/xrslam/estimation/preintegrator.cpp b/xrslam/src/xrslam/estimation/preintegrator.cpp
+index 9cd70bf..c69e244 100644
+--- a/xrslam/src/xrslam/estimation/preintegrator.cpp
++++ b/xrslam/src/xrslam/estimation/preintegrator.cpp
+@@ -88,6 +88,42 @@ bool PreIntegrator::integrate(double t0, double t1, const vector<3> &bg,
+         jacobian.dv_dba = -pi.C_integral;
+     }
+ 
++#if defined(PW_DIAG_COV) && PW_DIAG_COV == 2
++    // [诊断,不入库] 协方差整体换回 8ebac9a 的算法:按上游方式重建数据(起点插「时刻 <= t0 的末样本、改戳 t0」,
++    // 取 (t0, t1] 内样本,末样本保持到 t1),逐字照旧 increment() 的协方差部分(含它自己的左端保持姿态)。
++    if (compute_covariance) {
++        std::vector<ImuData> od;
++        for (const ImuData &x : data)
++            if (x.t <= t0) { od.assign(1, x); }
++        if (!od.empty()) od[0].t = t0;
++        for (const ImuData &x : data)
++            if (x.t > t0 && x.t <= t1) od.push_back(x);
++        matrix<15> cov = matrix<15>::Zero();
++        quaternion q; q.setIdentity();
++        for (size_t i = 0; i < od.size(); ++i) {
++            const double dt = (i + 1 < od.size() ? od[i + 1].t : t1) - od[i].t;
++            vector<3> w = od[i].w - bg, a = od[i].a - ba;
++            matrix<9> A; A.setIdentity();
++            A.block<3, 3>(ES_Q, ES_Q) = expmap(w * dt).conjugate().matrix();
++            A.block<3, 3>(ES_V, ES_Q) = -dt * q.matrix() * hat(a);
++            A.block<3, 3>(ES_P, ES_Q) = -0.5 * dt * dt * q.matrix() * hat(a);
++            A.block<3, 3>(ES_P, ES_V) = dt * matrix<3>::Identity();
++            matrix<9, 6> B; B.setZero();
++            B.block<3, 3>(ES_Q, ES_BG - ES_BG) = dt * right_jacobian(w * dt);
++            B.block<3, 3>(ES_V, ES_BA - ES_BG) = dt * q.matrix();
++            B.block<3, 3>(ES_P, ES_BA - ES_BG) = 0.5 * dt * dt * q.matrix();
++            matrix<6> wn; double inv_dt = 1.0 / std::max(dt, 1.0e-7); wn.setZero();
++            wn.block<3, 3>(0, 0) = cov_w * inv_dt; wn.block<3, 3>(3, 3) = cov_a * inv_dt;
++            cov.block<9, 9>(ES_Q, ES_Q) = A * cov.block<9, 9>(0, 0) * A.transpose() + B * wn * B.transpose();
++            cov.block<3, 3>(ES_BG, ES_BG) += cov_bg * dt;
++            cov.block<3, 3>(ES_BA, ES_BA) += cov_ba * dt;
++            q = (q * expmap(w * dt)).normalized();
++        }
++        delta.cov = cov;
++        compute_sqrt_inv_cov();
++    }
++    return true;
++#endif
+     if (compute_covariance) {
+         // OKVIS2 (p, α, v, bg, ba) → XRSLAM (q, p, v, bg, ba),θ = C_N^T α
+         matrix<15> M = matrix<15>::Zero();
+@@ -97,6 +133,11 @@ bool PreIntegrator::integrate(double t0, double t1, const vector<3> &bg,
+         M.block<3, 3>(ES_BG, 9).setIdentity();
+         M.block<3, 3>(ES_BA, 12).setIdentity();
+         delta.cov = M * pi.P_delta * M.transpose();
++#if defined(PW_DIAG_COV) && PW_DIAG_COV == 1
++        // [诊断,不入库] 只去掉 OKVIS2 的「姿态/位置/速度 × 零偏」交叉块,其余不动
++        delta.cov.block<9, 6>(ES_Q, ES_BG).setZero();
++        delta.cov.block<6, 9>(ES_BG, ES_Q).setZero();
++#endif
+         compute_sqrt_inv_cov();
+     }
+     return true;

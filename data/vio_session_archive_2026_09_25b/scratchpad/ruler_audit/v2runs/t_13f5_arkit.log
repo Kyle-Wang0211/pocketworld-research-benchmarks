@@ -1,0 +1,26 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 897 行 ↔ 相机 897 帧;配上 897,配不上 0
+  轨迹 arkit: 866 帧配上  {"rows": 897, "zero_translation_dropped": 31, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-13f53d2f-5935-4b1a-a499-4dc8367ea935/arkit_poses.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 灰度 + 所有轨迹都有位姿):288 / 录制帧 897 / 深度 296 张
+  帧对档 标称 0.3s:选 285,新 285,实际间隔 中位 0.300s [0.300, 0.300]
+  帧对档 标称 0.6s:选 283,新 283,实际间隔 中位 0.600s [0.500, 0.600]
+帧对 568(去重后),特征 sift×4000,匹配中…
+
+G4 深度相对图像时间偏移 δ = -27.4 ms(95% [-58.1, -9.3],19237 点);按 δ 校正后参照 k 变 -0.114% ⇒ ✅ 过(上限 ±0.25%)
+粗对齐曲线(诊断,深度行偏移 → 帧对间 IQR):{'-2': 0.06898206542286764, '-1': 0.06204221453662584, '0': 0.04730493232890074, '1': 0.05934492338000087, '2': 0.07203940341516307}
+
+── arkit ── verdict: invalid  {'gates_G1_G4': False, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9738 ⇒ -2.62%   帧对 274/568  块 bootstrap 95% [-3.97, -1.74]%  ⇒ 总 95%(∪方法范围∪噪声底) [-4.28, +0.08]%
+  方法范围(点估计,96 种):[-3.08, -0.61]%
+  焦距敏感度 dk/dα = +0.407(α=1.03 ⇒ k ×1.0122)
+  闸 {'G1_pairs': False, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0473  帧对内 0.0402
+  分段 k [0.9780891810208127, 0.9569586730048185, 0.9753895962395993, 0.9826742378623953]
+  PC ×1.03:比值 1.03001 ✅
+  PC ×1.05:比值 1.05001 ✅
+  NC 深度洗牌:k=1.1409 过闸=False ✅ 被拒(应当)
+
+同点比值(同一批帧对、同一批点,LiDAR 逐对约掉):
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/v2runs/t_13f5_arkit/lidar_ruler_report.json
+PYTHONDONTWRITEBYTECODE=1 nice -n 10 /usr/bin/python3 $WT/lidar_ruler.py  $R   76.50s user 2.14s system 175% cpu 44.708 total

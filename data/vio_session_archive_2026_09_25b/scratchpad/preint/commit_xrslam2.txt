@@ -1,0 +1,19 @@
+feat(backend-pose): 后端出口记录附上速度与零偏(v / bg / ba,frame->motion 原值),旧 136 字节出口不动
+
+协调方批准(为下一轮「后端定稿 + 官方外推」测试准备):离线 SfM agent 发现出口只有位姿、没有 v / bg / ba,
+6d18 只能拿另一次运行凑数。这里只把后端 map 里已有的状态交出来,不算任何东西、不改任何状态。
+
+- core/pw_backend_pose_tap.h / sliding_window_tracker.cpp:内部记录多存一份 frame->motion(照抄)。
+- interface/include/XRSLAMBackendPose.h:新增 XRSLAMBackendState(= XRSLAMBackendPose 原样 + velocity[3]
+  + gyro_bias[3] + acc_bias[3],208 字节)与 XRSLAMDrainBackendStates / XRSLAMGetBackendWindowStates。
+  XRSLAMBackendPose(136 字节)和它的两个函数一个字节不动:已有调用方(台架回放)按旧布局分配缓冲区,
+  改旧结构会越界写。两个 Drain 取同一个事件队列,一个会话只用其中一个(头文件已注明)。
+- interface/src/XRSLAMManager.{h,cpp}、XRSLAMInternal.cpp:两个读取方法 + static_assert 钉住新布局。
+
+逐位证明(Mac 单线程回放,手机同款喂法,三场 13f5/6d18/7353,对照 bdf9080):前端 CAMERA/BODY/STATE 全精度
+十六进制轨迹、前端按录制帧 CSV、后端 CSV 原有 23 列,用新出口和旧出口读都与 bdf9080 逐位相同
+(sha 前缀 13f5 86bf9d53 / 6d18 c76bd4bf / 7353 879a9b01)。合理性:出口 v 与定稿位置中心差分之差中位 5.8–7.6%。
+跨端自证:add2ee3..本提交新增行里 __APPLE__ / TARGET_OS / __ANDROID__ / OHOS / 任何厂商 API 均为 0 处,
+新增 include 只有标准库与引擎自身头文件。仅台架;未推送。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

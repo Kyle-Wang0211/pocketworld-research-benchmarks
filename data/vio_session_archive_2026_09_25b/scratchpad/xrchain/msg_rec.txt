@@ -1,0 +1,49 @@
+bench(xr-recon-chain): 录制器 IMU 修复 —— 陀螺 / 加计各自带 handler、各带自己的时间戳(照抄 XRSLAM 官方 Motion.swift),新格式 imu_events.csv + 全部读录制工具兼容新旧格式(仅台架)
+
+问题(PwBenchLidarSession.swift 原 :470-490,源 BasaltVIOBench ARKitReferenceSession [port] :412-452):陀螺回调驱动,
+在陀螺回调里读 motion.accelerometerData(startAccelerometerUpdates() 无 handler = 拉取模式的「最新一条」),配上陀螺的
+时间戳写一行 imu.csv ⇒ 加计自己的采样时刻丢了。
+修法(照抄 xrslam-ios/visualizer/src/Motion.swift @4beb1a9,Apache-2.0,:31-51):同一条队列上 startGyroUpdates(to:q){…}
+与 startAccelerometerUpdates(to:q){…} 各带 handler、各用各的 record.timestamp,加计 × GRAVITY_NOMINAL(−9.80665),
+error != nil 的回调丢弃;100 Hz 不变。
+
+- ios/Runner/PwBenchLidarSession.swift(S8):IMU 采集改成两路各自 handler;录制摘要多报 imu_format 与两路条数。
+- ios/Runner/PwBenchLidarRecordingWriter.swift(W13):appendGyro / appendAccel 各写一行到 imu_events.csv
+  (`timestamp_ns,sensor,x,y,z`,sensor ∈ gyro/accel,行序 = 回调顺序,单位同旧 imu.csv);manifest 新角色 imu_events +
+  imu_format=split_events_v1 + 两路条数;有新格式行时不再写 imu.csv(旧调用方 appendIMU 照旧写 imu.csv)。
+  子集导出:首条 IMU = 两路最早时间戳,imu_events.csv 一起带走。
+- ios/Runner/PwBenchReplayRecording.swift(D11):manifest 有 imu_events 就按两路读(每路各自严格递增,未知传感器名 / 表头
+  不对 / 单路倒退一律拒收),回放事件 .gyro / .accel 各按自己的时刻;并列 陀螺 < 加计 < 相机;首条 IMU = 两路最早。
+  没有 imu_events 的旧录制走原来那条代码路径(同一个 required(.imuIndex)、同一个 parseIMU、排序比较结果不变)。
+- ios/Runner/PwBenchReplay.swift:.gyro / .accel 分别推(同一道背压闸);回执多 imu_format / 两路条数。
+- ios/Runner/PwXrslamLive.swift:pushReplayGyro / pushReplayAccel(各走一次 enqueueImu,同直播 onGyro / onAccel);
+  旧格式的 pushReplayImu 一字未动。
+- tool/bench/lidar_swift_tests:新增 ImuSplitRecorderTests(7 条)+ run.sh 传会话源码路径给契约测试。
+- tool/bench/replay_swift_tests:replay_events_dump(回放装载器 → 推送序列规范转储 + sha256)+ dump_events.sh
+  (给定一版装载器源码编一次,改前 / 改后各跑一次比 sha)。
+- bench/arloopbench_own_snapshot/tools/pwvi_to_euroc.py:台架自有转换器的新版快照(台架目录里那份已同改;原版备份
+  tools/pwvi_to_euroc.py.bak-pre-imu-events)。新格式按引擎自己的同步规则(detail.cpp track_accelerometer /
+  track_gyroscope:在每条加计时刻对相邻两条陀螺线性插值,恰同刻直接用那条陀螺,首条陀螺前 / 末条陀螺后的加计不出行)
+  合成 EuRoC 行;旧格式那段代码一字未动。
+
+验证(Mac):
+- 写器 / 新格式单测 16/16 全过(新增 7 条:两路时间戳各自独立且不配对、装载器读成两条独立事件流、并列次序、
+  首条 IMU 取两路最早、单路倒退与未知传感器拒收、会话源码只剩两路 handler 且不再拉取 accelerometerData、子集首条 IMU);
+  回放装载器原有单测 24/24 全过。
+- 旧格式逐位不变:三场真实录制(13f5 / 6d18 / 7353)用改前(3acfa75)/ 改后两版装载器各转储一次推送序列,
+  sha256 相同(af13158a… / 4c0b47f2… / 23cb6ec4…);同一场改写成新格式(同刻两路)的副本推送序列 sha 与旧格式相同。
+- Mac 回放器(pwvi_runner,台架外工具,新版见下一提交 tool/bench/xr_recon_chain/mac/)旧格式前端十六进制轨迹逐位
+  不变,新格式(同刻两路)副本与旧格式逐位相同。
+- pwvi_to_euroc.py:同刻两路副本转出的 IMU 行与旧 imu.csv 数值逐位相同(3009/3009);加计错开 3.7 ms 的合成录制,
+  插值结果与引擎公式逐位相同(3008/3008,丢 1 条 = 末条陀螺之后的加计)。
+- 米尺(lidar_ruler.py 及 vendored)不读 IMU,新旧格式都不受影响。
+自查(只报告,不改):同类「陀螺驱动 + 拉取 accelerometerData + 陀螺时间戳」写法还在旧 VIO 台架的 ARKit 参照录制器
+bench/viobench_kit/src/BasaltVIOBench/ARKitReference/ARKitReferenceSession.swift:422-447;本文件内没有别的配对写法
+(深度 / 内参与相机帧同一个 ARFrame)。旧台架直播传输层 LiveSensorTransport 的录制副本是陀螺驱动 + 加计按时间
+线性插值(Basalt 规则 GyroDrivenIMUAssembler),不是同一个问题;PwImuSource / PwImuCalibCapture 本来就两路各自 handler。
+
+仅台架;未装机;未推送。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

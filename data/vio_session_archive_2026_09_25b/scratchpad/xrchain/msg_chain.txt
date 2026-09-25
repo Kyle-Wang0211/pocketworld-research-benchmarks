@@ -1,0 +1,48 @@
+bench(xr-recon-chain): 台架 XRSLAM → SfM 重建链 —— 照片位姿 = 拍照前最近后端帧定稿 + 引擎官方外推,按可信位喂修复核(仅台架,未装机)
+
+用户 2026-09-25 拍板「定 12MP + 后端定稿外推,搭台架链」。链路:
+  预览 = XRSLAM 前端输出;照片 = 零 ARKit PwCameraSlot 静态照(AVCapturePhotoOutput .speed、不开 OIS,平台默认模式下
+  最大 4:3,本机 4032×3024,已由上一提交合入的 bench/entry-any-4x3 实现);照片位姿 = 拍照时刻之前最近一个后端帧的
+  FINAL 定稿状态(位姿 / 速度 / bg / ba),用引擎官方 propagate_state_okvis2(xrslam feat/xr-recon-chain@cd3469c 新增
+  XRSLAMPropagateBackendState)外推到拍照时刻,不插值、不平滑、不补偿;喂 SfM = 生产 SfmLiveRecon.offerFrame
+  (pwofficial_add_jpeg_frame_v2 + device_pose_trusted),核不改,交付尺度沿用核内 DEVICE-ALIGN-V1。
+
+- vendor/xrslam/chain/PwXrReconChainCore.{h,cpp}(新,跨端 C++,C ABI):照片位姿规则 R1–R6 ——
+  R2 b = FIRST 时刻 ≤ t_photo 的最近后端帧(见到 FIRST > t_photo 后认定);R3 等 b 的 FINAL,拿到即外推;
+  R4 宿主时钟 now − t_photo > 超时(默认 3 s)⇒ TIMEOUT 不可信(位姿取 b 的 FIRST 外推,只存档);
+  R5 收尾时仍在等的照片取收尾窗口(XRSLAMGetBackendWindowStates)里 b 的状态外推;
+  R6 可信 ⇔ 来源 FINAL/收尾窗口 且 外推 == XRSLAM_PROPAGATE_OK 且 外推长度 ≤ 100 ms 且 拍照时刻引擎状态 ==
+  TRACKING_SUCCESS(拍照时刻状态 = 引擎时刻 ≤ t_photo 的最后一帧)。只用标准库与 XRSLAM C 接口,平台宏 / 平台 API 0 处;
+  iOS Runner 里另带一组弱定义兜底(-DPW_XRCHAIN_ENGINE_WEAK_FALLBACK,同 PwBenchReplayEngineProbe.c ③),Mac 回放不带。
+- ios/Runner/PwXrReconChain.swift(新,平台代码只在这里):逐帧观察者把传输层 C 账本的 effective 时间戳与
+  XRSLAM_RESULT_STATE 报给核心;CMClockGetHostTimeClock 作 now,50 ms 轮询;照片时刻 t_photo = PTS + exposure/2 + (c + Δ)
+  —— 与视频帧同一规则、同一组数、同一加法次序(PwXrslamLive.onCameraFrame + 传输层 effective = raw + offset);
+  收尾前报喂料 / 引擎 worker 排空状态。
+- ios/Runner/PwXrslamLive.swift:appliedCameraTimeOffsetSeconds(建会话时交给传输层的 c + Δ);观察者注释。
+- lib/bench_xrchain/xr_recon_chain_page.dart(新):相机 / 会话 / 预览 / 对焦臂与自愈环照零 ARKit 探针页;
+  Δ 默认 −5 ms(-PWXrslamTdExtraMs 覆盖,🔴 只是台架实验设置,不写进任何产品规则),超时 / 外推上限各有启动参数;
+  快门 → PwCameraPhoto → 链路核心 → SfmLiveRecon;完成 → 等照片落盘 → 停相机 → 等引擎排空 → 收尾 → 销毁会话 →
+  finalize → 落 xrchain_run_<ts>/(run_manifest.json、chain_photos.jsonl、sfm_refined_poses.csv / points.ply)。
+- lib/bench_xrchain/xrchain_pose_convention.dart(新):XRSLAM 相机位姿(OpenCV 相机轴、z 上世界)→ 产品 ABI 的
+  ARKit 口径 camera-to-world,逐式照抄 prep_inputs.py / make_feeds.py xr_to_ark;可信判决 → DevicePoseTrust 词表
+  (normal / limited_xrchain_<原因>)。xrchain_native.dart:FFI 绑定。test/bench_xrchain:期望值用 make_feeds.py 自己的函数算。
+- vendor/xrslam/include/XRSLAMBackendPose.h:换成引擎 cd3469c 那份(逐字节相同,多 XRSLAMPropagatedState / 外推接口)。
+- vendor/xrslam/libs/ios-arm64/libxrslam_official_rules_xrchain_a6b41c92.a(+ syms / receipt):同 okvis2preint 配方;
+  对父提交 4e8dda2 同目录对照,只有 detail / XRSLAMManager / XRSLAMInternal / xrslam(含 detail.h)四个 .o 与符号表不同,
+  导出多 XRSLAMPropagateBackendState 一个。
+- bench/arloopbench_own_snapshot:Podfile 臂表加 xrchain;pbxproj 加两个源文件(.cpp 带弱定义旗标);桥接头加核心头;
+  main.dart 菜单加「XRSLAM → SfM 重建链(台架)」(-PWBenchPage xrchain);同步脚本 VIO 段带 PwXrReconChain.swift、
+  合一段带 lib/bench_xrchain、完整链段清单外检查放行它。
+- tool/bench/xr_recon_chain/mac:Mac 回放器新版(新旧 IMU 格式 / 外推自检 / 链路回放)与构建、运行、汇总脚本。
+
+验证(Mac,单线程,手机同款喂法 + Δ −5 ms,三场 13f5 / 6d18 / 7353,各 22 张模拟照片含边界):
+  外推接口 vs 参照 xr_propagate2 66/66 逐字段相同;链路回放(与手机同一份核心源码)22×3 张位姿与自检逐位相同,
+  两次回放前端十六进制轨迹逐位相同;每场 FINAL 20 张(可信)、收尾窗口 2 张(末帧前可信 / 末帧后外推 > 100 ms 且
+  IMU 未覆盖 ⇒ 不可信)、初始化前那张 FINAL 但不可信(外推 129 ms + 状态 INITIALIZING);常规照片等定稿(数据时间)
+  438–573 ms。Swift 胶水与核心在 Mac 上按回放装具方式编译链接通过。Dart:换算单测 2/2,analyze 0 问题。
+
+仅台架;未装机;未推送。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

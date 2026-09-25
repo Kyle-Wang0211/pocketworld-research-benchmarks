@@ -1,0 +1,34 @@
+feat(preint): IMU 预积分改成 OKVIS2 的离散方式(端点按时间插值 + 段内梯形),均值/偏置雅可比/协方差一起照抄
+
+用户 2026-09-25「把积分方式改成跟同类系统一样,先在台架上试」。上游是左端零阶保持:每段用段首样本、最后一个
+样本保持到帧时刻、帧起点插一个「上一帧末样本、时间戳改成上一帧时刻」的拷贝 ⇒ 100 Hz 下积出的姿态代表时间戳之前
+约 5 ms(后端位姿相对陀螺恒偏 −5 ms)。照抄对象 OKVIS2(BSD-3,ethz-mrl/okvis2 @a2ea006);GPLv3 的
+VINS-Mono/Fusion、OpenVINS、ORB-SLAM3 一行没抄。
+
+- estimation/okvis2_imu_integration.h(新):ImuError::redoPreintegration() 循环逐行照抄(均值、dalpha_db_g /
+  dv_db_g / dp_db_g、F_delta 与噪声 K0..K3 的协方差传播),连同它用的 rightJacobian / crossMx / sinc;
+  文件头保留 OKVIS2 原版权声明,并逐条写明搬不过去的地方(double 秒时间、无饱和放大、dPdsigma 四份直接求和、
+  σ²·I 换成配置里的 3×3 cov、末样本不越界)。
+- estimation/LICENSE.okvis2-BSD-3-Clause(新):OKVIS2 LICENSE 原文(二进制分发条款要求随附)。
+- estimation/preintegrator.{h,cpp}:integrate(t0, t1, ...) 起点显式传入;调 OKVIS2 循环后换到 XRSLAM 参数化:
+  delta.q/p/v = Delta_q_/acc_doubleintegral_/acc_integral_;dq_dbg = −C_N^T·dalpha_db_g_(左乘→右乘,伴随恒等式);
+  dp_dba = −C_doubleintegral_、dv_dba = −C_integral_;delta.cov = M·P_delta_·M^T(次序 p,α,v,bg,ba → q,p,v,bg,ba,
+  θ = C_N^T α)。依据:两边残差式逐项对照(OKVIS2 ImuError.cpp:890-925 vs ceres/preintegration_factor.h)。
+  新增 prepend_data / append_data:多段样本拼接时去掉接缝处的越界样本拷贝(保持一条按时间递增的测量队列)。
+  重新线性化策略、信息矩阵平方根保留 XRSLAM 的(求解器结构,不属于离散方式;理由写在文件头)。
+- core/detail.cpp:派发帧时把第一个越过帧时刻的 IMU 样本也给这一帧(OKVIS2 要求测量覆盖 [t0, t1]);
+  predict_pose 的 propagate_state(逐样本右端零阶保持)换成 OKVIS2 ImuError::propagation() 同一离散与输出式,
+  终点 = min(t, 最新样本):已覆盖就到 t,没覆盖就到最新样本(OKVIS2 实时外推的做法,不外插)。
+- core/feature_tracker.cpp:帧起点改为插入上一帧里时刻 <= 上一帧时刻的最后一个原始样本(时间戳不改);两处 integrate 传起点。
+- core/sliding_window_tracker.cpp、core/initializer.cpp:所有 integrate 调用传前一帧时刻;所有样本拼接改用去重拼接。
+
+不改:td 规则(曝光中点 + c = 3 ms)、yaml、噪声值;XRSLAM.h 与所有 C 接口。
+
+自检(scratch 单测,合成正弦运动):区间增量对细积分真值的等效时间偏移 上游 −5.0 ms → 本版 0.0 ms;偏置雅可比
+有限差分残差 < 2e-7;协方差与 2 万次蒙特卡洛对角差 < 5%、交叉项与相关结构一致。
+Mac 回放(官方配置臂,手机同款喂法,单线程逐位可复现,三场 13f5/6d18/7353):后端首次/定稿对陀螺的偏移
+−5.00 ms → 0.00 / −0.5…−1.0 ms,前端幅度比 0.90 → 0.994;但沿用现行 td 规则时后端抖动 +13…+26%、7353 对 LiDAR
+尺度 +1.9% → +4.8%(诊断:相机时间戳再挪 −5 ms 即基本回到改前水平 ⇒ 现行 td 规则是在带 −5 ms 滞后的旧积分器下定的)。
+仅台架;未推送。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

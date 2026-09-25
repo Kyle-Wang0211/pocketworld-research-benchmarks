@@ -1,0 +1,19 @@
+bench(backend-pose): iOS 引擎归档 libxrslam_official_rules_bkpose_4853976d.a(89042cd5 同配方 + 后端位姿只读出口)+ 回执(仅台架)
+
+源码 xrslam fork feat/backend-pose-output@8ebac9a(父 add2ee3 = 89042cd5 的源码),配方逐字照抄 89042cd5
+(scratchpad/xrofficial/tools/build_ios.sh,只换工作目录):LOWLATENCY ON + THREADING ON + 队列 0 +
+-fno-fast-math -ffp-contract=off,CPU/OpenCV 前端。research_only,只进台架。
+
+归因对照:同一源码树、同一构建目录先编 add2ee3(对照 sha256 367441ee…)再编 8ebac9a;57 个成员里只有
+XRSLAMInternal.cpp.o / XRSLAMManager.cpp.o / sliding_window_tracker.cpp.o / __.SYMDEF 不同,53 个逐字节相同;
+新增导出 XRSLAMDrainBackendPoses / XRSLAMGetBackendWindowPoses。指纹(OpenCV mat.inl.hpp 构建路径)3 处,
+不含 89042cd5 的指纹。
+
+本提交**不**改台架 Podfile 臂表、没出台架包:台架目录的完整链真源工作树 bench-unified-20260924 在本次运行中
+被清盘删除(分支已在远端),pw_full_chain / vendor/{aether_ffi,official_sfm,pw_dense,pw_viobench_kit} /
+ios/Vendor 都成了断链,viobench_kit/dist 是被忽略的构建产物、随之丢失 ⇒ 编包前要先恢复那棵树并重跑
+build_kit.sh。台架目录已按备份还原到本次同步前的状态(191 个文件逐字节、10 条符号链接一致)。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

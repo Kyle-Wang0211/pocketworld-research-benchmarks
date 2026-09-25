@@ -1,0 +1,182 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 897 行 ↔ 相机 897 帧;配上 897,配不上 0
+  轨迹 arkit: 866 帧配上  {"rows": 897, "zero_translation_dropped": 31, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-13f53d2f-5935-4b1a-a499-4dc8367ea935/arkit_poses.tum"}
+  轨迹 old_front: 286 帧配上  {"rows": 286, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scnone_ap0_swp0_front.tum"}
+  轨迹 old_final: 295 帧配上  {"rows": 295, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scnone_ap0_swp0_final.tum"}
+  轨迹 new_acc16_front: 286 帧配上  {"rows": 286, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scall_am16_swm4_front.tum"}
+  轨迹 new_acc16_final: 295 帧配上  {"rows": 295, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scall_am16_swm4_final.tum"}
+  轨迹 new_acc0_front: 286 帧配上  {"rows": 286, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scall_ap0_swm4_front.tum"}
+  轨迹 new_acc0_final: 295 帧配上  {"rows": 295, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/tums/13f5_scall_ap0_swm4_final.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 灰度 + 所有轨迹都有位姿):286 / 录制帧 897 / 深度 296 张
+  帧对档 标称 0.3s:选 283,新 283,实际间隔 中位 0.300s [0.300, 0.300]
+  帧对档 标称 0.6s:选 281,新 281,实际间隔 中位 0.600s [0.500, 0.600]
+帧对 564(去重后),特征 sift×4000,匹配中…
+
+G4 深度相对图像时间偏移 δ = -7.1 ms(95% [-18.2, +0.4],16221 点);按 δ 校正后参照 k 变 -0.060% ⇒ ✅ 过(上限 ±0.50%)
+粗对齐曲线(诊断,深度行偏移 → 帧对间 IQR):{'-2': 0.06772412479854714, '-1': 0.0621107992000373, '0': 0.046798717711840264, '1': 0.0579812871412693, '2': 0.0712874208243306}
+
+── arkit ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9746 ⇒ -2.54%   帧对 269/564  块 bootstrap 95% [-4.01, -1.72]%  ⇒ 总 95%(∪方法范围∪噪声底) [-4.32, +0.07]%
+  方法范围(点估计,96 种):[-2.95, -0.55]%
+  焦距敏感度 dk/dα = +0.408(α=1.03 ⇒ k ×1.0122)
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0457  帧对内 0.0397
+  分段 k [0.9797144117847992, 0.9584599056491928, 0.9751375426960147, 0.9825606967666534]
+  PC ×1.03:比值 1.03000 ✅
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1457 过闸=False ✅ 被拒(应当)
+
+── old_front ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9650 ⇒ -3.50%   帧对 269/564  块 bootstrap 95% [-5.38, -1.47]%  ⇒ 总 95%(∪方法范围∪噪声底) [-5.71, +1.53]%
+  方法范围(点估计,96 种):[-4.47, -1.63]%
+  焦距敏感度 dk/dα = +0.302(α=1.03 ⇒ k ×1.0091)
+  噪声底:NC 均值 1.0013 sd 0.89% 带 k∈[0.9509, 0.9799];PC ×1.03 → 1.0312 ×1.05 → 1.0512 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0759  帧对内 0.0413
+  分段 k [0.9586060776597761, 0.9621938549546909, 0.9398332712668741, 1.0038464948117642]
+  PC ×1.03:比值 1.03003 ✅
+  PC ×1.05:比值 1.05005 ✅
+  NC 深度洗牌:k=1.1696 过闸=False ✅ 被拒(应当)
+
+── old_final ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9637 ⇒ -3.63%   帧对 269/564  块 bootstrap 95% [-5.93, -1.62]%  ⇒ 总 95%(∪方法范围∪噪声底) [-6.69, +1.36]%
+  方法范围(点估计,96 种):[-4.32, -1.25]%
+  焦距敏感度 dk/dα = +0.412(α=1.03 ⇒ k ×1.0124)
+  噪声底:NC 均值 1.0016 sd 0.77% 带 k∈[0.9535, 0.9767];PC ×1.03 → 1.0324 ×1.05 → 1.0520 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0667  帧对内 0.0404
+  分段 k [0.9548054777076367, 0.9701533886364216, 0.9174445487650329, 0.9925802417936918]
+  PC ×1.03:比值 1.03000 ✅
+  PC ×1.05:比值 1.05001 ✅
+  NC 深度洗牌:k=1.1519 过闸=False ✅ 被拒(应当)
+
+── new_acc16_front ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9539 ⇒ -4.61%   帧对 269/564  块 bootstrap 95% [-6.40, -3.36]%  ⇒ 总 95%(∪方法范围∪噪声底) [-7.03, -1.37]%
+  方法范围(点估计,96 种):[-5.13, -3.10]%
+  焦距敏感度 dk/dα = +0.177(α=1.03 ⇒ k ×1.0053)
+  噪声底:NC 均值 1.0013 sd 0.81% 带 k∈[0.9462, 0.9723];PC ×1.03 → 1.0316 ×1.05 → 1.0499 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0738  帧对内 0.0414
+  分段 k [0.9498902937024956, 0.9341532827109504, 0.9608012708093099, 0.9729796702467411]
+  PC ×1.03:比值 1.03006 ✅
+  PC ×1.05:比值 1.05010 ✅
+  NC 深度洗牌:k=1.1361 过闸=False ✅ 被拒(应当)
+
+── new_acc16_final ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9548 ⇒ -4.52%   帧对 269/564  块 bootstrap 95% [-5.20, -2.97]%  ⇒ 总 95%(∪方法范围∪噪声底) [-5.63, -0.35]%
+  方法范围(点估计,96 种):[-4.92, -2.63]%
+  焦距敏感度 dk/dα = +0.412(α=1.03 ⇒ k ×1.0124)
+  噪声底:NC 均值 0.9991 sd 0.59% 带 k∈[0.9438, 0.9633];PC ×1.03 → 1.0305 ×1.05 → 1.0499 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0460  帧对内 0.0398
+  分段 k [0.9447348975162, 0.9552100300297338, 0.9379938402427311, 0.9802594576102396]
+  PC ×1.03:比值 1.03001 ✅
+  PC ×1.05:比值 1.05001 ✅
+  NC 深度洗牌:k=1.1345 过闸=False ✅ 被拒(应当)
+
+── new_acc0_front ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9698 ⇒ -3.02%   帧对 269/564  块 bootstrap 95% [-4.54, -0.75]%  ⇒ 总 95%(∪方法范围∪噪声底) [-5.62, +2.26]%
+  方法范围(点估计,96 种):[-3.75, -0.87]%
+  焦距敏感度 dk/dα = +0.471(α=1.03 ⇒ k ×1.0141)
+  噪声底:NC 均值 1.0009 sd 1.16% 带 k∈[0.9518, 0.9902];PC ×1.03 → 1.0298 ×1.05 → 1.0498 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0820  帧对内 0.0422
+  分段 k [0.9602745259440401, 0.9734559548444289, 0.9318459893215967, 1.0137284828966315]
+  PC ×1.03:比值 1.03002 ✅
+  PC ×1.05:比值 1.05003 ✅
+  NC 深度洗牌:k=1.1698 过闸=False ✅ 被拒(应当)
+
+── new_acc0_final ── verdict: valid  {'gates_G1_G4': True, 'nc_rejected': True, 'pc_x1_03_x1_05': True, 'noise_floor_pc': True}
+  k(轨迹/米) = 0.9642 ⇒ -3.58%   帧对 269/564  块 bootstrap 95% [-6.01, -1.23]%  ⇒ 总 95%(∪方法范围∪噪声底) [-6.90, +1.74]%
+  方法范围(点估计,96 种):[-4.64, -0.49]%
+  焦距敏感度 dk/dα = +0.599(α=1.03 ⇒ k ×1.0180)
+  噪声底:NC 均值 1.0023 sd 0.90% 带 k∈[0.9530, 0.9805];PC ×1.03 → 1.0332 ×1.05 → 1.0525 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_depth_time_offset': True}  帧对间 IQR/中位 0.0709  帧对内 0.0404
+  分段 k [0.9536124441116112, 0.9790678159677393, 0.9078996126807516, 0.9937114345529251]
+  PC ×1.03:比值 1.03000 ✅
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.1444 过闸=False ✅ 被拒(应当)
+
+同点比值(同一批帧对、同一批点,LiDAR 逐对约掉):
+  arkit/old_front = 1.0034  块 bootstrap 95% [0.9819, 1.0200]  总 [0.9789, 1.0357]
+  arkit/old_final = 1.0110  块 bootstrap 95% [0.9850, 1.0390]  总 [0.9827, 1.0483]
+  arkit/new_acc16_front = 1.0247  块 bootstrap 95% [1.0116, 1.0400]  总 [1.0081, 1.0469]
+  arkit/new_acc16_final = 1.0170  块 bootstrap 95% [1.0023, 1.0295]  总 [0.9953, 1.0383]
+  arkit/new_acc0_front = 1.0022  块 bootstrap 95% [0.9763, 1.0270]  总 [0.9729, 1.0356]
+  arkit/new_acc0_final = 1.0042  块 bootstrap 95% [0.9776, 1.0469]  总 [0.9760, 1.0532]
+  old_front/arkit = 0.9966  块 bootstrap 95% [0.9804, 1.0184]  总 [0.9656, 1.0216]
+  old_front/old_final = 1.0054  块 bootstrap 95% [0.9966, 1.0189]  总 [0.9891, 1.0231]
+  old_front/new_acc16_front = 1.0257  块 bootstrap 95% [1.0147, 1.0333]  总 [0.9962, 1.0396]
+  old_front/new_acc16_final = 1.0117  块 bootstrap 95% [0.9972, 1.0320]  总 [0.9886, 1.0336]
+  old_front/new_acc0_front = 0.9958  块 bootstrap 95% [0.9899, 1.0018]  总 [0.9879, 1.0031]
+  old_front/new_acc0_final = 1.0083  块 bootstrap 95% [0.9970, 1.0243]  总 [0.9918, 1.0272]
+  old_final/arkit = 0.9891  块 bootstrap 95% [0.9625, 1.0152]  总 [0.9539, 1.0176]
+  old_final/old_front = 0.9946  块 bootstrap 95% [0.9815, 1.0034]  总 [0.9774, 1.0111]
+  old_final/new_acc16_front = 1.0131  块 bootstrap 95% [0.9973, 1.0363]  总 [0.9873, 1.0389]
+  old_final/new_acc16_final = 1.0129  块 bootstrap 95% [0.9970, 1.0205]  总 [0.9929, 1.0220]
+  old_final/new_acc0_front = 0.9930  块 bootstrap 95% [0.9730, 1.0060]  总 [0.9690, 1.0088]
+  old_final/new_acc0_final = 0.9998  块 bootstrap 95% [0.9968, 1.0021]  总 [0.9950, 1.0033]
+  new_acc16_front/arkit = 0.9758  块 bootstrap 95% [0.9615, 0.9885]  总 [0.9552, 0.9920]
+  new_acc16_front/old_front = 0.9749  块 bootstrap 95% [0.9678, 0.9855]  总 [0.9619, 1.0038]
+  new_acc16_front/old_final = 0.9871  块 bootstrap 95% [0.9650, 1.0027]  总 [0.9626, 1.0129]
+  new_acc16_front/new_acc16_final = 0.9935  块 bootstrap 95% [0.9858, 1.0071]  总 [0.9791, 1.0170]
+  new_acc16_front/new_acc0_front = 0.9781  块 bootstrap 95% [0.9648, 0.9878]  总 [0.9605, 1.0012]
+  new_acc16_front/new_acc0_final = 0.9885  块 bootstrap 95% [0.9678, 1.0123]  总 [0.9631, 1.0210]
+  new_acc16_final/arkit = 0.9833  块 bootstrap 95% [0.9713, 0.9977]  总 [0.9631, 1.0047]
+  new_acc16_final/old_front = 0.9885  块 bootstrap 95% [0.9690, 1.0028]  总 [0.9675, 1.0115]
+  new_acc16_final/old_final = 0.9873  块 bootstrap 95% [0.9799, 1.0030]  总 [0.9785, 1.0071]
+  new_acc16_final/new_acc16_front = 1.0065  块 bootstrap 95% [0.9930, 1.0144]  总 [0.9833, 1.0214]
+  new_acc16_final/new_acc0_front = 0.9831  块 bootstrap 95% [0.9624, 0.9953]  总 [0.9560, 1.0059]
+  new_acc16_final/new_acc0_final = 0.9857  块 bootstrap 95% [0.9759, 1.0098]  总 [0.9754, 1.0190]
+  new_acc0_front/arkit = 0.9978  块 bootstrap 95% [0.9737, 1.0243]  总 [0.9656, 1.0279]
+  new_acc0_front/old_front = 1.0042  块 bootstrap 95% [0.9982, 1.0103]  总 [0.9969, 1.0122]
+  new_acc0_front/old_final = 1.0071  块 bootstrap 95% [0.9941, 1.0278]  总 [0.9912, 1.0320]
+  new_acc0_front/new_acc16_front = 1.0224  块 bootstrap 95% [1.0124, 1.0365]  总 [0.9988, 1.0411]
+  new_acc0_front/new_acc16_final = 1.0172  块 bootstrap 95% [1.0047, 1.0391]  总 [0.9942, 1.0460]
+  new_acc0_front/new_acc0_final = 1.0090  块 bootstrap 95% [0.9961, 1.0297]  总 [0.9952, 1.0350]
+  new_acc0_final/arkit = 0.9959  块 bootstrap 95% [0.9552, 1.0229]  总 [0.9495, 1.0246]
+  new_acc0_final/old_front = 0.9918  块 bootstrap 95% [0.9763, 1.0030]  总 [0.9735, 1.0083]
+  new_acc0_final/old_final = 1.0002  块 bootstrap 95% [0.9979, 1.0032]  总 [0.9967, 1.0051]
+  new_acc0_final/new_acc16_front = 1.0116  块 bootstrap 95% [0.9879, 1.0332]  总 [0.9794, 1.0384]
+  new_acc0_final/new_acc16_final = 1.0145  块 bootstrap 95% [0.9903, 1.0247]  总 [0.9813, 1.0252]
+  new_acc0_final/new_acc0_front = 0.9911  块 bootstrap 95% [0.9712, 1.0039]  总 [0.9662, 1.0049]
+交叉核对(诊断)arkit/old_front:尺子比值 1.0100 vs 整场 Sim3 0.9990(差 +1.10%,Sim3 ATE 1.74 cm)
+交叉核对(诊断)arkit/old_final:尺子比值 1.0113 vs 整场 Sim3 1.0014(差 +0.99%,Sim3 ATE 1.60 cm)
+交叉核对(诊断)arkit/new_acc16_front:尺子比值 1.0218 vs 整场 Sim3 1.0133(差 +0.84%,Sim3 ATE 1.25 cm)
+交叉核对(诊断)arkit/new_acc16_final:尺子比值 1.0208 vs 整场 Sim3 1.0130(差 +0.77%,Sim3 ATE 1.16 cm)
+交叉核对(诊断)arkit/new_acc0_front:尺子比值 1.0050 vs 整场 Sim3 0.9913(差 +1.38%,Sim3 ATE 2.11 cm)
+交叉核对(诊断)arkit/new_acc0_final:尺子比值 1.0109 vs 整场 Sim3 0.9946(差 +1.63%,Sim3 ATE 1.97 cm)
+交叉核对(诊断)old_front/arkit:尺子比值 0.9901 vs 整场 Sim3 1.0021(差 -1.20%,Sim3 ATE 1.73 cm)
+交叉核对(诊断)old_front/old_final:尺子比值 1.0013 vs 整场 Sim3 1.0024(差 -0.10%,Sim3 ATE 0.74 cm)
+交叉核对(诊断)old_front/new_acc16_front:尺子比值 1.0117 vs 整场 Sim3 1.0150(差 -0.33%,Sim3 ATE 1.58 cm)
+交叉核对(诊断)old_front/new_acc16_final:尺子比值 1.0107 vs 整场 Sim3 1.0146(差 -0.38%,Sim3 ATE 1.52 cm)
+交叉核对(诊断)old_front/new_acc0_front:尺子比值 0.9951 vs 整场 Sim3 0.9922(差 +0.29%,Sim3 ATE 0.74 cm)
+交叉核对(诊断)old_front/new_acc0_final:尺子比值 1.0009 vs 整场 Sim3 0.9954(差 +0.55%,Sim3 ATE 1.10 cm)
+交叉核对(诊断)old_final/arkit:尺子比值 0.9888 vs 整场 Sim3 0.9995(差 -1.07%,Sim3 ATE 1.60 cm)
+交叉核对(诊断)old_final/old_front:尺子比值 0.9987 vs 整场 Sim3 0.9978(差 +0.08%,Sim3 ATE 0.74 cm)
+交叉核对(诊断)old_final/new_acc16_front:尺子比值 1.0103 vs 整场 Sim3 1.0126(差 -0.23%,Sim3 ATE 1.47 cm)
+交叉核对(诊断)old_final/new_acc16_final:尺子比值 1.0094 vs 整场 Sim3 1.0117(差 -0.24%,Sim3 ATE 1.25 cm)
+交叉核对(诊断)old_final/new_acc0_front:尺子比值 0.9938 vs 整场 Sim3 0.9900(差 +0.38%,Sim3 ATE 1.04 cm)
+交叉核对(诊断)old_final/new_acc0_final:尺子比值 0.9995 vs 整场 Sim3 0.9932(差 +0.64%,Sim3 ATE 0.68 cm)
+交叉核对(诊断)new_acc16_front/arkit:尺子比值 0.9787 vs 整场 Sim3 0.9875(差 -0.89%,Sim3 ATE 1.26 cm)
+交叉核对(诊断)new_acc16_front/old_front:尺子比值 0.9885 vs 整场 Sim3 0.9861(差 +0.24%,Sim3 ATE 1.60 cm)
+交叉核对(诊断)new_acc16_front/old_final:尺子比值 0.9898 vs 整场 Sim3 0.9883(差 +0.15%,Sim3 ATE 1.48 cm)
+交叉核对(诊断)new_acc16_front/new_acc16_final:尺子比值 0.9991 vs 整场 Sim3 0.9997(差 -0.06%,Sim3 ATE 0.58 cm)
+交叉核对(诊断)new_acc16_front/new_acc0_front:尺子比值 0.9836 vs 整场 Sim3 0.9785(差 +0.52%,Sim3 ATE 1.87 cm)
+交叉核对(诊断)new_acc16_front/new_acc0_final:尺子比值 0.9893 vs 整场 Sim3 0.9815(差 +0.80%,Sim3 ATE 1.73 cm)
+交叉核对(诊断)new_acc16_final/arkit:尺子比值 0.9796 vs 整场 Sim3 0.9877(差 -0.81%,Sim3 ATE 1.17 cm)
+交叉核对(诊断)new_acc16_final/old_front:尺子比值 0.9894 vs 整场 Sim3 0.9865(差 +0.30%,Sim3 ATE 1.54 cm)
+交叉核对(诊断)new_acc16_final/old_final:尺子比值 0.9907 vs 整场 Sim3 0.9890(差 +0.18%,Sim3 ATE 1.27 cm)
+交叉核对(诊断)new_acc16_final/new_acc16_front:尺子比值 1.0009 vs 整场 Sim3 1.0005(差 +0.05%,Sim3 ATE 0.58 cm)
+交叉核对(诊断)new_acc16_final/new_acc0_front:尺子比值 0.9846 vs 整场 Sim3 0.9788(差 +0.59%,Sim3 ATE 1.79 cm)
+交叉核对(诊断)new_acc16_final/new_acc0_final:尺子比值 0.9903 vs 整场 Sim3 0.9823(差 +0.81%,Sim3 ATE 1.51 cm)
+交叉核对(诊断)new_acc0_front/arkit:尺子比值 0.9950 vs 整场 Sim3 1.0103(差 -1.52%,Sim3 ATE 2.09 cm)
+交叉核对(诊断)new_acc0_front/old_front:尺子比值 1.0049 vs 整场 Sim3 1.0081(差 -0.31%,Sim3 ATE 0.74 cm)
+交叉核对(诊断)new_acc0_front/old_final:尺子比值 1.0063 vs 整场 Sim3 1.0104(差 -0.41%,Sim3 ATE 1.03 cm)
+交叉核对(诊断)new_acc0_front/new_acc16_front:尺子比值 1.0166 vs 整场 Sim3 1.0232(差 -0.65%,Sim3 ATE 1.83 cm)
+交叉核对(诊断)new_acc0_front/new_acc16_final:尺子比值 1.0157 vs 整场 Sim3 1.0228(差 -0.70%,Sim3 ATE 1.75 cm)
+交叉核对(诊断)new_acc0_front/new_acc0_final:尺子比值 1.0058 vs 整场 Sim3 1.0033(差 +0.25%,Sim3 ATE 0.90 cm)
+交叉核对(诊断)new_acc0_final/arkit:尺子比值 0.9893 vs 整场 Sim3 1.0068(差 -1.74%,Sim3 ATE 1.96 cm)
+交叉核对(诊断)new_acc0_final/old_front:尺子比值 0.9991 vs 整场 Sim3 1.0050(差 -0.59%,Sim3 ATE 1.10 cm)
+交叉核对(诊断)new_acc0_final/old_final:尺子比值 1.0005 vs 整场 Sim3 1.0070(差 -0.65%,Sim3 ATE 0.68 cm)
+交叉核对(诊断)new_acc0_final/new_acc16_front:尺子比值 1.0108 vs 整场 Sim3 1.0200(差 -0.90%,Sim3 ATE 1.70 cm)
+交叉核对(诊断)new_acc0_final/new_acc16_final:尺子比值 1.0098 vs 整场 Sim3 1.0189(差 -0.89%,Sim3 ATE 1.48 cm)
+交叉核对(诊断)new_acc0_final/new_acc0_front:尺子比值 0.9942 vs 整场 Sim3 0.9970(差 -0.28%,Sim3 ATE 0.90 cm)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/ruler_audit/v2runs/13f5/lidar_ruler_report.json
+rc=0 13f5

@@ -1,0 +1,15 @@
+bench(okvis2-preint): VERIFY —— 台架包构建核验 + Mac 回放改前改后(仅台架,未装机)
+
+- 包:~/Developer/arloopbench_builds/unified_official_xrslam_rec30_expmid_backendpose_okvis2preint_20260925/Runner.app
+  (PW_XRSLAM_ARM=okvis2preint,flutter build ios --profile --no-pub);Info.plist 臂身份 okvis2preint / 归档 4b6f7bf8;
+  Runner 里本臂指纹 1、其它五条臂 0;OKVIS2 代码与后端位姿两个出口已链入;签名有效;除 PWVIOBenchKit(dist 重编,
+  代码段不变)外内嵌框架与上一版台架包去签名后逐字节相同,Dart AOT 同 sha。
+- 台架目录:同步前备份 → 同步 → 换 Podfile → pod install → 构建 → 按备份还原(493/493 文件、24/24 链接一致)。
+- Mac 回放(手机同款喂法,三场,单线程两次逐位相同):后端对陀螺偏移 −5.00 ms → 0.00 / −0.5…−1.0 ms;
+  沿用现行 td 规则时后端抖动与部分场尺度/ATE 回退,诊断显示与 td 规则(在旧积分器上定的)配套有关,详见文件。
+
+未装机、未碰生产 App;未推送。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

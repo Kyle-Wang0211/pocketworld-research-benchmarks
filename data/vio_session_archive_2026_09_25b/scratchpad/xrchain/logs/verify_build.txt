@@ -1,0 +1,71 @@
+== Info.plist 身份
+  CFBundleIdentifier           base=com.kyle.arloopbench new=com.kyle.arloopbench
+  CFBundleVersion              base=1 new=1
+  PWXrslamBuildEngine          base=official_rules new=official_rules
+  PWXrslamEngineArm            base=official_rules new=official_rules
+  PWXrslamBenchArm             base=default new=xrchain
+  PWXrslamBuildLib             base=libxrslam_official_rules_89042cd5.a new=libxrslam_official_rules_xrchain_a6b41c92.a
+  PWXrslamSHA256               base=89042cd5d5be844801a40b914cd8742119f8a9b4c3f6e3a9deef115bd4e7942f new=a6b41c92013a0d8e812d9e0104691157ad98dfd960084a27dc1c8baf603e9a8f
+  PWXrslamThreadingEnabled     base=true new=true
+  PWXrslamBuildRules           base=official new=official
+  PWXrslamGpuFrontendLinked    base=false new=false
+  PWXrslamEnginePedigree       base=research_only new=research_only
+== Runner 里的引擎指纹(本臂 xrchain 必须 ≥1,其它臂 0)
+  xrchain                    1
+  okvis2preint               0
+  official_rules 89042cd5    0
+  bkpose 4853976d            0
+  generic                    0
+  gpufe/pfk                  0
+== Runner 符号(nm -m:引擎外推接口须是强定义,不是本包的弱兜底)
+  00000001015e6a60 (__TEXT,__text) non-external (was a private external) _XRSLAMDrainBackendStates
+  00000001015e6a9c (__TEXT,__text) non-external (was a private external) _XRSLAMGetBackendWindowStates
+  00000001015e6ac8 (__TEXT,__text) non-external (was a private external) _XRSLAMPropagateBackendState
+  _pw_xrchain_begin                        base=0 new=1
+  _pw_xrchain_end                          base=0 new=1
+  _pw_xrchain_submit_photo_host            base=0 new=1
+  _pw_xrchain_take_result_host             base=0 new=1
+  _pw_xrchain_drain_state                  base=0 new=1
+  _pw_xrchain_close_host                   base=0 new=1
+  _pw_xrchain_stats_host                   base=0 new=1
+  _pw_xrchain_reset                        base=0 new=1
+  _pw_xrchain_poll                         base=0 new=1
+  _pw_xrchain_close                        base=0 new=1
+  _pw_camera_slot_capture_photo            base=1 new=1
+  _pw_camera_slot_photo_result             base=1 new=1
+  _pw_camera_slot_photo_size_candidates    base=1 new=1
+  _pw_bench_lidar_start                    base=1 new=1
+  string imu_events.csv               base=0 new=1
+  string split_events_v1              base=0 new=1
+  string imu_gyro_sample_count        base=0 new=1
+  string timestamp_ns,sensor,x,y,z    base=0 new=1
+== Dart AOT(App.framework/App)
+  XrReconChainPage                 base=0 new=4
+  xrchain_run_                     base=0 new=1
+  limited_xrchain_                 base=0 new=1
+  pw_xrchain_begin                 base=0 new=1
+  pw_xrchain_submit_photo_host     base=0 new=1
+  PWXrslamTdExtraMs                base=0 new=1
+  PWXrchainFinalTimeoutMs          base=0 new=1
+  pw.bench.xr_recon_chain/1        base=0 new=1
+  BenchHomePage                    base=3 new=3
+  ZeroArkitCaptureProbePage        base=4 new=4
+  BenchLidarRecordPage             base=4 new=4
+== 其它嵌入二进制(对基线包去签名逐字节)
+  PWOfficialSfm  SAME
+  PWDense        SAME
+  PWOnnxRuntime  SAME
+  PWVIOBenchKit  SAME
+  PWXRSLAMEngine SAME
+  PWBasaltEngine SAME
+  thermion_dart  SAME
+  Flutter        SAME
+== Frameworks 目录
+  同一集合
+== 签名
+  valid
+Identifier=com.kyle.arloopbench
+TeamIdentifier=26AH7V448L
+== 主二进制 sha256
+c6a99114b028473c36482903ae2b3c36a26fd5767b317023dfda6046743bffe2  Runner
+2547c2895a278f2bcf0f7fc5b8d1335693e0dd214cfd37e20c5adc49e53db82c  App
