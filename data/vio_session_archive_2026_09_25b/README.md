@@ -39,5 +39,5 @@
 
 ## 入库前的检查
 
-逐文件扫描了密钥、邮箱、签名身份、法律/专利关键词和 IP 地址,全部零命中(`KEEP_LOCAL` 0 个,需要剔除签名身份的 0 个)。
+逐文件扫描了密钥、邮箱、签名身份、法律关键词和 IP 地址,全部零命中(`KEEP_LOCAL` 0 个,需要剔除签名身份的 0 个)。
 部分构建日志里有 `TeamIdentifier=26AH7V448L`。这个团队号早已公开在 pocketworld 的 `ios/Runner.xcodeproj/project.pbxproj` 里,日志里没有姓名或邮箱。
