@@ -1,0 +1,40 @@
+PASS bundle id com.kyle.PocketWorld
+PASS codesign --verify --deep --strict
+PASS entitlements == 168
+     signer: Authority=Apple Development: <user-email> (<team-id>)
+PASS Runner defines _pwlod_viewer_create
+PASS Runner defines _pwlod_build_from_ply
+PASS Runner defines _pwlod_verify_octree
+PASS Runner defines _pwlod_version
+PASS Runner defines _pwlod_viewer_set_points
+PASS Runner defines _pwlod_viewer_set_style
+PASS version string "72ee817f abi=3"
+PASS pwlod_run (M1) not in Runner
+PASS Runner defines wgpuCreateInstance once (168: 1)
+PASS Frameworks/App.framework/App wgpuCreateInstance defs 0 == 168
+PASS Frameworks/Flutter.framework/Flutter wgpuCreateInstance defs 0 == 168
+PASS Frameworks/PWDense.framework/PWDense wgpuCreateInstance defs 0 == 168
+PASS Frameworks/PWOfficialSfm.framework/PWOfficialSfm wgpuCreateInstance defs 1 == 168
+PASS Frameworks/PWOnnxRuntime.framework/PWOnnxRuntime wgpuCreateInstance defs 1 == 168
+PASS Frameworks/thermion_dart.framework/thermion_dart wgpuCreateInstance defs 0 == 168
+     Runner defined _wgpu* : 89 (168: 77)
+PASS App.framework has class GpuCloudLayer
+PASS App.framework has class DenseLodCache
+PASS App.framework has class LodBridge
+PASS App.framework has class LodStyle
+PASS LodDebugPage not in App.framework
+PASS positive control: SparseCloudPainter present
+PASS PWDartAOTSHA256 = App bytes in bundle
+PASS PWOfficialSfmSHA256 = PWOfficialSfm bytes in bundle
+PASS PWNativeHostUUID = Runner LC_UUID C71D4FA8-C9F8-3E64-A416-E431F64C1B23
+PASS CFBundleVersion 171
+PASS experiment marker names the change
+PASS PWLiveCloudDiagnosticBuildId 171-lod-viewer
+     PWProductSourceManifestSHA256 fb83bdc4ff5d9bec3d6ec1b9136d106aeba1d475ba8ad372aa907b85c136658b
+PASS iPhone portrait lock kept
+PASS Flutter == 168 (unsigned 26b491d8bb18)
+PASS PWDense == 168 (unsigned e5f9a92a20ca)
+PASS PWOfficialSfm == 168 (unsigned 6e7fc4302ef5)
+PASS PWOnnxRuntime == 168 (unsigned b2ded3833247)
+PASS thermion_dart == 168 (unsigned f6757cca9c91)
+FAILS=0

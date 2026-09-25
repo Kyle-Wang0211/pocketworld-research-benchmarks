@@ -1,0 +1,23 @@
+PASS bundle id com.kyle.PocketWorld
+PASS codesign --verify --deep --strict
+PASS entitlements == 171
+PASS file set == 171 (154 files)
+PASS all other files == 171 (Mach-O unsigned)
+FAIL App identical to 171 (nothing new?)
+FAIL Info.plist differs in: 
+FAIL CFBundleVersion 171
+FAIL marker
+PASS PWDartAOTSHA256 = App bytes in bundle
+FAIL App lacks 'findValid'
+FAIL App lacks 'background during build'
+FAIL App lacks 'loadReviewCloud] refused'
+FAIL App lacks 'dense tree: '
+FAIL App lacks '正在载入点云…'
+PASS App has 'GpuCloudLayer'
+PASS App has 'DenseLodCache'
+PASS LodDebugPage not in App
+PASS positive control SparseCloudPainter present
+PASS Runner = 171's (pwlod_* + 72ee817f abi=3)
+PASS Runner defines wgpuCreateInstance once
+PASS portrait lock kept
+FAILS=9

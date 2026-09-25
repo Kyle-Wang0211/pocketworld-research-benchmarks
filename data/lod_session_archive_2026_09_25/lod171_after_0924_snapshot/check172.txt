@@ -1,0 +1,23 @@
+PASS bundle id com.kyle.PocketWorld
+PASS codesign --verify --deep --strict
+PASS entitlements == 171
+PASS file set == 171 (154 files)
+PASS all other files == 171 (Mach-O unsigned)
+PASS App.framework/App differs from 171 (new Dart)
+PASS Info.plist differs only in: CFBundleVersion PWBuildExperimentMarker PWDartAOTSHA256 
+PASS CFBundleVersion 172
+PASS marker names the change (+reopen-tree-or-sparse-v1)
+PASS PWDartAOTSHA256 = App bytes in bundle
+PASS App has 'findValid'
+PASS App has 'background during build'
+PASS App has 'loadReviewCloud] refused'
+PASS App has 'dense tree: '
+PASS App has '正在载入点云…'
+PASS App has 'GpuCloudLayer'
+PASS App has 'DenseLodCache'
+PASS LodDebugPage not in App
+PASS positive control SparseCloudPainter present
+PASS Runner = 171's (pwlod_* + 72ee817f abi=3)
+PASS Runner defines wgpuCreateInstance once
+PASS portrait lock kept
+FAILS=0

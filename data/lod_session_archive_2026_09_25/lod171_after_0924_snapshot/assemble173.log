@@ -1,0 +1,20 @@
+=== 该 framework 内文件集合必须与基线一致(除主二进制) ===
+  SAME
+
+⚠️  **协议 ④ 告警:同一二进制冲突**
+   你要换的 'app',在基线 Runner-172-reopen-tree-or-sparse.app 里相对
+   Runner-171-lod-viewer.app 也变过 —— 说明另一条线刚动过同一个二进制。
+   叠加会把它冲掉。正解:双方先 commit 到共享分支,由后出包的那方
+   在**一棵树**上 full build。见 SHARED_DEVICE_INSTALL_PROTOCOL.md ④。
+   ⚠️ 本闸分不出那次变更是**你自己**上一版改的、还是别人改的 ——
+      若基线就是你自己刚装的那一版,忽略此告警。
+
+=== 自证:只有 'app' 该 DIFF,其余必须 SAME ===
+  SAME  Runner
+  DIFF  Frameworks/App.framework/App  7057d9d571e1 -> 54a5fc2e0d70
+  SAME  Frameworks/Flutter.framework/Flutter
+  SAME  Frameworks/PWOfficialSfm.framework/PWOfficialSfm
+  SAME  Frameworks/thermion_dart.framework/thermion_dart
+
+✓ 组装完成:~/Developer/pw_builds_20260904/Runner-173-dpr-and-container-identity.app  (CFBundleVersion=173)
+  下一步:pw_ship.sh install "~/Developer/pw_builds_20260904/Runner-173-dpr-and-container-identity.app" "Runner-172-reopen-tree-or-sparse.app"

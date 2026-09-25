@@ -1,0 +1,37 @@
+PASS bundle id com.kyle.PocketWorld
+PASS codesign --verify --deep --strict
+PASS entitlements == BASE
+PASS file set == BASE (154 files)
+PASS all other files == BASE (Mach-O unsigned)
+PASS App.framework/App differs from BASE (new Dart)
+PASS Info.plist differs only in: CFBundleVersion PWBuildExperimentMarker PWDartAOTSHA256 
+PASS CFBundleVersion 174
+PASS marker names the change (+dpr-target-pixels-v1+tree-in-capture-dir-v1+dense-never-retrain-capture-closed-v1)
+PASS PWDartAOTSHA256 = App bytes in bundle
+PASS App has 'findValid'
+PASS App has 'background during build'
+PASS App has 'loadReviewCloud] refused'
+PASS App has '正在载入点云…'
+PASS App has 'GpuCloudLayer'
+PASS App has 'DenseLodCache'
+PASS App has 'inTargetPixels'
+PASS App has 'lod.building'
+PASS App has 'pw_lod_source/2'
+PASS App has 'lod_chunks'
+PASS App has 'migrated legacy tree'
+PASS App has 'dense_started.json'
+PASS App has 'pw_dense_started/1'
+PASS App has '完成稠密'
+PASS App has '稠密点云已经生成过,不会重新训练'
+PASS App has '这个作品已进入稠密阶段'
+PASS App has 'never re-trained'
+PASS App no longer has 'ply_container_path'
+PASS App no longer has 'containerRelativePath'
+PASS App no longer has 'ply_path_hash32'
+PASS App no longer has 'dense tree: '
+PASS LodDebugPage not in App
+PASS positive control SparseCloudPainter present
+PASS Runner = BASE's (pwlod_* + 72ee817f abi=3)
+PASS Runner defines wgpuCreateInstance once
+PASS portrait lock kept
+FAILS=0
