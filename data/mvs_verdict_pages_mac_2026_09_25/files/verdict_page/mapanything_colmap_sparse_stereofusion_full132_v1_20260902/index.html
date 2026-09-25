@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MapAnything + 生产 COLMAP 稀疏轨道 + 官方 StereoFusion</title>
+<style>
+html,body{margin:0;background:#000;color:#ddd;font:14px/1.45 -apple-system,"PingFang SC",sans-serif;overflow:hidden}
+header{height:104px;box-sizing:border-box;padding:12px 18px;background:#111;border-bottom:1px solid #2a2a2a}
+h1{margin:0 0 4px;color:#fff;font-size:21px}.hint{color:#999;max-width:1600px}
+#controls{height:48px;box-sizing:border-box;display:flex;gap:14px;align-items:center;padding:7px 18px;background:#0d0d0d;border-bottom:1px solid #222}
+#view{position:relative;width:100vw;height:calc(100vh - 153px);background:#000}canvas{display:block;width:100%;height:100%}
+#caption{position:absolute;left:18px;top:15px;pointer-events:none;text-shadow:0 2px 4px #000}#caption b{color:#fff;font-size:18px}#caption div{color:#aaa;margin-top:3px}
+#count{position:absolute;left:18px;bottom:13px;color:#888;font-variant-numeric:tabular-nums;text-shadow:0 2px 4px #000}
+#bar{position:absolute;left:0;top:151px;height:3px;width:0;background:#45d2a8;z-index:4}button,a{background:#1c1c1c;color:#ddd;border:1px solid #555;border-radius:6px;padding:6px 10px;text-decoration:none}
+</style>
+<header>
+  <h1>MapAnything Apache — 生产 COLMAP 稀疏轨道约束 + 官方 StereoFusion</h1>
+  <div class="hint">132 帧官方 K/位姿推理；用生产 COLMAP 稀疏 tracks 逐帧校准深度尺度，再原样交给 COLMAP 4.1.1 官方 StereoFusion 默认几何一致性融合。没有 CasDiff、Sim(3)、TSDF、体素、降采样或自定义筛点。这是诊断版：严格一致性只融合出 509,072 点，不是最终密度验收版。</div>
+</header>
+<div id="controls"><span>点大小</span><input id="pointSize" type="range" min="0.5" max="5" step="0.1" value="1.7"><button id="reset">复位视角</button><a href="bin/mapanything_colmap_sparse_stereofusion.ply" download>下载原始 PLY</a><span id="status"></span></div>
+<div id="bar"></div>
+<div id="view"><canvas></canvas><div id="caption"><b>稀疏轨道定标后的唯一表面</b><div id="detail">正在读取冻结产物…</div></div><div id="count"></div></div>
+<script>
+const canvas=document.querySelector('canvas'), status=document.querySelector('#status'), bar=document.querySelector('#bar');
+const gl=canvas.getContext('webgl',{antialias:true}); if(!gl) throw new Error('WebGL 不可用');
+const VS=`attribute vec3 p;attribute vec3 c;uniform mat4 mvp;uniform mat4 model;uniform float ps;varying vec3 vc;void main(){gl_Position=mvp*model*vec4(p,1.0);gl_PointSize=ps;vc=c;}`;
+const FS=`precision mediump float;varying vec3 vc;void main(){vec2 d=gl_PointCoord-vec2(.5);if(dot(d,d)>.25)discard;gl_FragColor=vec4(vc,1.0);}`;
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,VS));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,FS));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,1);
+const loc={p:gl.getAttribLocation(program,'p'),c:gl.getAttribLocation(program,'c'),mvp:gl.getUniformLocation(program,'mvp'),model:gl.getUniformLocation(program,'model'),ps:gl.getUniformLocation(program,'ps')};
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)},dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function lookAt(e,c,u){const f=norm(sub(c,e)),s=norm(cross(f,u)),v=cross(s,f);return [s[0],v[0],-f[0],0,s[1],v[1],-f[1],0,s[2],v[2],-f[2],0,-dot(s,e),-dot(v,e),dot(f,e),1]}
+function perspective(fy,a,n,f){const t=1/Math.tan(fy/2);return[t/a,0,0,0,0,t,0,0,0,0,(f+n)/(n-f),-1,0,0,2*f*n/(n-f),0]}
+function mul(A,B){const O=new Array(16).fill(0);for(let r=0;r<4;r++)for(let c=0;c<4;c++)for(let k=0;k<4;k++)O[c*4+r]+=A[k*4+r]*B[c*4+k];return O}
+let meta,n=0,pbuf,cbuf,pointSize=1.7,cam,initial;
+async function upload(url,label,expected,progressStart,progressSpan){const response=await fetch(url);if(!response.ok||!response.body)throw new Error(label+' 下载失败 HTTP '+response.status);const declared=Number(response.headers.get('content-length'));if(declared!==expected)throw new Error(label+' 字节数 '+declared+' != '+expected);const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,expected,gl.STATIC_DRAW);const reader=response.body.getReader();let got=0;for(;;){const {done,value}=await reader.read();if(done)break;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferSubData(gl.ARRAY_BUFFER,got,value);got+=value.byteLength;bar.style.width=(progressStart+progressSpan*got/expected)+'%';status.textContent=label+' '+Math.floor(100*got/expected)+'%'}if(got!==expected)throw new Error(label+' 数据不完整');return buffer}
+async function load(){meta=await (await fetch('bin/meta.json',{cache:'no-store'})).json();n=meta.n;initial={az:.6,el:.35,dist:meta.radius*2.4,tx:meta.med[0],ty:meta.med[1],tz:meta.med[2]};cam={...initial};document.querySelector('#detail').textContent=`${n.toLocaleString()} 点 · 官方 StereoFusion 默认一致性阈值 · 零降采样`;document.querySelector('#count').textContent=`${n.toLocaleString()} 点 · 全量显示 · PLY SHA256 ${meta.source_ply_sha256.slice(0,12)}…`;pbuf=await upload('bin/fused.pos','位置',meta.position_bytes,0,80);cbuf=await upload('bin/fused.col','颜色',meta.color_bytes,80,20);bar.style.width='0';status.textContent='加载完成';document.body.dataset.ready='1'}
+load().catch(error=>{status.textContent='加载失败：'+error.message;console.error(error)});
+function draw(){const dp=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w*dp||canvas.height!==h*dp){canvas.width=w*dp;canvas.height=h*dp}gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(n&&pbuf&&cbuf){const eye=[cam.tx+cam.dist*Math.cos(cam.el)*Math.sin(cam.az),cam.ty+cam.dist*Math.sin(cam.el),cam.tz+cam.dist*Math.cos(cam.el)*Math.cos(cam.az)];const mvp=mul(perspective(1,canvas.width/canvas.height,meta.radius*.005,meta.radius*40),lookAt(eye,[cam.tx,cam.ty,cam.tz],[0,1,0]));gl.useProgram(program);gl.uniformMatrix4fv(loc.mvp,false,new Float32Array(mvp));gl.uniformMatrix4fv(loc.model,false,new Float32Array(meta.node_matrix));gl.uniform1f(loc.ps,pointSize*dp);gl.bindBuffer(gl.ARRAY_BUFFER,pbuf);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,0,0);gl.enableVertexAttribArray(loc.p);gl.bindBuffer(gl.ARRAY_BUFFER,cbuf);gl.vertexAttribPointer(loc.c,3,gl.UNSIGNED_BYTE,true,0,0);gl.enableVertexAttribArray(loc.c);gl.drawArrays(gl.POINTS,0,n)}requestAnimationFrame(draw)}draw();
+let drag=null;addEventListener('mousedown',e=>{if(e.target===canvas){drag={x:e.clientX,y:e.clientY,b:e.button};e.preventDefault()}});addEventListener('mouseup',()=>drag=null);addEventListener('mousemove',e=>{if(!drag||!cam)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(drag.b===2){const k=cam.dist*.0015;cam.tx-=k*dx*Math.cos(cam.az);cam.tz+=k*dx*Math.sin(cam.az);cam.ty+=k*dy}else{cam.az-=dx*.006;cam.el=Math.max(-1.5,Math.min(1.5,cam.el+dy*.006))}});addEventListener('contextmenu',e=>e.preventDefault());addEventListener('wheel',e=>{if(cam){e.preventDefault();cam.dist*=Math.exp(e.deltaY*.001)}},{passive:false});document.querySelector('#pointSize').oninput=e=>pointSize=Number(e.target.value);document.querySelector('#reset').onclick=()=>{if(initial)cam={...initial}};
+</script>

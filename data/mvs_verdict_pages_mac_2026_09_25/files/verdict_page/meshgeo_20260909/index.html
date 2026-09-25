@@ -1,0 +1,137 @@
+<meta charset="utf-8"><title>网格密度三档 · 官方默认 / 768 / 原生 4032</title>
+<style>
+ html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif}
+ header{padding:8px 12px;background:#111;border-bottom:1px solid #222}
+ h1{margin:0 0 4px;font-size:15px;color:#fff} .hint{color:#8a8a8a;font-size:12px}
+ #ctl{display:flex;gap:14px;align-items:center;padding:6px 12px;background:#0d0d0d;
+      border-bottom:1px solid #222;position:sticky;top:0;z-index:5}
+ #grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#222;
+       height:calc(100vh - 124px)}
+ .pane{position:relative;background:#000;overflow:hidden}
+ canvas{display:block;width:100%;height:100%}
+ .cap{position:absolute;left:8px;top:6px;right:8px;pointer-events:none;text-shadow:0 1px 3px #000}
+ .cap b{color:#fff;font-size:13px} .cap div{color:#b0b0b0;font-size:11px;margin-top:2px}
+ .pts{position:absolute;left:8px;bottom:6px;color:#7a7a7a;font-size:11px;
+      font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000}
+ #bar{height:3px;background:#1a5fb4;width:0;transition:width .12s} #barw{background:#181818}
+ label{color:#9a9a9a}
+</style>
+<header><h1>网格密度三档 · 同坐标同相机 · 132 张 · 只差「喂进 Meshing 的深度图分辨率 + 密度旋钮」</h1>
+<div class="hint">灰模是为了单看几何(真彩图集仍在 aliceVision_texturing 里打包)。三窗共用一个相机,拖动同步。</div></header>
+<div id="ctl"><label><input id="wire" type="checkbox"> 线框</label>
+ <span id="msg" style="color:#8a8a8a"></span></div>
+<div id="barw"><div id="bar"></div></div>
+<div id="grid"></div>
+<script>
+// 相机/矩阵/交互逐字取自 build_page_cli.py
+const V={cx:0.5897371768951416,cy:-1.0425186157226562,cz:-3.504240036010742,radius:4.360073089599609};
+const cam={az:0.6,el:0.35,dist:V.radius*2.4,tx:V.cx,ty:V.cy,tz:V.cz};
+let WIRE=0;
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const crs=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const nrm=a=>{const l=Math.hypot(...a)||1;return[a[0]/l,a[1]/l,a[2]/l]};
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function lookAt(e,c,u){const f=nrm(sub(c,e)),s=nrm(crs(f,u)),v=crs(s,f);
+ return [s[0],v[0],-f[0],0, s[1],v[1],-f[1],0, s[2],v[2],-f[2],0,
+         -dot3(s,e),-dot3(v,e),dot3(f,e),1];}
+function persp(fy,a,zn,zf){const t=1/Math.tan(fy/2);
+ return [t/a,0,0,0, 0,t,0,0, 0,0,(zf+zn)/(zn-zf),-1, 0,0,2*zf*zn/(zn-zf),0];}
+const mul=(A,B)=>{const O=new Array(16).fill(0);
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++)for(let k=0;k<4;k++)O[c*4+r]+=A[k*4+r]*B[c*4+k];return O};
+const bar=document.getElementById("bar"), msg=document.getElementById("msg");
+const VS=`#version 300 es
+ in vec3 p; uniform mat4 mvp; out vec3 vp;
+ void main(){gl_Position=mvp*vec4(p,1.0); vp=p;}`;
+const FS=`#version 300 es
+ precision highp float; in vec3 vp; uniform vec3 eye; out vec4 o;
+ void main(){
+  vec3 n=normalize(cross(dFdx(vp),dFdy(vp)));   // 无法线属性 ⇒ 屏幕导数取面法线
+  float d=abs(dot(n,normalize(eye-vp)));
+  o=vec4(vec3(0.10+0.90*d),1.0);
+ }`;
+const PLAN=[["① 纯官方 Meshing 默认","768×576 深度图 + Meshroom 节点默认值(maxPoints 5M/minStep 2/pixSizeMarginFinal 4/minAngle 1.0)","geoofficial","264,145 顶点 · 532,260 三角形"],
+            ["② 档案放宽版","同样 768×576 深度图,六个密度旋钮放宽过官方","geo768","1,266,394 顶点 · 2,581,829 三角形"],
+            ["③ 原生 4032×3008 深度图","放宽版不变,只把深度图换成 12MP 原生(官方在 12MP 上是 downscale=2 → 2016×1504)","geonative","4,070,295 顶点 · 8,312,703 三角形"]];
+const panes=PLAN.map(([name,sub,tag,foot])=>{
+ const d=document.createElement("div"); d.className="pane";
+ d.innerHTML=`<canvas></canvas><div class="cap"><b>${name}</b><div>${sub}</div></div>
+   <div class="pts">${foot}</div>`;
+ document.getElementById("grid").appendChild(d);
+ const cv=d.querySelector("canvas"), gl=cv.getContext("webgl2",{antialias:true});
+ if(!gl)throw new Error(name+" 需要 WebGL2");
+ gl.enable(gl.DEPTH_TEST); gl.clearColor(0,0,0,1);
+ return {d,cv,gl,tag};
+});
+function prog(gl,vs,fs,lab){
+ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+  if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(lab+": "+gl.getShaderInfoLog(o));return o};
+ const p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,vs));
+ gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
+ if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(lab+" 链接: "+gl.getProgramInfoLog(p));
+ return p;
+}
+async function load(v,i,tot){
+ const r=await fetch(`bin/${v.tag}.glb`); if(!r.ok)throw new Error(v.tag+" HTTP "+r.status);
+ const total=+r.headers.get("content-length")||0; const parts=[]; let got=0;
+ const rd=r.body.getReader();
+ for(;;){const{done,value}=await rd.read(); if(done)break; parts.push(value); got+=value.byteLength;
+  if(total){bar.style.width=(100*(i+got/total)/tot)+"%"; msg.textContent=v.tag+" "+(100*got/total|0)+"%";}}
+ const raw=new Uint8Array(got); let o=0; for(const c of parts){raw.set(c,o);o+=c.byteLength;}
+ const dv=new DataView(raw.buffer);
+ if(dv.getUint32(0,true)!==0x46546C67)throw new Error(v.tag+" 不是 GLB");
+ const jl=dv.getUint32(12,true);
+ const g=JSON.parse(new TextDecoder().decode(raw.subarray(20,20+jl)));
+ const binOff=20+jl+8;
+ const bv=k=>{const b=g.bufferViews[k]; return raw.subarray(binOff+b.byteOffset,binOff+b.byteOffset+b.byteLength);};
+ const prim=g.meshes[0].primitives[0], acc=g.accessors, gl=v.gl;
+ const pos=new Float32Array(bv(acc[prim.attributes.POSITION].bufferView).slice().buffer);
+ const idx=new Uint32Array(bv(acc[prim.indices].bufferView).slice().buffer);
+ const pr=prog(gl,VS,FS,v.tag);
+ const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+ const pb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,pb);
+ gl.bufferData(gl.ARRAY_BUFFER,pos,gl.STATIC_DRAW);
+ const lp=gl.getAttribLocation(pr,"p"); gl.enableVertexAttribArray(lp);
+ gl.vertexAttribPointer(lp,3,gl.FLOAT,false,0,0);
+ const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,idx,gl.STATIC_DRAW);
+ gl.bindVertexArray(null);
+ if(gl.getError()!==gl.NO_ERROR) throw new Error(v.tag+" 上传失败");
+ v.pr=pr; v.vao=vao; v.count=idx.length;
+ v.loc={mvp:gl.getUniformLocation(pr,"mvp"),eye:gl.getUniformLocation(pr,"eye")};
+}
+(async()=>{ for(let i=0;i<panes.length;i++) await load(panes[i],i,panes.length);
+ bar.style.width="0"; msg.textContent=""; document.body.dataset.ready="1";
+})().catch(e=>{msg.textContent="加载失败："+e.message;console.error(e);});
+function draw(){
+ const ce=[cam.tx+cam.dist*Math.cos(cam.el)*Math.sin(cam.az),
+           cam.ty+cam.dist*Math.sin(cam.el),
+           cam.tz+cam.dist*Math.cos(cam.el)*Math.cos(cam.az)];
+ for(const v of panes){
+  const {gl,cv}=v, w=cv.clientWidth,h=cv.clientHeight,dp=Math.min(devicePixelRatio||1,2);
+  if(cv.width!==w*dp||cv.height!==h*dp){cv.width=w*dp;cv.height=h*dp;}
+  gl.viewport(0,0,cv.width,cv.height); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  if(!v.pr) continue;
+  const mvp=mul(persp(1.0,cv.width/cv.height,V.radius*0.005,V.radius*40),
+                lookAt(ce,[cam.tx,cam.ty,cam.tz],[0,1,0]));
+  gl.useProgram(v.pr); gl.bindVertexArray(v.vao);
+  gl.uniformMatrix4fv(v.loc.mvp,false,new Float32Array(mvp));
+  gl.uniform3fv(v.loc.eye,new Float32Array(ce));
+  gl.drawElements(WIRE?gl.LINES:gl.TRIANGLES,v.count,gl.UNSIGNED_INT,0);
+  gl.bindVertexArray(null);
+ }
+ requestAnimationFrame(draw);
+}
+draw();
+let drag=null;
+addEventListener("mousedown",e=>{if(e.target.tagName==="CANVAS"){
+ drag={x:e.clientX,y:e.clientY,b:e.button}; e.preventDefault();}});
+addEventListener("mouseup",()=>drag=null);
+addEventListener("mousemove",e=>{if(!drag)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY;
+ if(drag.b===2){const k=cam.dist*0.0015;
+  cam.tx-=k*(dx*Math.cos(cam.az)); cam.tz+=k*(dx*Math.sin(cam.az)); cam.ty+=k*dy;}
+ else{cam.az-=dx*0.006; cam.el=Math.max(-1.5,Math.min(1.5,cam.el+dy*0.006));}});
+addEventListener("contextmenu",e=>e.preventDefault());
+addEventListener("wheel",e=>{e.preventDefault();cam.dist*=Math.exp(e.deltaY*0.001);},{passive:false});
+document.getElementById("wire").onchange=e=>{WIRE=e.target.checked?1:0;};
+</script>

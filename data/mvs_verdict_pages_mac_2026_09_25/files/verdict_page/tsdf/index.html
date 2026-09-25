@@ -1,0 +1,197 @@
+<meta charset="utf-8"><title>mvgZeroDTU TSDF 网格</title>
+<style>
+ html,body{margin:0;background:#000;color:#ddd;font:13px/1.5 -apple-system,"PingFang SC",sans-serif}
+ header{padding:8px 12px;background:#111;border-bottom:1px solid #222}
+ h1{margin:0 0 4px;font-size:15px;color:#fff} .hint{color:#8a8a8a;font-size:12px}
+ #ctl{display:flex;gap:14px;align-items:center;padding:6px 12px;background:#0d0d0d;
+      border-bottom:1px solid #222;position:sticky;top:0;z-index:5}
+ #grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#222;
+       height:calc(100vh - 118px)}
+ .pane{position:relative;background:#000;overflow:hidden}
+ canvas{display:block;width:100%;height:100%}
+ .cap{position:absolute;left:8px;top:6px;right:8px;pointer-events:none;text-shadow:0 1px 3px #000}
+ .cap b{color:#fff;font-size:13px} .cap div{color:#b0b0b0;font-size:11px;margin-top:2px}
+ .pts{position:absolute;left:8px;bottom:6px;color:#7a7a7a;font-size:11px;
+      font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000}
+ #bar{height:3px;background:#1a5fb4;width:0;transition:width .12s} #barw{background:#181818}
+</style>
+<header><h1>mvgZeroDTU 权重 — TSDF 网格(生产基线) vs 稠密点云对照</h1>
+<div class="hint">拖拽旋转 · 滚轮缩放 · 右键平移 —— 两窗相机同步。左窗 = 132 帧深度图(官方 filter.py
+photo[0.3,0.5,0.5]∧geo≥3 门 + 深度平均)→ Open3D ScalableTSDFVolume(6mm 体素,24mm 截断)提取的三角网格,
+屏幕空间导数法线 + 半朗伯光照。右窗 = 同权重稠密点云(dense_mvgZeroDTU.ply,零降采样),同一坐标系直接对照。</div></header>
+<div id="ctl"><span>点大小</span><input id="ps" type="range" min="0.5" max="4" step="0.1" value="1.3">
+ <span id="msg" style="color:#8a8a8a"></span></div>
+<div id="barw"><div id="bar"></div></div>
+<div id="grid"></div>
+<script>
+let PS=1.3;
+let V=null, cam=null;
+const bar=document.getElementById("bar"), msg=document.getElementById("msg");
+
+const mesh_VS=`attribute vec3 p;attribute vec3 c;uniform mat4 mvp;uniform mat4 mv;
+ varying vec3 vc;varying vec3 vPos;
+ void main(){vec4 vp=mv*vec4(p,1.0);vPos=vp.xyz;gl_Position=mvp*vec4(p,1.0);vc=c;}`;
+const mesh_FS=`#extension GL_OES_standard_derivatives : enable
+ precision mediump float;varying vec3 vc;varying vec3 vPos;
+ void main(){
+  vec3 n=normalize(cross(dFdx(vPos),dFdy(vPos)));
+  vec3 L=normalize(vec3(0.35,0.55,0.75));
+  float ndl=abs(dot(n,L));
+  vec3 col=vc*(0.32+0.68*ndl);
+  gl_FragColor=vec4(col,1.0);
+ }`;
+const pc_VS=`attribute vec3 p;attribute vec3 c;uniform mat4 mvp;uniform float ps;varying vec3 vc;
+ void main(){gl_Position=mvp*vec4(p,1.0);gl_PointSize=ps;vc=c;}`;
+const pc_FS=`precision mediump float;varying vec3 vc;
+ void main(){vec2 d=gl_PointCoord-vec2(0.5);if(dot(d,d)>0.25)discard;gl_FragColor=vec4(vc,1.0);}`;
+
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const crs=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const nrm=a=>{const l=Math.hypot(...a)||1;return[a[0]/l,a[1]/l,a[2]/l]};
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function lookAt(e,c,u){const f=nrm(sub(c,e)),s=nrm(crs(f,u)),v=crs(s,f);
+ return [s[0],v[0],-f[0],0, s[1],v[1],-f[1],0, s[2],v[2],-f[2],0,
+         -dot3(s,e),-dot3(v,e),dot3(f,e),1];}
+function persp(fy,a,zn,zf){const t=1/Math.tan(fy/2);
+ return [t/a,0,0,0, 0,t,0,0, 0,0,(zf+zn)/(zn-zf),-1, 0,0,2*zf*zn/(zn-zf),0];}
+const mul=(A,B)=>{const O=new Array(16).fill(0);
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++)for(let k=0;k<4;k++)O[c*4+r]+=A[k*4+r]*B[c*4+k];return O};
+
+async function grab(url,lab,i,tot){
+ const r=await fetch(url), n=+r.headers.get("content-length")||0, rd=r.body.getReader();
+ const cs=[]; let got=0;
+ for(;;){const{done,value}=await rd.read(); if(done)break; cs.push(value); got+=value.length;
+  if(n){bar.style.width=(100*(i+got/n)/tot)+"%"; msg.textContent=lab+" "+(100*got/n|0)+"%";}}
+ const b=new Uint8Array(got); let o=0; for(const c of cs){b.set(c,o); o+=c.length;}
+ return b.buffer;
+}
+
+(async()=>{
+ const META=await (await fetch("bin/meta.json")).json();
+ const M=META.tsdf, MC=META.tsdf_clean, P=META.mvgZeroDTU;
+ // 视轴参数取网格的 med/radius(与点云同坐标系,场景本身相近)
+ V={cx:M.med[0],cy:M.med[1],cz:M.med[2],radius:M.radius};
+ cam={az:0.6,el:0.35,dist:V.radius*2.4,tx:V.cx,ty:V.cy,tz:V.cz};
+
+ const grid=document.getElementById("grid");
+ function makePane(name, subcap, ptsLabel, isMesh){
+  const d=document.createElement("div"); d.className="pane";
+  d.innerHTML=`<canvas></canvas><div class="cap"><b>${name}</b><div>${subcap}</div></div>
+    <div class="pts">${ptsLabel}</div>`;
+  grid.appendChild(d);
+  const cv=d.querySelector("canvas");
+  const gl=cv.getContext("webgl",{antialias:true});
+  if(isMesh){
+   gl.getExtension("OES_element_index_uint");
+   gl.getExtension("OES_standard_derivatives");
+  }
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+    if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o};
+  const pr=gl.createProgram();
+  gl.attachShader(pr,sh(gl.VERTEX_SHADER,isMesh?mesh_VS:pc_VS));
+  gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,isMesh?mesh_FS:pc_FS));
+  gl.linkProgram(pr); gl.useProgram(pr);
+  gl.enable(gl.DEPTH_TEST); gl.clearColor(0,0,0,1);
+  return {d,cv,gl,pr,isMesh,n:0,
+    loc:{p:gl.getAttribLocation(pr,"p"),c:gl.getAttribLocation(pr,"c"),
+         mvp:gl.getUniformLocation(pr,"mvp"),
+         mv:isMesh?gl.getUniformLocation(pr,"mv"):null,
+         ps:isMesh?null:gl.getUniformLocation(pr,"ps")}};
+ }
+
+ const meshPane=makePane("TSDF 网格(mvgZeroDTU)",
+   "Open3D ScalableTSDFVolume · voxel 6mm · trunc 24mm · 官方 filter.py 门",
+   `${M.n.toLocaleString()} 顶点 · ${M.n_tri.toLocaleString()} 三角面`, true);
+ const cleanPane=makePane("TSDF 清理版(≥max(200, 0.1%)连通域)",
+   "cluster_connected_triangles · 官方推荐后处理 · 93,666 域→8 域 · 删面 11.26%",
+   `${MC.n.toLocaleString()} 顶点 · ${MC.n_tri.toLocaleString()} 三角面`, true);
+ const pcPane=makePane("稠密点云(mvgZeroDTU)对照",
+   "dense_mvgZeroDTU.ply · 全分辨率零降采样",
+   `${P.n.toLocaleString()} 点`, false);
+
+ const tot=8; // mesh×2: pos,col,idx  pc: pos,col
+ const meshPos=await grab("bin/tsdf.pos","网格位置",0,tot);
+ const meshCol=await grab("bin/tsdf.col","网格颜色",1,tot);
+ const meshIdx=await grab("bin/tsdf.idx","网格索引",2,tot);
+ const cleanPos=await grab("bin/tsdf_clean.pos","清理版位置",3,tot);
+ const cleanCol=await grab("bin/tsdf_clean.col","清理版颜色",4,tot);
+ const cleanIdx=await grab("bin/tsdf_clean.idx","清理版索引",5,tot);
+ const pcPos=await grab("/bin/mvgZeroDTU.pos","点云位置",6,tot);
+ const pcCol=await grab("/bin/mvgZeroDTU.col","点云颜色",7,tot);
+
+ {
+  const g=meshPane.gl;
+  meshPane.n=M.n; meshPane.nTri=M.n_tri;
+  meshPane.pbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,meshPane.pbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Float32Array(meshPos),g.STATIC_DRAW);
+  meshPane.cbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,meshPane.cbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Uint8Array(meshCol),g.STATIC_DRAW);
+  meshPane.ibuf=g.createBuffer(); g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,meshPane.ibuf);
+  g.bufferData(g.ELEMENT_ARRAY_BUFFER,new Uint32Array(meshIdx),g.STATIC_DRAW);
+ }
+ {
+  const g=cleanPane.gl;
+  cleanPane.n=MC.n; cleanPane.nTri=MC.n_tri;
+  cleanPane.pbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,cleanPane.pbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Float32Array(cleanPos),g.STATIC_DRAW);
+  cleanPane.cbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,cleanPane.cbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Uint8Array(cleanCol),g.STATIC_DRAW);
+  cleanPane.ibuf=g.createBuffer(); g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,cleanPane.ibuf);
+  g.bufferData(g.ELEMENT_ARRAY_BUFFER,new Uint32Array(cleanIdx),g.STATIC_DRAW);
+ }
+ {
+  const g=pcPane.gl;
+  pcPane.n=P.n;
+  pcPane.pbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,pcPane.pbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Float32Array(pcPos),g.STATIC_DRAW);
+  pcPane.cbuf=g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER,pcPane.cbuf);
+  g.bufferData(g.ARRAY_BUFFER,new Uint8Array(pcCol),g.STATIC_DRAW);
+ }
+ bar.style.width="0"; msg.textContent="";
+
+ const panes=[meshPane,cleanPane,pcPane];
+ function draw(){
+  for(const v of panes){
+   const {gl,cv}=v, w=cv.clientWidth, h=cv.clientHeight, dp=Math.min(devicePixelRatio||1,2);
+   if(cv.width!==w*dp||cv.height!==h*dp){cv.width=w*dp;cv.height=h*dp;}
+   gl.viewport(0,0,cv.width,cv.height); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+   if(!v.n||!v.pbuf) continue;
+   const ce=[cam.tx+cam.dist*Math.cos(cam.el)*Math.sin(cam.az),
+             cam.ty+cam.dist*Math.sin(cam.el),
+             cam.tz+cam.dist*Math.cos(cam.el)*Math.cos(cam.az)];
+   const viewM=lookAt(ce,[cam.tx,cam.ty,cam.tz],[0,1,0]);
+   const projM=persp(1.0,cv.width/cv.height,V.radius*0.005,V.radius*40);
+   const mvp=mul(projM,viewM);
+   gl.useProgram(v.pr);
+   gl.uniformMatrix4fv(v.loc.mvp,false,new Float32Array(mvp));
+   if(v.isMesh) gl.uniformMatrix4fv(v.loc.mv,false,new Float32Array(viewM));
+   else gl.uniform1f(v.loc.ps,PS*dp);
+   gl.bindBuffer(gl.ARRAY_BUFFER,v.pbuf);
+   gl.vertexAttribPointer(v.loc.p,3,gl.FLOAT,false,0,0); gl.enableVertexAttribArray(v.loc.p);
+   gl.bindBuffer(gl.ARRAY_BUFFER,v.cbuf);
+   gl.vertexAttribPointer(v.loc.c,3,gl.UNSIGNED_BYTE,true,0,0); gl.enableVertexAttribArray(v.loc.c);
+   if(v.isMesh){
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,v.ibuf);
+    gl.drawElements(gl.TRIANGLES,v.nTri*3,gl.UNSIGNED_INT,0);
+   } else {
+    gl.drawArrays(gl.POINTS,0,v.n);
+   }
+  }
+  requestAnimationFrame(draw);
+ }
+ draw();
+})();
+
+let drag=null;
+addEventListener("mousedown",e=>{if(e.target.tagName==="CANVAS"){
+ drag={x:e.clientX,y:e.clientY,b:e.button}; e.preventDefault();}});
+addEventListener("mouseup",()=>drag=null);
+addEventListener("mousemove",e=>{if(!drag||!cam)return;
+ const dx=e.clientX-drag.x,dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY;
+ if(drag.b===2){const k=cam.dist*0.0015;
+  cam.tx-=k*(dx*Math.cos(cam.az)); cam.tz+=k*(dx*Math.sin(cam.az)); cam.ty+=k*dy;}
+ else{cam.az-=dx*0.006; cam.el=Math.max(-1.5,Math.min(1.5,cam.el+dy*0.006));}});
+addEventListener("contextmenu",e=>e.preventDefault());
+addEventListener("wheel",e=>{e.preventDefault(); if(cam) cam.dist*=Math.exp(e.deltaY*0.001);},{passive:false});
+document.getElementById("ps").oninput=e=>{PS=parseFloat(e.target.value);};
+</script>
