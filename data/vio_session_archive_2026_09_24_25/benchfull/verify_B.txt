@@ -1,0 +1,78 @@
+== Info.plist
+true
+com.kyle.arloopbench
+== Dart AOT 类名(App.framework/App)
+  OfficialARCapturePage              6
+  AetherAppShell                     4
+  PocketWorldApp                     1
+  _AuthGate                          4
+  NativeDenseStageLauncher           2
+  PwDenseFfi                         2
+  PhotoArchiveCoordinator            2
+  OfficialArchiveBackgroundRuntime   1
+  SfmLiveRecon                       4
+  VioDiagnosticsRecorder             2
+  MePage                             4
+  ArLoopBenchApp                     0
+  LodDebugPage                       0
+  BenchReplayPage                    0
+  ZeroArkitCaptureProbePage          0
+  ArMinimalLoopPage                  0
+== Runner 符号(nm -gU 定义的)
+  _wgpuCreateInstance$     1
+  _pwsfm_                  25
+  _aether_sfm_             0
+  _XRSLAM                  5
+  _pw_jxl_                 12
+  _pw_zpaq_                8
+  _pw_lepton_              7
+  _pw_sqlite_              10
+  _pw_telemetry$           1
+  _pwlod_                  17
+  _pw_camera_slot_         17
+  _pw_bench_replay_        5
+  _OrtGetApiBase$          1
+  _pw_vt_                  10
+  _PWXrslamTransport       10
+  wgpuCreateInstance 全部定义(含本地符号): 1
+== Runner 里的生产 Swift / 通道字符串
+  pocketworld_official_arkit                   3
+  pocketworld_vio_timebase                     1
+  pocketworld_vio_thermal                      2
+  pocketworld_official_archive_background      0
+  aether_texture                               1
+  OfficialAetherARKitPlugin                    6
+  PwVioSlamFeeder                              5
+  full-chain 168 plugins registered            1
+  pw_lod_texture                               0
+== 与 168 出货 Runner 的字符串指纹(含 Official/PwVio/pocketworld_ 的字符串,台架包是否全都有)
+  168 指纹串      104 条,台架缺        3 条
+    缺: [AppDelegate] archive background registrar unavailable
+    缺: [OfficialArchiveBackgroundTask] registration rejected
+    缺: pocketworld_official_archive_background
+== 嵌入框架 vs 168(去签名后 __text sha)
+  PWOfficialSfm  bench=38c1d8434739feb2 168=38c1d8434739feb2 SAME
+  PWDense        bench=8bcbf79d5a063553 168=8bcbf79d5a063553 SAME
+  PWOnnxRuntime  bench=aee4ff6abe49ccb8 168=aee4ff6abe49ccb8 SAME
+  casdiffmvs.onnx SAME
+  casdiffmvs_feat.onnx SAME
+  casdiffmvs_rest.onnx SAME
+== Frameworks 目录
+App.framework
+Flutter.framework
+PWDense.framework
+PWOfficialSfm.framework
+PWOnnxRuntime.framework
+path_provider_foundation.framework
+sensors_plus.framework
+thermion_dart.framework
+== 链接图:Dawn 目标文件来源
+  目标文件总数     3374
+  来自 libaether3d_ffi.a: 706
+  来自 Release-iphoneos/libwebgpu_dawn.a: 0
+  来自 Debug-iphoneos/libwebgpu_dawn.a: 0
+  来自 libpw_gpu_frontend: 0
+  来自 libpw_lod_: 12
+  定义 _wgpuCreateInstance 的目标文件:
+    定义条数: 1
+    [699] /Users/kaidongwang/Developer/arloopbench/ios/Pods/../../../dist/libs/ios-arm64/libaether3d_ffi.a(webgpu_dawn_native_proc.o)

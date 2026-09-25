@@ -1,0 +1,42 @@
+bench(168-fixes): ios-arm64 PWOfficialSfm = a313ede0 + 补丁 B + fixC 核 + fixD 载体(重新构建,去签名)
+
+构建方式(与 165..168 出货核同一配方,台账 ~/Developer/pw_builds_20260904/README.md:762-768):
+  核 libpwofficial_core.a:Aether3D a313ede0(出货核的源码版本)本地克隆,glomap_vendor 用
+    Unix Makefiles + third_party/ceres/cmake/iOS.cmake(OS/arm64/iOS 26.2/Release),
+    AETHER_BUILD_PRECLAMP_STAGE_B_PRIVATE=ON、AETHER_COMPILE_DESCRIPTOR_RESIDENCY_V1=ON,
+    源目录经 39 字符长的符号链接(与原 /Users/kaidongwang/Developer/aether_cpp 等长);
+    pwofficial_core(180 个目标文件)+ pwofficial_stage_b_private(3 个)libtool -static 合成 184 成员。
+  GPU 载体 libpwofficial_gpu_extract.a:a313ede0 CMakeLists "P3a1 OFFICIAL GPU CARRIER" 目标的最小复刻,
+    Xcode 生成器 iOS/arm64/部署 14.0/Release(目标级构建设置与出货载体的 Xcode 工程逐项相同)。
+  框架:本分支 vendor/official_sfm/scripts/build_xcframework.sh,Dawn Release 23c7437d… /
+    Ceres ac61cdcf… / glog dc35639b…(三个归档 sha 与钉子逐字相同)。
+
+复现闸(打补丁前先做,通过):同配方编未打补丁的 a313ede0 ⇒
+  载体整份 .a 与出货载体(build-ios-device-dawn/Release-iphoneos,sha256 9b5315dc…)逐字节相同;
+  核 180 个目标文件里 178 个与 09-11 出货血统逐字节相同(路径串归一后),另 2 个正是 a313ede0
+  迭代计数刀改的两个 TU;stage-B 3/3 相同;
+  链出的框架与 8437faf(168 出货核去签名)同尺寸 20,774,960 B,__TEXT,__text sha256 同为 38c1d843…,
+  36 个导出、46,562 个符号(地址+类型+名字)全同,__TEXT/__DATA 常量段全同;
+  全文件只差 78 处等长源码路径串、__DATE__/__TIME__、LC_UUID,以及去签名留下的 __LINKEDIT vmsize。
+
+本次补丁(源码都在研究仓,打在 a313ede0 上无冲突;a313ede0 是 7dc00642 的父提交,
+补丁涉及的文件两者逐字节相同):
+  补丁 B  data/sfm-device-align-20260924@7b1f8a0 patch_B_device_align_v1.diff
+          (finalize 末尾 LO-RANSAC Sim3 对齐到设备相机中心 + 闸;σ=0.040 m 经上游逐先验协方差输入)
+  fixC 核 data/rootcause-fixes-20260924@8cb0ca9 patch_C_core_reg_evidence_on_B_v1.diff(只取 aether_cpp 部分)
+          (add_frame_v2 信任契约、位姿库 bit0、不可信帧走上游 RegisterNextImage;
+           臂 a OFFICIAL_AETHER_REG_EVIDENCE / 臂 b OFFICIAL_AETHER_FINALIZE_VIA_RESUME 默认都关,待用户拍板)
+  fixD    同分支 fixD_gss_2pass_default.diff(tools/sift_pyramid_dawn.cc:默认上游 VLFeat 两遍模糊,
+          融合核只在 OFFICIAL_AETHER_GSS_FUSED=1 时开)
+  打补丁后:核只变 3 个目标文件(official_aether_sfm_c / arkit_pose_store_v1 / official_bundle_adjustment_ceres),
+  载体只变 sift_pyramid_dawn.o;导出 36→39(+pwofficial_add_frame_v2 / pwofficial_add_jpeg_frame_v2 /
+  pwofficial_registration_evidence_stats_v1)。
+
+只换 ios-arm64 这一片的二进制(去签名态,与 vendor 惯例一致);模拟器片、Headers、Info.plist 不动(同 8437faf)。
+新文件 sha256 8f310e83ade72f5b34314e9e15334def8991a761197ab26e278bf4dc6347c539,__TEXT,__text sha256 c71529ad797ddd6c49d54c6db261e3dc88aa6dabc89d7fdd20e91e2aa60a6adf。
+
+仅台架用,不上生产。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,16 @@
+bench(168-fixes): fixB —— 设备跟踪会话切分 deviceSessionId(叠在 fixA 上,原样打补丁)
+
+来源:研究仓 data/rootcause-fixes-20260924 @ 8cb0ca9,
+  data/rootcause_fixes_2026_09_24/fixB_device_session/patch_fixB_device_session_onA_v1.diff
+  (交付版,必须先打 A;pre-image = A 的 post-image)。git apply 干净,逐字未改。
+
+内容(补丁自述):孤儿采集恢复 / 补拍 / 整项目重喂会把旧 ARKit 会话的照片带旧世界系外参重喂,
+一个模型混两个世界系。Dart 侧逐张记 deviceSessionId(落 official_device_sessions.jsonl),
+只有参考会话的帧 devicePoseTrusted=true,其余走 fixA 的不可信通道;续跑把喂帧时的信任位原样读回。
+核不需要会话 id。
+
+仅台架用,不上生产。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

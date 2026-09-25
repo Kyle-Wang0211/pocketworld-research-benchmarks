@@ -1,0 +1,36 @@
+台架 LiDAR 米尺:arloopbench 录制器(含 sceneDepth)+ 离线深度尺子(🔴 bench-only ruler)
+
+🔴 LiDAR 只在台架里当研发期米尺,量 XRSLAM / ARKit 在我们自己录制上的绝对尺度;
+永不进产品代码、产品管线、产品提案。每个新定义点都写着这句话。
+
+录制器(只编进 arloopbench,生产 Runner 不编):
+- ios/Runner/PwBenchLidarRecordingWriter.swift:BasaltVIOBench DeviceRecordingWriter @76b8d47
+  (09-22 子 agent D 加了深度、从未装机)的移植,偏离 W1–W9 逐条写在文件头:去掉从不调用的
+  HEVC 编码器;深度独立队列;深度步长 6(60 fps ⇒ 10 Hz,写入量 +1.5% 而非 +8.9%);按 Apple 文档
+  核实 DepthFloat32 / OneComponent8 再拷;depth.pwvi 行加 camera_frame / ar_frame / k_image /
+  k_depth;intrinsics.jsonl 行加 arkit_tracking;计时统计;录完导出 ruler_subset/(Mac 只拉 ~400 MB)。
+  Codable 类型复用回放装载器 PwBenchReplayRecording.swift 的那一份(写读同一套)。
+- ios/Runner/PwBenchLidarSession.swift:ARKitReferenceSession 的 record 臂移植(生产 hires43 选法、
+  supportsFrameSemantics 先查再插 .sceneDepth、不用 smoothedSceneDepth 并引 Apple 原话说明原因、
+  CoreMotion 陀螺驱动 IMU),专用串行 delegate 队列,recorder_timing.json 量「开深度扰不扰动帧流」,
+  4 个 @_cdecl pw_bench_lidar_*。录制落 Documents/replay_recordings/ ⇒ 回放页可直接在手机上出 XRSLAM 位姿。
+- lib/bench_lidar/:录制页 BenchLidarRecordPage(时长 / 深度开关 / 开始停止 / 静置 ABBA 扰动自测)
+  + dart:ffi 绑定。由台架 main.dart 的 const PW_LIDAR_RULER_BENCH 分支引用。
+
+离线尺子(Mac):
+- tool/bench/lidar_ruler/lidar_ruler.py:depth_ruler.py(research @76b8d47)的特征/三角化/深度取值/
+  monodepth2 中位数对齐原样 import,换编排:一次匹配多条轨迹共用;按 09-24 规范估计器的约定配位姿
+  (XRSLAM BODY→相机中心、逐帧账或 td+exposure/2 反查帧时间、丢 ARKit 非跟踪行、带符号 k);
+  闸 G1–G4、内建阳性对照(×1.05)与阴性对照(深度洗牌必须被拒)、noise_floor.py 原法的轨迹残差
+  循环平移噪声底(经尺子重估)、与规范 Sim3 的交叉核对。
+  🔴 第一版噪声底放在帧对基线空间,对中位数结构性退化(带宽恒 0),已改,文件头记着。
+- test_lidar_ruler_synth.py:合成 14 条判据全过(ARKit 轴真值 k=1.0001、XRSLAM BODY 0.88→0.8822、
+  逐帧账与 td 映射同值、×1.05 恢复、深度洗牌被拒、跟踪过滤、LiDAR 噪声下 ±1.5%、LiDAR ×1.02 原样
+  进 k(局限自证)、无深度录制被拒、Swift 子集导出器导出的子集上同值)。
+- tool/bench/lidar_swift_tests:写器 5 条 XCTest 全过(含写→回放装载器闭环、行填充、错格式、子集)
+  + 子集导出器 + 写器 A/B 测量工具。
+- tool/bench/pull_lidar_recording.sh:只拉 ruler_subset/ 与回放位姿,然后跑尺子(未在真机上跑过)。
+
+未装机、未推送。
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

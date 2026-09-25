@@ -1,0 +1,48 @@
+commit 46f56a39d0ecb8b226e5026f7afe687dc8726d62
+Author: manorajesh <mano@raje.sh>
+Date:   Fri Jun 5 13:38:53 2026 -0700
+
+    Enable the per-frame visual PnP in FeatureTracker::solve_pnp so the live pose is anchored to the map landmarks instead of pure IMU dead-reckoning.
+    
+    solve_pnp assembled the reprojection-prior problem but never called solver->solve() (a no-op since the first commit), so the frontend output pose was the last optimized keyframe pose plus IMU integration forward to now. While moving, the backend re-keyframes almost every frame so that dead-reckoning leg is short; when still, frames become subframes, the backend stops emitting keyframes, and the growing dead-reckoning leg shows up as the tracked features floating.
+    
+    Add the missing solve(), make it a pose-only PnP (add_frame_states with_motion=false), and skip it below 6 constraints to avoid a degenerate solve being worse than the IMU prediction. With LiDAR-anchored landmark depth, translation is observable even at zero parallax, so the PnP pins the still pose. Output-only: solve_pnp runs on the throwaway frontend keymap and the temp frame is erased right after, so it never touches the backend optimization.
+
+diff --git a/xrslam/src/xrslam/core/feature_tracker.cpp b/xrslam/src/xrslam/core/feature_tracker.cpp
+index 7d91c00..8fa498a 100644
+--- a/xrslam/src/xrslam/core/feature_tracker.cpp
++++ b/xrslam/src/xrslam/core/feature_tracker.cpp
+@@ -285,16 +285,32 @@ void FeatureTracker::solve_pnp() {
+ 
+     auto solver = Solver::create();
+ 
+-    solver->add_frame_states(latest_frame);
++    // Only the latest frame's pose is free; the mirrored keyframes and their
++    // landmarks are fixed (see mirror_map). This is a pure PnP, so no motion state.
++    solver->add_frame_states(latest_frame, false);
+ 
++    size_t factor_count = 0;
+     for (size_t j = 0; j < latest_frame->keypoint_num(); ++j) {
+         if (Track *track = latest_frame->get_track(j)) {
+             if (track->all_tagged(TT_VALID, TT_TRIANGULATED)) {
+                 solver->put_factor(Solver::create_reprojection_prior_factor(
+                     latest_frame, track));
++                ++factor_count;
+             }
+         }
+     }
++
++    // Visually refine the live output pose against the (LiDAR-depth-anchored) map
++    // landmarks every frame. Without this solve the per-frame pose is pure IMU
++    // dead-reckoning forward from the last backend keyframe; when the device is
++    // still the backend stops emitting keyframes, so that dead-reckoning leg grows
++    // and its noise shows up as the tracked features floating. Known landmark depth
++    // makes translation observable even at zero parallax, so the PnP pins it.
++    // Skip when too few constraints, where a degenerate PnP would be worse than the
++    // IMU prediction we already have.
++    if (factor_count >= 6) {
++        solver->solve();
++    }
+ }
+ 
+ } // namespace xrslam

@@ -1,0 +1,114 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品管线。
+
+  渲染 0/80
+  渲染 20/80
+  渲染 40/80
+  渲染 60/80
+
+══ A:无噪声 LiDAR,ARKit + XRSLAM(td+exposure/2 映射)══
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 80 行 ↔ 相机 80 帧;配上 80,配不上 0
+  轨迹 arkit: 75 帧配上  {"rows": 80, "zero_translation_dropped": 3, "not_normal_dropped": 2, "tracking_key_present": true, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/rec30/synth/run-synthetic-lidar/arkit_poses.tum"}
+  轨迹 xr: 80 帧配上  {"rows": 80, "mapping": "shift", "unmapped_rows": 0, "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/rec30/synth/xr_body.tum", "extrinsic_source": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/rec30/synth/xr.yaml", "td_s": 0.008, "exposure_half": true}
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):25 / 录制帧 80 / 深度 27 张
+帧对 21(间隔 ~0.5s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 1.0001  ⇒ 轨迹比米制 +0.01%   有效帧对 21/21
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0005  帧对内 0.0011
+  分段 k [1.0000424166816455, 1.0000806302245726, 1.0002316817623882, 0.9995364275777561]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.0352 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.16709765046489622, '-1': 0.08423647260162502, '1': 0.09354254499895254, '2': 0.20559454976377411, '0': 0.0004706105502172715}
+
+── xr ── verdict: valid
+  k(轨迹/米) = 0.8822  ⇒ 轨迹比米制 -11.78%   有效帧对 13/21
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.8767, 0.8899]   NC sd 0.35%   PC k0=1.05 恢复 1.0507 ✅
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0195  帧对内 0.0021
+  分段 k [0.8908237233871046, 0.8821880887581268, 0.8727563622346064, 0.8852926492531814]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=0.9539 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.11421568433002825, '-1': 0.06576979910275392, '1': 0.04936718576839393, '2': 0.12019396906966853, '0': 0.019525931608230105}
+
+交叉核对 arkit/xr:尺子比值 1.1336 vs 规范 Sim3 1.1389(差 -0.47%,Sim3 ATE 0.26 cm)
+
+交叉核对 xr/arkit:尺子比值 0.8821 vs 规范 Sim3 0.8781(差 +0.45%,Sim3 ATE 0.30 cm)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/rec30/synth/out_A/lidar_ruler_report.json
+
+  ✅ T1 ARKit 轴真值 k=1.00008(期望 1.0000,±1%),verdict valid
+  ✅ T2 XRSLAM BODY k=0.88219(期望 0.88,±1%),verdict valid
+  ✅ T4 arkit:相机中心 ×1.05 ⇒ k 比值 1.05000(±0.5%)
+  ✅ T4 xr:相机中心 ×1.05 ⇒ k 比值 1.05000(±0.5%)
+  ✅ T4b XRSLAM 噪声底:NC 带 [0.9937787297726073, 1.0087733270263628](sd 0.354%,必须 > 0 —— 第一版是 0,见 lidar_ruler 文件头),PC 恢复 1.0507,95% 区间 [0.8767, 0.8899] 盖住真值 0.88
+  ✅ T5 arkit:深度洗牌被拒(帧对间 IQR 0.3135434085588329,帧对内 0.048864269201202896,闸 {'G1_pairs': True, 'G2_between_rel_iqr': False, 'G3_within_rel_iqr': True})
+  ✅ T5 xr:深度洗牌被拒(帧对间 IQR 0.16478301832380407,帧对内 0.03581171778495261,闸 {'G1_pairs': True, 'G2_between_rel_iqr': False, 'G3_within_rel_iqr': True})
+  ✅ T6 交叉核对 k_xr/k_arkit=0.88212 vs 规范 Sim3 0.87814(差 +0.453%)
+  ✅ T7 跟踪过滤:平移为 0 丢 3、非 normal 丢 2(期望 3 / 2)
+
+══ B:同一条 XRSLAM,走逐帧账映射 ══
+  ✅ T3 逐帧账映射 k=0.88219 vs td 映射 0.88219
+
+══ G(rec30):XRSLAM CAMERA 位姿按录制帧 t_ns 精确键控(--xrslam-camera)══
+  ✅ T12 精确键控 k=0.88219(期望 0.88,±1%),verdict valid,闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True},×1.05 1.05000,洗牌被拒 True,噪声底 PC 1.0506631592862181
+  ✅ T12 缺位姿点数:缺 5(收了没跟踪 5 / 没收 0),期望 5/5/0
+  ✅ T12b 精确键控 k=0.88219 vs BODY+逐帧账 k=0.88219(≤0.1%)
+  ✅ T13 反例:引擎位姿全落在无深度帧上 ⇒ 尺子拒绝(exit 1),不插值
+
+══ C:LiDAR 逐像素 1% 噪声 + 5% 野值 ══
+  ✅ T8 噪声下 ARKit k=1.00160、XRSLAM k=0.88364(±1.5%),verdict ['valid', 'valid']
+
+══ D:LiDAR 整体偏 ×1.02(局限自证)══
+  ✅ T9 LiDAR ×1.02 ⇒ ARKit k=0.98047(期望 1/1.02=0.98039):LiDAR 的系统偏差原样进 k
+
+══ E:没有深度的老录制 ══
+  ✅ T10 无深度录制被拒(exit 1)
+
+══ F:Swift 子集导出器 → 在 ruler_subset/ 上跑 ══
+{
+  "bench_only_notice" : "🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品管线,也不作为任何产品方案的一部分",
+  "copied" : [
+
+  ],
+  "depth_rows" : 27,
+  "frames" : 9,
+  "frames_bin_bytes" : 24883200,
+  "frames_bin_sha256" : "f33279d7321d1b5bce0e272ee5a606a5a2d1ff2cc93c132686bb51c9aed96568",
+  "linked" : [
+    "recording_manifest.json",
+    "intrinsics.jsonl",
+    "arkit_poses.tum",
+    "imu.csv",
+    "depth.bin",
+    "depth_conf.bin",
+    "depth.pwvi"
+  ],
+  "min_spacing_s" : 0.25,
+  "not_replayable_reason" : "recording_manifest.json 描述的是整份录制;子集只给离线尺子",
+  "out_name" : "ruler_subset",
+  "schema" : "pw.bench.lidar-ruler-subset\/1",
+  "source_frame_count" : 80,
+  "source_recording_id" : "synthetic-lidar-ruler",
+  "xrslam_admission" : {
+    "admitted" : 80,
+    "camera_hz" : 30,
+    "camera_rows" : 80,
+    "depth_rows_not_admitted" : 0,
+    "depth_rows_with_luma" : 27,
+    "every_subset_frame_admitted" : true,
+    "fed" : 80,
+    "first_imu_ns" : 78685112068208,
+    "gate_source" : "PwBenchLidarRecordingWriter.xrslamGateCopy",
+    "gated_out" : 0,
+    "leading_without_imu_dropped" : 0,
+    "limit_frames" : 0,
+    "rule" : "phone replay: camera_index rows (limit_frames prefix) → drop t < first IMU → PwXrslamOfficialFeed.admits(pts=Double(t_ns)*1e-9): reject if pts - last_admitted < 0.8\/R"
+  }
+}
+ 
+  ✅ T11 子集上 ARKit k=1.00019、XRSLAM k=0.88015;子集帧 9
+  ✅ T11b 子集 9 帧:有引擎位姿 8,没收 0;k=0.88015,verdict valid
+
+✅ lidar_ruler 合成验证通过
+   摘要 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/rec30/synth/synth_summary.json

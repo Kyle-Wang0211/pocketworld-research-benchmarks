@@ -1,0 +1,35 @@
+bench(168): ios-arm64 PWOfficialSfm = 168 实际出货的那份核(去签名)—— 源码树里 vendor 的是更旧的 09-08 版
+
+为什么有这个提交
+  86a45cf 是 pw-dense-stage 工作树的纯源码快照(2137 文件逐字节对上,09-24 复核仍成立),
+  但 168 出货包里的 SfM 核不是源码树 vendor/official_sfm 里那份:
+    * 源码树(= 86a45cf = pw-dense-stage):56,181,480 B,__TEXT,__text sha256
+      231c25d6927ea184d112915d92fa337d7176a6b450cfb77e3b8710cdc630f897,编译戳 "Sep  8 2026 10:28:19",
+      导出 35 个,无 _pwofficial_finalize_progress。
+    * 168 出货:20,834,048 B,__text sha256
+      38c1d8434739feb22c6cd7dc433f3c798261305d543c2fe8c0bb981016914d68,编译戳 "Sep 16 2026 10:55:14",
+      导出 36 个 = 上面 35 个 + _pwofficial_finalize_progress。165/166/167/168/169/170 六个包同一份。
+  flutter build ios 不重链 PWOfficialSfm(podspec vendor 预制 xcframework),165 的核在仓外
+  scratch 重建后直接进包,没回写 vendor(台账 ~/Developer/pw_builds_20260904/README.md:762-767)。
+  台架要镜像「168 出货态」,所以把出货那份核放进来;86a45cf 仍是纯源码快照,本提交是其上唯一改动。
+
+来源与搬法
+  源:~/Developer/pw_builds_20260904/Runner-168-feature-reuse.app/Frameworks/PWOfficialSfm.framework/PWOfficialSfm
+      (签名态 sha256 91044707d36201b60888f56c7072a798322a047a41752d13473c526187fc8bb9)
+  cp 到 scratch 后 codesign --remove-signature(仓里 vendor 的二进制一贯不带签名,台架嵌入时由
+  CocoaPods 的嵌入脚本重签);去签名后文件 sha256
+  6e7fc4302ef5cd057db9e79480438e1afdc42101f8c2519215868512e6dcf4a4。
+  只换 ios-arm64 这一片;模拟器片、Headers、Info.plist(与 168 包内 Info.plist 逐字节同)、
+  *_abi_symbols.txt 都不动。
+
+对应的 Aether3D 源码版本
+  二进制本身不带 git 版本号:内嵌的 "AETHER_0ab02a0_SNAPSHOT_01" 是写死的诊断契约常量,两份核里都有;
+  "git:12ee391c…" 是 Dawn 的版本。能钉的只有 __DATE__/__TIME__ = Sep 16 2026 10:55:14。
+  台账 README.md:763 记 165 的核 = Aether3D-cross claude/publish-to-community @ a313ede0
+  (出货态 68bfa680 + 迭代计数刀),a313ede0 的提交时间 2026-09-16 10:58:50 +0800,晚于编译戳 3.5 分钟,
+  内容(全局 BA 迭代计数 + finalize_progress)与多出的那个导出一致 ⇒ 与 a313ede0 吻合;
+  但二进制里没有 a313ede0 字样,只能由台账 + 时间戳 + 导出差佐证,不是二进制自证。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

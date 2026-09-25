@@ -1,0 +1,1142 @@
+diff --git a/xrslam/src/xrslam/core/feature_tracker.cpp b/xrslam/src/xrslam/core/feature_tracker.cpp
+index 1e40025..3d7f26d 100644
+--- a/xrslam/src/xrslam/core/feature_tracker.cpp
++++ b/xrslam/src/xrslam/core/feature_tracker.cpp
+@@ -4,6 +4,8 @@
+ #include <xrslam/core/feature_tracker.h>
+ #include <xrslam/core/frontend_worker.h>
+ #include <xrslam/estimation/solver.h>
++#include <xrslam/estimation/pw_s3_log.h>
++#include <algorithm>
+ #include <xrslam/geometry/stereo.h>
+ #include <xrslam/inspection.h>
+ #include <xrslam/localizer/localizer.h>
+@@ -80,6 +82,8 @@ void FeatureTracker::work(std::unique_lock<std::mutex> &l) {
+                     // TODO: unfortunately the frame has slided out, which means
+                     // we are lost...
+                     log_warning("SWT cannot catch up.");
++                if (FILE *pf = pw_s3_log()) // [dip13f]
++                    fprintf(pf, "{\"ev\":\"ft_lost\",\"t\":%.9f}\n", frame->image->t);
+                     std::unique_lock lk(latest_pose_mutex);
+                     latest_state.reset();
+                 }
+@@ -138,10 +142,48 @@ void FeatureTracker::work(std::unique_lock<std::mutex> &l) {
+             last_frame->image->release_image_buffer();
+         }
+ 
++        const bool pw_dip_tracked = map->frame_num() > 0; // [dip13f]
++        if (pw_s3_log() && !pw_dip_tracked)
++            pw_dip_ft = PwDipFt();
+         if (slidind_window_frame_tag) {
+             PW_ZONE("frontend.detect_call");
+             frame->detect_keypoints(config.get());
+         }
++        if (FILE *pf = pw_s3_log()) { // [dip13f] read-only
++            std::vector<int> tl;
++            for (size_t i = 0; i < frame->keypoint_num(); ++i)
++                if (Track *tk = frame->get_track(i))
++                    tl.push_back((int)tk->keypoint_num());
++            double tl_mean = 0;
++            for (int x : tl)
++                tl_mean += x;
++            if (!tl.empty())
++                tl_mean /= tl.size();
++            int tl_med = 0, tl_ge10 = 0, tl_ge30 = 0;
++            if (!tl.empty()) {
++                std::vector<int> c = tl;
++                std::nth_element(c.begin(), c.begin() + c.size() / 2, c.end());
++                tl_med = c[c.size() / 2];
++                for (int x : tl) {
++                    tl_ge10 += x >= 10;
++                    tl_ge30 += x >= 30;
++                }
++            }
++            fprintf(pf,
++                    "{\"ev\":\"ft\",\"t\":%.9f,\"id\":%zu,\"fx\":%.6f,\"cx\":%.6f,\"cy\":%.6f,"
++                    "\"init\":%d,\"sw\":%d,\"n_curr\":%d,\"n_lk\":%d,\"n_ess\":%d,\"n_rot\":%d,"
++                    "\"n_out\":%d,\"n_total\":%zu,\"misalign\":%.5f,\"no_trans\":%d,\"flow\":%.4f,"
++                    "\"tl_mean\":%.3f,\"tl_med\":%d,\"tl_ge10\":%d,\"tl_ge30\":%d,\"t_opt\":%.9f,"
++                    "\"p\":[%.9g,%.9g,%.9g],\"v\":[%.9g,%.9g,%.9g]}\n",
++                    frame->image->t, frame->id(), frame->K(0, 0), frame->K(0, 2), frame->K(1, 2),
++                    is_initialized ? 1 : 0, slidind_window_frame_tag ? 1 : 0, pw_dip_ft.n_curr,
++                    pw_dip_ft.n_lk, pw_dip_ft.n_ess, pw_dip_ft.n_rot, pw_dip_ft.n_out,
++                    frame->keypoint_num(), pw_dip_ft.misalign,
++                    frame->tag(FT_NO_TRANSLATION) ? 1 : 0, pw_dip_ft.med_flow, tl_mean, tl_med,
++                    tl_ge10, tl_ge30, is_initialized ? latest_optimized_time : -1.0,
++                    frame->pose.p.x(), frame->pose.p.y(), frame->pose.p.z(), frame->motion.v.x(),
++                    frame->motion.v.y(), frame->motion.v.z());
++        }
+         map->attach_frame(std::move(frame));
+ 
+         size_t max_frame_num = is_initialized? config->feature_tracker_max_frames(): config->feature_tracker_max_init_frames();
+diff --git a/xrslam/src/xrslam/core/initializer.cpp b/xrslam/src/xrslam/core/initializer.cpp
+index 024d3e5..a160675 100644
+--- a/xrslam/src/xrslam/core/initializer.cpp
++++ b/xrslam/src/xrslam/core/initializer.cpp
+@@ -6,6 +6,8 @@
+ #include <xrslam/core/initializer.h>
+ #include <xrslam/core/sliding_window_tracker.h>
+ #include <xrslam/estimation/solver.h>
++#include <xrslam/estimation/pw_s3_log.h>
++#include <string>
+ #include <xrslam/geometry/essential.h>
+ #include <xrslam/geometry/homography.h>
+ #include <xrslam/geometry/lie_algebra.h>
+@@ -54,6 +56,53 @@ enum PwInitCounter {
+ };
+ 
+ 
++
++// ---------------------------------------------------------------------------------------------
++// [S3 scale-root-cause, scratch only] read-only record of the IMU-alignment stage.
++// ---------------------------------------------------------------------------------------------
++namespace {
++struct PwS3Init {
++    double parallax = 0;
++    int common = 0;
++    size_t triangulated = 0;
++    std::string lin, ref, v4, exc;
++};
++PwS3Init pw_s3_init;
++
++// statistics of a linear LS solve A x = b: singular values, residual rms, std error of x(k)
++std::string pw_s3_lsq(const xrslam::matrix<> &A, const xrslam::vector<> &b, const xrslam::vector<> &x,
++                      int k) {
++    using namespace xrslam;
++    Eigen::JacobiSVD<matrix<>> svd(A);
++    const vector<> &sv = svd.singularValues();
++    vector<> r = A * x - b;
++    const int m = (int)A.rows(), n = (int)A.cols();
++    double sig2 = r.squaredNorm() / std::max(1, m - n);
++    matrix<> AtA = A.transpose() * A;
++    double var_k = sig2 * AtA.inverse()(k, k);
++    // column-normalized conditioning (unit-free)
++    matrix<> An = A;
++    for (int j = 0; j < n; ++j) {
++        double cn = A.col(j).norm();
++        if (cn > 0)
++            An.col(j) /= cn;
++    }
++    Eigen::JacobiSVD<matrix<>> svdn(An);
++    const vector<> &svn = svdn.singularValues();
++    // how strongly is x(k) tied to the smallest right-singular direction
++    Eigen::JacobiSVD<matrix<>> svdv(A, Eigen::ComputeThinV);
++    double vk = std::abs(svdv.matrixV()(k, n - 1));
++    char buf[512];
++    snprintf(buf, sizeof buf,
++             "\"sv_max\":%.6g,\"sv_min\":%.6g,\"cond\":%.6g,\"condn\":%.6g,\"rms\":%.6g,"
++             "\"x_k\":%.9g,\"std_k\":%.6g,\"rel_std_k\":%.6g,\"vmin_k\":%.4g",
++             sv[0], sv[n - 1], sv[0] / sv[n - 1], svn[0] / svn[n - 1], std::sqrt(r.squaredNorm() / m),
++             x[k], std::sqrt(std::max(0.0, var_k)), std::sqrt(std::max(0.0, var_k)) / std::abs(x[k]),
++             vk);
++    return buf;
++}
++} // namespace
++
+ Initializer::Initializer(std::shared_ptr<Config> config) : config(config) {}
+ 
+ Initializer::~Initializer() = default;
+@@ -155,6 +204,16 @@ std::unique_ptr<SlidingWindowTracker> Initializer::initialize() {
+     for (size_t i = 0; i < map->frame_num(); ++i) {
+         solver->add_frame_states(map->get_frame(i));
+     }
++    // [S3 prototype P5, env-gated, default OFF] ORB-SLAM3 LocalMapping.cc:184 InitializeIMU(1e2, 1e10)
++    // for monocular: accelerometer-bias prior of information 1e10 (sigma 1e-5 m/s^2) around 0 in the
++    // FIRST inertial initialisation. Our init VI-BA has no bias prior at all. Hard-fix == 1e10 prior.
++    static const bool pw_s3_p5 = [] {
++        const char *e = std::getenv("PW_S3_P5_FIXBA");
++        return e && e[0] == '1';
++    }();
++    if (pw_s3_p5)
++        for (size_t i = 0; i < map->frame_num(); ++i)
++            solver->pw_s3_fix_ba(map->get_frame(i));
+     std::unordered_set<Track *> visited_tracks;
+     for (size_t i = 0; i < map->frame_num(); ++i) {
+         Frame *frame = map->get_frame(i);
+@@ -193,7 +252,20 @@ std::unique_ptr<SlidingWindowTracker> Initializer::initialize() {
+                 frame_i, frame_j, frame_j->preintegration));
+         }
+     }
++    std::vector<vector<3>> pw_s3_pre; // [S3] read-only copy
++    if (pw_s3_log())
++        for (size_t i = 0; i < map->frame_num(); ++i)
++            pw_s3_pre.push_back(map->get_frame(i)->get_pose(map->get_frame(i)->camera).p);
+     solver->solve();
++    if (FILE *f = pw_s3_log()) {
++        for (size_t i = 0; i < map->frame_num(); ++i) {
++            const Frame *fr = map->get_frame(i);
++            fprintf(f, "{\"ev\":\"init_pre\",\"t\":%.9f,\"pc\":[%.9g,%.9g,%.9g]}\n",
++                    fr->image->t, pw_s3_pre[i].x(), pw_s3_pre[i].y(), pw_s3_pre[i].z());
++            pw_s3_log_frame("init_post", fr);
++        }
++        fflush(f);
++    }
+ 
+     for (size_t i = 0; i < map->frame_num(); ++i) {
+         map->get_frame(i)->tag(FT_KEYFRAME) = true;
+@@ -346,6 +418,9 @@ bool Initializer::init_sfm() {
+     init_point_status.swap(triangulation_status[best_rt_index]);
+     size_t triangulated_num = triangulation_counts[best_rt_index];
+ 
++    pw_s3_init.parallax = total_parallax; // [S3]
++    pw_s3_init.common = common_track_num;
++    pw_s3_init.triangulated = triangulated_num;
+     if (triangulated_num < config->initializer_min_triangulation()) {
+         log_debug("SfM init fail: triangulation (%zd).", triangulated_num);
+         ++pw_init_counters[kPwInitFailTriangulation];
+@@ -455,9 +530,72 @@ bool Initializer::init_sfm() {
+ }
+ 
+ bool Initializer::init_imu() {
++    // [S3] original body moved to pw_init_imu_impl(); this wrapper only logs.
++    pw_s3_init.lin.clear();
++    pw_s3_init.ref.clear();
++    pw_s3_init.v4.clear();
++    pw_s3_init.exc.clear();
++    double scale_lin = NAN;
++    const bool ok = pw_init_imu_impl(&scale_lin);
++    if (FILE *f = pw_s3_log()) {
++        // excitation over the window (read-only)
++        const size_t N = map->frame_num();
++        double sum_dt = 0;
++        vector<3> sum_g = vector<3>::Zero();
++        std::vector<vector<3>> gs;
++        for (size_t j = 1; j < N; ++j) {
++            const Frame *fj = map->get_frame(j);
++            double dt = fj->preintegration.delta.t;
++            if (dt <= 0)
++                continue;
++            vector<3> g = fj->preintegration.delta.v / dt;
++            gs.push_back(g);
++            sum_g += g;
++            sum_dt += dt;
++        }
++        double var = 0;
++        if (!gs.empty()) {
++            vector<3> aver = sum_g / double(gs.size());
++            for (auto &g : gs)
++                var += (g - aver).squaredNorm();
++            var = std::sqrt(var / double(gs.size()));
++        }
++        double an_sum = 0, an_sq = 0, wn_sum = 0;
++        size_t na = 0;
++        for (size_t j = 1; j < N; ++j) {
++            for (const ImuData &d : map->get_frame(j)->preintegration.data) {
++                double an = d.a.norm();
++                an_sum += an;
++                an_sq += an * an;
++                wn_sum += d.w.norm();
++                ++na;
++            }
++        }
++        double an_mean = na ? an_sum / na : 0;
++        double an_std = na ? std::sqrt(std::max(0.0, an_sq / na - an_mean * an_mean)) : 0;
++        const Frame *f0 = map->get_frame(0);
++        const Frame *fN = map->get_frame(N - 1);
++        double rot_deg = 2 * std::acos(std::min(1.0, std::abs((f0->pose.q.conjugate() * fN->pose.q).w()))) * 180 / M_PI;
++        fprintf(f,
++                "{\"ev\":\"init_imu\",\"ok\":%d,\"t0\":%.9f,\"t1\":%.9f,\"N\":%zu,"
++                "\"parallax_px\":%.4g,\"common\":%d,\"triangulated\":%zu,"
++                "\"scale_lin\":%.9g,\"scale\":%.9g,\"vins_var\":%.6g,\"acc_norm_mean\":%.6g,"
++                "\"acc_norm_std\":%.6g,\"gyro_norm_mean\":%.6g,\"rot_deg\":%.4g,"
++                "\"lin\":{%s},\"ref\":{%s},\"v4\":{%s},\"bg\":[%.6g,%.6g,%.6g]}\n",
++                ok ? 1 : 0, f0->image->t, fN->image->t, N, pw_s3_init.parallax, pw_s3_init.common,
++                pw_s3_init.triangulated, scale_lin, scale, var, an_mean, an_std,
++                na ? wn_sum / na : 0.0, rot_deg, pw_s3_init.lin.c_str(), pw_s3_init.ref.c_str(),
++                pw_s3_init.v4.c_str(), bg.x(), bg.y(), bg.z());
++        fflush(f);
++    }
++    return ok;
++}
++
++bool Initializer::pw_init_imu_impl(double *scale_lin_out) {
+     reset_states();
+     solve_gyro_bias();
+     solve_gravity_scale_velocity();
++    *scale_lin_out = scale;
+     if (scale < 0.001 || scale > 1.0)
+         return false;
+     if (!config->initializer_refine_imu()) {
+@@ -529,6 +667,12 @@ void Initializer::solve_gravity_scale_velocity() {
+     }
+ 
+     vector<> x = A.fullPivHouseholderQr().solve(b);
++    if (pw_s3_log()) { // [S3] read-only
++        char buf[256];
++        snprintf(buf, sizeof buf, "\"g_raw\":[%.6g,%.6g,%.6g],\"g_raw_norm\":%.6g,", x[0], x[1],
++                 x[2], x.segment<3>(0).norm());
++        pw_s3_init.lin = std::string(buf) + pw_s3_lsq(A, b, x, 3);
++    }
+     gravity = x.segment<3>(0).normalized() * XRSLAM_GRAVITY_NOMINAL;
+     scale = x(3);
+     for (size_t i = 0; i < map->frame_num(); ++i) {
+@@ -578,9 +722,60 @@ void Initializer::refine_scale_velocity_via_gravity() {
+ 
+         x = A.fullPivHouseholderQr().solve(b);
+         vector<2> dg = x.segment<2>(0);
++        if (pw_s3_log()) { // [S3] read-only
++            vector<3> g_full = (gravity + Tg * dg).normalized();
++            vector<3> g_damp = (gravity + damp * Tg * dg).normalized();
++            char buf[256];
++            snprintf(buf, sizeof buf,
++                     "\"dg_norm\":%.6g,\"ang_full_deg\":%.6g,\"ang_applied_deg\":%.6g,",
++                     dg.norm(),
++                     std::acos(std::min(1.0, g_full.dot(gravity.normalized()))) * 180 / M_PI,
++                     std::acos(std::min(1.0, g_damp.dot(gravity.normalized()))) * 180 / M_PI);
++            pw_s3_init.ref = std::string(buf) + pw_s3_lsq(A, b, x, 2);
++        }
+         gravity =
+             (gravity + damp * Tg * dg).normalized() * XRSLAM_GRAVITY_NOMINAL;
+     }
++    if (pw_s3_log()) {
++        // [S3] counterfactual on COPIES: the same linear system iterated to convergence with a full
++        // step (VINS-Mono RefineGravity shape: 4 iterations, no damping). Never written back.
++        vector<3> g4 = gravity; // start from the value the engine would keep
++        // restart from the pre-refine gravity is not available here; iterate from the damped one
++        vector<> x4;
++        double ang_total = 0;
++        for (int it = 0; it < 4; ++it) {
++            matrix<> A4 = matrix<>::Zero((N - 1) * 6, 2 + 1 + 3 * N);
++            vector<> b4 = vector<>::Zero((N - 1) * 6);
++            matrix<3, 2> Tg4 = s2_tangential_basis(g4);
++            for (size_t j = 1; j < map->frame_num(); ++j) {
++                const size_t i = j - 1;
++                const Frame *frame_i = map->get_frame(i);
++                const Frame *frame_j = map->get_frame(j);
++                const PreIntegrator::Delta &delta = frame_j->preintegration.delta;
++                const PoseState camera_pose_i = frame_i->get_pose(frame_i->camera);
++                const PoseState camera_pose_j = frame_j->get_pose(frame_j->camera);
++                A4.block<3, 2>(i * 6, 0) = -0.5 * delta.t * delta.t * Tg4;
++                A4.block<3, 1>(i * 6, 2) = camera_pose_j.p - camera_pose_i.p;
++                A4.block<3, 3>(i * 6, 3 + i * 3) = -delta.t * matrix<3>::Identity();
++                b4.segment<3>(i * 6) = 0.5 * delta.t * delta.t * g4 + frame_i->pose.q * delta.p +
++                                       (frame_j->pose.q * frame_j->camera.p_cs -
++                                        frame_i->pose.q * frame_i->camera.p_cs);
++                A4.block<3, 2>(i * 6 + 3, 0) = -delta.t * Tg4;
++                A4.block<3, 3>(i * 6 + 3, 3 + i * 3) = -matrix<3>::Identity();
++                A4.block<3, 3>(i * 6 + 3, 3 + j * 3) = matrix<3>::Identity();
++                b4.segment<3>(i * 6 + 3) = delta.t * g4 + frame_i->pose.q * delta.v;
++            }
++            x4 = A4.fullPivHouseholderQr().solve(b4);
++            vector<3> gn = (g4 + Tg4 * x4.segment<2>(0)).normalized() * XRSLAM_GRAVITY_NOMINAL;
++            ang_total += std::acos(std::min(1.0, gn.normalized().dot(g4.normalized()))) * 180 / M_PI;
++            g4 = gn;
++        }
++        char buf[256];
++        snprintf(buf, sizeof buf, "\"scale\":%.9g,\"ang_total_deg\":%.6g,\"ang_vs_engine_deg\":%.6g",
++                 x4[2], ang_total,
++                 std::acos(std::min(1.0, g4.normalized().dot(gravity.normalized()))) * 180 / M_PI);
++        pw_s3_init.v4 = buf;
++    }
+ 
+     scale = x(2);
+     for (size_t i = 0; i < map->frame_num(); ++i) {
+diff --git a/xrslam/src/xrslam/core/initializer.h b/xrslam/src/xrslam/core/initializer.h
+index aff6b11..b2ad582 100644
+--- a/xrslam/src/xrslam/core/initializer.h
++++ b/xrslam/src/xrslam/core/initializer.h
+@@ -22,6 +22,7 @@ class Initializer {
+   private:
+     bool init_sfm();
+     bool init_imu();
++    bool pw_init_imu_impl(double *scale_lin_out); // [S3]
+ 
+     void solve_gyro_bias();
+     void solve_gravity_scale_velocity();
+diff --git a/xrslam/src/xrslam/core/sliding_window_tracker.cpp b/xrslam/src/xrslam/core/sliding_window_tracker.cpp
+index ebb443b..35ff4eb 100644
+--- a/xrslam/src/xrslam/core/sliding_window_tracker.cpp
++++ b/xrslam/src/xrslam/core/sliding_window_tracker.cpp
+@@ -1,9 +1,12 @@
+ #include <atomic>
++#include <string>
++#include <unordered_set>
+ #include <xrslam/common.h>
+ #include <xrslam/core/detail.h>
+ #include <xrslam/core/feature_tracker.h>
+ #include <xrslam/core/frontend_worker.h>
+ #include <xrslam/core/sliding_window_tracker.h>
++#include <xrslam/estimation/pw_s3_log.h>
+ #include <xrslam/estimation/solver.h>
+ #include <xrslam/geometry/lie_algebra.h>
+ #include <xrslam/geometry/stereo.h>
+@@ -160,13 +163,47 @@ bool SlidingWindowTracker::track() {
+ 
+     localize_newframe();
+ 
+-    if (manage_keyframe()) {
++    // [dip13f] read-only snapshot of the keyframe decision inputs
++    int pw_dip_mapped = 0, pw_dip_sub = 0, pw_dip_sub_nt = -1, pw_dip_nt = 0, pw_dip_nkp = 0;
++    double pw_dip_t = 0;
++    if (pw_s3_log()) {
++        Frame *ki = map->get_frame(map->frame_num() - 2);
++        Frame *nj = map->get_frame(map->frame_num() - 1);
++        pw_dip_t = nj->image->t;
++        pw_dip_nkp = (int)nj->keypoint_num();
++        for (size_t k = 0; k < nj->keypoint_num(); ++k)
++            if (Track *tk = nj->get_track(k))
++                if (tk->all_tagged(TT_VALID, TT_TRIANGULATED, TT_STATIC))
++                    ++pw_dip_mapped;
++        pw_dip_sub = (int)ki->subframes.size();
++        if (!ki->subframes.empty())
++            pw_dip_sub_nt = ki->subframes.back()->tag(FT_NO_TRANSLATION) ? 1 : 0;
++        pw_dip_nt = nj->tag(FT_NO_TRANSLATION) ? 1 : 0;
++    }
++    const bool pw_dip_kf = manage_keyframe();
++    if (FILE *pf = pw_s3_log())
++        fprintf(pf,
++                "{\"ev\":\"kfdec\",\"t\":%.9f,\"kf\":%d,\"mapped\":%d,\"nkp\":%d,\"no_trans\":%d,"
++                "\"sub\":%d,\"sub_nt\":%d,\"nframes\":%zu}\n",
++                pw_dip_t, pw_dip_kf ? 1 : 0, pw_dip_mapped, pw_dip_nkp, pw_dip_nt, pw_dip_sub,
++                pw_dip_sub_nt, map->frame_num());
++    if (pw_dip_kf) {
+         track_landmark();
+         refine_window();
+         slide_window();
+     } else {
+         refine_subwindow();
+     }
++    if (FILE *pf = pw_s3_log()) { // [dip13f] state handed to the output path
++        auto [lt, lp, lm] = get_latest_state();
++        fprintf(pf,
++                "{\"ev\":\"latest\",\"t\":%.9f,\"p\":[%.9g,%.9g,%.9g],\"q\":[%.9g,%.9g,%.9g,%.9g],"
++                "\"v\":[%.9g,%.9g,%.9g],\"ba\":[%.9g,%.9g,%.9g],\"bg\":[%.9g,%.9g,%.9g],"
++                "\"t0\":%.9f}\n",
++                lt, lp.p.x(), lp.p.y(), lp.p.z(), lp.q.x(), lp.q.y(), lp.q.z(), lp.q.w(), lm.v.x(),
++                lm.v.y(), lm.v.z(), lm.ba.x(), lm.ba.y(), lm.ba.z(), lm.bg.x(), lm.bg.y(), lm.bg.z(),
++                map->get_frame(0)->image->t);
++    }
+ 
+     inspect_debug(sliding_window_landmarks, landmarks) {
+         std::vector<Landmark> points;
+@@ -201,18 +238,64 @@ void SlidingWindowTracker::localize_newframe() {
+     solver->put_factor(Solver::create_preintegration_prior_factor(
+         frame_i, frame_j, frame_j->preintegration));
+ 
++    int pw_dip_nprior = 0; // [dip13f]
+     for (size_t k = 0; k < frame_j->keypoint_num(); ++k) {
+         if (Track *track = frame_j->get_track(k)) {
+             if (track->all_tagged(TT_VALID, TT_TRIANGULATED, TT_STATIC)) {
+                 solver->put_factor(
+                     Solver::create_reprojection_prior_factor(frame_j, track));
++                ++pw_dip_nprior;
+             }
+         }
+     }
+ 
++    vector<3> pw_dip_p0 = frame_j->pose.p; // [dip13f] IMU-predicted position before the PnP-like solve
++    if (pw_s3_log()) {
++        pw_dip_solve_ctx = "loc";
++        pw_dip_solve_t = frame_j->image->t;
++    }
+     ++pw_solver_counters[kPwSolveCalls];
+     if (!solver->solve())
+         ++pw_solver_counters[kPwSolveUnusable];
++    if (FILE *pf = pw_s3_log()) {
++        // reprojection residual (px) of the prior landmarks at the solved pose: inlier proxy
++        int n_in1 = 0, n_in3 = 0, n_tot = 0;
++        std::vector<double> rr;
++        std::string pts;
++        const PoseState cam = frame_j->get_pose(frame_j->camera);
++        for (size_t k = 0; k < frame_j->keypoint_num(); ++k) {
++            if (Track *track = frame_j->get_track(k)) {
++                if (track->all_tagged(TT_VALID, TT_TRIANGULATED, TT_STATIC)) {
++                    vector<3> y = cam.q.conjugate() * (track->get_landmark_point() - cam.p);
++                    if (y.z() <= 1e-6)
++                        continue;
++                    double e = (apply_k(y, frame_j->K) -
++                                apply_k(frame_j->get_keypoint(k), frame_j->K))
++                                   .norm();
++                    ++n_tot;
++                    n_in1 += e < 1.0;
++                    n_in3 += e < 3.0;
++                    rr.push_back(e);
++                    const vector<2> uv = apply_k(frame_j->get_keypoint(k), frame_j->K);
++                    char pb[96];
++                    snprintf(pb, sizeof pb, "%s[%.1f,%.1f,%.2f,%.3f,%zu]", pts.empty() ? "" : ",",
++                             uv.x(), uv.y(), e, y.z(), track->keypoint_num());
++                    pts += pb;
++                }
++            }
++        }
++        double med = 0;
++        if (!rr.empty()) {
++            std::nth_element(rr.begin(), rr.begin() + rr.size() / 2, rr.end());
++            med = rr[rr.size() / 2];
++        }
++        fprintf(pf,
++                "{\"ev\":\"loc\",\"t\":%.9f,\"nprior\":%d,\"n\":%d,\"in1\":%d,\"in3\":%d,"
++                "\"med_px\":%.4f,\"dp_pred\":[%.6g,%.6g,%.6g],\"pts\":[%s]}\n",
++                frame_j->image->t, pw_dip_nprior, n_tot, n_in1, n_in3, med,
++                frame_j->pose.p.x() - pw_dip_p0.x(), frame_j->pose.p.y() - pw_dip_p0.y(),
++                frame_j->pose.p.z() - pw_dip_p0.z(), pts.c_str());
++    }
+ }
+ 
+ bool SlidingWindowTracker::manage_keyframe() {
+@@ -393,9 +476,38 @@ void SlidingWindowTracker::refine_window() {
+         }
+     }
+ 
++    int pw_dip_nrep = 0, pw_dip_ntrk = 0, pw_dip_npie = 0; // [dip13f]
++    if (pw_s3_log()) {
++        std::unordered_set<Track *> vt;
++        for (size_t i = 0; i < map->frame_num(); ++i) {
++            Frame *frame = map->get_frame(i);
++            for (size_t j = 0; j < frame->keypoint_num(); ++j) {
++                Track *track = frame->get_track(j);
++                if (!track || !track->all_tagged(TT_VALID, TT_TRIANGULATED, TT_STATIC))
++                    continue;
++                if (!track->first_frame()->tag(FT_KEYFRAME))
++                    continue;
++                vt.insert(track);
++                if (frame == track->first_frame())
++                    continue;
++                ++pw_dip_nrep;
++            }
++        }
++        pw_dip_ntrk = (int)vt.size();
++        for (size_t j = 1; j < map->frame_num(); ++j)
++            pw_dip_npie += map->get_frame(j)->keyframe_preintegration.data.empty() ? 0 : 1;
++        pw_dip_solve_ctx = "win";
++        pw_dip_solve_t = keyframe_j->image->t;
++    }
+     ++pw_solver_counters[kPwSolveCalls];
+     if (!solver->solve())
+         ++pw_solver_counters[kPwSolveUnusable];
++    if (pw_s3_log())
++        pw_s3_scale_tension(map.get()); // [S3] read-only
++    const uint64_t pw_dip_rej_d0 = pw_solver_counters[kPwTrackRejectDepth].load(),
++                   pw_dip_rej_r0 = pw_solver_counters[kPwTrackRejectRpe].load(),
++                   pw_dip_eval0 = pw_solver_counters[kPwTrackEvaluated].load(); // [dip13f]
++    std::string pw_dip_gate; // [dip13f]
+ 
+     for (size_t k = 0; k < map->track_num(); ++k) {
+         Track *track = map->get_track(k);
+@@ -431,6 +543,16 @@ void SlidingWindowTracker::refine_window() {
+             pw_account_rpe(rpe, rpe_count, pw_depth_ok, is_valid,
+                            kPwTrackRpeSamples, kPwTrackRpeMilliPx);
+             track->tag(TT_VALID) = is_valid;
++            if (pw_s3_log()) { // [dip13f] where do gated tracks sit (newest keyframe observation)
++                const auto &km = track->keypoint_map();
++                Frame *lf = km.rbegin()->first;
++                const vector<2> uv = apply_k(lf->get_keypoint(km.rbegin()->second), lf->K);
++                char pb[112];
++                snprintf(pb, sizeof pb, "%s[%.1f,%.1f,%.2f,%d,%d,%zu,%.4f]", pw_dip_gate.empty() ? "" : ",",
++                         uv.x(), uv.y(), rpe / std::max(rpe_count, 1.0), pw_depth_ok ? 1 : 0,
++                         is_valid ? 1 : 0, track->keypoint_num(), lf->image->t);
++                pw_dip_gate += pb;
++            }
+         } else {
+             track->landmark.inv_depth = -1.0;
+         }
+@@ -441,6 +563,25 @@ void SlidingWindowTracker::refine_window() {
+         if (!track->tag(TT_VALID))
+             track->tag(TT_TRASH) = true;
+     }
++    if (FILE *pf = pw_s3_log()) { // [dip13f] window summary after the TT_VALID gate
++        std::string ts, fs;
++        char b[96];
++        for (size_t i = 0; i < map->frame_num(); ++i) {
++            snprintf(b, sizeof b, "%s%.4f", i ? "," : "", map->get_frame(i)->image->t);
++            ts += b;
++            snprintf(b, sizeof b, "%s%zu", i ? "," : "", map->get_frame(i)->subframes.size());
++            fs += b;
++        }
++        fprintf(pf,
++                "{\"ev\":\"win\",\"t\":%.9f,\"nframes\":%zu,\"ntrk\":%d,\"nrep\":%d,"
++                "\"npie\":%d,\"eval\":%llu,\"rej_depth\":%llu,\"rej_rpe\":%llu,\"ft\":[%s],"
++                "\"nsub\":[%s],\"gate\":[%s]}\n",
++                keyframe_j->image->t, map->frame_num(), pw_dip_ntrk, pw_dip_nrep, pw_dip_npie,
++                (unsigned long long)(pw_solver_counters[kPwTrackEvaluated].load() - pw_dip_eval0),
++                (unsigned long long)(pw_solver_counters[kPwTrackRejectDepth].load() - pw_dip_rej_d0),
++                (unsigned long long)(pw_solver_counters[kPwTrackRejectRpe].load() - pw_dip_rej_r0),
++                ts.c_str(), fs.c_str(), pw_dip_gate.c_str());
++    }
+ }
+ 
+ void SlidingWindowTracker::slide_window() {
+@@ -449,6 +590,11 @@ void SlidingWindowTracker::slide_window() {
+         for (size_t i = 0; i < frame->subframes.size(); ++i) {
+             map->untrack_frame(frame->subframes[i].get());
+         }
++        if (pw_s3_log()) {
++            pw_s3_log_frame("kf_final", frame); // [S3] read-only
++            fprintf(pw_s3_log(), "{\"ev\":\"marg_kf\",\"t\":%.9f,\"nsub\":%zu}\n", frame->image->t,
++                    frame->subframes.size()); // [dip13f]
++        }
+         map->marginalize_frame(0);
+     }
+ }
+@@ -510,6 +656,10 @@ void SlidingWindowTracker::refine_subwindow() {
+             }
+         }
+ 
++        if (pw_s3_log()) { // [dip13f]
++            pw_dip_solve_ctx = "sub";
++            pw_dip_solve_t = frame->subframes.back()->image->t;
++        }
+         ++pw_solver_counters[kPwSolveCalls];
+     if (!solver->solve())
+         ++pw_solver_counters[kPwSolveUnusable];
+@@ -546,6 +696,10 @@ void SlidingWindowTracker::refine_subwindow() {
+                 }
+             }
+         }
++        if (pw_s3_log()) { // [dip13f]
++            pw_dip_solve_ctx = "sub";
++            pw_dip_solve_t = frame->subframes.back()->image->t;
++        }
+         ++pw_solver_counters[kPwSolveCalls];
+     if (!solver->solve())
+         ++pw_solver_counters[kPwSolveUnusable];
+diff --git a/xrslam/src/xrslam/estimation/ceres/marginalization_factor.h b/xrslam/src/xrslam/estimation/ceres/marginalization_factor.h
+index 14b8430..2f218a6 100644
+--- a/xrslam/src/xrslam/estimation/ceres/marginalization_factor.h
++++ b/xrslam/src/xrslam/estimation/ceres/marginalization_factor.h
+@@ -6,6 +6,7 @@
+ #include <xrslam/estimation/ceres/preintegration_factor.h>
+ #include <xrslam/estimation/ceres/reprojection_factor.h>
+ #include <xrslam/estimation/marginalization_factor.h>
++#include <xrslam/estimation/pw_s3_log.h>
+ 
+ namespace xrslam {
+ 
+@@ -85,6 +86,9 @@ class CeresMarginalizationFactor : public MarginalizationFactor,
+         matrix<> pose_motion_infomat;
+         vector<> pose_motion_infovec;
+         std::map<Track *, LandmarkInfo, compare<Track *>> landmark_info;
++        // [S3] read-only: magnitude of the incoming prior (detects the 1e15 gauge block)
++        const double pw_s3_in_max = pw_s3_log() ? sqrt_inv_cov.cwiseAbs().maxCoeff() : 0.0;
++        double pw_s3_pre_max_diag = 0.0;
+ 
+         pose_motion_infomat.resize(base_map->frame_num() * ES_SIZE,
+                                    base_map->frame_num() * ES_SIZE);
+@@ -397,6 +401,8 @@ class CeresMarginalizationFactor : public MarginalizationFactor,
+             }
+         }
+ 
++        if (pw_s3_log())
++            pw_s3_pre_max_diag = pose_motion_infomat.diagonal().cwiseAbs().maxCoeff();
+         /* scope: marginalize the corresponding frame */ {
+             size_t last_index = base_map->frame_num() - 1;
+             matrix<15, 15> inv_infomat =
+@@ -471,6 +477,10 @@ class CeresMarginalizationFactor : public MarginalizationFactor,
+                 mutable_parameter_block_sizes()->push_back(3); // bg
+                 mutable_parameter_block_sizes()->push_back(3); // ba
+             }
++            if (pw_s3_log())
++                pw_s3_log_marg(pw_s3_in_max, pw_s3_pre_max_diag, pose_motion_infomat,
++                               saesolver.eigenvalues(), saesolver.eigenvectors(), sqrt_inv_cov,
++                               frames);
+         }
+     }
+ };
+diff --git a/xrslam/src/xrslam/estimation/pw_s3_log.h b/xrslam/src/xrslam/estimation/pw_s3_log.h
+new file mode 100644
+index 0000000..7e95469
+--- /dev/null
++++ b/xrslam/src/xrslam/estimation/pw_s3_log.h
+@@ -0,0 +1,35 @@
++#ifndef XRSLAM_PW_S3_LOG_H
++#define XRSLAM_PW_S3_LOG_H
++// [S3 scale-root-cause, scratch only, never committed] Logging-only instrumentation.
++// Everything is gated on PW_S3_LOG=<path>; with it unset no extra code runs at all.
++// With it set, the hooks only READ engine state (copies, const Evaluate, eigen solves on copies);
++// bit-identical trajectories with the log on/off are the acceptance test.
++#include <cstdio>
++#include <vector>
++#include <xrslam/common.h>
++
++namespace xrslam {
++class Map;
++class Frame;
++FILE *pw_s3_log();
++// refine_window(): directional (global-scale) cost terms of IMU factors vs marginalization prior
++void pw_s3_scale_tension(Map *map);
++// slide_window(): final (smoothed) state of the frame about to be marginalized
++void pw_s3_log_frame(const char *tag, const Frame *frame);
++// marginalize(): spectrum + directional information of the new prior
++void pw_s3_log_marg(double incoming_max_sqrt, double pre_schur_max_diag, const matrix<> &H,
++                    const vector<> &evals, const matrix<> &evecs, const matrix<> &sqrt_inv_cov,
++                    const std::vector<Frame *> &frames);
++// [dip13f, scratch only] per-thread scratch filled by Frame::track_keypoints (FT thread) and a
++// context label consumed by Solver::solve(). Written only when pw_s3_log() is non-null.
++struct PwDipFt {
++    int n_curr = 0, n_lk = 0, n_ess = 0, n_rot = 0, n_out = 0;
++    double misalign = 0;
++    double med_flow = 0; // median |next - curr| px of LK-tracked points (motion/blur proxy)
++};
++extern thread_local PwDipFt pw_dip_ft;
++extern thread_local const char *pw_dip_solve_ctx;
++extern thread_local double pw_dip_solve_t;
++} // namespace xrslam
++
++#endif
+diff --git a/xrslam/src/xrslam/estimation/solver.cpp b/xrslam/src/xrslam/estimation/solver.cpp
+index fe93a46..6a8ffd5 100644
+--- a/xrslam/src/xrslam/estimation/solver.cpp
++++ b/xrslam/src/xrslam/estimation/solver.cpp
+@@ -5,6 +5,7 @@
+ #include <xrslam/estimation/ceres/reprojection_factor.h>
+ #include <xrslam/estimation/ceres/rotation_factor.h>
+ #include <xrslam/estimation/solver.h>
++#include <xrslam/estimation/pw_s3_log.h>
+ #include <xrslam/estimation/state.h>
+ #include <xrslam/map/frame.h>
+ 
+@@ -105,6 +106,10 @@ void Solver::add_frame_states(Frame *frame, bool with_motion) {
+     }
+ }
+ 
++void Solver::pw_s3_fix_ba(Frame *frame) {
++    details->problem->SetParameterBlockConstant(frame->motion.ba.data());
++}
++
+ void Solver::add_track_states(Track *track) {
+     details->problem->AddParameterBlock(&(track->landmark.inv_depth), 1);
+ }
+@@ -186,6 +191,19 @@ bool Solver::solve(bool verbose) {
+     solver_options.minimizer_progress_to_stdout = verbose;
+     solver_options.update_state_every_iteration = true;
+     ceres::Solve(solver_options, details->problem.get(), &solver_summary);
++    if (FILE *pf = pw_s3_log()) { // [dip13f] read-only
++        if (pw_dip_solve_ctx) {
++            fprintf(pf,
++                    "{\"ev\":\"solve\",\"ctx\":\"%s\",\"t\":%.9f,\"iters\":%d,\"c0\":%.9g,"
++                    "\"c1\":%.9g,\"term\":%d,\"nres\":%d,\"ms\":%.3f,\"usable\":%d}\n",
++                    pw_dip_solve_ctx, pw_dip_solve_t, (int)solver_summary.iterations.size(),
++                    solver_summary.initial_cost, solver_summary.final_cost,
++                    (int)solver_summary.termination_type, solver_summary.num_residual_blocks,
++                    solver_summary.total_time_in_seconds * 1e3,
++                    solver_summary.IsSolutionUsable() ? 1 : 0);
++            pw_dip_solve_ctx = nullptr;
++        }
++    }
+     return solver_summary.IsSolutionUsable();
+ }
+ 
+@@ -216,3 +234,352 @@ void Solver::manage_factor(std::unique_ptr<MarginalizationFactor> &&factor) {
+ }
+ 
+ } // namespace xrslam
++
++// ============================================================================================
++// [S3 scale-root-cause, scratch only] logging-only hooks. See pw_s3_log.h.
++// ============================================================================================
++#include <xrslam/estimation/pw_s3_log.h>
++#include <xrslam/map/map.h>
++#include <xrslam/map/track.h>
++#include <cstdlib>
++#include <unordered_map>
++
++namespace xrslam {
++
++thread_local PwDipFt pw_dip_ft;
++thread_local const char *pw_dip_solve_ctx = nullptr;
++thread_local double pw_dip_solve_t = 0;
++
++FILE *pw_s3_log() {
++    static FILE *f = []() -> FILE * {
++        const char *p = std::getenv("PW_S3_LOG");
++        return (p && *p) ? std::fopen(p, "w") : nullptr;
++    }();
++    return f;
++}
++
++void pw_s3_log_frame(const char *tag, const Frame *frame) {
++    FILE *f = pw_s3_log();
++    if (!f)
++        return;
++    const PoseState cam = frame->get_pose(frame->camera);
++    fprintf(f,
++            "{\"ev\":\"%s\",\"t\":%.9f,\"p\":[%.9g,%.9g,%.9g],\"q\":[%.9g,%.9g,%.9g,%.9g],"
++            "\"pc\":[%.9g,%.9g,%.9g],\"v\":[%.9g,%.9g,%.9g],\"bg\":[%.9g,%.9g,%.9g],"
++            "\"ba\":[%.9g,%.9g,%.9g]}\n",
++            tag, frame->image->t, frame->pose.p.x(), frame->pose.p.y(), frame->pose.p.z(),
++            frame->pose.q.x(), frame->pose.q.y(), frame->pose.q.z(), frame->pose.q.w(), cam.p.x(),
++            cam.p.y(), cam.p.z(), frame->motion.v.x(), frame->motion.v.y(), frame->motion.v.z(),
++            frame->motion.bg.x(), frame->motion.bg.y(), frame->motion.bg.z(), frame->motion.ba.x(),
++            frame->motion.ba.y(), frame->motion.ba.z());
++}
++
++// Directional analysis of the window cost along a global similarity "scale" direction:
++//   body p_i -> c + s (p_i - c), v_i -> s v_i, landmark inv_depth -> inv_depth / s, q/bg/ba fixed.
++// Returns (per term) C(s) = sum of squared whitened residuals (reprojection: sum rho(|r|^2),
++// Cauchy(1) as in the solver). g = dC/dlog s, I = d2C/dlog s^2 by central differences, eps=1e-2.
++// Self-check: at the solver optimum g_imu + g_prior + g_rep ~ 0 (can fail if not converged).
++void pw_s3_scale_tension(Map *map) {
++    FILE *f = pw_s3_log();
++    if (!f)
++        return;
++    const size_t n = map->frame_num();
++    if (n < 2)
++        return;
++    std::unordered_map<const Frame *, size_t> idx;
++    vector<3> c = vector<3>::Zero();
++    for (size_t i = 0; i < n; ++i) {
++        idx[map->get_frame(i)] = i;
++        c += map->get_frame(i)->pose.p;
++    }
++    c /= double(n);
++    double rms = 0;
++    for (size_t i = 0; i < n; ++i)
++        rms += (map->get_frame(i)->pose.p - c).squaredNorm();
++    rms = std::sqrt(rms / n);
++
++    const double eps = 1.0e-2;
++    const double svals[3] = {std::exp(-eps), 1.0, std::exp(eps)};
++    double Ci[3] = {0, 0, 0}, Cp[3] = {0, 0, 0}, Cr[3] = {0, 0, 0};
++    size_t n_imu = 0, n_rep = 0;
++    CeresMarginalizationFactor *mf =
++        static_cast<CeresMarginalizationFactor *>(map->marginalization_factor.get());
++    for (int k = 0; k < 3; ++k) {
++        const double s = svals[k];
++        std::vector<quaternion> q(n);
++        std::vector<vector<3>> p(n), v(n), bg(n), ba(n);
++        for (size_t i = 0; i < n; ++i) {
++            const Frame *fr = map->get_frame(i);
++            q[i] = fr->pose.q;
++            p[i] = c + s * (fr->pose.p - c);
++            v[i] = s * fr->motion.v;
++            bg[i] = fr->motion.bg;
++            ba[i] = fr->motion.ba;
++        }
++        // IMU factors (same pairs refine_window() put into the solver)
++        for (size_t j = 1; j < n; ++j) {
++            Frame *fi = map->get_frame(j - 1);
++            Frame *fj = map->get_frame(j);
++            if (fj->keyframe_preintegration.data.empty())
++                continue;
++            CeresPreIntegrationErrorFactor fac(fi, fj, fj->keyframe_preintegration);
++            const double *params[10] = {q[j - 1].coeffs().data(), p[j - 1].data(),
++                                        v[j - 1].data(),          bg[j - 1].data(),
++                                        ba[j - 1].data(),         q[j].coeffs().data(),
++                                        p[j].data(),              v[j].data(),
++                                        bg[j].data(),             ba[j].data()};
++            vector<15> r;
++            fac.Evaluate(params, r.data(), nullptr);
++            Ci[k] += r.squaredNorm();
++            if (k == 0)
++                ++n_imu;
++        }
++        // marginalization prior
++        if (mf) {
++            const auto &lf = mf->linearization_frames();
++            std::vector<const double *> params;
++            bool ok = true;
++            for (Frame *fr : lf) {
++                auto it = idx.find(fr);
++                if (it == idx.end()) {
++                    ok = false;
++                    break;
++                }
++                size_t i = it->second;
++                params.push_back(q[i].coeffs().data());
++                params.push_back(p[i].data());
++                params.push_back(v[i].data());
++                params.push_back(bg[i].data());
++                params.push_back(ba[i].data());
++            }
++            if (ok) {
++                vector<> r(lf.size() * ES_SIZE);
++                mf->Evaluate(params.data(), r.data(), nullptr);
++                Cp[k] = r.squaredNorm();
++            } else {
++                Cp[k] = NAN;
++            }
++        }
++        // reprojection factors (same selection as refine_window())
++        for (size_t i = 0; i < n; ++i) {
++            Frame *frame = map->get_frame(i);
++            for (size_t jj = 0; jj < frame->keypoint_num(); ++jj) {
++                Track *track = frame->get_track(jj);
++                if (!track)
++                    continue;
++                if (!track->all_tagged(TT_VALID, TT_TRIANGULATED, TT_STATIC))
++                    continue;
++                if (!track->first_frame()->tag(FT_KEYFRAME))
++                    continue;
++                if (frame == track->first_frame())
++                    continue;
++                auto itr = idx.find(track->first_frame());
++                if (itr == idx.end())
++                    continue;
++                size_t ir = itr->second;
++                double invd = track->landmark.inv_depth / s;
++                const double *params[5] = {q[i].coeffs().data(), p[i].data(),
++                                           q[ir].coeffs().data(), p[ir].data(), &invd};
++                vector<2> r;
++                static_cast<CeresReprojectionErrorFactor *>(
++                    frame->reprojection_error_factors[jj].get())
++                    ->Evaluate(params, r.data(), nullptr);
++                Cr[k] += std::log1p(r.squaredNorm());
++                if (k == 0)
++                    ++n_rep;
++            }
++        }
++    }
++    // ---- IMU-only Gauss-Newton along scale with nuisances free (v_i each, common ba, 2 gravity
++    // tilts). Positions/rotations enter only through the similarity/tilt directions. This is the
++    // local analogue of an inertial-only scale refinement: what scale does the IMU in THIS window
++    // prefer, and how well does it determine it (sd). Gauge-free: IMU is invariant to translation
++    // and to yaw about gravity.
++    double gn_ds = NAN, gn_sd = NAN, gn_ds_v = NAN, gn_sd_v = NAN, gn_tilt[2] = {NAN, NAN};
++    vector<3> gn_dba = vector<3>::Constant(NAN);
++    {
++        const int nv = 3 * (int)n, ncol = 1 + 2 + 3 + nv;
++        matrix<> H = matrix<>::Zero(ncol, ncol);
++        vector<> gv = vector<>::Zero(ncol);
++        const vector<3> axes[2] = {vector<3>(1, 0, 0), vector<3>(0, 1, 0)};
++        for (size_t j = 1; j < n; ++j) {
++            Frame *fi = map->get_frame(j - 1);
++            Frame *fj = map->get_frame(j);
++            if (fj->keyframe_preintegration.data.empty())
++                continue;
++            CeresPreIntegrationErrorFactor fac(fi, fj, fj->keyframe_preintegration);
++            const double *params[10] = {fi->pose.q.coeffs().data(), fi->pose.p.data(),
++                                        fi->motion.v.data(),        fi->motion.bg.data(),
++                                        fi->motion.ba.data(),       fj->pose.q.coeffs().data(),
++                                        fj->pose.p.data(),          fj->motion.v.data(),
++                                        fj->motion.bg.data(),       fj->motion.ba.data()};
++            vector<15> r;
++            matrix<15, 4, true> Jqi, Jqj;
++            matrix<15, 3, true> Jpi, Jvi, Jbgi, Jbai, Jpj, Jvj, Jbgj, Jbaj;
++            double *jac[10] = {Jqi.data(), Jpi.data(), Jvi.data(), Jbgi.data(), Jbai.data(),
++                               Jqj.data(), Jpj.data(), Jvj.data(), Jbgj.data(), Jbaj.data()};
++            fac.Evaluate(params, r.data(), jac);
++            matrix<> J = matrix<>::Zero(15, ncol);
++            J.col(0) = Jpi * (fi->pose.p - c) + Jpj * (fj->pose.p - c);
++            for (int a = 0; a < 2; ++a) {
++                J.col(1 + a) = Jqi.leftCols<3>() * (fi->pose.q.conjugate() * axes[a]) +
++                               Jpi * axes[a].cross(fi->pose.p - c) +
++                               Jqj.leftCols<3>() * (fj->pose.q.conjugate() * axes[a]) +
++                               Jpj * axes[a].cross(fj->pose.p - c);
++            }
++            J.middleCols<3>(3) = Jbai + Jbaj;
++            J.middleCols<3>(6 + 3 * (j - 1)) += Jvi;
++            J.middleCols<3>(6 + 3 * j) += Jvj;
++            H += J.transpose() * J;
++            gv += J.transpose() * r;
++        }
++        Eigen::FullPivLU<matrix<>> lu(H);
++        if (lu.rank() == ncol) {
++            matrix<> Hi = lu.inverse();
++            vector<> dz = -Hi * gv;
++            gn_ds = dz[0];
++            gn_sd = std::sqrt(std::max(0.0, Hi(0, 0)));
++            gn_tilt[0] = dz[1];
++            gn_tilt[1] = dz[2];
++            gn_dba = dz.segment<3>(3);
++        }
++        // v-only nuisance (drop tilt+ba columns)
++        std::vector<int> keep;
++        keep.push_back(0);
++        for (int k = 6; k < ncol; ++k)
++            keep.push_back(k);
++        matrix<> H2(keep.size(), keep.size());
++        vector<> g2(keep.size());
++        for (size_t a = 0; a < keep.size(); ++a) {
++            g2[a] = gv[keep[a]];
++            for (size_t b = 0; b < keep.size(); ++b)
++                H2(a, b) = H(keep[a], keep[b]);
++        }
++        Eigen::FullPivLU<matrix<>> lu2(H2);
++        if (lu2.rank() == (int)keep.size()) {
++            matrix<> H2i = lu2.inverse();
++            gn_ds_v = -(H2i * g2)[0];
++            gn_sd_v = std::sqrt(std::max(0.0, H2i(0, 0)));
++        }
++    }
++    fprintf(f,
++            "{\"ev\":\"imu_gn\",\"t\":%.9f,\"ds\":%.6g,\"sd\":%.6g,\"ds_v\":%.6g,\"sd_v\":%.6g,"
++            "\"tilt\":[%.6g,%.6g],\"dba\":[%.6g,%.6g,%.6g],\"ba\":[%.6g,%.6g,%.6g]}\n",
++            map->get_frame(n - 1)->image->t, gn_ds, gn_sd, gn_ds_v, gn_sd_v, gn_tilt[0], gn_tilt[1],
++            gn_dba.x(), gn_dba.y(), gn_dba.z(), map->get_frame(n - 1)->motion.ba.x(),
++            map->get_frame(n - 1)->motion.ba.y(), map->get_frame(n - 1)->motion.ba.z());
++
++    auto g = [&](const double *C) { return (C[2] - C[0]) / (2 * eps); };
++    auto I = [&](const double *C) { return (C[2] - 2 * C[1] + C[0]) / (eps * eps); };
++    Frame *last = map->get_frame(n - 1);
++    fprintf(f,
++            "{\"ev\":\"tension\",\"t\":%.9f,\"t0\":%.9f,\"n\":%zu,\"rms\":%.6g,\"n_imu\":%zu,"
++            "\"n_rep\":%zu,\"C_imu\":%.9g,\"g_imu\":%.9g,\"I_imu\":%.9g,\"C_pri\":%.9g,"
++            "\"g_pri\":%.9g,\"I_pri\":%.9g,\"C_rep\":%.9g,\"g_rep\":%.9g,\"I_rep\":%.9g,"
++            "\"has_prior\":%d}\n",
++            last->image->t, map->get_frame(0)->image->t, n, rms, n_imu, n_rep, Ci[1], g(Ci),
++            I(Ci), Cp[1], g(Cp), I(Cp), Cr[1], g(Cr), I(Cr), mf ? 1 : 0);
++}
++
++// Called from CeresMarginalizationFactor::marginalize() (header) after the new prior is built.
++void pw_s3_log_marg(double incoming_max_sqrt, double pre_schur_max_diag, const matrix<> &H,
++                    const vector<> &evals, const matrix<> &evecs, const matrix<> &sqrt_inv_cov,
++                    const std::vector<Frame *> &frames) {
++    FILE *f = pw_s3_log();
++    if (!f)
++        return;
++    const int N = (int)H.rows();
++    double hmax = 0, hnorm = H.norm();
++    for (int i = 0; i < N; ++i)
++        hmax = std::max(hmax, std::abs(H(i, i)));
++    int n_trunc = 0, n_neg = 0;
++    double lmin_pos = INFINITY, lmax = -INFINITY, lmin = INFINITY;
++    for (int i = 0; i < N; ++i) {
++        double l = evals[i];
++        lmax = std::max(lmax, l);
++        lmin = std::min(lmin, l);
++        if (l <= 1.0e-8)
++            ++n_trunc;
++        else
++            lmin_pos = std::min(lmin_pos, l);
++        if (l < 0)
++            ++n_neg;
++    }
++    double recon = (H - evecs * evals.asDiagonal() * evecs.transpose()).norm() / hnorm;
++    // Jacobi-scaled spectrum: precision-independent count of genuine near-null directions
++    vector<> dsc(N);
++    for (int i = 0; i < N; ++i)
++        dsc[i] = H(i, i) > 0 ? 1.0 / std::sqrt(H(i, i)) : 1.0;
++    matrix<> Hs = dsc.asDiagonal() * H * dsc.asDiagonal();
++    Eigen::SelfAdjointEigenSolver<matrix<>> es2(Hs, Eigen::EigenvaluesOnly);
++    int n_null_s = 0;
++    for (int i = 0; i < N; ++i)
++        if (es2.eigenvalues()[i] < 1.0e-12 * es2.eigenvalues().maxCoeff())
++            ++n_null_s;
++    // directions over the prior's frames (ordered as `frames`)
++    const size_t nf = frames.size();
++    vector<3> c = vector<3>::Zero();
++    for (auto *fr : frames)
++        c += fr->pose.p;
++    c /= double(nf);
++    auto quad = [&](const vector<> &d, double &raw, double &tr) {
++        raw = d.dot(H * d);
++        tr = (sqrt_inv_cov * d).squaredNorm();
++    };
++    vector<> ds = vector<>::Zero(N), dtx = vector<>::Zero(N), dtz = vector<>::Zero(N),
++             dyaw = vector<>::Zero(N), droll = vector<>::Zero(N);
++    const vector<3> ez(0, 0, 1), ex(1, 0, 0);
++    for (size_t i = 0; i < nf && (int)(ES_SIZE * i + ES_SIZE) <= N; ++i) {
++        const Frame *fr = frames[i];
++        ds.segment<3>(ES_SIZE * i + ES_P) = fr->pose.p - c;
++        ds.segment<3>(ES_SIZE * i + ES_V) = fr->motion.v;
++        dtx.segment<3>(ES_SIZE * i + ES_P) = ex;
++        dtz.segment<3>(ES_SIZE * i + ES_P) = ez;
++        // world-axis rotation about c: q' = R(a) q  => body-frame tangent = q^-1 a
++        dyaw.segment<3>(ES_SIZE * i + ES_Q) = fr->pose.q.conjugate() * ez;
++        dyaw.segment<3>(ES_SIZE * i + ES_P) = ez.cross(fr->pose.p - c);
++        dyaw.segment<3>(ES_SIZE * i + ES_V) = ez.cross(fr->motion.v);
++        droll.segment<3>(ES_SIZE * i + ES_Q) = fr->pose.q.conjugate() * ex;
++        droll.segment<3>(ES_SIZE * i + ES_P) = ex.cross(fr->pose.p - c);
++        droll.segment<3>(ES_SIZE * i + ES_V) = ex.cross(fr->motion.v);
++    }
++    // conditional (gauge-free) scale information: Schur-complement translation(3)+yaw(1) out of
++    // the 5x5 directional information block, for the raw H and for the truncated prior.
++    vector<> dty = vector<>::Zero(N);
++    for (size_t i = 0; i < nf && (int)(ES_SIZE * i + ES_SIZE) <= N; ++i)
++        dty.segment<3>(ES_SIZE * i + ES_P) = vector<3>(0, 1, 0);
++    matrix<> D(N, 5);
++    D.col(0) = ds;
++    D.col(1) = dtx;
++    D.col(2) = dty;
++    D.col(3) = dtz;
++    D.col(4) = dyaw;
++    matrix<> M_raw = D.transpose() * H * D;
++    matrix<> SD = sqrt_inv_cov * D;
++    matrix<> M_tr = SD.transpose() * SD;
++    auto cond_info = [](const matrix<> &M) {
++        matrix<> Mgg = M.bottomRightCorner(4, 4);
++        Eigen::FullPivLU<matrix<>> lu(Mgg);
++        if (lu.rank() < 4)
++            return (double)NAN;
++        return M(0, 0) - (M.block(0, 1, 1, 4) * lu.solve(M.block(1, 0, 4, 1)))(0, 0);
++    };
++    const double Isc_raw = cond_info(M_raw), Isc_tr = cond_info(M_tr);
++    double s_raw, s_tr, tx_raw, tx_tr, tz_raw, tz_tr, y_raw, y_tr, r_raw, r_tr;
++    quad(ds, s_raw, s_tr);
++    quad(dtx, tx_raw, tx_tr);
++    quad(dtz, tz_raw, tz_tr);
++    quad(dyaw, y_raw, y_tr);
++    quad(droll, r_raw, r_tr);
++    fprintf(f,
++            "{\"ev\":\"marg\",\"t0\":%.9f,\"N\":%d,\"in_max_sqrt\":%.6g,\"pre_max_diag\":%.6g,"
++            "\"hmax_diag\":%.6g,\"lmax\":%.6g,\"lmin\":%.6g,\"lmin_pos\":%.6g,\"n_trunc\":%d,"
++            "\"n_neg\":%d,\"recon\":%.3g,\"n_null_scaled\":%d,\"lmin_scaled\":%.6g,"
++            "\"I_scale\":[%.6g,%.6g],\"I_tx\":[%.6g,%.6g],\"I_tz\":[%.6g,%.6g],"
++            "\"I_yaw\":[%.6g,%.6g],\"I_roll\":[%.6g,%.6g],\"I_scale_cond\":[%.6g,%.6g]}\n",
++            frames.empty() ? 0.0 : frames[0]->image->t, N, incoming_max_sqrt, pre_schur_max_diag,
++            hmax, lmax, lmin, lmin_pos, n_trunc, n_neg, recon, n_null_s, es2.eigenvalues().minCoeff(),
++            s_raw, s_tr, tx_raw, tx_tr, tz_raw, tz_tr, y_raw, y_tr, r_raw, r_tr, Isc_raw, Isc_tr);
++}
++
++} // namespace xrslam
+diff --git a/xrslam/src/xrslam/estimation/solver.h b/xrslam/src/xrslam/estimation/solver.h
+index f1197b5..de33b37 100644
+--- a/xrslam/src/xrslam/estimation/solver.h
++++ b/xrslam/src/xrslam/estimation/solver.h
+@@ -41,6 +41,8 @@ class Solver {
+ 
+     virtual void add_frame_states(Frame *frame, bool with_motion = true);
+     virtual void add_track_states(Track *track);
++    // [S3 prototype P5] hold motion.ba constant (== ORB-SLAM3 mono first-init accel-bias prior 1e10)
++    void pw_s3_fix_ba(Frame *frame);
+ 
+     virtual void add_factor(ReprojectionErrorFactor *rpecost);
+     virtual void add_factor(ReprojectionPriorFactor *rppcost);
+diff --git a/xrslam/src/xrslam/map/frame.cpp b/xrslam/src/xrslam/map/frame.cpp
+index 3fb3821..2d9eb85 100644
+--- a/xrslam/src/xrslam/map/frame.cpp
++++ b/xrslam/src/xrslam/map/frame.cpp
+@@ -5,6 +5,8 @@
+ #include <xrslam/map/map.h>
+ #include <xrslam/map/track.h>
+ #include <xrslam/utility/poisson_disk_filter.h>
++#include <xrslam/estimation/pw_s3_log.h>
++#include <algorithm>
+ 
+ namespace xrslam {
+ 
+@@ -95,6 +97,9 @@ void Frame::track_keypoints(Frame *next_frame, Config *config) {
+     std::vector<char> status, mask;
+     image->track_keypoints(next_frame->image.get(), curr_keypoints,
+                            next_keypoints, status);
++    const int pw_dip_n_lk = pw_s3_log() ? (int)std::count_if(status.begin(), status.end(),
++                                                          [](char c) { return c != 0; })
++                                        : 0; // [dip13f]
+ 
+     std::vector<vector<2>> curr_keypoints_h, next_keypoints_h;
+     std::vector<vector<3>> next_bearings;
+@@ -132,6 +137,25 @@ void Frame::track_keypoints(Frame *next_frame, Config *config) {
+     if (misalignment < config->rotation_misalignment_threshold()) {
+         next_frame->tag(FT_NO_TRANSLATION) = true;
+     }
++    if (pw_s3_log()) { // [dip13f] read-only counts
++        pw_dip_ft = PwDipFt();
++        pw_dip_ft.n_curr = (int)curr_keypoints.size();
++        pw_dip_ft.n_lk = pw_dip_n_lk;
++        pw_dip_ft.misalign = misalignment;
++        std::vector<double> fl;
++        for (size_t i = 0; i < status.size(); ++i) {
++            if (status[i]) {
++                ++pw_dip_ft.n_ess; // status already AND-ed with the essential mask above
++                fl.push_back((next_keypoints[i] - curr_keypoints[i]).norm());
++            }
++            if (mask[i])
++                ++pw_dip_ft.n_rot;
++        }
++        if (!fl.empty()) {
++            std::nth_element(fl.begin(), fl.begin() + fl.size() / 2, fl.end());
++            pw_dip_ft.med_flow = fl[fl.size() / 2];
++        }
++    }
+ 
+     // filter keypoints based on track length
+     std::vector<std::pair<size_t, size_t>> keypoint_index_track_length;
+@@ -162,6 +186,8 @@ void Frame::track_keypoints(Frame *next_frame, Config *config) {
+         }
+     }
+ 
++    if (pw_s3_log()) // [dip13f]
++        pw_dip_ft.n_out = (int)std::count_if(status.begin(), status.end(), [](char c) { return c != 0; });
+     for (size_t curr_keypoint_index = 0;
+          curr_keypoint_index < curr_keypoints.size(); ++curr_keypoint_index) {
+         if (status[curr_keypoint_index]) {

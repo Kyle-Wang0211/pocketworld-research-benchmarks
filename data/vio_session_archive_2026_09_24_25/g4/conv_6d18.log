@@ -1,0 +1,33 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 898 行 ↔ 相机 100 帧;配上 100,配不上 0
+  轨迹 arkit: 97 帧配上  {"rows": 898, "zero_translation_dropped": 31, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-6d187dff-403a-4882-b692-7bdc6c3cfa2a/ruler_subset/arkit_poses.tum"}
+  轨迹 arkxr: 97 帧配上  {"rows": 867, "mapping": "exact_recording_t_ns (integer equality, no interpolation)", "duplicate_t_ns": 0, "recording_frames": 100, "recording_frames_with_pose": 97, "recording_frames_without_pose": 3, "engine_t_minus_t_ns_s": [-5.820766091346741e-11, 0.0], "path": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/g4/ark_as_xr_6d18.csv"}
+  XRSLAM 精确键控 arkxr:子集帧 100,有引擎位姿 97,缺 3;不插值
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):97 / 录制帧 100 / 深度 297 张
+帧对 90(间隔 ~0.33s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 0.9602  ⇒ 轨迹比米制 -3.98%   有效帧对 81/90
+  深度侧 95%(不重叠帧对 81 个,顺序统计量): k ∈ [0.9547, 0.9628]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0247  帧对内 0.0241
+  分段 k [0.952609474753175, 0.9589053620979324, 0.962157477464249, 0.9732402047613978]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=0.8321 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.09408262631662782, '-1': 0.05122865705099717, '1': 0.048382334158453874, '2': 0.07313661047342283, '0': 0.024717159898428067}
+
+── arkxr ── verdict: valid
+  k(轨迹/米) = 0.9602  ⇒ 轨迹比米制 -3.98%   有效帧对 81/90
+  噪声底 95%(轨迹残差循环平移,经尺子重估): k ∈ [0.9602, 0.9602]   NC sd 0.00%   PC k0=1.05 恢复 1.0500 ✅
+  深度侧 95%(不重叠帧对 81 个,顺序统计量): k ∈ [0.9547, 0.9628]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0247  帧对内 0.0241
+  分段 k [0.9526094747682938, 0.9589053621032199, 0.9621574774690899, 0.9732402047634862]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=0.8321 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.09408262630271211, '-1': 0.05122865705877999, '1': 0.04838233413486698, '2': 0.0731366104777146, '0': 0.024717159914652797}
+
+交叉核对 arkit/arkxr:尺子比值 1.0000 vs 规范 Sim3 1.0000(差 -0.00%,Sim3 ATE 0.00 cm)
+
+交叉核对 arkxr/arkit:尺子比值 1.0000 vs 规范 Sim3 1.0000(差 +0.00%,Sim3 ATE 0.00 cm)
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/g4/conv_6d18/lidar_ruler_report.json

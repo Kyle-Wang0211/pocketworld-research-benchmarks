@@ -1,0 +1,35 @@
+{
+  "algorithm" : "ARWorldTrackingConfiguration",
+  "autofocus" : true,
+  "delegate_queue" : "com.kyle.arloopbench.lidar.arkit (serial, userInteractive)",
+  "depth_stride" : 3,
+  "depth_stride_unit" : "admitted (recorded) frames",
+  "light_estimation" : false,
+  "plane_detection" : [
+    "horizontal"
+  ],
+  "production_source" : "OfficialAetherARKitPlugin.startSession (hires43)",
+  "record_gate" : "PwXrslamOfficialFeed.admits: record an ARFrame iff it is the first, or Double(t_ns)*1e-9 - last_recorded_pts >= 0.8\/record_hz (same function the XRSLAM replay gate calls ⇒ every recorded frame is admitted on replay)",
+  "record_hz" : 60,
+  "recorder" : "arloopbench PwBenchLidarSession (port of BasaltVIOBench ARKitReferenceSession @76b8d47)",
+  "run_options" : [
+    "resetTracking",
+    "removeExistingAnchors"
+  ],
+  "scene_depth_requested" : true,
+  "scene_depth_role" : "bench_only_metric_ruler_not_a_product_input",
+  "scene_depth_supported" : true,
+  "selected_video_format" : {
+    "fps" : 60,
+    "height" : 1440,
+    "recommended_for_high_resolution_capture" : true,
+    "recorded_fps_nominal" : 60,
+    "width" : 1920
+  },
+  "smoothed_scene_depth" : false,
+  "tag" : "soak_3_60hz_barrier",
+  "video_format_policy" : "locked_1920x1440_high_resolution_recommended_highest_fps",
+  "world_alignment" : "gravity",
+  "write_sync" : "barrier",
+  "writer_queue_depth" : 64
+}

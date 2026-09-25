@@ -1,0 +1,155 @@
+--- /Users/kaidongwang/Developer/arloopbench_backups/lidar_20260924_184559/.sync_from_integration.sh	2026-09-24 17:15:58
++++ .sync_from_integration.sh	2026-09-24 18:46:50
+@@ -239,5 +239,50 @@
+ else
+   bad=1
+ fi
++# ── 2026-09-24(LiDAR 米尺录制,🔴 bench-only ruler):独立的一段,上面 VIO(P)/ LOD(L)/ 完整链(F)一个字不动 ──
++#   🔴 LiDAR 只在台架里当研发期米尺(量 XRSLAM / ARKit 的绝对尺度),永不进产品代码、产品管线、产品提案。
++#   真源 = pocketworld 工作树 bench-lidar-ruler-20260924(分支 bench/lidar-ruler,从 feat/bench-replay 875fe67 切出,
++#   永不上生产)。用自己的变量 R,不借 P:要临时从别的树同步:PW_BENCH_LIDAR_SOURCE=<pocketworld 工作树> ./.sync_from_integration.sh
++#   只核不拷(阴性对照 / 查台架有没有被改过):PW_BENCH_LIDAR_VERIFY_ONLY=1 ./.sync_from_integration.sh
++#   镜像范围 = 下面 lidar_scope 一处定义,拷贝与三道闸都用它:
++#     lib/bench_lidar/*.dart                        录制页 BenchLidarRecordPage + dart:ffi 绑定
++#     ios/Runner/PwBenchLidarRecordingWriter.swift  录制写器(BasaltVIOBench DeviceRecordingWriter @76b8d47 的移植,含深度)
++#     ios/Runner/PwBenchLidarSession.swift          ARKit + CoreMotion 会话 + 4 个 @_cdecl pw_bench_lidar_*
++#   类型依赖:写器用的是 VIO 段镜像的 ios/Runner/PwBenchReplayRecording.swift 里那套 Codable ⇒ 下面核它与 R 里那份相同。
++#   Mac 侧工具(tool/bench/lidar_ruler/、tool/bench/lidar_swift_tests/、tool/bench/pull_lidar_recording.sh)留在 pocketworld。
++#   🔴 pbxproj(两份 Swift 进 Runner Sources + 三个配置各 4 条 -Wl,-u,_pw_bench_lidar_*)/ main.dart(const PW_LIDAR_RULER_BENCH
++#      分支)是台架自己的文件,不在镜像范围。
++R="${PW_BENCH_LIDAR_SOURCE:-/Users/kaidongwang/.config/superpowers/worktrees/pocketworld/bench-lidar-ruler-20260924}"
++if [ ! -d "$R" ]; then echo "LiDAR 尺子源不在,跳过"; else
++lidar_scope="$(
++  cd "$R"
++  ls lib/bench_lidar/*.dart
++  for f in PwBenchLidarRecordingWriter.swift PwBenchLidarSession.swift; do echo "ios/Runner/$f"; done
++)"
++echo "LiDAR 尺子真源: $R @ $(git -C "$R" rev-parse --short HEAD 2>/dev/null || echo '?')" \
++     "(未提交改动 $(git -C "$R" status --porcelain 2>/dev/null | wc -l | tr -d ' ') 个)"
++if [ "${PW_BENCH_LIDAR_VERIFY_ONLY:-0}" != 1 ]; then
++  while IFS= read -r rel; do
++    mkdir -p "$B/$(dirname "$rel")"
++    cp "$R/$rel" "$B/$rel"
++  done <<< "$lidar_scope"
++fi
++rbad=0
++while IFS= read -r rel; do
++  cmp -s "$B/$rel" "$R/$rel" || { echo "🔴 LiDAR 尺子不一致: $rel"; rbad=1; }
++done <<< "$lidar_scope"
++cmp -s "$B/ios/Runner/PwBenchReplayRecording.swift" "$R/ios/Runner/PwBenchReplayRecording.swift" \
++  || { echo "🔴 PwBenchReplayRecording.swift:VIO 真源与 LiDAR 真源已分叉,写器与回放装载器会编成两套 Codable —— 先在 pocketworld 里对齐"; rbad=1; }
++while IFS= read -r rel; do
++  [ -n "$rel" ] || continue
++  grep -Fxq -- "$rel" <<< "$lidar_scope" || { echo "🔴 台架多出 LiDAR 镜像范围外的文件: $rel"; rbad=1; }
++done <<< "$(cd "$B" && { find lib/bench_lidar -type f 2>/dev/null
++                         find ios/Runner -maxdepth 1 -name 'PwBenchLidar*' -type f; } | LC_ALL=C sort)"
++if [ $rbad -eq 0 ]; then
++  echo "✅ LiDAR 尺子与真源逐字节一致($(printf '%s\n' "$lidar_scope" | wc -l | tr -d ' ') 个文件)"
++else
++  bad=1
++fi
++fi  # LiDAR 源存在性守卫结束
+ [ $bad -eq 0 ] && echo "✅ 与生产逐字节一致"
+ exit $bad
+--- /Users/kaidongwang/Developer/arloopbench_backups/lidar_20260924_184559/lib/main.dart	2026-09-24 16:45:43
++++ lib/main.dart	2026-09-24 19:07:05
+@@ -14,6 +14,9 @@
+ // [2026-09-24 完整重建链 168] 生产入口本身(pocketworld_flutter 包 = 生产 lib/ 原样,见 pubspec)。
+ import 'package:pocketworld_flutter/main.dart' as pw168;
+ 
++// [2026-09-24 LiDAR 米尺录制] 🔴 bench-only ruler:LiDAR 只在台架里当研发期米尺,永不进产品。
++//   真源 pocketworld bench/lidar-ruler,同步脚本 LiDAR 段镜像(lib/bench_lidar/ + ios/Runner/PwBenchLidar*.swift)。
++import 'bench_lidar/bench_lidar_record_page.dart';
+ import 'point_cloud_lod/lod_debug_page.dart';
+ import 'vio/calib/imu_calib_capture_page.dart';
+ import 'vio/render/ar_minimal_loop_page.dart';
+@@ -77,7 +80,17 @@
+       //     包里也找不到 PW_LOD_BENCH=true ⇒ 这一支在 profile 包里永远走不到。带 const 后由编译器
+       //     折成常量,不带 define 的包里 LodDebugPage 整个被树摇掉(装机前核对用 strings 查类名)。
+       //     下面各支没带 const,是台架原样,这次没动。
+-      home: const bool.fromEnvironment('PW_LOD_BENCH')
++      //   PW_LIDAR_RULER_BENCH=true = LiDAR 米尺录制页 BenchLidarRecordPage(2026-09-24;**会开摄像头**:
++      //     ARKit 1920×1440@60 + CoreMotion + ARFrame.sceneDepth,落 Documents/replay_recordings/run-…;
++      //     🔴 bench-only ruler,LiDAR 永不进产品)。放在链的最前;**必须带 const**(理由同下面 PW_LOD_BENCH
++      //     那条 2026-09-24 实测注释)⇒ 不带 define 的包里整页被树摇掉,装机前用 strings 核类名。
++      //     这个包里仍认 -PWBenchReplayRecording 启动参数 ⇒ 录完直接用 tool/bench/launch_bench_replay.sh
++      //     在手机上回放出 XRSLAM 位姿,**不用换包重装**(其余各支在这个包里被树摇掉)。
++      home: const bool.fromEnvironment('PW_LIDAR_RULER_BENCH')
++          ? (benchReplayRequestedByLaunchArgs()
++              ? BenchReplayPage()
++              : const BenchLidarRecordPage())
++          : const bool.fromEnvironment('PW_LOD_BENCH')
+           ? LodDebugPage()
+           : bool.fromEnvironment('PW_BENCH_REPLAY') || benchReplayRequestedByLaunchArgs()
+           ? BenchReplayPage()
+--- /Users/kaidongwang/Developer/arloopbench_backups/lidar_20260924_184559/ios/Runner.xcodeproj/project.pbxproj	2026-09-24 18:29:15
++++ ios/Runner.xcodeproj/project.pbxproj	2026-09-24 19:04:19
+@@ -34,6 +34,8 @@
+ 		AF0C0A520000000000000009 /* focus_measure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AF0C0A520000000000000008 /* focus_measure.cpp */; settings = {COMPILER_FLAGS = "-std=c++17"; }; };
+ 		AF0C0A52000000000000000B /* lens_scale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AF0C0A52000000000000000A /* lens_scale.cpp */; settings = {COMPILER_FLAGS = "-std=c++17"; }; };
+ 		B3E9A1C00000000000000011 /* PwBenchReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E9A1C00000000000000001 /* PwBenchReplay.swift */; };
++		C4D1A2B00000000000000011 /* PwBenchLidarRecordingWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D1A2B00000000000000001 /* PwBenchLidarRecordingWriter.swift */; };
++		C4D1A2B00000000000000012 /* PwBenchLidarSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D1A2B00000000000000002 /* PwBenchLidarSession.swift */; };
+ 		B3E9A1C00000000000000012 /* PwBenchReplayRecording.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E9A1C00000000000000002 /* PwBenchReplayRecording.swift */; };
+ 		B3E9A1C00000000000000013 /* PwBenchReplayScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E9A1C00000000000000003 /* PwBenchReplayScheduler.swift */; };
+ 		B3E9A1C00000000000000014 /* PwBenchReplayEngineProbe.c in Sources */ = {isa = PBXBuildFile; fileRef = B3E9A1C00000000000000004 /* PwBenchReplayEngineProbe.c */; };
+@@ -125,6 +127,8 @@
+ 		AF0C0A52000000000000000A /* lens_scale.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = lens_scale.cpp; path = ../../vendor/pw_af/lens_scale.cpp; sourceTree = "<group>"; };
+ 		B2F63D4CAC8AC1E908065712 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+ 		B3E9A1C00000000000000001 /* PwBenchReplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PwBenchReplay.swift; sourceTree = "<group>"; };
++		C4D1A2B00000000000000001 /* PwBenchLidarRecordingWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PwBenchLidarRecordingWriter.swift; sourceTree = "<group>"; };
++		C4D1A2B00000000000000002 /* PwBenchLidarSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PwBenchLidarSession.swift; sourceTree = "<group>"; };
+ 		B3E9A1C00000000000000002 /* PwBenchReplayRecording.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PwBenchReplayRecording.swift; sourceTree = "<group>"; };
+ 		B3E9A1C00000000000000003 /* PwBenchReplayScheduler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PwBenchReplayScheduler.swift; sourceTree = "<group>"; };
+ 		B3E9A1C00000000000000004 /* PwBenchReplayEngineProbe.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = PwBenchReplayEngineProbe.c; sourceTree = "<group>"; };
+@@ -247,6 +251,8 @@
+ 				B3E9A1C00000000000000003 /* PwBenchReplayScheduler.swift */,
+ 				B3E9A1C00000000000000004 /* PwBenchReplayEngineProbe.c */,
+ 				B3E9A1C00000000000000005 /* PwBenchReplayEngineProbe.h */,
++				C4D1A2B00000000000000001 /* PwBenchLidarRecordingWriter.swift */,
++				C4D1A2B00000000000000002 /* PwBenchLidarSession.swift */,
+ 				AF0C0A520000000000000001 /* PwFocusArms.swift */,
+ 				AF0C0A520000000000000003 /* pw_af_c.h */,
+ 				AF0C0A520000000000000004 /* pw_af_c.cpp */,
+@@ -589,6 +595,8 @@
+ 				B3E9A1C00000000000000012 /* PwBenchReplayRecording.swift in Sources */,
+ 				B3E9A1C00000000000000013 /* PwBenchReplayScheduler.swift in Sources */,
+ 				B3E9A1C00000000000000014 /* PwBenchReplayEngineProbe.c in Sources */,
++				C4D1A2B00000000000000011 /* PwBenchLidarRecordingWriter.swift in Sources */,
++				C4D1A2B00000000000000012 /* PwBenchLidarSession.swift in Sources */,
+ 				AF0C0A520000000000000002 /* PwFocusArms.swift in Sources */,
+ 				AF0C0A520000000000000005 /* pw_af_c.cpp in Sources */,
+ 				AF0C0A520000000000000007 /* af_scan.cpp in Sources */,
+@@ -754,6 +762,10 @@
+ 					"-Wl,-u,_pw_bench_replay_start",
+ 					"-Wl,-u,_pw_bench_replay_status",
+ 					"-Wl,-u,_pw_bench_replay_cancel",
++					"-Wl,-u,_pw_bench_lidar_capability",
++					"-Wl,-u,_pw_bench_lidar_start",
++					"-Wl,-u,_pw_bench_lidar_stop",
++					"-Wl,-u,_pw_bench_lidar_status",
+ 					-ljxl,
+ 					-ljxl_cms,
+ 					-ljxl_threads,
+@@ -1006,6 +1018,10 @@
+ 					"-Wl,-u,_pw_bench_replay_start",
+ 					"-Wl,-u,_pw_bench_replay_status",
+ 					"-Wl,-u,_pw_bench_replay_cancel",
++					"-Wl,-u,_pw_bench_lidar_capability",
++					"-Wl,-u,_pw_bench_lidar_start",
++					"-Wl,-u,_pw_bench_lidar_stop",
++					"-Wl,-u,_pw_bench_lidar_status",
+ 					-ljxl,
+ 					-ljxl_cms,
+ 					-ljxl_threads,
+@@ -1096,6 +1112,10 @@
+ 					"-Wl,-u,_pw_bench_replay_start",
+ 					"-Wl,-u,_pw_bench_replay_status",
+ 					"-Wl,-u,_pw_bench_replay_cancel",
++					"-Wl,-u,_pw_bench_lidar_capability",
++					"-Wl,-u,_pw_bench_lidar_start",
++					"-Wl,-u,_pw_bench_lidar_stop",
++					"-Wl,-u,_pw_bench_lidar_status",
+ 					-ljxl,
+ 					-ljxl_cms,
+ 					-ljxl_threads,

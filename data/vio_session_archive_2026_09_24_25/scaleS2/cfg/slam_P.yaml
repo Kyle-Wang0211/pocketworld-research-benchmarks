@@ -1,0 +1,25 @@
+%YAML:1.0
+output:
+  q_bo: [ 0, 0, 0, 1 ]
+  p_bo: [ 0, 0, 0 ]
+feature_tracker:
+  max_frames: 100
+  min_keypoint_distance: 25.0
+  max_keypoint_detection: 300
+solver:
+  time_limit: 0.1
+  iteration_limit: 10
+sliding_window:
+  size: 5
+  tracker_frequent: 3
+visual_localization:
+  enable: false
+  port: 12345
+initializer:
+  min_parallax: 10.0
+parsac:
+  parsac_flag: false
+  dynamic_probability: 0.15
+  threshold: 1.0
+  norm_scale: 1.0
+  keyframe_check_size: 1

@@ -1,0 +1,132 @@
+2026-09-24 19:09:28.148 - [XRSLAM][info] 
+██╗  ██╗██████╗ ███████╗██╗      █████╗ ███╗   ███╗
+╚██╗██╔╝██╔══██╗██╔════╝██║     ██╔══██╗████╗ ████║
+ ╚███╔╝ ██████╔╝███████╗██║     ███████║██╔████╔██║
+ ██╔██╗ ██╔══██╗╚════██║██║     ██╔══██║██║╚██╔╝██║
+██╔╝ ██╗██║  ██║███████║███████╗██║  ██║██║ ╚═╝ ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝NSt3__120__shared_ptr_emplaceIN12xrslam_0_5_05extra11OpenCvImageENS_9allocatorIS3_EEEE
+2026-09-24 19:09:28.149 - [XRSLAM][info] Configurations: 
+Config::camera_intrinsic:
+4.93017e+02 0.00000e+00 3.17979e+02
+0.00000e+00 4.91560e+02 2.42392e+02
+0.00000e+00 0.00000e+00 1.00000e+00
+
+Config::camera_distortion_flag:
+0
+
+Config::camera_distortion:
+0.00000e+00 0.00000e+00 0.00000e+00 0.00000e+00
+
+Config::camera_time_offset:
+0.00000e+00
+
+Config::camera_to_body_rotation:
+ 7.07107e-01 -7.07107e-01  0.00000e+00  0.00000e+00
+
+Config::camera_to_body_translation:
+-1.65000e-03 -9.95000e-03  6.70000e-04
+
+Config::imu_to_body_rotation:
+0.00000e+00 0.00000e+00 0.00000e+00 1.00000e+00
+
+Config::imu_to_body_translation:
+0.00000e+00 0.00000e+00 0.00000e+00
+
+Config::keypoint_noise_cov:
+5.00000e-01 0.00000e+00
+0.00000e+00 5.00000e-01
+
+Config::gyroscope_noise_cov:
+2.87913e-08 0.00000e+00 0.00000e+00
+0.00000e+00 2.87913e-08 0.00000e+00
+0.00000e+00 0.00000e+00 2.87913e-08
+
+Config::accelerometer_noise_cov:
+4.00000e-06 0.00000e+00 0.00000e+00
+0.00000e+00 4.00000e-06 0.00000e+00
+0.00000e+00 0.00000e+00 4.00000e-06
+
+Config::gyroscope_bias_noise_cov:
+3.76088e-10 0.00000e+00 0.00000e+00
+0.00000e+00 3.76088e-10 0.00000e+00
+0.00000e+00 0.00000e+00 3.76088e-10
+
+Config::accelerometer_bias_noise_cov:
+9.00000e-06 0.00000e+00 0.00000e+00
+0.00000e+00 9.00000e-06 0.00000e+00
+0.00000e+00 0.00000e+00 9.00000e-06
+
+Config::sliding_window_size: 10
+Config::sliding_window_subframe_size: 3
+Config::sliding_window_force_keyframe_landmarks: 35
+Config::sliding_window_tracker_frequent: 1
+Config::feature_tracker_min_keypoint_distance: 2.50000e+01
+Config::feature_tracker_max_keypoint_detection: 200
+Config::feature_tracker_max_init_frames: 60
+Config::feature_tracker_max_frames: 20
+Config::feature_tracker_predict_keypoints: true
+Config::feature_tracker_clahe_clip_limit: 6.00000e+00
+Config::feature_tracker_clahe_width: 8
+Config::feature_tracker_clahe_height: 8
+Config::initializer_keyframe_gap: 5
+Config::initializer_min_matches: 50
+Config::initializer_min_parallax: 1.00000e+01
+Config::initializer_min_triangulation: 20
+Config::initializer_min_landmarks: 30
+Config::initializer_refine_imu: true
+Config::solver_iteration_limit: 30
+Config::solver_time_limit: 1.00000e+06
+Config::parsac_flag: false
+Config::parsac_dynamic_probability: 1.50000e-01
+Config::parsac_threshold: 1.00000e+00
+Config::parsac_norm_scale: 1.00000e+00
+Config::parsac_fast_imu_pnp: false
+Config::rotation_misalignment_threshold: 2.00000e-02
+Config::rotation_ransac_threshold: 1.00000e+01
+Config::runtime_max_raw_imu_queue: 1024
+Config::runtime_max_pending_imu: 4096
+Config::runtime_max_frontal_imu: 2048
+Config::runtime_max_pending_camera_frames: 0
+Config::runtime_max_tracking_map_frames: 256
+Config::runtime_max_pending_frame_ids: 256
+Config::imu_timing_warmup_samples: 200
+Config::imu_timing_window_samples: 512
+Config::imu_timing_batch_gap_ratio: 3.00000e+00
+
+THREADING DISABLE
+
+-----------------Create XRSLAM vxrslam v0.5.0 successfully-----------
+XRSLAM: XRSLAMImage.timestamp_convention == XRSLAM_TS_UNSPECIFIED; the timestamp is used as-is. Android SENSOR_TIMESTAMP is first-row exposure START, iOS presentationTimeStamp is UNDOCUMENTED -- the two ends are NOT equivalent, and this library has no td state to absorb the difference (state.h ES_SIZE == 15, no td). Declare the convention (see XRSLAM.h). This warning is printed once.
+2026-09-24 19:09:28.248 - [XRSLAM][info] [pw][imu] 时基预热结束(200 个样本):实测中位 Δ=0.002500s (400.0 Hz),批内抖动 CV=0.0000,成簇上报=否。在此之前离散共分散用的是逐样本实测 Δ,不是 yaml 频率。
+2026-09-24 19:09:28.248 - [XRSLAM][warning] [pw][imu] 检测到**成簇(批量)上报**(到达时钟):约 13.2 个样本同批到达,批间隔中位 0.003128s,而传感器时间戳中位 Δ=0.002500s(时间戳序列连续、直方图不双峰 ⇒ 只看时间戳看不出来)。视觉/惯性权重比会随机型漂移,请勿假设 100Hz。
+2026-09-24 19:09:28.248 - [XRSLAM][warning] [pw][imu] 批内时间戳**疑似等距伪造**(批内 Δ 的 CV=3.98e-08 < 1e-3)。伪造的等距会让离散噪声模型系统性乐观、bias 估计被带偏 —— 这是逐样本 dt 无法自证的盲区。
+2026-09-24 19:09:28.323 - [XRSLAM][debug] SfM init fail: triangulation (3).
+2026-09-24 19:09:28.327 - [XRSLAM][debug] SfM init fail: triangulation (6).
+2026-09-24 19:09:28.332 - [XRSLAM][debug] SfM init fail: triangulation (4).
+2026-09-24 19:09:28.735 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 1)
+2026-09-24 19:09:28.735 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 2)
+2026-09-24 19:09:28.735 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 5)
+2026-09-24 19:09:28.739 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 10)
+2026-09-24 19:09:28.742 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 20)
+2026-09-24 19:09:28.749 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 50)
+2026-09-24 19:09:28.763 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 100)
+2026-09-24 19:09:28.787 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 200)
+2026-09-24 19:09:28.867 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 500)
+2026-09-24 19:09:28.995 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 1000)
+2026-09-24 19:09:29.267 - [XRSLAM][warning] [pw][budget] detail.frontal_imus(前向传播 IMU) 超过硬上限 2048,丢弃最老的 1 个(累计 2000)
+-----------------Destroy XRSLAM vxrslam v0.5.0 successfully-----------
+
+=== pw euroc runner ===
+  images      2143 (rejected 0)
+  gyro/acc    28586 / 28586
+  poses       1826  -> /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/gtdata/runs/zju/A6.M.tum
+  IMU push    mean 0.7733  max 103.605  总计 44.2 s  <- 🔑 真正的成本在这
+  read  ms    mean 0.003
+  push  ms    mean 0.014
+  run   ms    mean 0.001  max 0.005   <- 我们量的 RunOneFrame
+  core  ms    mean 0.001  max 0.005   <- 核内自报 last_frame_ms
+  run_every   1   downscale 1
+  wall        44.8 s
+  imu_zero_frames    0   <- >0 表示那些帧退化成了纯单目
+  degenerate_frames  317
+/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/gtdata/tools/locked.sh: line 7: 55130 Segmentation fault: 11  "$@"

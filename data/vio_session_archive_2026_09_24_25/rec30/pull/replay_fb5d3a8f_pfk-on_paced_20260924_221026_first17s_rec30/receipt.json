@@ -1,0 +1,271 @@
+{
+  "schema": "pw.bench.replay-receipt/1",
+  "marker": "PW_BENCH_REPLAY_PAGE_V1",
+  "bundle": "com.kyle.arloopbench",
+  "run_dir_name": "replay_fb5d3a8f_pfk-on_paced_20260924_221026_first17s_rec30",
+  "started_at_utc": "2026-09-24T14:10:26.992392Z",
+  "ended_at_utc": "2026-09-24T14:10:57.267555Z",
+  "phase": "done",
+  "recording": {
+    "recording_id": "fb5d3a8f-6e31-463e-989d-bd73bb3a2def",
+    "dir_name": "run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def",
+    "device_model": "iPhone15,2",
+    "device_model_source": "input_manifest.json:device_model(不在 manifest.files 内,未核哈希)",
+    "manifest_sha256": "585ed793fa1c9667d968dca91f0ed97f0591032d1277d0c7c34a432e2b740c0a",
+    "frames_digest_sha256": "b6ab0b10ca5dd1d028fe6ef4a259a3b219ab8a4a42abcd18a67de43d7311c47b",
+    "camera": {
+      "height": 1440,
+      "nominal_fps": 60,
+      "pixel_format": "luma8_from_420f_full_range",
+      "width": 1920
+    },
+    "frame_count": 1450,
+    "loss_count": 341,
+    "load_report": {
+      "camera_imu_timestamp_ties": 0,
+      "camera_rows_after_limit": 1060,
+      "camera_rows_total": 1450,
+      "frames_digest_verified": false,
+      "frames_with_exposure": 1060,
+      "imu_samples": 3009,
+      "index_files_sha256_verified": 6,
+      "intrinsics_index_present": true,
+      "intrinsics_paired": 1060,
+      "intrinsics_rows": 1791,
+      "intrinsics_unmatched": 0,
+      "leading_camera_frames_without_imu_dropped": 4,
+      "loss_count": 341,
+      "verdict_resolution_1920x1440": true
+    }
+  },
+  "feed_resolution": {
+    "width": 1920,
+    "height": 1440,
+    "downscaled": false,
+    "at_or_above_1920x1440": true,
+    "note": "录制即 1920×1440,原样喂"
+  },
+  "switches": {
+    "per_frame_intrinsics": {
+      "enabled": true,
+      "parse_failed": false,
+      "raw": "on",
+      "source": 1
+    },
+    "arm_label": "pfk-on",
+    "pace": "paced",
+    "allow_lossy": true,
+    "ignore_exposure": false,
+    "limit_frames": 1060,
+    "verify_frames_digest": false,
+    "tag": "first17s_rec30",
+    "launch_arg_problems": []
+  },
+  "config": {
+    "slam_config": "slam_config.yaml",
+    "device_config": "device_config.yaml",
+    "slam_config_sha256": "8756ff7df3365002258844468f9b67f61dcd3ffe9ebb9bede898ff5e5af13424",
+    "device_config_sha256": "4aeb2c50d8e3484fb3558dfb992c63f3efa475fb7557df6715234b913741cc9a",
+    "effective_config_sha256": "812900abd229c6115a44acdba9644d01422d8d7d882cffcba5646b7de58ae4e0",
+    "generator": "lib/vio/ffi/xrslam_config.dart XrslamConfigBuilder",
+    "provenance": {
+      "cam0.intrinsics": "device-api",
+      "cam0.resolution": "device-api",
+      "cam0.extrinsic": "device-api",
+      "cam0.time_offset": "PLACEHOLDER",
+      "imu.noise": "shared-default",
+      "pixel_params": "upstream-verbatim (min_parallax=10.0, min_keypoint_distance=25.0) @ 640px; 上游验证区间是 640-752px,本次超出"
+    },
+    "yaml_overrides": [],
+    "solver_time_budget": {
+      "frame_time_budget": null,
+      "min_iterations": null,
+      "frame_time_budget_effective_s": -1.0,
+      "budget_on": false,
+      "note": "键不在 ⇒ 引擎默认 −1(关);只有时间预算引擎(b0937ef 起)认这两个键,别的臂 yaml-cpp 读不到也不报错"
+    },
+    "has_placeholders": true,
+    "extrinsic": {
+      "q_bc": [
+        -0.7071068,
+        0.7071068,
+        0.0,
+        0.0
+      ],
+      "p_bc": [
+        0.03290364,
+        -0.00696553,
+        -0.00286231
+      ],
+      "provenance": "device-api",
+      "rule": "CameraImuExtrinsic.forIosMachine(录制机型)"
+    },
+    "camera_time_offset": {
+      "seconds": 0.0,
+      "milliseconds": 0.0,
+      "provenance": "shared-default",
+      "machine": "iPhone15,2",
+      "note": "官方 iOS 配置 time_offset: 0.0(slam_params + 每机 yaml),原始 PTS",
+      "applied_by": "PWXrslamTransportCreateWithCameraTimeOffset(与 ON 臂同)"
+    }
+  },
+  "engine": {
+    "info_plist": {
+      "consumes_per_frame_k": 1,
+      "PWNativeHostUUID": "E000DFBD-E57A-39E3-9662-52F34EBF178F",
+      "PWXrslamBenchArm": "default",
+      "PWXrslamBuildBenchArm": "",
+      "PWXrslamBuildEngine": "official_rules",
+      "PWXrslamBuildLib": "libxrslam_official_rules_89042cd5.a",
+      "PWXrslamBuildRules": "official",
+      "PWXrslamBuildSha16": "89042cd5d5be8448",
+      "PWXrslamBuildThreading": "true",
+      "PWXrslamEngineArm": "official_rules",
+      "PWXrslamEngineFingerprint": "/private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/xrofficial/build-ios/_deps/depends-opencv-build/opencv2.framework/Headers/core/mat.inl.hpp",
+      "PWXrslamEngineLib": "libxrslam_official_rules_89042cd5.a",
+      "PWXrslamEnginePedigree": "research_only",
+      "PWXrslamEngineSHA16": "89042cd5d5be8448",
+      "PWXrslamGpuFrontendLinked": "false",
+      "PWXrslamSHA256": "89042cd5d5be844801a40b914cd8742119f8a9b4c3f6e3a9deef115bd4e7942f",
+      "PWXrslamThreadingEnabled": "true"
+    },
+    "identity_source": "Info.plist(由 stamp_bench_engine_identity.sh 在 Release 构建时按 ios/scripts/stamp_runtime_identity.sh 的臂表与二进制指纹核对后盖章)",
+    "gpu_frontend_trail": "",
+    "telemetry_symbols_found": 3
+  },
+  "per_frame_intrinsics": {
+    "schema": "pw.vio.per-frame-intrinsics/2",
+    "arm": "per_frame_k_on",
+    "switch_enabled": true,
+    "switch_source": "launch_argument",
+    "switch_parse_failed": false,
+    "switch_launch_argument": "-PWPerFrameIntrinsics",
+    "frames": 529,
+    "transport_attached": 529,
+    "transport_not_attached": 0,
+    "transport_rejected_invalid": 0,
+    "transport_engine_report_differs": 0,
+    "transport_engine_report_equal_not_evidence": 529,
+    "engine_consumes_per_frame_k": "build_identity_per_frame_k_arm",
+    "host_switch_off": 0,
+    "host_no_attachment": 0,
+    "host_reference_dims_mismatch": 0,
+    "host_active_format_mismatch": 0,
+    "host_config_resolution_mismatch": 0,
+    "host_config_resolution_unknown": 0,
+    "last_source": "per_frame",
+    "last_attached_fxfycxcy": [
+      469.7427978515625,
+      469.7427978515625,
+      320.8132731119792,
+      240.21565755208334
+    ],
+    "last_engine_fxfycxcy": [
+      469.7427978515625,
+      469.7427978515625,
+      320.8132731119792,
+      240.21565755208334
+    ],
+    "fx_min": 453.2997639973958,
+    "fx_max": 476.2266845703125,
+    "pushed_width": 640,
+    "pushed_height": 480,
+    "config_width": 640,
+    "config_height": 480,
+    "trace_sequence_mismatch": 0
+  },
+  "transport_stats": {
+    "acceleration_submitted": 3009,
+    "camera_callbacks": 529,
+    "camera_lock_failures": 0,
+    "camera_run_calls": 529,
+    "camera_submitted": 529,
+    "frames_dropped": 0,
+    "frames_offered": 529,
+    "gyroscope_submitted": 3009,
+    "imu_dropped": 0,
+    "max_pending_frames": 1,
+    "rejected_invalid_argument": 0,
+    "rejected_non_monotonic": 0,
+    "rejected_not_running": 0,
+    "running": 1
+  },
+  "timebase": [
+    0,
+    0,
+    529,
+    529,
+    0.008883270776262034,
+    0.007246376811594203,
+    0.009009009009009009,
+    0,
+    0,
+    0,
+    0,
+    529
+  ],
+  "feeding": {
+    "camera_offered": 1056,
+    "capacity_waits_camera": 0,
+    "capacity_waits_imu": 0,
+    "imu_rows_pushed": 3009,
+    "observations": 529,
+    "paced_late_events_over_5ms": 0,
+    "paced_max_lateness_ms": 4.559875,
+    "recording_span_s": 29.993599792,
+    "wall_s": 29.997056625
+  },
+  "thermal_state": {
+    "end": 0,
+    "start": 0
+  },
+  "device": {
+    "hw_machine": "iPhone15,2",
+    "os": "Version 26.6.1 (Build 23G83)"
+  },
+  "launch_arguments": {
+    "PWBenchReplayAllowLossy": "on",
+    "PWBenchReplayLimitFrames": "1060",
+    "PWBenchReplayPace": "paced",
+    "PWBenchReplayRecording": "run-fb5d3a8f",
+    "PWBenchReplayTag": "first17s_rec30",
+    "PWPerFrameIntrinsics": {
+      "enabled": true,
+      "raw": "on",
+      "source": 1
+    },
+    "PWYamlOverride": []
+  },
+  "outputs": {
+    "frame_timing.csv": {
+      "bytes": 48836,
+      "rows": 529,
+      "sha256": "eba61268c0ffca0573d50be2cfbe8ef595f76dcdf0e13d1d3fffdff4480d5b3e"
+    },
+    "intrinsics_ledger.csv": {
+      "bytes": 194257,
+      "rows": 529,
+      "sha256": "a1d4a25954cac10d2b0466e1f9aa664b325937e2669b2d0342328409cf78ecb7"
+    },
+    "poses_body.tum": {
+      "bytes": 43145,
+      "rows": 480,
+      "sha256": "10831a761ddf5a5175bdea6db2ca97d3c4a71c07a76028bcef1ddce0df81ccac"
+    },
+    "poses_camera_by_recording_frame.csv": {
+      "bytes": 59046,
+      "rows": 480,
+      "sha256": "6da6369eb7163257bf086a882f04e29082e9f018a38eb3e84878f94699caf0d9"
+    },
+    "poses_camera.tum": {
+      "bytes": 42734,
+      "rows": 481,
+      "sha256": "90dd6147cfde48f7eed431e7fda7eefbcc7e622bdab8117e3191c3d2b573186f"
+    }
+  },
+  "native_summary_file": "replay_native_summary.json",
+  "invariants": {
+    "failed": [],
+    "passed": true
+  }
+}

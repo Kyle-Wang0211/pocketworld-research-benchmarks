@@ -1,0 +1,15 @@
+bench(168-fixes): export shim 两个 v2 转发加 TARGET_OS_SIMULATOR 守卫(只为模拟器切片能链接)
+
+上一个提交(fixC 产品侧补丁原样)的 pwofficial_add_frame_v2 / pwofficial_registration_evidence_stats_v1
+没有模拟器分支;scripts/build_xcframework.sh 链模拟器切片时只带 pwofficial_sim_backend.c(没有核),
+于是报 Undefined symbols _aether_sfm_add_frame_v2 / _aether_sfm_registration_evidence_stats_v1。
+照本文件里已有转发(prefetch_frame / remove_frame / finalize_async / finalize_progress)的写法补上
+#if TARGET_OS_SIMULATOR 分支:返回 AETHER_SFM_ERR_UNSUPPORTED / 计数清零。
+
+真机切片不受影响:同一编译命令(arm64-apple-ios14.0 -O3 -fvisibility=hidden)编出的
+export_shim.o 在加守卫前后 __TEXT,__text 逐字节相同(sha1 f34cec5aee9e…)。
+这是补丁之外唯一的源码改动,属构建补全,不改任何行为。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,12 @@
+| A6 | S | Scale: 100.000% APE: 30.629 [mm] RPE: 1.342 [mm] ARE: 1.780 [deg] RRE: 0.219 [deg] CMPL: 100.000% | T_init: 7.568 [s] E_scale: 0.085171 E_init: 2.334757 |
+| A6 | M | Scale: 100.000% APE: 46.217 [mm] RPE: 4.541 [mm] ARE: 2.016 [deg] RRE: 0.309 [deg] CMPL: 99.890% | T_init: 7.001 [s] E_scale: 0.093657 E_init: 2.254187 |
+| B0 | S | Scale: 100.000% APE: 81.779 [mm] RPE: 5.265 [mm] ARE: 3.751 [deg] RRE: 1.000 [deg] CMPL: 72.719% | T_init: 0.000 [s] E_scale: 0.005182 E_init: 0.000000 |
+| B0 | M | Scale: 100.000% APE: 102.787 [mm] RPE: 8.055 [mm] ARE: 6.545 [deg] RRE: 1.064 [deg] CMPL: 61.599% | T_init: 0.000 [s] E_scale: 0.011665 E_init: 0.000000 |
+| B3 | S | Scale: 100.000% APE: 42.968 [mm] RPE: 3.834 [mm] ARE: 1.842 [deg] RRE: 0.260 [deg] CMPL: 99.424% | T_init: 0.000 [s] E_scale: 0.019918 E_init: 0.000000 |
+| B3 | M | Scale: 100.000% APE: 53.310 [mm] RPE: 6.216 [mm] ARE: 1.852 [deg] RRE: 0.345 [deg] CMPL: 98.056% | T_init: 0.000 [s] E_scale: 0.003926 E_init: 0.000000 |
+| B7 | S | Scale: 100.000% APE: 57.529 [mm] RPE: 6.578 [mm] ARE: 1.326 [deg] RRE: 0.267 [deg] CMPL: 96.654% | T_init: 6.398 [s] E_scale: 0.040693 E_init: 1.440613 |
+| B7 | M | Scale: 100.000% APE: 83.326 [mm] RPE: 6.647 [mm] ARE: 4.143 [deg] RRE: 0.298 [deg] CMPL: 79.802% | T_init: 6.298 [s] E_scale: 0.025726 E_init: 1.190483 |
+| A6 | O | Scale: 100.000% APE: 33.754 [mm] RPE: 1.844 [mm] ARE: 1.758 [deg] RRE: 0.220 [deg] CMPL: 100.000% | T_init: 8.068 [s] E_scale: 0.040837 E_init: 1.819121 |
+| B0 | O | Scale: 100.000% APE: 84.370 [mm] RPE: 4.848 [mm] ARE: 5.953 [deg] RRE: 1.003 [deg] CMPL: 69.626% | T_init: 0.000 [s] E_scale: 0.002173 E_init: 0.000000 |
+| B3 | O | Scale: 100.000% APE: 38.262 [mm] RPE: 3.853 [mm] ARE: 1.599 [deg] RRE: 0.260 [deg] CMPL: 100.000% | T_init: 0.000 [s] E_scale: 0.025256 E_init: 0.000000 |
+| B7 | O | Scale: 100.000% APE: 47.074 [mm] RPE: 6.730 [mm] ARE: 1.311 [deg] RRE: 0.267 [deg] CMPL: 97.831% | T_init: 5.699 [s] E_scale: 0.029539 E_init: 1.133130 |

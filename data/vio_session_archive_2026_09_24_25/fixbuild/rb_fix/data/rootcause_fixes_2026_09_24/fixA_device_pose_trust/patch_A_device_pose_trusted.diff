@@ -1,0 +1,1002 @@
+diff --git a/lib/official_aether_sfm_ffi.dart b/lib/official_aether_sfm_ffi.dart
+index c8d2be5668ae6e028852a8f2add3eefcea894232..1796f0319c41790a4e34ac1f3b71614f6b6db09c 100644
+--- a/lib/official_aether_sfm_ffi.dart
++++ b/lib/official_aether_sfm_ffi.dart
+@@ -611,6 +611,41 @@ typedef _AddJpegFrameDart =
+       Pointer<Int32> outFrameId,
+     );
+ 
++// [DEVICE-POSE-TRUST 2026-09-24] 带「设备位姿可信」位的喂帧 ABI(核侧由
++// agent C 实现,契约见 lib/official_capture/device_pose_trust.dart)。
++// 与 v1 逐参同序,只在 pose_t 之后多一个 int32 device_pose_trusted(0/1)。
++// 0 ⇒ 核不得把该帧摆在设备位姿上、不得拿它做 Sim3 对齐对/位姿先验,按上游
++// 无先验图像从图像证据注册(证据不够则不注册)。位姿指针照传(审计/诊断)。
++// 🔴 符号名/签名是本侧提案;若 C 定名不同,只改这里与 _lookupAddJpegFrameV2。
++typedef _AddJpegFrameV2C =
++    Int32 Function(
++      Pointer<Void> session,
++      Pointer<Utf8> jpegPath,
++      Double captureTimestamp,
++      Float fx,
++      Float fy,
++      Float cx,
++      Float cy,
++      Pointer<Double> poseQwxyz, // may be nullptr
++      Pointer<Double> poseT, // may be nullptr
++      Int32 devicePoseTrusted, // 1 = trusted, 0 = untrusted
++      Pointer<Int32> outFrameId,
++    );
++typedef _AddJpegFrameV2Dart =
++    int Function(
++      Pointer<Void> session,
++      Pointer<Utf8> jpegPath,
++      double captureTimestamp,
++      double fx,
++      double fy,
++      double cx,
++      double cy,
++      Pointer<Double> poseQwxyz,
++      Pointer<Double> poseT,
++      int devicePoseTrusted,
++      Pointer<Int32> outFrameId,
++    );
++
+ // [EXTRACT-PREFETCH 2026-08-09] JPEG 版预取:非阻塞,壳层解码后交核内专属
+ // 提取线程;env OFFICIAL_AETHER_EXTRACT_PREFETCH 未设时 native 是 no-op。
+ typedef _PrefetchJpegFrameC =
+@@ -865,6 +900,23 @@ class AetherSfm {
+       .lookupFunction<_AddJpegFrameC, _AddJpegFrameDart>(
+         'pwofficial_add_jpeg_frame',
+       );
++  // [DEVICE-POSE-TRUST 2026-09-24] 懒绑定、可缺:旧 framework 没有 v2 符号时
++  // 为 null,addJpegFrame 回退 v1(核按旧行为使用设备位姿),并在返回值里
++  // 报告 devicePoseTrustHonored=false,由 fed 记录如实落盘。
++  static final _AddJpegFrameV2Dart? _addJpegFrameV2 = _lookupAddJpegFrameV2();
++  static _AddJpegFrameV2Dart? _lookupAddJpegFrameV2() {
++    try {
++      return _lib.lookupFunction<_AddJpegFrameV2C, _AddJpegFrameV2Dart>(
++        'pwofficial_add_jpeg_frame_v2',
++      );
++    } catch (_) {
++      return null;
++    }
++  }
++
++  /// 当前链接的核是否实现了带设备位姿可信位的喂帧 ABI。
++  static bool get supportsDevicePoseTrust => _addJpegFrameV2 != null;
++
+   // [EXTRACT-PREFETCH] 懒绑定;旧 framework 无此符号时首次调用抛错,调用方
+   // catch(与 repairStats 同一契约)。
+   static final _PrefetchJpegFrameDart _prefetchJpegFrame = _lib
+@@ -968,7 +1020,15 @@ class AetherSfm {
+ class AetherSfmAddFrameResult {
+   final AetherSfmResult result;
+   final int frameId; // -1 unless result == ok
+-  const AetherSfmAddFrameResult(this.result, this.frameId);
++
++  /// [DEVICE-POSE-TRUST 2026-09-24] true = 经带信任位的 v2 ABI 喂入(核按
++  /// devicePoseTrusted 处理);false = 旧核回退 v1(核按旧行为用设备位姿)。
++  final bool devicePoseTrustHonored;
++  const AetherSfmAddFrameResult(
++    this.result,
++    this.frameId, {
++    this.devicePoseTrustHonored = false,
++  });
+ }
+ 
+ /// Sparse cloud packed for cheap isolate transfer / rendering:
+@@ -1175,6 +1235,9 @@ class AetherSfmStreamSession {
+     required double cy,
+     List<double>? quatWxyz,
+     List<double>? translation,
++    // [DEVICE-POSE-TRUST 2026-09-24] 追踪器是否承认这帧的设备位姿。缺省 true
++    // 只为兼容既有调用;拍摄期喂帧路径一律显式传入。
++    bool devicePoseTrusted = true,
+   }) {
+     _checkLive();
+     final pathPtr = jpegPath.toNativeUtf8();
+@@ -1191,22 +1254,38 @@ class AetherSfmStreamSession {
+         tPtr.asTypedList(3).setAll(0, translation);
+       }
+       idPtr.value = -1;
+-      final rc = AetherSfm._addJpegFrame(
+-        _session,
+-        pathPtr,
+-        captureTimestamp,
+-        fx,
+-        fy,
+-        cx,
+-        cy,
+-        qPtr,
+-        tPtr,
+-        idPtr,
+-      );
++      final v2 = AetherSfm._addJpegFrameV2;
++      final rc = v2 != null
++          ? v2(
++              _session,
++              pathPtr,
++              captureTimestamp,
++              fx,
++              fy,
++              cx,
++              cy,
++              qPtr,
++              tPtr,
++              devicePoseTrusted ? 1 : 0,
++              idPtr,
++            )
++          : AetherSfm._addJpegFrame(
++              _session,
++              pathPtr,
++              captureTimestamp,
++              fx,
++              fy,
++              cx,
++              cy,
++              qPtr,
++              tPtr,
++              idPtr,
++            );
+       final result = _resultFromCode(rc);
+       return AetherSfmAddFrameResult(
+         result,
+         result == AetherSfmResult.ok ? idPtr.value : -1,
++        devicePoseTrustHonored: v2 != null,
+       );
+     } finally {
+       malloc.free(pathPtr);
+diff --git a/lib/official_capture/auto_capture_controller.dart b/lib/official_capture/auto_capture_controller.dart
+index 6b3d38dc2a2fd0dc33847689450cb401b3cef7ea..1140b7ad6878ddc6c3ff3723545381fd68231d40 100644
+--- a/lib/official_capture/auto_capture_controller.dart
++++ b/lib/official_capture/auto_capture_controller.dart
+@@ -11,6 +11,8 @@
+ // 2026-08-26:选帧只消费后端统一后的位姿、相机内参与可选特征健康度。
+ // 横/纵有效视差、前后尺度、原地旋转和重叠保底分开分类；不读取 ARKit
+ // trackingStateName、centerRayDepthM 或其它苹果私有质量/选帧算法。
++// (唯一例外是 tracking 硬闸 [_trackingNormal]:它经 device_pose_trust.dart
++// 读跨端词表里"追踪器是否 normal"这一位,不参与选帧,只管停/不停。)
+ //
+ // 设计见 docs/superpowers/specs/2026-08-19-auto-capture-design.md。
+ // 几何在 auto_capture_geometry.dart,决策谓词在 auto_capture_governor.dart;
+@@ -31,6 +33,7 @@ import 'place_recognition_bayes.dart';
+ import 'visual_word_dictionary.dart';
+ import 'alicevision_motion_segment.dart';
+ import 'continuous_feature_tracks.dart';
++import 'device_pose_trust.dart';
+ import 'photo_card_state.dart' show medianOf;
+ import 'shutter_backpressure_gate.dart' show ShutterPace;
+ 
+@@ -833,7 +836,18 @@ class AutoCaptureController {
+ 
+   /// 只消费后端统一后的 tracking 布尔值。ARKit 专属的 limited_* 字符串只
+   /// 留给诊断；xrslam/ARCore/其它端不需要伪造苹果枚举才能获得同一行为。
+-  static bool _trackingNormal(ARPose p) => p.isTracking;
++  ///
++  /// [DEVICE-POSE-TRUST 2026-09-24] 但页面喂进来的是 CaptureSession 的
++  /// **hybrid** 位姿:ARKit limited 时 `_resolveHybridPose` 用 IMU 航位推算
++  /// 替换 az/el 并强行把 isTracking 置 true(给穹顶 UI 用),于是本闸在
++  /// limited 期间永远放行(cap_1787733401226757:924 次判定 skipTracking=0,
++  /// 3 张拍在 limited_initializing 窗口里)。hybrid 位姿的 copyWith 刻意保留
++  /// 原生 trackingStateName,所以这里再看一眼跨端词表:追踪器**明确**报了
++  /// 非 normal ⇒ 不是正常追踪。未报(null,mock/测试)⇒ 维持原 isTracking。
++  /// spec §7「tracking 丢失 / limited ⇒ 暂停触发,且基准帧不更新」。
++  static bool _trackingNormal(ARPose p) =>
++      p.isTracking &&
++      !DevicePoseTrust.trackerReportsDegraded(p.trackingStateName);
+ 
+   static Vector3 _forwardOf(ARPose pose) =>
+       cameraForwardInWorld(pose.orientation);
+diff --git a/lib/official_capture/capture_session.dart b/lib/official_capture/capture_session.dart
+index 92101d85adb2c50c60f3d4f4efd3a4e41bb76ca9..2250cc937f80683ddd81fe1e6a48b36c2e2ce804 100644
+--- a/lib/official_capture/capture_session.dart
++++ b/lib/official_capture/capture_session.dart
+@@ -1744,6 +1744,11 @@ class CaptureSession {
+               captureTimestamp: still.timestamp,
+               cameraTransform: still.cameraTransform,
+               intrinsics: still.intrinsics,
++              // [DEVICE-POSE-TRUST 2026-09-24] 这张 12MP 照片**自己那一帧**的
++              // 追踪状态(原生随同一 ARFrame 回传)。不是按快门时预览帧的
++              // _lastPoseSource / hybrid isTracking —— 那两个在 limited 时被
++              // IMU 航位推算改写过。判定见 device_pose_trust.dart。
++              trackingStateName: still.trackingStateName,
+             );
+             if (!validation.isAccepted ||
+                 !await File(still.highresPath).exists()) {
+diff --git a/lib/official_capture/device_pose_trust.dart b/lib/official_capture/device_pose_trust.dart
+new file mode 100644
+index 0000000000000000000000000000000000000000..46afe4baf732e1156a050f6bc5430a61b4a40eb2
+--- /dev/null
++++ b/lib/official_capture/device_pose_trust.dart
+@@ -0,0 +1,136 @@
++// device_pose_trust.dart — [DEVICE-POSE-TRUST 2026-09-24] 每张喂给 SfM 的照片
++// 带一个布尔 `devicePoseTrusted`:这张照片自己那一帧的设备位姿,追踪器本身
++// 是否承认它可用。纯 Dart,零 Flutter/平台依赖;四端同一份判据。
++//
++// ── 为什么要有它(cap_1787733401226757,08-26 真机)──────────────────────
++// ARKit 对第 1–3 张照片自己那一帧报 `limited_initializing`(photo bundle 与
++// 原生 sidecar 都记着),我们照样把那三帧的 ARKit 位姿当可信位姿喂进了 SfM
++// 核;核把帧直接摆在设备位姿上,交付后这三帧离像 78–382 mm,尺度偏 −3.2%。
++// 链路上有三处把"追踪器说没准备好"丢掉了:
++//   1. 原生高清帧回传了 trackingStateName,但
++//      `OfficialHighResReconstructionInput.validate` 没有这个字段,
++//      `SfmLiveRecon.offerFrame` 无条件把 cameraTransform 当位姿喂核;
++//   2. 自动快门的 tracking 硬闸 `AutoCaptureController._trackingNormal`
++//      读 `ARPose.isTracking`,而 `CaptureSession._resolveHybridPose` 在
++//      ARKit limited 时用 IMU 航位推算替换 az/el 并**强行置 isTracking=true**
++//      (为穹顶 UI),于是闸永远不响:那一场 924 次判定 `skipTracking=0`,
++//      却有 3 张在 limited_initializing 窗口里拍下;
++//   3. 手动快门路径注释写着 "Downstream filters on pose quality later",
++//      但下游从来没有这个过滤。
++//
++// ── 判据(照官方,不自研)──────────────────────────────────────────────
++// 可信 ⇔ 追踪器对**这张照片自己那一帧**报告的状态是它的"正常/完全追踪"。
++// 其余一律不可信,包括状态缺失(fail-closed:不知道追踪器状态就不能宣称
++// 位姿可信 —— 用户铁律「必须准」)。
++//   • Apple ARKit(developer.apple.com/documentation/arkit/
++//     managing-session-life-cycle-and-tracking-quality):`.limited(.initializing)`
++//     时 "a device pose is available but its accuracy is uncertain";只有
++//     `.normal` 表示位姿准确。Apple 自己的 Object Capture 取景样例
++//     (Scanning objects using Object Capture,CapturePrimaryView.swift:65-66)
++//     只在 `session.cameraTracking == .normal` 时才显示快门。
++//   • Google ARCore(developers.google.com/ar/reference/java/com/google/ar/core/
++//     Camera,getPose / getTrackingState):位姿只在 `TRACKING` 时有用,否则不应
++//     使用;`PAUSED` + `TrackingFailureReason.NONE` 就是正常初始化中。官方
++//     hello_ar_java(HelloArActivity.java:553-556)`PAUSED` 时直接 return。
++//     映射:TRACKING→"normal";PAUSED→"limited_*";STOPPED→"not_available"。
++//   • Huawei HarmonyOS AR Engine(HMS_AREngine_ARCamera_GetPose /
++//     GetTrackingState):同 ARCore,只在 TRACKING 时使用位姿。
++//   • OpenXR `XR_SPACE_LOCATION_POSITION_TRACKED_BIT`(VALID 但未 TRACKED =
++//     推算/最后已知位置)与 WebXR `XRPose.emulatedPosition`:标准里就有"位姿在、
++//     但不是真追踪"的逐位姿标志 —— 本文件的 devicePoseTrusted 就是它的对等物。
++//   • XRSLAM:官方 `XRSLAM_RESULT_STATE == TRACKING_SUCCESS`,见本文件底部
++//     [XRSLAM] 段(映射 [xrslamTrackerStateName])。
++// 引文与 URL 见交付报告;这里不复制长段原文。
++//
++// ── 契约(与 agent B / C 共用)───────────────────────────────────────────
++// devicePoseTrusted=false ⇒ 核**不得**把该帧摆在设备位姿上、不得拿它做
++// Sim3 对齐对、不得拿它做位姿先验;像上游没有先验的图像一样从图像证据注册,
++// 证据不够就不注册。照片本身**照常入库、照常喂**(用户按下的快门不丢)。
++//
++// 状态字符串词表 = `ARPose.trackingStateName` 已有的跨端词表
++// ("normal" / "not_available" / "limited_*"),由各端原生层映射。
++
++import '../vio/diagnostics/vio_shadow_se3_comparison.dart'
++    show RawXrslamPoseClassification;
++
++/// 追踪器的"正常/完全追踪"状态在跨端词表里的唯一取值。
++const String kTrackerStateNormal = 'normal';
++
++/// 一张照片的设备位姿可信判决 + 原因(原因只做审计,判决只看 [trusted])。
++class DevicePoseTrust {
++  const DevicePoseTrust._(this.trusted, this.trackerState, this.reason);
++
++  /// 追踪器对该帧报告 "normal" ⇔ true。
++  final bool trusted;
++
++  /// 追踪器对该帧报告的原始状态(跨端词表);null = 未报告。
++  final String? trackerState;
++
++  /// `tracker_normal` / `tracker_state_missing` / `tracker_<state>`。
++  final String reason;
++
++  /// 由**产生该位姿的那一帧**的追踪状态判定。
++  ///
++  /// 注意:必须传位姿所属那一帧的状态(高清静照 = 原生回传的
++  /// `HighResolutionStillCapture.trackingStateName`),不是按快门那一刻预览
++  /// 帧的状态,也不是 `CaptureSession` 的 hybrid `isTracking`。
++  factory DevicePoseTrust.fromTrackerState(String? trackerState) {
++    if (trackerState == null || trackerState.isEmpty) {
++      return const DevicePoseTrust._(false, null, 'tracker_state_missing');
++    }
++    if (trackerState == kTrackerStateNormal) {
++      return const DevicePoseTrust._(
++        true,
++        kTrackerStateNormal,
++        'tracker_normal',
++      );
++    }
++    return DevicePoseTrust._(false, trackerState, 'tracker_$trackerState');
++  }
++
++  /// 预览位姿流用的"追踪器明确说了非正常"判断(自动快门硬闸)。
++  ///
++  /// 与 [DevicePoseTrust.fromTrackerState] 的区别只在 null:预览流上 null 表示
++  /// provider 还没给值(`ARPose.trackingStateName` 文档:mock/Web/HarmonyOS
++  /// 约定给 "normal",null 由 PoseDriftTracker 当 normal),此时退回既有的
++  /// `isTracking` 布尔;真正决定位姿能不能进重建的是喂帧时的
++  /// [DevicePoseTrust.fromTrackerState](那里 null 一律不可信)。
++  static bool trackerReportsDegraded(String? trackerState) =>
++      trackerState != null &&
++      trackerState.isNotEmpty &&
++      trackerState != kTrackerStateNormal;
++
++  Map<String, Object?> toJson() => <String, Object?>{
++    'devicePoseTrusted': trusted,
++    'deviceTrackingState': trackerState,
++    'devicePoseTrustReason': reason,
++  };
++
++  @override
++  String toString() => 'DevicePoseTrust($trusted, $reason)';
++}
++
++// ── [XRSLAM] 发布版只有 XRSLAM ────────────────────────────────────────────
++// XRSLAM 的 `track()` 恒 true,但它**有**官方就绪信号:
++// `XRSLAMGetResult(XRSLAM_RESULT_STATE)` ∈ {INITIALIZING, TRACKING_SUCCESS,
++// TRACKING_FAIL}(xrslam-interface/src/XRSLAMManager.cpp:191-202 @upstream
++// 4beb1a9;INITIALIZING ⇔ initializer 仍非空,core/frontend_worker.cpp:120-127)。
++// 上游自己的消费端只在 `state == TRACKING_SUCCESS && pose.timestamp > 0` 时用
++// 位姿(xrslam-pc/player/src/main.cpp:150-158;ROS / iOS demo 同口径)。
++// 上游在第一个 TRACKING_SUCCESS 帧会吐全零四元数(feature_tracker.cpp:43-46,
++// 113-122),我们既有的 `classifyRawXrslamPose` 已把它判 degenerate。
++// 生产传输层每帧都已读这两个量(vendor/xrslam/transport/
++// PwXrslamTransportCore.cpp:223-231 → wire 'rawXrslamState')。
++// 已知盲区(上游**没有**官方信号,要上台架量,见交付报告第 6 节):
++//   • 初始化成功后尺度/重力/偏置是否已收敛;
++//   • 视觉丢失 / 纯 IMU 外推段(上游从不宣告丢失,TRACKING_FAIL 实际不出现)。
++
++/// XRSLAM 原始状态分类 → 跨端词表。只有 [RawXrslamPoseClassification.valid]
++/// (= 上游用位姿的条件 + 非退化四元数)映射到 "normal"。
++String xrslamTrackerStateName(RawXrslamPoseClassification c) => switch (c) {
++  RawXrslamPoseClassification.valid => kTrackerStateNormal,
++  RawXrslamPoseClassification.initializing => 'limited_initializing',
++  RawXrslamPoseClassification.trackingFailed => 'not_available',
++  RawXrslamPoseClassification.degenerate => 'limited_unknown',
++  RawXrslamPoseClassification.malformed => 'limited_unknown',
++};
+diff --git a/lib/official_capture/official_highres_reconstruction_input.dart b/lib/official_capture/official_highres_reconstruction_input.dart
+index 6497e81748069bca96e60709cdf5524a663e598a..f08a3284acbc8a87dd067dba9e9e2648173864c4 100644
+--- a/lib/official_capture/official_highres_reconstruction_input.dart
++++ b/lib/official_capture/official_highres_reconstruction_input.dart
+@@ -1,3 +1,5 @@
++import 'device_pose_trust.dart';
++
+ enum OfficialHighResInputFailure {
+   captureFailed,
+   unexpectedDimensions,
+@@ -30,6 +32,7 @@ class OfficialHighResReconstructionInput {
+     required this.captureTimestamp,
+     required this.cameraTransform,
+     required this.intrinsics,
++    required this.devicePoseTrust,
+   });
+ 
+   static const int requiredWidth = 4032;
+@@ -43,6 +46,13 @@ class OfficialHighResReconstructionInput {
+   final List<double> cameraTransform;
+   final List<double> intrinsics;
+ 
++  /// [DEVICE-POSE-TRUST 2026-09-24] 追踪器是否承认 [cameraTransform] 所属那一帧
++  /// 的位姿(见 device_pose_trust.dart)。**不参与接受/拒绝**:不可信的照片
++  /// 照样是合法输入、照样喂 SfM,只是核不得把它摆在这个位姿上。
++  final DevicePoseTrust devicePoseTrust;
++
++  bool get devicePoseTrusted => devicePoseTrust.trusted;
++
+   double get timestampDeltaSeconds =>
+       (captureTimestamp - triggerTimestamp).abs();
+ 
+@@ -54,6 +64,9 @@ class OfficialHighResReconstructionInput {
+     required double captureTimestamp,
+     required List<double> cameraTransform,
+     required List<double> intrinsics,
++    // 原生高清帧自己那一帧的追踪状态(HighResolutionStillCapture
++    // .trackingStateName)。缺省 null ⇒ 不可信(fail-closed)。
++    String? trackingStateName,
+   }) {
+     if (jpegPath.isEmpty ||
+         !(jpegPath.toLowerCase().endsWith('.jpg') ||
+@@ -99,6 +112,7 @@ class OfficialHighResReconstructionInput {
+         captureTimestamp: captureTimestamp,
+         cameraTransform: List<double>.unmodifiable(cameraTransform),
+         intrinsics: List<double>.unmodifiable(intrinsics.take(4)),
++        devicePoseTrust: DevicePoseTrust.fromTrackerState(trackingStateName),
+       ),
+     );
+   }
+diff --git a/lib/official_capture/sfm_live_recon.dart b/lib/official_capture/sfm_live_recon.dart
+index 7979cbadfa07509aead9f8b6d3180207ce35cfd5..40352b74973f55e3b9b53523f5465e06974180e7 100644
+--- a/lib/official_capture/sfm_live_recon.dart
++++ b/lib/official_capture/sfm_live_recon.dart
+@@ -394,6 +394,9 @@ class SfmFedFrameMeta {
+     this.arkitQuatWxyz,
+     this.arkitTransTxyz,
+     this.arkitCameraCenterWorld,
++    this.devicePoseTrusted = true,
++    this.deviceTrackingState,
++    this.devicePoseTrustReason,
+   });
+   final String jpegPath;
+   final int imageW;
+@@ -418,6 +421,63 @@ class SfmFedFrameMeta {
+ 
+   /// ARKit camera center in the gravity-aligned world frame, meters.
+   final List<double>? arkitCameraCenterWorld;
++
++  /// [DEVICE-POSE-TRUST 2026-09-24] 共享契约位(agent A/B/C):false ⇒ 核不得
++  /// 把该帧摆在设备位姿上、不得拿它做 Sim3 对齐对/位姿先验;Dart 侧也不拿它
++  /// 的 ARKit 旋转做重力对齐。拍摄期喂帧路径一律显式赋值
++  /// (OfficialHighResReconstructionInput.devicePoseTrust);缺省 true 只为
++  /// 兼容本字段出现之前落盘的 fed 记录(当时一律按可信喂)—— 续跑读旧记录
++  /// 时是否改判由 resume 侧决定。
++  final bool devicePoseTrusted;
++
++  /// 追踪器对该帧报告的原始状态(跨端词表),审计用;null = 未报告。
++  final String? deviceTrackingState;
++
++  /// DevicePoseTrust.reason,审计用。
++  final String? devicePoseTrustReason;
++}
++
++/// [DEVICE-POSE-TRUST 2026-09-24] 一行 `official_sfm_fed_frames.jsonl` 记录。
++/// 纯函数(便于单测);[SfmLiveRecon._persistFedMeta] 原样落盘。
++/// `devicePoseTrusted` 恒写出;[coreHonorsDevicePoseTrust] = 这一帧是不是经
++/// 带信任位的核 ABI 喂进去的(false = 旧核回退路径:核仍按旧行为把它摆在
++/// 设备位姿上,分析时不能把 devicePoseTrusted=false 当成"核没用它")。
++Map<String, Object?> sfmFedFrameRecord(
++  int frameId,
++  SfmFedFrameMeta m, {
++  bool? coreHonorsDevicePoseTrust,
++}) {
++  final meta = <String, Object?>{
++    'frameId': frameId,
++    'jpegPath': m.jpegPath,
++    'grayW': m.grayW,
++    'grayH': m.grayH,
++    if (m.captureTimestamp != null) 'captureTimestamp': m.captureTimestamp,
++    'devicePoseTrusted': m.devicePoseTrusted,
++    'deviceTrackingState': m.deviceTrackingState,
++    if (m.devicePoseTrustReason != null)
++      'devicePoseTrustReason': m.devicePoseTrustReason,
++    // null = 调用方不知道(非拍摄期喂帧路径)。
++    'coreHonorsDevicePoseTrust': coreHonorsDevicePoseTrust,
++  };
++  if (m.arkitQuatWxyz != null &&
++      m.arkitTransTxyz != null &&
++      m.arkitCameraCenterWorld != null) {
++    meta.addAll(<String, Object?>{
++      // [07-28 勘误] 旧标签让外部分析误以为已做 COLMAP 相机系翻转;
++      // 实际存的是 ARKit 相机轴约定的 CamFromWorld(C=diag(1,-1,-1)
++      // **未**应用——gravity align 公式 R_w=R_ark^T·C·R_col 自带 C,
++      // 吃的就是 raw)。标签改为显式声明,数据一字未动。
++      'arkitPoseConvention':
++          'worldAlignment.gravity; CamFromWorld inverted from ARKit '
++          'cameraToWorld, in ARKit CAMERA AXES (COLMAP C=diag(1,-1,-1) '
++          'flip NOT applied); plus camera center in world',
++      'arkitCamFromWorldQwxyz': m.arkitQuatWxyz,
++      'arkitCamFromWorldTxyz': m.arkitTransTxyz,
++      'arkitCameraCenterWorld': m.arkitCameraCenterWorld,
++    });
++  }
++  return meta;
+ }
+ 
+ /// One canonical JPEG waiting while the worker is busy. CaptureSession owns
+@@ -435,6 +495,7 @@ class _SpooledFrame {
+     required this.cy,
+     required this.quatWxyz,
+     required this.trans,
++    required this.devicePoseTrusted,
+   });
+   final int seq;
+   final String path;
+@@ -447,6 +508,7 @@ class _SpooledFrame {
+   final double cy;
+   final Float64List? quatWxyz;
+   final Float64List? trans;
++  final bool devicePoseTrusted;
+ }
+ 
+ /// Identifies the coordinate-space contract of a snapshot before alignment.
+@@ -721,7 +783,19 @@ class SfmLiveRecon {
+       arkitQuatWxyz: quatWxyz?.toList(), // ARKit CamFromWorld (gravity frame)
+       arkitTransTxyz: trans?.toList(),
+       arkitCameraCenterWorld: cameraCenterWorld,
++      // [DEVICE-POSE-TRUST] 追踪器对这张照片自己那一帧的判决。位姿照样随帧
++      // 记下(审计/续跑),但核与 Dart 重力对齐都不得把它当设备位姿用。
++      devicePoseTrusted: feed.devicePoseTrusted,
++      deviceTrackingState: feed.devicePoseTrust.trackerState,
++      devicePoseTrustReason: feed.devicePoseTrust.reason,
+     );
++    if (!feed.devicePoseTrusted) {
++      DeviceLog.log(
++        'SfmLive',
++        'frame#$seq device pose UNTRUSTED (${feed.devicePoseTrust.reason}) '
++            '— fed for image-evidence registration only',
++      );
++    }
+ 
+     // [THERMAL-DOWNSHIFT 2026-08-07] 直发路径同样过热闸(短路求值:要 spool
+     // 时不消耗奇偶);被闸下的帧走 spool,排空期回填,交付数据零损失。
+@@ -739,6 +813,7 @@ class SfmLiveRecon {
+         cy,
+         quatWxyz,
+         trans,
++        feed.devicePoseTrusted,
+       );
+     } else {
+       _spool.add(
+@@ -754,6 +829,7 @@ class SfmLiveRecon {
+           cy: cy,
+           quatWxyz: quatWxyz,
+           trans: trans,
++          devicePoseTrusted: feed.devicePoseTrusted,
+         ),
+       );
+       _events.add(SfmLiveFrameQueued(seq, _spool.length));
+@@ -841,6 +917,7 @@ class SfmLiveRecon {
+     double cy,
+     Float64List? q,
+     Float64List? t,
++    bool devicePoseTrusted,
+   ) {
+     _inFlight++;
+     _seqSentMs[seq] = DateTime.now().millisecondsSinceEpoch; // 遥测【frame】
+@@ -857,6 +934,7 @@ class SfmLiveRecon {
+       'cy': cy,
+       'q': q,
+       't': t,
++      'devicePoseTrusted': devicePoseTrusted,
+     });
+   }
+ 
+@@ -953,6 +1031,7 @@ class SfmLiveRecon {
+             entry.cy,
+             entry.quatWxyz,
+             entry.trans,
++            entry.devicePoseTrusted,
+           );
+         } catch (e) {
+           // Unreadable spill — skip this frame rather than stall the queue.
+@@ -1049,6 +1128,7 @@ class SfmLiveRecon {
+           trans: m.arkitTransTxyz != null
+               ? Float64List.fromList(m.arkitTransTxyz!)
+               : null,
++          devicePoseTrusted: m.devicePoseTrusted,
+         ),
+       );
+     }
+@@ -1137,33 +1217,18 @@ class SfmLiveRecon {
+   /// exact same track-observation sampling the live colorizer does — instead of
+   /// having to guess the mapping from disk. One tiny append per registered
+   /// frame; best-effort (colorize has a timestamp-order fallback if absent).
+-  void _persistFedMeta(int frameId, SfmFedFrameMeta m) {
++  void _persistFedMeta(
++    int frameId,
++    SfmFedFrameMeta m, {
++    bool? coreHonorsDevicePoseTrust,
++  }) {
+     try {
+       final dir = File(_dbPath).parent.path;
+-      final meta = <String, Object?>{
+-        'frameId': frameId,
+-        'jpegPath': m.jpegPath,
+-        'grayW': m.grayW,
+-        'grayH': m.grayH,
+-        if (m.captureTimestamp != null) 'captureTimestamp': m.captureTimestamp,
+-      };
+-      if (m.arkitQuatWxyz != null &&
+-          m.arkitTransTxyz != null &&
+-          m.arkitCameraCenterWorld != null) {
+-        meta.addAll(<String, Object?>{
+-          // [07-28 勘误] 旧标签让外部分析误以为已做 COLMAP 相机系翻转;
+-          // 实际存的是 ARKit 相机轴约定的 CamFromWorld(C=diag(1,-1,-1)
+-          // **未**应用——gravity align 公式 R_w=R_ark^T·C·R_col 自带 C,
+-          // 吃的就是 raw)。标签改为显式声明,数据一字未动。
+-          'arkitPoseConvention':
+-              'worldAlignment.gravity; CamFromWorld inverted from ARKit '
+-              'cameraToWorld, in ARKit CAMERA AXES (COLMAP C=diag(1,-1,-1) '
+-              'flip NOT applied); plus camera center in world',
+-          'arkitCamFromWorldQwxyz': m.arkitQuatWxyz,
+-          'arkitCamFromWorldTxyz': m.arkitTransTxyz,
+-          'arkitCameraCenterWorld': m.arkitCameraCenterWorld,
+-        });
+-      }
++      final meta = sfmFedFrameRecord(
++        frameId,
++        m,
++        coreHonorsDevicePoseTrust: coreHonorsDevicePoseTrust,
++      );
+       final line = '${jsonEncode(meta)}\n';
+       File(
+         '$dir/official_sfm_fed_frames.jsonl',
+@@ -1256,7 +1321,11 @@ class SfmLiveRecon {
+           }
+         } else if (ok && meta != null && frameId >= 0) {
+           _fedMeta[frameId] = meta;
+-          _persistFedMeta(frameId, meta);
++          _persistFedMeta(
++            frameId,
++            meta,
++            coreHonorsDevicePoseTrust: msg['trustAbi'] as bool?,
++          );
+         }
+         // [EXTRACT-DEBT REPAY] 提取失败的帧记欠账(照片在盘上、pose 在 meta
+         // 里,什么都不缺,只是晚算)。正被删除的帧(removeAfterAck)不欠;
+@@ -1587,7 +1656,11 @@ class SfmLiveRecon {
+     final diag = GravityAlignDiagV1();
+     final q = gravityAlignQuatWxyz(
+       posesPacked: snap.posesPacked,
+-      arkitQuatWxyzOf: (frameId) => _fedMeta[frameId]?.arkitQuatWxyz,
++      // [DEVICE-POSE-TRUST] 追踪器不承认的帧不贡献设备旋转。
++      arkitQuatWxyzOf: (frameId) {
++        final m = _fedMeta[frameId];
++        return m != null && m.devicePoseTrusted ? m.arkitQuatWxyz : null;
++      },
+       diag: diag,
+     );
+     if (q == null || snap.xyz.isEmpty) {
+@@ -1994,6 +2067,8 @@ void _sfmWorkerMain(_SfmWorkerBootstrap boot) {
+             cy: msg['cy'] as double,
+             quatWxyz: (msg['q'] as Float64List?)?.toList(),
+             translation: (msg['t'] as Float64List?)?.toList(),
++            // [DEVICE-POSE-TRUST] 缺字段按不可信(fail-closed)。
++            devicePoseTrusted: msg['devicePoseTrusted'] == true,
+           );
+           sw.stop();
+           // Sample telemetry HERE — right after add_frame, at the per-frame
+@@ -2052,6 +2127,7 @@ void _sfmWorkerMain(_SfmWorkerBootstrap boot) {
+             if (tvgPairs >= 0) 'tvgPairs': tvgPairs,
+             if (rawPairs >= 0) 'rawPairs': rawPairs,
+             if (throttledCum >= 0) 'throttledCum': throttledCum,
++            'trustAbi': r.devicePoseTrustHonored,
+           });
+           // AR 照片卡片边框连通性(黑/白/红的数据源):喂入成功后节流发
+           // 一份合成 poses。自带 try/catch —— 绝不允许它把异常抛进外层
+@@ -2064,7 +2140,8 @@ void _sfmWorkerMain(_SfmWorkerBootstrap boot) {
+             {
+               final q = msg['q'] as Float64List?;
+               final t = msg['t'] as Float64List?;
+-              if (q != null && t != null) {
++              // [DEVICE-POSE-TRUST] 不可信帧不提供设备相机中心。
++              if (q != null && t != null && msg['devicePoseTrusted'] == true) {
+                 final c = cameraCenterFromCamFromWorld(q, t);
+                 if (c != null) frameCenters[r.frameId] = c;
+               }
+diff --git a/test/auto_capture_controller_test.dart b/test/auto_capture_controller_test.dart
+index 03b7fb9c7943fdd83344f933261fed15640ca675..eabdbc53875888d9a89bd88e36e88b6c0af9bc32 100644
+--- a/test/auto_capture_controller_test.dart
++++ b/test/auto_capture_controller_test.dart
+@@ -177,6 +177,62 @@ _Harness _started() {
+ }
+ 
+ void main() {
++  // ─── [DEVICE-POSE-TRUST 2026-09-24] tracking 硬闸看追踪器,不看 hybrid ──────
++  // CaptureSession._resolveHybridPose 在 ARKit limited 时产出的就是
++  // `raw.copyWith(isTracking: true)`(az/el 换成 IMU 推算,trackingStateName
++  // 原样保留)。cap_1787733401226757:924 次判定 skipTracking=0,3 张拍在
++  // limited_initializing 窗口里。spec §7:limited ⇒ 零触发且基准帧不动。
++  group('tracking 硬闸 × hybrid 位姿', () {
++    ARPose hybridOf(ARPose raw) => raw.copyWith(isTracking: true);
++
++    test('阳性对照:normal 帧、同一几何 ⇒ 开火', () {
++      final h = _started();
++      expect(
++        h.feed(_pose(t: 0.2, pos: Vector3(40 / 128, 0, 0), grayShiftX: 40)),
++        AutoCaptureDecision.fire,
++      );
++      expect(h.fires, 1);
++    });
++
++    test(
++      '🔴 hybrid(limited_initializing,isTracking 被强置 true)⇒ skipTracking',
++      () {
++        final h = _started();
++        final raw = _pose(
++          t: 0.2,
++          pos: Vector3(40 / 128, 0, 0),
++          grayShiftX: 40,
++          tracking: 'limited_initializing',
++        );
++        final p = hybridOf(raw);
++        expect(p.isTracking, isTrue, reason: '这就是 hybrid 骗过旧闸的那一位');
++        expect(p.trackingStateName, 'limited_initializing');
++        expect(h.feed(p), AutoCaptureDecision.skipTracking);
++        expect(h.fires, 0);
++        // 恢复 normal 后同一几何照常开火(闸只停,不永久卡死)。
++        expect(
++          h.feed(_pose(t: 0.3, pos: Vector3(40 / 128, 0, 0), grayShiftX: 40)),
++          AutoCaptureDecision.fire,
++        );
++      },
++    );
++
++    test('provider 没给状态(null,mock 约定)⇒ 维持原 isTracking 语义', () {
++      final h = _started();
++      final p = hybridOf(
++        _pose(
++          t: 0.2,
++          pos: Vector3(40 / 128, 0, 0),
++          grayShiftX: 40,
++          tracking: null,
++        ),
++      );
++      expect(p.isTracking, isTrue);
++      expect(p.trackingStateName, isNull);
++      expect(h.feed(p), AutoCaptureDecision.fire);
++    });
++  });
++
+   // ─── 地图口径接线(2026-09-11 A 路)────────────────────────────────
+   // 判据本身一个字节没改;换的是喂给它的三个量。顺序照抄上游
+   // tracking_module.cc:145-148:先判跟踪成没成功,没成功就根本不问判据。
+diff --git a/test/device_pose_trust_test.dart b/test/device_pose_trust_test.dart
+new file mode 100644
+index 0000000000000000000000000000000000000000..914421aa2d1d69d776b93a4911ec13bbb79b26a1
+--- /dev/null
++++ b/test/device_pose_trust_test.dart
+@@ -0,0 +1,201 @@
++// [DEVICE-POSE-TRUST 2026-09-24] 喂帧「设备位姿可信」位的判据与落盘。
++//
++// 每条判据都配阴性/阳性对照:limited_initializing 必须出不可信,normal 必须出
++// 可信;真机那一场(cap_1787733401226757)的 20 帧状态原样回放,只许第 1–3 帧
++// 不可信。
++import 'package:flutter_test/flutter_test.dart';
++import 'package:pocketworld_flutter/official_capture/device_pose_trust.dart';
++import 'package:pocketworld_flutter/official_capture/sfm_live_recon.dart';
++import 'package:pocketworld_flutter/vio/diagnostics/vio_shadow_se3_comparison.dart';
++
++SfmFedFrameMeta _meta({required bool trusted, String? state}) =>
++    SfmFedFrameMeta(
++      jpegPath: '/cap/photos_highres/official_tap-7.jpg',
++      imageW: 4032,
++      imageH: 3024,
++      grayW: 4032,
++      grayH: 3024,
++      fx: 2853.8,
++      fy: 2853.8,
++      cx: 2019.4,
++      cy: 1512.1,
++      captureTimestamp: 82203.28,
++      arkitQuatWxyz: const <double>[1, 0, 0, 0],
++      arkitTransTxyz: const <double>[0, 0, 0],
++      arkitCameraCenterWorld: const <double>[0, 0, 0],
++      devicePoseTrusted: trusted,
++      deviceTrackingState: state,
++      devicePoseTrustReason: DevicePoseTrust.fromTrackerState(state).reason,
++    );
++
++void main() {
++  group('DevicePoseTrust.fromTrackerState(该帧自己的追踪状态)', () {
++    test('阳性对照:normal ⇒ 可信', () {
++      final t = DevicePoseTrust.fromTrackerState('normal');
++      expect(t.trusted, isTrue);
++      expect(t.reason, 'tracker_normal');
++    });
++
++    test('🔴 阴性对照:limited_initializing ⇒ 不可信', () {
++      final t = DevicePoseTrust.fromTrackerState('limited_initializing');
++      expect(t.trusted, isFalse);
++      expect(t.trackerState, 'limited_initializing');
++      expect(t.reason, 'tracker_limited_initializing');
++    });
++
++    test('其余 limited_* 与 not_available 一律不可信', () {
++      for (final s in const <String>[
++        'limited_relocalizing',
++        'limited_excessive_motion',
++        'limited_insufficient_features',
++        'limited_unknown',
++        'not_available',
++      ]) {
++        expect(DevicePoseTrust.fromTrackerState(s).trusted, isFalse, reason: s);
++      }
++    });
++
++    test('🔴 状态缺失 ⇒ 不可信(fail-closed,不知道就不能宣称可信)', () {
++      expect(DevicePoseTrust.fromTrackerState(null).trusted, isFalse);
++      expect(DevicePoseTrust.fromTrackerState('').trusted, isFalse);
++      expect(
++        DevicePoseTrust.fromTrackerState(null).reason,
++        'tracker_state_missing',
++      );
++    });
++
++    test('真机回放 cap_1787733401226757:20 帧里只有 1–3 不可信', () {
++      // 原样取自该场 official_photo_bundle.json frames[].trackingState(与各帧
++      // 原生 sidecar 的 trackingStateName 一致)。
++      const states = <String>[
++        'normal',
++        'limited_initializing',
++        'limited_initializing',
++        'limited_initializing',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++        'normal',
++      ];
++      final untrusted = <int>[
++        for (var i = 0; i < states.length; i++)
++          if (!DevicePoseTrust.fromTrackerState(states[i]).trusted) i,
++      ];
++      expect(untrusted, <int>[1, 2, 3]);
++    });
++  });
++
++  group('trackerReportsDegraded(预览流上的自动快门硬闸)', () {
++    test('只有明确报了非 normal 才算降级;null 退回 isTracking', () {
++      expect(
++        DevicePoseTrust.trackerReportsDegraded('limited_initializing'),
++        isTrue,
++      );
++      expect(DevicePoseTrust.trackerReportsDegraded('not_available'), isTrue);
++      expect(DevicePoseTrust.trackerReportsDegraded('normal'), isFalse);
++      expect(DevicePoseTrust.trackerReportsDegraded(null), isFalse);
++    });
++  });
++
++  group('XRSLAM 官方状态 → 同一判据', () {
++    // 与生产传输层同形的 wire(PwXrslamTransportCore.cpp:223-231 读
++    // XRSLAM_RESULT_STATE + CAMERA_POSE),经既有 classifyRawXrslamPose。
++    // q = [qx, qy, qz, qw](XRSLAMPose 的字段序)。
++    Map<String, Object?> wire(int state, List<double> q) => <String, Object?>{
++      'rawStateCallCompleted': true,
++      'rawCameraPoseCallCompleted': true,
++      'rawXrslamState': state,
++      'xrslamPoseTimestamp': 12.5,
++      'xrslamWorldFromCamera': <String, Object?>{
++        'qx': q[0],
++        'qy': q[1],
++        'qz': q[2],
++        'qw': q[3],
++        'tx': 0.1,
++        'ty': 0.2,
++        'tz': 0.3,
++      },
++    };
++    bool trustedOf(Map<String, Object?> w) => DevicePoseTrust.fromTrackerState(
++      xrslamTrackerStateName(classifyRawXrslamPose(w)),
++    ).trusted;
++
++    test('映射表:只有 valid ⇒ normal', () {
++      expect(
++        xrslamTrackerStateName(RawXrslamPoseClassification.valid),
++        kTrackerStateNormal,
++      );
++      for (final c in RawXrslamPoseClassification.values) {
++        if (c == RawXrslamPoseClassification.valid) continue;
++        expect(
++          DevicePoseTrust.fromTrackerState(xrslamTrackerStateName(c)).trusted,
++          isFalse,
++          reason: c.name,
++        );
++      }
++    });
++
++    test('🔴 XRSLAM_STATE_INITIALIZING(0) ⇒ 不可信', () {
++      expect(
++        classifyRawXrslamPose(wire(0, <double>[0, 0, 0, 1])),
++        RawXrslamPoseClassification.initializing,
++      );
++      expect(trustedOf(wire(0, <double>[0, 0, 0, 1])), isFalse);
++    });
++
++    test('🔴 TRACKING_SUCCESS 但全零四元数(上游首帧)⇒ 不可信', () {
++      expect(trustedOf(wire(1, <double>[0, 0, 0, 0])), isFalse);
++    });
++
++    test('阳性对照:TRACKING_SUCCESS + 合法位姿 ⇒ 可信', () {
++      final w = wire(1, <double>[0, 0, 0, 1]);
++      expect(classifyRawXrslamPose(w), RawXrslamPoseClassification.valid);
++      expect(trustedOf(w), isTrue);
++    });
++  });
++
++  group('official_sfm_fed_frames.jsonl 记录', () {
++    test('🔴 limited 帧:devicePoseTrusted=false 与原始状态一起落盘,位姿照记', () {
++      final r = sfmFedFrameRecord(
++        1,
++        _meta(trusted: false, state: 'limited_initializing'),
++        coreHonorsDevicePoseTrust: true,
++      );
++      expect(r['devicePoseTrusted'], isFalse);
++      expect(r['deviceTrackingState'], 'limited_initializing');
++      expect(r['devicePoseTrustReason'], 'tracker_limited_initializing');
++      expect(r['coreHonorsDevicePoseTrust'], isTrue);
++      expect(r['arkitCamFromWorldQwxyz'], isNotNull, reason: '审计/续跑仍要这份位姿');
++    });
++
++    test('阳性对照:normal 帧 devicePoseTrusted=true', () {
++      final r = sfmFedFrameRecord(0, _meta(trusted: true, state: 'normal'));
++      expect(r['devicePoseTrusted'], isTrue);
++      expect(r['deviceTrackingState'], 'normal');
++      expect(r.containsKey('coreHonorsDevicePoseTrust'), isTrue);
++      expect(r['coreHonorsDevicePoseTrust'], isNull);
++    });
++
++    test('旧核回退(v1 ABI)如实记 coreHonorsDevicePoseTrust=false', () {
++      final r = sfmFedFrameRecord(
++        2,
++        _meta(trusted: false, state: 'limited_initializing'),
++        coreHonorsDevicePoseTrust: false,
++      );
++      expect(r['devicePoseTrusted'], isFalse);
++      expect(r['coreHonorsDevicePoseTrust'], isFalse);
++    });
++  });
++}
+diff --git a/test/official_highres_reconstruction_contract_test.dart b/test/official_highres_reconstruction_contract_test.dart
+index 26073dc7f2d1f012dd592897e253ca0cdb08072a..28ef74e0758f9cee854ed053ce39f5618d8f6648 100644
+--- a/test/official_highres_reconstruction_contract_test.dart
++++ b/test/official_highres_reconstruction_contract_test.dart
+@@ -131,6 +131,67 @@ void main() {
+     );
+   });
+ 
++  // [DEVICE-POSE-TRUST 2026-09-24] cap_1787733401226757: frames whose own
++  // ARFrame reported limited_initializing were fed as trusted poses.
++  group('device pose trust from the still\'s own tracking state', () {
++    OfficialHighResInputValidation validateWith(String? state) =>
++        OfficialHighResReconstructionInput.validate(
++          jpegPath: '/capture/photos_highres/official_tap-7.jpg',
++          imageWidth: 4032,
++          imageHeight: 3024,
++          triggerTimestamp: 50,
++          captureTimestamp: 50.2,
++          cameraTransform: transform,
++          intrinsics: intrinsics,
++          trackingStateName: state,
++        );
++
++    test('negative control: limited_initializing is kept but untrusted', () {
++      final result = validateWith('limited_initializing');
++      // The photo is a valid input (never drop the user's shot) ...
++      expect(result.isAccepted, isTrue);
++      // ... but its device pose must not be used as a pose.
++      expect(result.input!.devicePoseTrusted, isFalse);
++      expect(
++        result.input!.devicePoseTrust.trackerState,
++        'limited_initializing',
++      );
++    });
++
++    test('positive control: normal is trusted', () {
++      final result = validateWith('normal');
++      expect(result.isAccepted, isTrue);
++      expect(result.input!.devicePoseTrusted, isTrue);
++    });
++
++    test('missing tracking state fails closed (untrusted)', () {
++      expect(validateWith(null).input!.devicePoseTrusted, isFalse);
++    });
++
++    test('capture session passes the still\'s own tracking state', () {
++      final source = File(
++        'lib/official_capture/capture_session.dart',
++      ).readAsStringSync();
++      expect(source, contains('trackingStateName: still.trackingStateName,'));
++    });
++
++    test('live recon forwards the flag to the core and the fed record', () {
++      final live = File(
++        'lib/official_capture/sfm_live_recon.dart',
++      ).readAsStringSync();
++      final ffi = File('lib/official_aether_sfm_ffi.dart').readAsStringSync();
++      expect(
++        live,
++        contains("devicePoseTrusted: msg['devicePoseTrusted'] == true"),
++      );
++      expect(live, contains("'devicePoseTrusted': devicePoseTrusted"));
++      expect(live, contains('devicePoseTrusted: feed.devicePoseTrusted'));
++      expect(live, contains("'devicePoseTrusted': m.devicePoseTrusted"));
++      expect(ffi, contains('pwofficial_add_jpeg_frame_v2'));
++      expect(ffi, contains('devicePoseTrusted ? 1 : 0'));
++    });
++  });
++
+   test('official pipeline consumes a JPEG path at the native SfM boundary', () {
+     final ffi = File('lib/official_aether_sfm_ffi.dart').readAsStringSync();
+     final live = File(

@@ -1,0 +1,26 @@
+== 拉取 Documents/replay_recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/ruler_subset → /Users/kaidongwang/Developer/viobench-recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/ruler_subset ==
+21:22:54  Acquired tunnel connection to device.
+21:22:54  Enabling developer disk image services.
+21:22:54  Acquired usage assertion.
+File received from Device
+/Users/kaidongwang/Developer/viobench-recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/ruler_subset
+子集帧 90 / 录制帧 1450;深度行 296;frames.bin sha ✅;ARKit 少发帧估计 10;写器丢帧 341;跟踪 {'limited_initializing': 61, 'normal': 1730}
+== 离线尺子 ==
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 1791 行 ↔ 相机 90 帧;配上 90,配不上 0
+  轨迹 arkit: 87 帧配上  {"rows": 1791, "zero_translation_dropped": 62, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/ruler_subset/arkit_poses.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):87 / 录制帧 90 / 深度 296 张
+帧对 40(间隔 ~0.5s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 1.0070  ⇒ 轨迹比米制 +0.70%   有效帧对 33/40
+  深度侧 95%(不重叠帧对 18 个,顺序统计量): k ∈ [0.9986, 1.0157]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0239  帧对内 0.0233
+  分段 k [1.0005659524643475, 1.0126915545730797, 1.0001684826118415, 1.0096085473114336]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=1.0798 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.0790094248402982, '-1': 0.05269063432141856, '1': 0.02614045897379454, '2': 0.05715879222538469, '0': 0.02386657586282659}
+
+写出 /Users/kaidongwang/Developer/viobench-recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/lidar_ruler/lidar_ruler_report.json
+EXIT 0

@@ -1,0 +1,358 @@
+                                                                    The Mobile AR Sensor Logger
+                                                                     for Android and iOS Devices
+                                                     Jianzhu Huai                                     Yujia Zhang                                  Alper Yilmaz
+                                            Dept. of Civil, Environmental,       Dept. of Earth and Space Science and Engineering          Dept. of Civil, Environmental,
+                                             and Geodetic Engineering                             York University                           and Geodetic Engineering
+                                             The Ohio State University                         Toronto, Ontario, CA                         The Ohio State University
+                                               Columbus, OH 43210                                                                             Columbus, OH 43210
+
+
+
+
+arXiv:2001.00470v1 [cs.HC] 21 Dec 2019
+                                            Abstract—In recent years, commodity mobile devices equipped
+                                         with cameras and inertial measurement units (IMUs) have
+                                         attracted much research and design effort for augmented reality
+                                         (AR) and robotics applications. Based on such sensors, many
+                                         commercial AR toolkits and public benchmark datasets have
+                                         been made available to accelerate hatching and validating new
+                                         ideas. To lower the difficulty and enhance the flexibility in
+                                         accessing the rich raw data of typical AR sensors on mobile
+                                         devices, this paper present the mobile AR sensor (MARS) logger
+                                         for two of the most popular mobile operating systems, Android
+                                         and iOS. The logger highlights the best possible synchronization
+                                         between the camera and the IMU allowed by a mobile device,
+                                         and efficient saving of images at about 30Hz, and recording the
+                                         metadata relevant to AR applications. This logger has been tested
+                                         on a relatively large spectrum of mobile devices, and the collected
+                                         data has been used for analyzing the sensor characteristics. We
+                                         see that this application will facilitate research and development
+                                         related to AR and robotics, so it has been open sourced at
+                                         https://github.com/OSUPCVLab/mobile-ar-sensor-logger
+
+                                                                I. I NTRODUCTION
+                                                                                                                          (a)                                  (b)
+                                            ”Big data” has been driving the frontier of fields including
+                                         simultaneous localization and mapping (SLAM) and aug-                 Fig. 1: MARS logger in use: a, Honor V10 running Android
+                                         mented reality (AR) [1]. A plethora of datasets for bench-            9; b, iPhone 6S running iOS 12.
+                                         marking the SLAM techniques have been made public, e.g.,
+                                         [2][3]. While such data offer high integrity and ground truth
+                                         essential to developing and validating new methods, they are          to develop a logging tool meeting such requirements as rea-
+                                         often limited in quantity and diversity thanks to the confined        sonable synchronization and providing sensor characteristics.
+                                         labs and expensive devices for data acquisition.                      Many times, these tools are used for preliminary investigations
+                                            Meanwhile, driven by the consumer market, mobile devices           and may well be abandoned later on. To lower the bar of
+                                         have been decreasing in price and growing in capabilities.            acquiring the full data for mobile AR sensors, we propose the
+                                         Commodity mobile devices are usually equipped with cameras            MARS logger that runs on two of the most widely used mobile
+                                         and inertial measurement units (IMUs) which are all it needs          operating systems (OSs), Android and iOS.
+                                         for enabling SLAM or AR applications. Besides the huge                   The MARS logger distinguishes itself with the following
+                                         user base, many SDKs aiming at SLAM or AR are released                features. 1) Image frames are recorded efficiently with the
+                                         and promoted by large corporations, notably, the ARCore               standard APIs (Application Program Interfaces) of mobile
+                                         and ARKit [4]. These facts make it ideal to collect large             OSs. The OpenGL library is used for efficient rendering,
+                                         quantities of data with the mobile devices for research product       while frame encoding and I/O are done in background. In the
+                                         development related to SLAM and AR at a large scale [5].              normal operation mode, frames can be recorded at about 30 Hz
+                                            Despite the potential, we find it often cumbersome to access       over tens of minutes with moderately priced mobile devices.
+                                         the original and complete data from the mobile AR sensors.            2) Rich metadata of frames relevant to SLAM are saved if
+                                         Though there are many applications in Google Play or App              supported by the devices, including rolling shutter skew and
+                                         Store for logging sensor data with diverse flavors, few are           focus distance. In the same spirit, the frames are recorded with
+                                         written with retrieving the full visual and inertial data in mind.    auto-focus and auto-exposure locked to suit SLAM methods.
+                                         On the other hand, it typically involves a steep learning curve       3) Both IMU data and image frames are timestamped and
+synchronized to one time source.                                   methods, the focus distance and exposure time of the camera
+   The next section overviews the related work about data          can be locked by a tap on screen before data acquisition.
+acquisition with mobile devices. Section III discusses the dis-
+tinctive features of the MARS logger. Section IV diagnoses the     A. MARS logger in Android
+collected data by calibrating temporal and spatial parameters
+                                                                      The MARS logger in Android is developed based on the
+of the camera and the IMU along with motion estimation. In
+                                                                   CameraCaptureActivity of the grafika project [17] in Java with
+the end, Section V summarizes the work with remarks.
+                                                                   the minimum SDK version of API level 21. Added since
+                     II. R ELATED W ORK                            API 21, the camera2 API returns the camera timestamp and
+                                                                   camera intrinsic parameters, e.g., focal distance and rolling
+   To tap the potential of AR sensors, large corporations have
+                                                                   shutter skew, with a CaptureCallback, providing richer
+developed frameworks that opaquely pass the sensor data to
+                                                                   metadata than the deprecated Camera class. The sensor
+proprietary algorithms which output results for localization
+                                                                   timestamp in the capture result is ”the time at start of exposure
+and mapping. Popular AR frameworks include ARCore for
+                                                                   of first row of the image sensor active array, in nanoseconds”
+Android and ARKit for iOS [4]. Due to the demanding nature
+                                                                   [21]. To efficiently display the camera frames on the screen,
+and dependency on the hardware, both frameworks are only
+                                                                   the GLSurfaceView is used for rendering. Additionally,
+available on certain supporting devices.
+                                                                   it shares the rendered frame with a MediaCodec encoder,
+   As the affordable devices proliferate, many SLAM bench-
+                                                                   thus avoiding the pixel alignment issues which arise in using
+mark datasets collected with the mobile sensors have been
+                                                                   ImageReader and MediaCodec together. The encoded
+made available. Depending on the specific problems, many of
+                                                                   frames are written to a H.264/MP4 video file by the Me-
+them centered about the inertial data for localization [6], [7].
+                                                                   diaMuxer sequentially and the presentation times for every
+Images from the front cameras were captured infrequently in
+                                                                   frames to a text file.
+the UMDAA datasets [8]. The collaborative SLAM dataset
+                                                                      The IMU data are recorded with the SensorEventLis-
+[9] provided color and depth frames captured with an Asus
+                                                                   tener in a background HandlerThread. To synchro-
+ZenFone AR smartphone at 5Hz. The ADVIO dataset [10]
+                                                                   nize the accelerometer and the gyroscope, the accelerom-
+contained sessions lasting up to 7 minutes of camera frames
+                                                                   eter reading is linearly interpolated at the epoch of each
+at 60Hz and inertial data at 100Hz captured by an iPhone 6S.
+                                                                   gyroscope reading. Each event timestamp is the time
+   As the AR field flourishes, numerous applications have
+                                                                   in nanoseconds since boot just as returned by Sys-
+been developed for capturing the visual and inertial data. A
+                                                                   temClock.elapsedRealtimeNanos(). If the camera
+few curated ones are reviewed due to the space limit. For
+                                                                   timestamp source is CLOCK_BOOTTIME, then the cam-
+capturing image frames, the Camera app pre-installed in a
+                                                                   era timestamps are in the same timebase as the IMU
+device obviously is ideal in terms of efficiency and handiness.
+                                                                   data. Otherwise, to remedy the incomparable timestamps,
+This app can be paired with an inertial sensor logger running
+                                                                   the timestamps returned by System.nanoTime() in the
+continuously in background for data collection, for instance,
+                                                                   timebase of CLOCK_MONOTONIC as well as by System-
+powersense [11] for iOS, and Sensorstream IMU+GPS [12] for
+                                                                   Clock.elapsedRealtimeNanos() are recorded at the
+Android, with an obvious downside of out-of-sync timestamps.
+                                                                   start and the end of a capture session. In offline processing,
+There are also the OpenCV SDKs(software development kits)
+                                                                   the time difference between the two clock sources can be used
+for both Android [13] and iOS [14]. They do not pass
+                                                                   to correct the camera frame timestamps to the timebase of the
+timestamps along with images.
+                                                                   IMU data.
+   As for open sourced applications, the RosyWriter sample
+from Apple [15] showed delicate control of the camera and
+                                                                   B. MARS logger in iOS
+efficient recording of frames. The samples in [16] illustrated
+how to access the raw inertial data in iOS. For Android, the          The iOS version is developed based on the rosywriter [15] in
+Google grafika [17] and samples [18] showed how to use the         Objective C with the iOS SDK 8.0. To have more control over
+Camera class and the camera2 API for recording videos.             camera frames, AVCaptureVideoDataOutput is used
+The RPNG dataset recorder [19] recorded image sequences            together with AVAssetWriter to save H.264/MP4 videos
+and IMU data for Android devices. The camera recorder [20]         instead of AVCaptureMovieFileOutput. For SDK 11.0
+captured videos with the Android camera2 API.                      and greater, the CameraIntrinsicMatrix delivery is
+                                                                   enabled in the AVCaptureConnection instance for video
+          III. T HE M OBILE AR S ENSOR L OGGER                     data, so that every frame has an attachment containing the fo-
+   The MARS logger is designed to acquire visual and inertial      cal length and principal point offsets in pixels. For lower SDK
+data for SLAM and AR applications with commodity mobile            versions, these fields are set to empirical values. Additionally,
+devices. Two versions of the logger is developed to cater          the exposureDuration read from the AVCaptureDe-
+to the dominating mobile OSs, Android and iOS. For better          vice instance is recorded for every frame.
+portability and broader coverage, only standard APIs and li-          To obtain the IMU data, a CMMotionManager instance
+braries are employed and deprecated APIs and coding patterns       is set to update at a specific interval, e.g., 1/100 second,
+are avoided. To simplify offline processing by SLAM or AR          and periodically appends arriving CMAccelerometerData
+and CMGyroData messages to a background NSOpera-
+tionQueue which synchronizes the inertial data similarly
+to the Android version. As the inertial data are timestamped
+by the clock returned by CMClockGetHostTimeClock()
+while the camera frames have presentation times referring to
+the masterClock of a capture session, CMSyncConvert-
+Time() is used to convert the frame timestamps to the IMU
+host time clock for synchronization.
+                                                                                   (a)                                 (b)
+                      IV. E XPERIMENTS
+   Many sessions of visual and inertial data were collected
+from several handheld devices with the MARS logger in order
+to check the data quality and acquisition performance.
+
+A. Frequency of captured data
+   To evaluate the capture efficiency, five devices were used
+to capture the frames and IMU data, including an iPhone 6S                         (c)                                 (d)
+running iOS 12.3, an iPad mini running iOS 9.3, an Honor
+View 10 running Android 9.0, an Lenovo Phab2 Pro running
+Android 9.0, and an Samsung Galaxy S9+ running Android
+8.0. These devices are valued from $250 up to $850, spanning
+the medium to high price range of mobile devices. Each device
+ran the MARS logger for 10 minutes while moving in a nearly
+static area, and the capture intervals of the visual and inertial
+data were shown in Fig. 2. The recorded frame size for iPhone
+6S was 1920×1080, while it was 1280×720 for other devices.                                           (e)
+   From the figure, we see that for handheld Android and iOS
+                                                                      Fig. 2: Sampling intervals of captured visual inertial data
+devices of medium quality, the MARS logger can efficiently
+                                                                      with (a) iPad mini, (b) iPhone 6S, (c) Phab2 Pro, (d) Honor
+record camera frames at about 30Hz and IMU data at about
+                                                                      V10, (e) Samsung S9+. Note the inertial data of Android
+50Hz or 100Hz for over 10 minutes.
+                                                                      devices were captured at the device-dependent sensor delay
+B. Sensor parameters and synchronization                              SENSOR_DELAY_GAME.
+   To inspect the quality of the recorded camera intrinsic
+parameters and timestamps, two SLAM algorithms relevant               parameters given to VINS Mono were empirical values and
+to AR sensor online calibration were chosen for analyzing             are not available on iOS 9.3.
+the datasets. The VINS Mono [22] program were selected
+                                                                         We also see that despite the tactics for syncing sensor data
+to estimate extrinsic parameters and time offset between an
+                                                                      in the logger, these devices were revealed to have noticeable
+camera and an IMU for it supports cameras of rolling shutters.
+                                                                      time offsets up to 30 ms. One notable point is that these time
+The MSCKF implemented in [5] were used to estimate the
+                                                                      offset estimates had not accounted for the rolling shutter effect
+camera intrinsic parameters including the rolling shutter skew,
+                                                                      and the fact that images are timestamped at the beginning of
+i.e., frame readout time, and extrinsic parameters and the time
+                                                                      exposure. Subtracting half of the sum of the two effects, time
+offset between the two sensors.
+                                                                      offsets of iOS devices would look even better than those of
+   The 10 min long data 1 for every device from the previous
+                                                                      Android devices.
+test were each split into 5 segments and processed by the two
+                                                                         To show that the recorded data are amenable to SLAM
+methods using the recorded focal length and frame readout
+                                                                      methods, sessions of indoor and outdoor data were collected
+time if applicable. The VINS Mono successfully processed all
+                                                                      by the Honor View 10, the iPhone 6S, and the Tango service on
+segments while the MSCKF occasionally diverged. Ignoring
+                                                                      the Phab2 Pro while the three devices were strapped together.
+the bad cases of MSCKF, the estimated lever arm, time delay,
+                                                                      For evaluation, the start and end of a session were chosen to
+and frame readout time are illustrated in Fig. 3 for five devices.
+                                                                      be the same. The logged data were again processed by VINS
+   The figure shows that the two methods agreed well on
+                                                                      Mono and MSCKF methods. The trajectories estimated by
+estimated spatial and temporal parameters. The large differ-
+                                                                      these methods at a stairway and a building block were drawn
+ence on the position of the camera relative to the IMU pSC
+                                                                      in Fig. 4 in contrast to the Tango results. These drawings show
+for iPad mini is mainly due to the fact that camera intrinsic
+                                                                      that the quality of the logged data is sufficient for large-scale
+  1 The  data   is  available at  https://drive.google.com/open?id=   SLAM applications.
+1ryBXpcrpTsou-7HJDcHhq6sDI2zGCpFT                                        The above tests show that the data recorded with commodity
+        40                                                                                                                                                30
+
+
+        35
+                                                                                                   MSCKF
+                                                                                                   Vins-Mono
+                                                                                                                                                                                                                             MSCKF
+                                                                                                                                                                                                                             VINS-Mono
+                                                                                                                                                                                                                                              turing realistic and demanding datasets that will boost the
+                                                                                                                                                          20
+
+        30
+                                                                                                                                                                                                                                              development of the SLAM and AR algorithms.
+                                                                                                                                                          10
+
+        25
+
+
+
+
+                                                                                                                                time offset [millisec]
+                                                                                                                                                              0                                                                                                         ACKNOWLEDGMENT
+        20
+
+
+        15
+                                                                                                                                                         -10
+                                                                                                                                                                                                                                                We thank Huan Chang for letting us participate in the iOS
+        10
+                                                                                                                                                         -20
+                                                                                                                                                                                                                                              developer program.
+         5                                                                                                                                               -30
+
+
+         0                                                                                                                                               -40
+                                                                                                                                                                                                                                                                             R EFERENCES
+                 iPad Mini   Phab2 Pro     Honor V10                             iPhone 6S        Galaxy S9+                                                      iPad Mini       Phab2 Pro    Honor V10     iPhone 6S       Galaxy S9+
+
+
+                                                                                                                                                                                                                                               [1] I. Goodfellow, Y. Bengio, and A. Courville, Deep learning. MIT press,
+                                          (a)                                                                                                                                                  (b)                                                 2016. 1
+                                                                                 35
+                                                                                                                                                                              MSCKF
+                                                                                                                                                                              Nominal                                                          [2] M. Burri, J. Nikolic, P. Gohl, T. Schneider, J. Rehder, S. Omari, M. W.
+                                                                                 30
+                                                                                                                                                                                                                                                   Achtelik, and R. Siegwart, “The euroc micro aerial vehicle datasets,”
+                                                                                 25
+                                                                                                                                                                                                                                                   The International Journal of Robotics Research, vol. 35, no. 10, pp.
+
+
+                                                       readout time [millisec]
+                                                                                                                                                                                                                                                   1157–1163, 2016. 1
+                                                                                 20                                                                                                                                                            [3] F. P. Z. C. Jianzhu Huai, Yusen Qin. (2019, jul) Segway drive
+                                                                                 15
+                                                                                                                                                                                                                                                   benchmark: Place recognition and slam data collected by a fleet of
+                                                                                                                                                                                                                                                   delivery robots. [Online]. Available: https://arxiv.org/abs/1907.03424 1
+                                                                                 10                                                                                                                                                            [4] J. Linowes and K. Babilinski, Augmented Reality for Developers: Build
+                                                                                                                                                                                                                                                   Practical Augmented Reality Applications with Unity, ARCore, ARKit,
+                                                                                  5
+                                                                                          iPad Mini     Phab2 Pro   Honor V10                            iPhone 6S      Galaxy S9+                                                                 and Vuforia. Packt Publishing Ltd, 2017. 1, 2
+                                                                                                                                                                                                                                               [5] J. Huai, “Collaborative slam with crowdsourced data,” Ph.D. dissertation,
+                                                                                                                    (c)                                                                                                                            The Ohio State University, 2017. 1, 3
+                                                                                                                                                                                                                                               [6] C. Chen, P. Zhao, C. X. Lu, W. Wang, A. Markham, and N. Trigoni,
+Fig. 3: The camera-IMU lever arm (a), time offset (b), and                                                                                                                                                                                         “Oxiod: The dataset for deep inertial odometry,” arXiv preprint
+frame readout time (c) estimated by MSCKF and VINS Mono.                                                                                                                                                                                           arXiv:1809.07491, 2018. 2
+                                                                                                                                                                                                                                               [7] H. Gjoreski, M. Ciliberto, L. Wang, F. J. O. Morales, S. Mekki,
+        100
+                                                                                                                                                          2                                                                                        S. Valentin, and D. Roggen, “The university of sussex-huawei loco-
+                                                                                                                                                                        tango
+                                                                                          tango
+                                                                                          VINS-Mono
+                                                                                                                                                          1
+                                                                                                                                                                        VINS-Mono w/o loop
+                                                                                                                                                                        MSCKF
+                                                                                                                                                                                                                                                   motion and transportation dataset for multimodal analytics with mobile
+         80                                                                               VINS-Mono w/o loop
+                                                                                          MSCKF
+                                                                                          start                                                           0
+                                                                                                                                                                        start
+                                                                                                                                                                        finish                                                                     devices,” IEEE Access, vol. 6, pp. 42 592–42 604, 2018. 2
+         60
+                                                                                          finish
+                                                                                                                                                                                                                                               [8] U. Mahbub, S. Sarkar, V. M. Patel, and R. Chellappa, “Active user
+                                                                                                                                                         -1
+         40                                                                                                                                                                                                                                        authentication for smartphones: A challenge data set and benchmark
+y [m]                                                                                                                           z [m]
+
+         20
+                                                                                                                                                         -2
+                                                                                                                                                                                                                                                   results,” in 2016 IEEE 8th International Conference on Biometrics
+                                                                                                                                                         -3
+                                                                                                                                                                                                                                                   Theory, Applications and Systems (BTAS). IEEE, 2016, pp. 1–8. 2
+             0
+                                                                                                                                                         -4                                                                                    [9] S. Golodetz*, T. Cavallari*, N. A. Lord*, V. A. Prisacariu, D. W. Murray,
+        -20                                                                                                                                              -5                                                                                        and P. H. S. Torr, “Collaborative Large-Scale Dense 3D Reconstruction
+                    -100                 -50                                          0                        50                                                  -6     -5        -4    -3     -2     -1     0         1      2         3
+                                                                                                                                                                                                                                                   with Online Inter-Agent Pose Optimisation,” TVCG (ISMAR Special
+                                               x [m]                                                                                                                                            x [m]
+                                                                                                                                                                                                                                                   Issue), 2018. 2
+                                          (a)                                                                                                                                                  (b)                                            [10] S. Cortés, A. Solin, E. Rahtu, and J. Kannala, “Advio: An authentic
+                                                                                                                                                                                                                                                   dataset for visual-inertial odometry,” in Proceedings of the European
+Fig. 4: Estimated motion of a rig of a Honor View 10, an                                                                                                                                                                                           Conference on Computer Vision (ECCV), 2018, pp. 419–434. 2
+                                                                                                                                                                                                                                              [11] S.     Xu.     (2017,     jun)    Powersense:    Motion      sensor    data
+iPhone 6S, and a Lenovo Phab2 Pro compared to the Tango                                                                                                                                                                                            logging tool. [Online]. Available: https://appadvice.com/app/
+solution. a. Trajectories about a building block computed using                                                                                                                                                                                    powersense-motion-sensor-data-logging-tool/1050491381 2
+Honor View 10 data. b. Traversing a stairway computed using                                                                                                                                                                                   [12] A.     Lorenz.      (2013,      feb)   Sensorstream      imu+gps.     [On-
+                                                                                                                                                                                                                                                   line]. Available: https://play.google.com/store/apps/details?id=de.lorenz
+iPhone 6S data.                                                                                                                                                                                                                                    fenster.sensorstreamgps&hl=en 2
+                                                                                                                                                                                                                                              [13] OpenCV. (2019, jun) Android development with opencv. [On-
+                                                                                                                                                                                                                                                   line]. Available: https://docs.opencv.org/2.4/doc/tutorials/introduction/
+                                                                                                                                                                                                                                                   android binary package/dev with OCV on Android.html 2
+mobile devices can achieve reasonably accurate timestamps,                                                                                                                                                                                    [14] ——. (2019, jun) Opencv ios - video processing. [On-
+and they prove to be useful for SLAM and AR applications in                                                                                                                                                                                        line]. Available: https://docs.opencv.org/2.4/doc/tutorials/ios/video
+that it is fairly easy to estimate sensor parameters along with                                                                                                                                                                                    processing/video processing.html 2
+                                                                                                                                                                                                                                              [15] Rosywriter. [Online]. Available: https://developer.apple.com/library/
+the device motion with such data.                                                                                                                                                                                                                  archive/samplecode/RosyWriter/Introduction/Intro.html 2
+                                                                                                                                                                                                                                              [16] A. Allan, Basic Sensors in iOS.          O’Reilly Media, Inc., jul 2011,
+                                                                                                V. C ONCLUSION                                                                                                                                     https://www.oreilly.com/library/view/basic-sensors-in/9781449309480/.
+                                                                                                                                                                                                                                                   2
+   The mobile AR sensor (MARS) logger is presented for                                                                                                                                                                                        [17] Google. (2019, feb) grafika. [Online]. Available: https://github.com/
+collecting synced visual and inertial data with commodity                                                                                                                                                                                          google/grafika 2
+mobile devices at frequencies above 25Hz. In data acquisition,                                                                                                                                                                                [18] ——. (2019, feb) android-camera2video. [Online]. Available: https:
+                                                                                                                                                                                                                                                   //github.com/googlesamples/android-Camera2Video 2
+the sensor characteristics including focal length, rolling shutter                                                                                                                                                                            [19] P. Geneva. (2016, aug) Android dataset recorder. [Online]. Available:
+skew, exposure duration are also recorded to meet the needs of                                                                                                                                                                                     https://github.com/rpng/android-dataset-recorder 2
+SLAM algorithms. Two versions of the logger are developed                                                                                                                                                                                     [20] M. Suda. (2018, oct) Camerarecorder-android. [Online]. Available:
+                                                                                                                                                                                                                                                   https://github.com/MasayukiSuda/CameraRecorder-android 2
+for both Android and iOS. The quality of the datasets were                                                                                                                                                                                    [21] Android. (2019, jun) Android developers doc captureresult.
+investigated by two state-of-the-art SLAM algorithms, show-                                                                                                                                                                                        [Online]. Available: https://developer.android.com/reference/android/
+ing that the captured datasets with devices of medium prices                                                                                                                                                                                       hardware/camera2/CaptureResult 2
+                                                                                                                                                                                                                                              [22] T. Qin, P. Li, and S. Shen, “Vins-mono: A robust and versatile monocular
+are suitable for mapping and localization.                                                                                                                                                                                                         visual-inertial state estimator,” IEEE Transactions on Robotics, vol. 34,
+   We believe that along with the proliferation of mobile                                                                                                                                                                                          no. 4, pp. 1004–1020, 2018. 3
+devices, the MARS logger will reduce the difficulty in cap-
+

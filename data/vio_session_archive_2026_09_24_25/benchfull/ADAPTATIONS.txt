@@ -1,0 +1,17 @@
+台架外壳适配清单(完整链 168,2026-09-24)
+A1 Dart 以包形式接入:pubspec path 依赖 pocketworld_flutter -> pw_full_chain(符号链接到镜像树)。原因:台架 lib/ 已有 5 个同路径但内容不同的文件(bench-replay/LOD 线),不能平铺。
+A2 资产键:真源 pubspec 的资产按 Flutter 规则以 packages/pocketworld_flutter/ 前缀进包;生产代码按根键读的 2 份(DamagedHelmet.glb、default_env_ibl.ktx)在台架 pubspec 以根键另声明(符号链接)。
+A3 版本:17 个与台架共有的包沿用台架锁定版本(sensors_plus 7.1.0 vs 7.0.0、vector_math 2.4.0 vs 2.4.2、meta 1.18.3 vs 1.19.0、path_provider 2.1.6 vs 2.1.5 等);thermion_dart 沿用台架本地补丁版 ../thermion_dart_pw(生产 pub 0.3.4+1)。其余 91 个按生产锁定版本。生产的 dev 依赖(integration_test 等)不进台架(integration_test pod 因此缺席)。
+A4 插件注册时机:台架 AppDelegate 是 FlutterImplicitEngineDelegate,生产 4 个 Runner 内插件改在 didInitializeImplicitFlutterEngine 用 engine registry 注册(生产在 didFinishLaunching 经 launch engine 注册)。只在产物 Info.plist PWFullChainBench=YES(构建期由 DART_DEFINES 里 PW_FULL_CHAIN_BENCH=true 盖章)时注册,免得台架 VIO 页凭空多出 pocketworld_vio_timebase 通道。
+A5 后台任务不登记:OfficialArchiveBackgroundTask / OfficialReconUmbrella。原因:台架 Info.plist 没有 BGTaskSchedulerPermittedIdentifiers(不许改)→ 登记即崩;隐式引擎回调在启动完成之后,BGTaskScheduler 登记也太晚;recon 标识须以 bundle id 为前缀。后果:归档改在前台进程内做(生产代码自带的兜底);重建期间退到后台不会续跑,测试时 App 保持前台。
+A6 Lepton 链接行从 Flutter/{Debug,Release}.xcconfig 挪到 Podfile post_install 写进 Pods-Runner xcconfig(同一 xcconfig 层,$(inherited) 链接效果相同)。
+A7 Pods 链接形态改成生产的静态形态(去 use_frameworks!、加 use_modular_headers!、platform 15.0)。原因:aether3d_ffi.podspec 只能静态用;动态会两份 Dawn。台架原有 3 个插件随之变静态(生产本来就这样)。
+A8 生产的 pod 'xrslam'(纯头文件)不加;XRSLAM 仍走台架臂表(默认 generic = 与 168 同名同 sha 的 libxrslam_generic_4beb1a9.a)。
+A9 传输层:台架只能编一份 PwXrslamTransportCore,用 vendor/xrslam = bench-replay 那份(168 那份的超集:多逐帧内参入口与账本;旧入口 = 新入口传 NULL,行为等价)。168 的影子 XRSLAM 走它。
+A10 桥接头:加生产那行 #import <aether3d_ffi/aether_depth_tile_c.h>(生产 Swift 不调用其函数,仅对齐)。
+A11 Info.plist 未改:无 BG 标识/后台模式、无 NSMotion/NSPhotoLibrary 用途串、无 UIFileSharingEnabled、屏幕方向仍只竖屏(生产允许横屏)、无生产实验标记键。图库(举报页)在台架里会因缺用途串而不可用;采集链不涉及。
+A12 entitlements 未加:生产有 increased-memory-limit 与 extended-virtual-addressing;台架用通配描述文件(26AH7V448L.*),加了就签不了名;要加须给 com.kyle.arloopbench 建显式 App ID 并开这两项能力(改开发者账号,需用户批)。后果:手机上台架的内存上限低于生产,稠密/SfM 段可能被 jetsam 杀。
+A13 Runner 构建设置:JXL 宏 / JXL+Zpaq 头与库路径 / JXL+Zpaq 链接与 -u 保活照抄生产;C++ 标准不动(台架有效值本来就是 c++17);DEAD_CODE_STRIPPING 台架有效值本来就是 YES。
+A14 生产的构建期脚本「Stamp Runtime Identity」不加:它只在 Release 配置下运行,profile 直接退出;「Thin Binary」里生产的框架重签与「Clean CodeSign Attributes」不加(台架目录不在 File Provider 下;台架原有装机流程可用)。
+A15 PWOfficialSfm:用 168 实际出货那份(镜像分支 8437faf),不是源码树 vendor 的旧版。
+A16 本次构建传了 FLUTTER_XCODE_DEBUG_INFORMATION_FORMAT=dwarf(不出 dSYM,省盘;可执行文件不变)与 LD_GENERATE_MAP_FILE=YES(核 Dawn 来源)。

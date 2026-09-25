@@ -1,0 +1,19 @@
+bench(168-fixes): fixC 产品侧 —— vendor/official_sfm 头文件 / export shim / JPEG v2 入口 / ABI 符号表
+
+来源:研究仓 data/rootcause-fixes-20260924 @ 8cb0ca9,
+  data/rootcause_fixes_2026_09_24/fixC_core_reg_evidence/patch_C_pocketworld_side_v2_abi.diff
+  (orig 副本 = 1a43510 / 4e22ee7 的 vendor/official_sfm,本分支该目录与 4e22ee7 逐文件相同)。
+  git apply -p1 --directory=vendor/official_sfm 干净,逐字未改。
+
+新增对外符号(核侧实现在下一个提交的 PWOfficialSfm 里):
+  pwofficial_add_frame_v2 / pwofficial_registration_evidence_stats_v1(pwofficial_abi_symbols.txt、
+  pwofficial_only_abi_symbols.txt)、pwofficial_add_jpeg_frame_v2(pwofficial_io_abi_symbols.txt,
+  pwofficial_jpeg_decode.mm 里解码后转发 pwofficial_add_frame_v2)。
+  export shim 的 aether_sfm_c.h / pwofficial_export_shim.c 与核补丁 patch_C_core_reg_evidence_on_B_v1.diff
+  里的 pw_vendor post-image 逐字节相同;official_sfm_c.h 只差注释与声明的摆放位置。
+
+仅台架用,不上生产。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

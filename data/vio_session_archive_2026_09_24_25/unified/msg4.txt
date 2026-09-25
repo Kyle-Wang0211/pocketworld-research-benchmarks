@@ -1,0 +1,19 @@
+bench(unified): 台架菜单 + 启动参数路由 + 完整链入口 + 核开关页 + 通道 pw_bench_unified(仅台架)
+
+- lib/bench_unified/bench_home_page.dart:菜单骨架(条目由 arloopbench 自己的 main.dart 给出,那里 import 全部页面)。
+  启动参数:-PWBenchPage <id> 直开;兼容旧的 -PWBenchReplayRecording(→replay)、-PWLodCapture/-PWLodAuto(→lod)、
+  -PWMode(原 PWSplatAB → splat-ab)、-PWAutoRun(原 VIO Replacement Bench → viobench)。每进程路由一次。
+- bench_full_chain_page.dart:进入完整重建链 = 注册生产 4 个 Runner 插件后调生产 main()。单程:生产 main() 自己
+  runApp 并初始化归档/日志/EnvFile/遥测/稠密启动器,没有拆除路径,台架也不往生产代码里加 ⇒ 进去后直到杀 App,
+  下次启动回菜单。确认框写明这一点。
+- bench_core_switches_page.dart:编辑 Documents/official_env.json —— 生产 main() 自带的 EnvFile 机制
+  (AetherEnvFile.applyFrom,任何拍摄/进原生之前 setenv,并记 pw_device_log)。四个核开关:
+  OFFICIAL_AETHER_DEVICE_ALIGN_V1(默认开,"0"关)、OFFICIAL_AETHER_REG_EVIDENCE / OFFICIAL_AETHER_FINALIZE_VIA_RESUME
+  (默认关,"1"开)、OFFICIAL_AETHER_GSS_FUSED(默认关,"1" = 168 融合核)。核里都是 static const 缓存,每进程读一次。
+  页面列出没有运行期开关的修复(fixA、fixB、C-dart、fixC 产品侧 v2 入口与核内信任契约)。
+- ios/Runner/PwBenchUnifiedPlugin.swift:launchArgs / enterFullChain(AppDelegate 装注册器)/ 旧 VIO 台架按需加载与展示 /
+  泼溅 A/B 启动与状态。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

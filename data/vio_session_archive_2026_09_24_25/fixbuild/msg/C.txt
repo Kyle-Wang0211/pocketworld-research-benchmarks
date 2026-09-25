@@ -1,0 +1,19 @@
+bench(168-fixes): C-dart —— 拆掉静默失效的 Dart SCALE-ANCHOR(交付尺度改由核内 DEVICE-ALIGN-V1)
+
+来源:研究仓 data/sfm-device-align-20260924 @ 7b1f8a0,
+  data/sfm_device_align_2026_09_24/step2_patches_and_results/patch_C_retire_dart_scale_anchor.diff
+  (基线 1a43510)。与核侧补丁 B(Sim3 对齐 + 闸)配对:两处同时缩放会叠乘,所以 Dart 这条路整条删除;
+  Swift 侧对应的 setenv("OFFICIAL_AETHER_SCALE_ANCHOR") 一并删除。重力旋转对齐原样保留。
+
+打补丁时的唯一冲突(已按补丁原意解决,如实记录):
+  lib/official_capture/sfm_live_recon.dart 的 _gravityAlign 里,补丁 C 删除的整段 scale-anchor 代码块
+  在 fixB 里被改过一处(arkitCenterWorldOf 闭包改成只给 devicePoseTrusted 帧提供设备相机中心)。
+  C 删除整个块,fixB 那处改动随块一起消失。语义不冲突:删除后 Dart 不再做任何尺度锚定,
+  "不可信帧不得当位姿先验"改由核侧 fixC(不可信帧不做 Sim3 配对)保证。其余 hunk 仅行号偏移,
+  其余 4 个文件干净应用。解决方式 = git apply --3way 后冲突区取补丁 C 一侧。
+
+仅台架用,不上生产。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

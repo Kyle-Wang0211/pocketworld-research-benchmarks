@@ -1,0 +1,18 @@
+bench(unified): PWVIOBenchKit —— 旧 VIO Replacement Bench 包成 arloopbench 按需加载的框架(仅台架)
+
+arloopbench 不链接它:菜单「旧 VIO 替换台架」时 Bundle.load() + NSClassFromString("PWVIOBenchHost"),
+全屏展示原 SwiftUI ContentView;不点就一个字节都不进进程。相对原 app 的偏离(host/PWVIOBenchHost.swift 文件头逐条):
+  D1 @main App 结构体不编(文件留着);它的 onAppear 序列(purge → preflight → -PWAutoRun → 1.5 s 后 start)
+     原样搬进 host,每进程一次;一个 BenchViewModel 全进程共用(原 @StateObject)。
+  D2 资源在框架 bundle 里:src 里两处 Bundle.main 查资源改成先查框架 bundle 再查 Bundle.main
+     (BenchExperimentIdentity.swift、BenchmarkRunPreparation.swift resource())。src 其余一字不改。
+  D3 引擎 = 原 app 内嵌的预编译 generic 框架(~/Developer/viobench-build/bench-dd-generic,09-20;
+     引擎源码 09-18 后未改),sha256 见 engines/SHA256SUMS.txt。GPU 前端变体不带:它自带一份 Dawn(23 个
+     ObjC 类),arloopbench 已有一份 Dawn,同进程两份同名 ObjC 类是未定义行为。
+  D4 底栏「返回台架菜单」,运行中禁用。
+构建:project.yml(照抄原 target 设置;框架不许 SWIFT_OBJC_BRIDGING_HEADER,改用 -import-objc-header)
++ build_kit.sh(xcodegen + xcodebuild,产物写 dist/,不入库)。落盘格式不变:Documents/VIOBenchRuns/run-<uuid>/。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

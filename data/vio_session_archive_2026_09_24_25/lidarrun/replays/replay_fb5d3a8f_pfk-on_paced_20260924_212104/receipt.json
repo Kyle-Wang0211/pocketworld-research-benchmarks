@@ -1,0 +1,133 @@
+{
+  "schema": "pw.bench.replay-receipt/1",
+  "marker": "PW_BENCH_REPLAY_PAGE_V1",
+  "bundle": "com.kyle.arloopbench",
+  "run_dir_name": "replay_fb5d3a8f_pfk-on_paced_20260924_212104",
+  "started_at_utc": "2026-09-24T13:21:04.726633Z",
+  "ended_at_utc": "2026-09-24T13:21:04.979803Z",
+  "phase": "failed",
+  "error": "recording declares 341 losses; a lossy recording is invalid, not shorter (pass -PWBenchReplayAllowLossy on to replay it anyway, flagged in the receipt)",
+  "recording": {
+    "recording_id": "fb5d3a8f-6e31-463e-989d-bd73bb3a2def",
+    "dir_name": "run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def",
+    "device_model": "iPhone15,2",
+    "device_model_source": "input_manifest.json:device_model(不在 manifest.files 内,未核哈希)",
+    "manifest_sha256": "585ed793fa1c9667d968dca91f0ed97f0591032d1277d0c7c34a432e2b740c0a",
+    "frames_digest_sha256": "b6ab0b10ca5dd1d028fe6ef4a259a3b219ab8a4a42abcd18a67de43d7311c47b",
+    "camera": {
+      "height": 1440,
+      "nominal_fps": 60,
+      "pixel_format": "luma8_from_420f_full_range",
+      "width": 1920
+    },
+    "frame_count": 1450,
+    "loss_count": 341,
+    "load_report": {
+      "camera_imu_timestamp_ties": 0,
+      "camera_rows_after_limit": 1450,
+      "camera_rows_total": 1450,
+      "frames_digest_verified": false,
+      "frames_with_exposure": 1450,
+      "imu_samples": 3009,
+      "index_files_sha256_verified": 6,
+      "intrinsics_index_present": true,
+      "intrinsics_paired": 1450,
+      "intrinsics_rows": 1791,
+      "intrinsics_unmatched": 0,
+      "leading_camera_frames_without_imu_dropped": 4,
+      "loss_count": 341,
+      "verdict_resolution_1920x1440": true
+    }
+  },
+  "feed_resolution": {
+    "width": 1920,
+    "height": 1440,
+    "downscaled": false,
+    "at_or_above_1920x1440": true,
+    "note": "录制即 1920×1440,原样喂"
+  },
+  "switches": {
+    "per_frame_intrinsics": {
+      "enabled": true,
+      "source": 0,
+      "raw": ""
+    },
+    "arm_label": "pfk-on",
+    "pace": "paced",
+    "allow_lossy": false,
+    "ignore_exposure": false,
+    "limit_frames": 0,
+    "verify_frames_digest": false,
+    "tag": null,
+    "launch_arg_problems": []
+  },
+  "config": {
+    "slam_config": "slam_config.yaml",
+    "device_config": "device_config.yaml",
+    "slam_config_sha256": null,
+    "device_config_sha256": null,
+    "effective_config_sha256": null,
+    "generator": "lib/vio/ffi/xrslam_config.dart XrslamConfigBuilder",
+    "provenance": {
+      "cam0.intrinsics": "device-api",
+      "cam0.resolution": "device-api",
+      "cam0.extrinsic": "device-api",
+      "cam0.time_offset": "PLACEHOLDER",
+      "imu.noise": "shared-default",
+      "pixel_params": "upstream-verbatim (min_parallax=10.0, min_keypoint_distance=25.0) @ 640px; 上游验证区间是 640-752px,本次超出"
+    },
+    "yaml_overrides": [],
+    "solver_time_budget": {
+      "frame_time_budget": null,
+      "min_iterations": null,
+      "frame_time_budget_effective_s": -1.0,
+      "budget_on": false,
+      "note": "键不在 ⇒ 引擎默认 −1(关);只有时间预算引擎(b0937ef 起)认这两个键,别的臂 yaml-cpp 读不到也不报错"
+    },
+    "has_placeholders": true,
+    "extrinsic": {
+      "q_bc": [
+        -0.7071068,
+        0.7071068,
+        0.0,
+        0.0
+      ],
+      "p_bc": [
+        0.03290364,
+        -0.00696553,
+        -0.00286231
+      ],
+      "provenance": "device-api",
+      "rule": "CameraImuExtrinsic.forIosMachine(录制机型)"
+    },
+    "camera_time_offset": {
+      "seconds": 0.0,
+      "milliseconds": 0.0,
+      "provenance": "shared-default",
+      "machine": "iPhone15,2",
+      "note": "官方 iOS 配置 time_offset: 0.0(slam_params + 每机 yaml),原始 PTS",
+      "applied_by": "PWXrslamTransportCreateWithCameraTimeOffset(与 ON 臂同)"
+    }
+  },
+  "engine": {
+    "info_plist": null,
+    "identity_source": "Info.plist(由 stamp_bench_engine_identity.sh 在 Release 构建时按 ios/scripts/stamp_runtime_identity.sh 的臂表与二进制指纹核对后盖章)",
+    "gpu_frontend_trail": null,
+    "telemetry_symbols_found": null
+  },
+  "per_frame_intrinsics": null,
+  "transport_stats": null,
+  "timebase": null,
+  "feeding": null,
+  "thermal_state": null,
+  "device": null,
+  "launch_arguments": null,
+  "outputs": null,
+  "native_summary_file": "replay_native_summary.json",
+  "invariants": {
+    "passed": false,
+    "failed": [
+      "no_native_summary"
+    ]
+  }
+}

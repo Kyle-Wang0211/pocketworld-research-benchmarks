@@ -1,0 +1,15 @@
+XRSLAM: XRSLAMImage.timestamp_convention == XRSLAM_TS_UNSPECIFIED; the timestamp is used as-is. Android SENSOR_TIMESTAMP is first-row exposure START, iOS presentationTimeStamp is UNDOCUMENTED -- the two ends are NOT equivalent, and this library has no td state to absorb the difference (state.h ES_SIZE == 15, no td). Declare the convention (see XRSLAM.h). This warning is printed once.
+
+=== pw euroc runner ===
+  images      1702 (rejected 0)
+  gyro/acc    2842 / 2842
+  poses       1651  -> /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/scaleS4/runs/M_6e2d_640_td+0.tum
+  IMU push    mean 7.7607  max 187.177  总计 44.1 s  <- 🔑 真正的成本在这
+  read  ms    mean 0.005
+  push  ms    mean 0.040
+  run   ms    mean 0.002  max 0.025   <- 我们量的 RunOneFrame
+  core  ms    mean 0.001  max 0.024   <- 核内自报 last_frame_ms
+  run_every   1   downscale 1
+  wall        51.2 s
+  imu_zero_frames    1   <- >0 表示那些帧退化成了纯单目
+  degenerate_frames  51

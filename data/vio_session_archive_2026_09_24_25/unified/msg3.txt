@@ -1,0 +1,18 @@
+bench(unified): 泼溅 A/B —— PWSplatAB 并入 arloopbench(仅台架)
+
+原样拷贝(pw_splat_ab_bench @ b792d57,git show 导出,逐字节相同):
+  ios/Runner/PwSplatAB/{bench.mm, bench_points.mm, bench_cloud.mm, wgsl_arms.h}
+  ios/Runner/PwSplatAB/pw_splat_ab.h = Sources/Bridging.h 去掉第一行 #include "lod/pw_lod_bench.h"
+  (arloopbench 已经经 vendor/aether_lod/include/pw_lod_bench.h 声明 pwlod_run,再引一份会重复定义类型)。
+  lod/ 与 third_party/ 不拷:LOD 引擎 arloopbench 已链(libpw_lod_afb521e6.a,含逐字节相同的 pw_lod_bench.cpp),
+  再拷会重复定义 pwlod_run / aether::pointcloud_lod。
+外壳 ios/Runner/PwSplatABRunner.swift = Sources/App.swift 的 Runner.go() + lodVerify(),偏离 S1–S4 写在文件头:
+  参数从 Flutter 页来(键名 = 旧启动参数去掉横杠,默认值不变;页面会把 -PWMode 等启动参数原样填进来并自动跑一次,
+  旧 devicectl 命令只需换 bundle id);一次一跑;Runner 类改名;lod 模式用 arloopbench 已有的 pwLodProbe / pwlod_run;
+  Dawn 用 arloopbench 那一份(libaether3d_ffi.a),不是 PWSplatAB 原来 force_load 的 Aether3D-cross Release Dawn。
+页面 lib/bench_splat/splat_ab_page.dart:模式 splat / points / cloud / lodverify / lod,参数、状态、结果 json 列表。
+落盘不变:Documents/SplatAB/*.json,输入 Documents/cloud.bin、Documents/lod/<oct>/。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

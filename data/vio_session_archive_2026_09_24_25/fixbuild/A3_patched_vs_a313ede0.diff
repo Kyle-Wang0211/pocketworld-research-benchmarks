@@ -1,0 +1,2182 @@
+diff --git a/aether_cpp/official_pipeline/include/aether_sfm_c.h b/aether_cpp/official_pipeline/include/aether_sfm_c.h
+index 0fa2e519..595779a0 100644
+--- a/aether_cpp/official_pipeline/include/aether_sfm_c.h
++++ b/aether_cpp/official_pipeline/include/aether_sfm_c.h
+@@ -484,6 +484,68 @@ void aether_sfm_final_diag(aether_sfm_session_t* s, double* mean_reproj_px,
+                            int64_t* n_points, int64_t* n_track3plus,
+                            int64_t* n_obs);
+ 
++// [DEVICE-ALIGN-V1 2026-09-24] End-of-finalize alignment of the delivered model
++// to the fed device camera centres (COLMAP 3.14 pose-prior alignment step:
++// LO-RANSAC Sim3 + Reconstruction::Transform; see
++// official_pipeline/src/device_pose_alignment_v1.h) and its gate. Valid after
++// finalize REFINED; the getters already serve the aligned model. Returns the
++// status: 0 not_run, 1 aligned, 2 aligned_gate_tripped (aligned, but >=1 fed
++// registered frame lies outside the chi2(3) 95% radius), 3
++// failed_insufficient_pairs, 4 failed_ransac (1/2 = transform applied; 3/4 =
++// model left as finalize produced it), 5 disabled (kill switch). The full
++// record (Sim3, per-frame outliers, error summary) is the "device_alignment_v1"
++// line of the session's diagnostics jsonl. Out-params nullable. The core only
++// measures and flags; what the product does with 2/3/4 is not decided here.
++int aether_sfm_device_alignment_v1(aether_sfm_session_t* s, double* scale,
++                                   double* max_error_m, int* n_pairs,
++                                   int* n_inliers,
++                                   double* centre_err_median_m,
++                                   double* centre_err_max_m,
++                                   double* rot_err_median_deg,
++                                   double* rot_err_max_deg);
++
++// [DEVICE-POSE-TRUST-V1 2026-09-24] aether_sfm_add_frame with the per-frame
++// device-pose trust bit (contract with the Dart capture layer; the pocketworld
++// JPEG entry pwofficial_add_jpeg_frame_v2 decodes and calls this). Parameters
++// are aether_sfm_add_frame's in the same order plus `device_pose_trusted`
++// right after pose_t. aether_sfm_add_frame == this with device_pose_trusted=1,
++// so existing callers keep today's behaviour.
++//   device_pose_trusted != 0 : today's route — the frame is placed at its
++//       device pose (subject to the registration-evidence gate when
++//       AETHER_REG_EVIDENCE=1), is a Sim3 alignment pair, carries its
++//       gravity attitude anchor, drives spatial candidate selection.
++//   device_pose_trusted == 0 : the device pose is NEVER used for placement,
++//       as a Sim3 alignment pair, as a gravity/pose prior, or for spatial
++//       candidate / pose-guided matching. The frame is registered from image
++//       evidence exactly as upstream COLMAP registers an image without a
++//       prior (IncrementalMapper::RegisterNextImage: P3P RANSAC + refinement,
++//       retried by the upstream registration loop during capture, at
++//       finalize and on resume), or stays unregistered (get_poses
++//       registered=0) when the evidence is insufficient. The pose values are
++//       still persisted, with the untrusted bit, in the pose store (bit 0 of
++//       the former reserved word) so resume applies the same rule.
++aether_sfm_result_t aether_sfm_add_frame_v2(aether_sfm_session_t* s,
++                                            const uint8_t* gray,
++                                            int width, int height,
++                                            float fx, float fy,
++                                            float cx, float cy,
++                                            const double pose_qwxyz[4],
++                                            const double pose_t[3],
++                                            int32_t device_pose_trusted,
++                                            int* out_frame_id);
++
++// [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1 2026-09-24] Counters (nullable
++// out-params): frames fed untrusted, untrusted frames registered from image
++// evidence, trusted frames whose placement went through the evidence gate,
++// gate failures (frame left pending), pending frames registered later (live
++// retry / finalize / resume), and frames still unregistered in the delivered
++// model. Per-frame records: "reg_evidence_v1" lines in sfm_match_fail.jsonl.
++void aether_sfm_registration_evidence_stats_v1(
++    aether_sfm_session_t* s, int64_t* untrusted_fed,
++    int64_t* untrusted_registered, int64_t* evidence_checked,
++    int64_t* evidence_failed, int64_t* late_registered,
++    int64_t* unregistered_delivered);
++
+ // [L1-ARBITRATE 2026-07-12] Ghost-layer L1 CasDiffMVS 1-bit arbitration over
+ // the session's run_dir files: consumes the AETHER_GHOST_MASK=1 finalize-tail
+ // sidecars (arbitration_plan.bin / arbitration_points.bin / ghost_mask.bin)
+diff --git a/aether_cpp/official_pipeline/src/arkit_pose_store_v1.cc b/aether_cpp/official_pipeline/src/arkit_pose_store_v1.cc
+index c3281f8f..10807f4d 100644
+--- a/aether_cpp/official_pipeline/src/arkit_pose_store_v1.cc
++++ b/aether_cpp/official_pipeline/src/arkit_pose_store_v1.cc
+@@ -143,7 +143,9 @@ ArkitPoseStoreStatusV1 WriteArkitPoseStoreV1(
+     AppendU32(&payload, static_cast<uint32_t>(record.frame_id));
+     AppendU32(&payload, record.image_id);
+     AppendU32(&payload, record.active ? 1U : 0U);
+-    AppendU32(&payload, 0U);  // reserved for forward-compatible flags
++    // Forward-compatible flags word (was always 0). Bit 0 = device pose
++    // untrusted [DEVICE-POSE-TRUST-V1 2026-09-24]; all other bits stay 0.
++    AppendU32(&payload, record.device_pose_untrusted ? 1U : 0U);
+     AppendU64(&payload, record.frame_identity_digest);
+     for (const double value : record.cam_from_world_q_xyzw) {
+       AppendDouble(&payload, value);
+@@ -245,11 +247,12 @@ ArkitPoseStoreStatusV1 ReadArkitPoseStoreV1(
+         !ReadU32(bytes, &offset, &active) ||
+         !ReadU32(bytes, &offset, &reserved) ||
+         !ReadU64(bytes, &offset, &record.frame_identity_digest) || active > 1 ||
+-        reserved != 0) {
++        (reserved & ~1U) != 0) {  // [DEVICE-POSE-TRUST-V1] only bit 0 defined
+       return ArkitPoseStoreStatusV1::kInvalid;
+     }
+     record.frame_id = static_cast<int32_t>(frame_id);
+     record.active = active == 1;
++    record.device_pose_untrusted = (reserved & 1U) != 0;
+     for (double& value : record.cam_from_world_q_xyzw) {
+       if (!ReadDouble(bytes, &offset, &value))
+         return ArkitPoseStoreStatusV1::kInvalid;
+diff --git a/aether_cpp/official_pipeline/src/arkit_pose_store_v1.h b/aether_cpp/official_pipeline/src/arkit_pose_store_v1.h
+index 2a75e184..5fc4eb05 100644
+--- a/aether_cpp/official_pipeline/src/arkit_pose_store_v1.h
++++ b/aether_cpp/official_pipeline/src/arkit_pose_store_v1.h
+@@ -11,6 +11,11 @@ struct ArkitPoseRecordV1 {
+   int32_t frame_id = -1;
+   uint32_t image_id = 0;
+   bool active = true;
++  // [DEVICE-POSE-TRUST-V1 2026-09-24] true when the caller marked this frame's
++  // device pose untrusted (aether_sfm_add_frame_v2(..., device_pose_trusted=0, ..)).
++  // Persisted as bit 0 of the formerly always-zero "reserved" u32, so a store
++  // whose frames are all trusted stays byte-identical to the pre-flag format.
++  bool device_pose_untrusted = false;
+   uint64_t frame_identity_digest = 0;
+   std::array<double, 4> cam_from_world_q_xyzw{};
+   std::array<double, 3> cam_from_world_t_xyz{};
+@@ -19,6 +24,7 @@ struct ArkitPoseRecordV1 {
+   bool operator==(const ArkitPoseRecordV1& other) const {
+     return frame_id == other.frame_id && image_id == other.image_id &&
+            active == other.active &&
++           device_pose_untrusted == other.device_pose_untrusted &&
+            frame_identity_digest == other.frame_identity_digest &&
+            cam_from_world_q_xyzw == other.cam_from_world_q_xyzw &&
+            cam_from_world_t_xyz == other.cam_from_world_t_xyz &&
+diff --git a/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h b/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h
+new file mode 100644
+index 00000000..a7014567
+--- /dev/null
++++ b/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h
+@@ -0,0 +1,320 @@
++// device_pose_alignment_v1.h — [DEVICE-ALIGN-V1 2026-09-24] end-of-finalize
++// similarity alignment of the delivered reconstruction to the fed device
++// trajectory (camera centres), plus the same fit's inliers/residuals as a
++// garbage-pose gate. Header-only, no platform code, shared verbatim by the core
++// (official_aether_sfm_c.cc RefineGlobalBA tail) and the host offline checker.
++//
++// WHY: finalize leaves the delivered model in whatever scale the live model and
++// the global BA gauge (COLMAP TWO_CAMS_FROM_WORLD, incremental_mapper.cc:1273)
++// ended up with; COLMAP's own gauge comment (bundle_adjustment_ceres.cc:626)
++// says the gauge should be fixed differently "once we support IMUs or other
++// sensors". COLMAP 3.14's upstream answer for sensor position priors is the
++// pose-prior flow, whose first step is a robust Sim3 alignment of the
++// reconstruction to the prior positions.
++// This file copies exactly that first step; it does NOT copy the pose-prior
++// bundle adjustment that follows it upstream (geometry stays untouched).
++//
++// COPIED PIECES (vendored COLMAP 3.14.0.dev0, glomap_vendor/colmap-src/colmap):
++//   [C1] RANSAC max_error from prior covariances —
++//        estimators/bundle_adjustment_ceres.cc:1402-1426
++//        (PosePriorBundleAdjuster::AlignReconstruction).
++//   [C2] per-prior position covariance — the upstream caller-supplied path of
++//        the pose-prior mapper: RunPosePriorMapper (exe/sfm.cc:469) exposes
++//        prior_position_std_{x,y,z} (sfm.cc:474-476, options sfm.cc:492-494)
++//        and, with overwrite_priors_covariance (sfm.cc:473, 487-491), writes
++//        covariance = Vector3d(std_x,std_y,std_z).cwiseAbs2().asDiagonal()
++//        (sfm.cc:508-515) into EVERY pose prior
++//        (UpdateDatabasePosePriorsCovariance, sfm.cc:66-80). Each pair below
++//        carries that covariance in the upstream field
++//        (PosePrior::position_covariance, geometry/pose_prior.h:64), and [C1]
++//        consumes it unchanged. The 1.0 defaults at sfm.cc:474-476 and the
++//        1.0 prior_position_fallback_stddev (bundle_adjustment.h:255) are only
++//        what upstream uses when the caller supplies nothing; upstream expects
++//        the caller to supply the sensor's accuracy.
++//        SUPPLIED VALUE (input, not a deviation): σx=σy=σz =
++//        kDevicePriorPositionStdM = 0.040 m, the product's device-pose
++//        translation σ = pocketworld lib/vio/platform_pose/
++//        platform_pose_source.dart:57 kPlatformTranslationSigmaFloorM
++//        (pw-dense-stage @1a43510; line introduced 35c3046, 2026-08-26).
++//        Its provenance note there (platform_pose_source.dart:10-14, 49-54):
++//        first-hand published measurement, local median pose error 4.0 cm when
++//        ARCore poses were fed to COLMAP as fixed values; claiming a smaller σ
++//        requires an on-device calibration record first. x/y/z are equal
++//        because that source states a single translation σ.
++//   [C3] pairing + robust Sim3 — estimators/alignment.cc:246-279
++//        (AlignReconstructionToPosePriors: src = registered image projection
++//        centres, tgt = prior positions, EstimateSim3dRobust when
++//        max_error > 0, "< 3" → fail).
++//   [C4] apply — Reconstruction::Transform(tgt_from_src)
++//        (bundle_adjustment_ceres.cc:1437, exe/model.cc:369; implementation
++//        scene/reconstruction.cc:785-803). On failure nothing is applied
++//        (bundle_adjustment_ceres.cc:1432-1436, exe/model.cc:364-367).
++//   [C5] post-alignment per-image errors — estimators/alignment.cc:363-373
++//        (ComputeImageAlignmentError: rotation_error_deg, proj_center_error)
++//        and exe/model.cc:371-382 (error = |ProjectionCenter − ref location|
++//        AFTER Transform), summarised with AlignmentErrorSummary::Compute
++//        (alignment.cc:593-627).
++//   [C6] inlier criterion — optim/loransac.h:359 / ransac.h:371
++//        (residual² ≤ max_error²), residual = similarity_transform.h:161-164.
++//
++// DEVIATIONS (each with reason):
++//   [D1] Fixed RANSAC seed. Upstream passes the mapper's random_seed
++//        (incremental_mapper.cc:1284), which is -1 (= unseeded) in this core
++//        (incremental_pipeline.h:95 default, copied unchanged at
++//        official_incremental_pipeline.cc:150). A fixed seed makes the
++//        delivered transform reproducible for identical input; precedent in
++//        this core: upright_relative_pose_v1.h:22 (20260804).
++//   [D2] The body of AlignReconstructionToPosePriors (alignment.cc:246-279)
++//        is inlined over explicit (recon centre, device centre) pairs instead
++//        of calling it with std::vector<PosePrior>: the upstream function
++//        returns only bool and drops the RANSAC report, but the gate needs the
++//        inlier mask; the same pairs also drive the host offline checker.
++//        Pairing comes from the core's own FrameRecord (image_id ↔ device
++//        CamFromWorld), exactly as the core's live Sim3 diagnostic does
++//        (official_aether_sfm_c.cc:1928-1945, pre-patch line numbers), which
++//        is the image-id join upstream does through PosePrior::corr_data_id.
++//   [D3] No pose-prior bundle adjustment after the alignment (upstream
++//        bundle_adjustment_ceres.cc:1289-1320 continues into a prior-weighted
++//        BA). Approved scope is the alignment only; a similarity transform
++//        leaves reprojection residuals and shape unchanged.
++//   [D4] Gate flag (not upstream): upstream only distinguishes success /
++//        failure. Here, a successful alignment in which at least one fed,
++//        registered frame lies outside the χ²(3) 95% radius [C1] after the
++//        transform is reported as kAlignedGateTripped (transform still applied,
++//        as upstream does on success). What the product does on a trip is a UX
++//        decision and is NOT made here.
++//   [D5] Optional fit_mask (default: all pairs) so the host checker can fit on
++//        a subset and evaluate held-out frames. The core always passes none.
++//
++// HISTORY: v1 first read σ from the upstream 1.0 m fallback (95% radius 2.8 m:
++// shuffled-pose negative controls did not trip). Since 2026-09-24 (user
++// decision "用官方参数填 VIO 精度") the covariance is supplied through the
++// upstream per-prior mechanism [C2]; the threshold is still computed only by
++// the copied upstream formula [C1] — no threshold is typed here.
++
++#pragma once
++
++#include "colmap/estimators/alignment.h"
++#include "colmap/estimators/bundle_adjustment.h"
++#include "colmap/estimators/solvers/similarity_transform.h"
++#include "colmap/geometry/pose.h"
++#include "colmap/geometry/rigid3.h"
++#include "colmap/geometry/sim3.h"
++#include "colmap/math/math.h"
++#include "colmap/optim/ransac.h"
++
++#include <Eigen/Core>
++#include <Eigen/Geometry>
++
++#include <cmath>
++#include <limits>
++#include <string>
++#include <vector>
++
++namespace aether::sfm {
++
++// [C2] caller-supplied device prior position std-dev, metres (one value per
++// axis, as exe/sfm.cc:474-476 exposes them; all three equal because the source
++// states a single translation σ). Source: pocketworld
++// lib/vio/platform_pose/platform_pose_source.dart:57
++// kPlatformTranslationSigmaFloorM = 0.040 (provenance in the file header).
++inline constexpr double kDevicePriorPositionStdM = 0.040;
++
++// [C2] exe/sfm.cc:508-513 verbatim: the covariance the overwrite path writes
++// into every pose prior.
++inline Eigen::Matrix3d DevicePriorPositionCovariance(
++    double prior_position_std_x = kDevicePriorPositionStdM,
++    double prior_position_std_y = kDevicePriorPositionStdM,
++    double prior_position_std_z = kDevicePriorPositionStdM) {
++  const Eigen::Matrix3d covariance =
++      Eigen::Vector3d(
++          prior_position_std_x, prior_position_std_y, prior_position_std_z)
++          .cwiseAbs2()
++          .asDiagonal();
++  return covariance;
++}
++
++// [D1] fixed RANSAC seed (value = date of this change; any fixed value works).
++inline constexpr int kDeviceAlignRansacSeedV1 = 20260924;
++
++struct DeviceCentrePairV1 {
++  int frame_id = -1;
++  // Delivered model: CamFromWorld of the registered image (COLMAP axes).
++  colmap::Rigid3d recon_cam_from_world;
++  // Fed device pose: CamFromWorld already in COLMAP camera axes
++  // (FrameRecord::cam_from_world, official_aether_sfm_c.cc:414-416 pre-patch).
++  colmap::Rigid3d device_cam_from_world;
++  // [C2] upstream PosePrior::position_covariance (geometry/pose_prior.h:64,
++  // same NaN default = "no covariance"); the core fills it with
++  // DevicePriorPositionCovariance() for every pair.
++  Eigen::Matrix3d position_covariance =
++      Eigen::Matrix3d::Constant(std::numeric_limits<double>::quiet_NaN());
++};
++
++enum class DeviceAlignStatusV1 : int {
++  kNotRun = 0,
++  kAligned = 1,                  // RANSAC ok, every pair within the radius
++  kAlignedGateTripped = 2,       // RANSAC ok, ≥1 pair outside the radius [D4]
++  kFailedInsufficientPairs = 3,  // < 3 pairs (alignment.cc:271-274)
++  kFailedRansac = 4,             // report.success == false
++  kDisabled = 5,                 // kill switch OFFICIAL_AETHER_DEVICE_ALIGN_V1=0
++};
++
++inline const char* DeviceAlignStatusNameV1(DeviceAlignStatusV1 s) {
++  switch (s) {
++    case DeviceAlignStatusV1::kNotRun: return "not_run";
++    case DeviceAlignStatusV1::kAligned: return "aligned";
++    case DeviceAlignStatusV1::kAlignedGateTripped: return "aligned_gate_tripped";
++    case DeviceAlignStatusV1::kFailedInsufficientPairs:
++      return "failed_insufficient_pairs";
++    case DeviceAlignStatusV1::kFailedRansac: return "failed_ransac";
++    case DeviceAlignStatusV1::kDisabled: return "disabled";
++  }
++  return "unknown";
++}
++
++struct DeviceAlignResultV1 {
++  DeviceAlignStatusV1 status = DeviceAlignStatusV1::kNotRun;
++  int n_pairs = 0;            // fed + registered frames
++  int n_fit = 0;              // pairs handed to RANSAC (== n_pairs in the core)
++  int n_ransac_inliers = 0;   // report.support.num_inliers (fit set)
++  int n_inliers_all = 0;      // pairs within max_error after Transform [C6]
++  size_t ransac_trials = 0;
++  double max_error_m = 0.0;   // [C1]
++  // [C2] sqrt(median(trace(Σ)/3)) that [C1] used, i.e. the effective prior σ
++  // (reporting only; the threshold is max_error_m).
++  double sigma_m = 0.0;
++  // device_from_recon (upstream name: tgt_from_src / metric_from_orig).
++  colmap::Sim3d device_from_recon;
++  // [C5] over ALL pairs after the transform (device metres / degrees).
++  colmap::AlignmentErrorSummary errors;
++  std::vector<int> outlier_frame_ids;
++  std::vector<double> centre_error_m;  // per pair, pair order
++  std::vector<char> inlier_all;        // per pair, pair order
++
++  bool Applied() const {
++    return status == DeviceAlignStatusV1::kAligned ||
++           status == DeviceAlignStatusV1::kAlignedGateTripped;
++  }
++};
++
++// [C1] bundle_adjustment_ceres.cc:1404-1426 verbatim over the priors handed to
++// the fit (upstream: pose_priors_ after the constructor's filter, i.e. priors
++// with a position whose image is in the problem = our fit pairs). The
++// covariances are whatever the caller put in [C2]; nothing is typed here.
++// Returns max_error; *rms_sigma_m (nullable) = sqrt(median rms var).
++inline double DeviceAlignMaxErrorV1(
++    const std::vector<Eigen::Matrix3d>& position_covariances,
++    double* rms_sigma_m = nullptr) {
++  std::vector<double> rms_vars;
++  rms_vars.reserve(position_covariances.size());
++  for (const Eigen::Matrix3d& position_covariance : position_covariances) {
++    const double trace = position_covariance.trace();
++    if (trace <= 0.0) {
++      continue;
++    }
++    rms_vars.push_back(trace / 3.0);
++  }
++
++  if (rms_vars.empty()) {
++    // bundle_adjustment_ceres.cc:1415-1419 ("No pose priors with valid
++    // covariance found."), fallback read from the upstream option default.
++    const double fallback_stddev = colmap::PosePriorBundleAdjustmentOptions()
++                                       .prior_position_fallback_stddev;
++    rms_vars.push_back(fallback_stddev * fallback_stddev);
++  }
++
++  const double median_rms_var = colmap::Median(rms_vars);
++  if (rms_sigma_m) *rms_sigma_m = std::sqrt(median_rms_var);
++  // Set max error using the median RMS variance of valid pose priors.
++  // Scaled by sqrt(chi-square 95% quantile, 3 DOF) to approximate a 95%
++  // confidence radius.
++  return std::sqrt(colmap::kChiSquare95ThreeDof * median_rms_var);
++}
++
++// [C3]+[C5]+[C6]; does NOT modify any reconstruction — the caller applies
++// result.device_from_recon with Reconstruction::Transform [C4] iff Applied().
++inline DeviceAlignResultV1 EstimateDeviceAlignmentV1(
++    const std::vector<DeviceCentrePairV1>& pairs,
++    const std::vector<char>* fit_mask = nullptr) {
++  DeviceAlignResultV1 out;
++  out.n_pairs = static_cast<int>(pairs.size());
++
++  // alignment.cc:246-269 — src = image.ProjectionCenter(), tgt = prior pos.
++  std::vector<Eigen::Vector3d> src;
++  std::vector<Eigen::Vector3d> tgt;
++  std::vector<Eigen::Matrix3d> fit_covariances;  // [C1] input
++  src.reserve(pairs.size());
++  tgt.reserve(pairs.size());
++  fit_covariances.reserve(pairs.size());
++  for (size_t i = 0; i < pairs.size(); ++i) {
++    if (fit_mask && !(*fit_mask)[i]) continue;  // [D5]
++    src.push_back(pairs[i].recon_cam_from_world.TgtOriginInSrc());
++    tgt.push_back(pairs[i].device_cam_from_world.TgtOriginInSrc());
++    fit_covariances.push_back(pairs[i].position_covariance);
++  }
++  out.n_fit = static_cast<int>(src.size());
++  // alignment.cc:271-274
++  if (src.size() < 3) {
++    out.status = DeviceAlignStatusV1::kFailedInsufficientPairs;
++    return out;
++  }
++
++  // bundle_adjustment_ceres.cc:1403 (alignment_ransac_options defaults) +
++  // incremental_mapper.cc:1284 (random_seed) [D1]
++  colmap::RANSACOptions ransac_options;
++  ransac_options.random_seed = kDeviceAlignRansacSeedV1;
++  ransac_options.max_error =
++      DeviceAlignMaxErrorV1(fit_covariances, &out.sigma_m);
++  out.max_error_m = ransac_options.max_error;
++
++  // alignment.cc:276-277 (max_error > 0 ⇒ robust)
++  colmap::Sim3d tgt_from_src;
++  const auto report =
++      colmap::EstimateSim3dRobust(src, tgt, ransac_options, tgt_from_src);
++  out.ransac_trials = report.num_trials;
++  if (!report.success) {
++    out.status = DeviceAlignStatusV1::kFailedRansac;
++    return out;
++  }
++  out.n_ransac_inliers = static_cast<int>(report.support.num_inliers);
++  out.device_from_recon = tgt_from_src;
++
++  // [C5] alignment.cc:363-373 per pair, over ALL pairs (fit + held-out).
++  std::vector<colmap::ImageAlignmentError> errors;
++  errors.reserve(pairs.size());
++  out.centre_error_m.reserve(pairs.size());
++  out.inlier_all.reserve(pairs.size());
++  const double max_sq = out.max_error_m * out.max_error_m;  // [C6]
++  for (const DeviceCentrePairV1& p : pairs) {
++    const colmap::Rigid3d tgt_world_from_src_cam = colmap::Inverse(
++        colmap::TransformCameraWorld(tgt_from_src, p.recon_cam_from_world));
++    const colmap::Rigid3d tgt_world_from_tgt_cam =
++        colmap::Inverse(p.device_cam_from_world);
++    colmap::ImageAlignmentError error;
++    error.image_name = std::to_string(p.frame_id);
++    error.rotation_error_deg =
++        colmap::RadToDeg(tgt_world_from_src_cam.rotation().angularDistance(
++            tgt_world_from_tgt_cam.rotation()));
++    error.proj_center_error = (tgt_world_from_src_cam.translation() -
++                               tgt_world_from_tgt_cam.translation())
++                                  .norm();
++    errors.push_back(error);
++    out.centre_error_m.push_back(error.proj_center_error);
++    const bool inlier =
++        error.proj_center_error * error.proj_center_error <= max_sq;
++    out.inlier_all.push_back(inlier ? 1 : 0);
++    if (inlier) {
++      ++out.n_inliers_all;
++    } else {
++      out.outlier_frame_ids.push_back(p.frame_id);
++    }
++  }
++  out.errors = colmap::AlignmentErrorSummary::Compute(errors);
++  out.status = out.outlier_frame_ids.empty()
++                   ? DeviceAlignStatusV1::kAligned
++                   : DeviceAlignStatusV1::kAlignedGateTripped;  // [D4]
++  return out;
++}
++
++}  // namespace aether::sfm
+diff --git a/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc b/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
+index 8bf8d6c8..bcd1a004 100644
+--- a/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
++++ b/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
+@@ -27,6 +27,9 @@
+ #include "mandatory_arkit_gravity_v1.h"
+ #include "mandatory_gravity_tvg_v1.h"
+ #include "live_cloud_diagnostics_v1.h"
++// [DEVICE-ALIGN-V1 2026-09-24] end-of-finalize Sim3 to the fed device
++// trajectory + gate (COLMAP 3.14 pose-prior alignment step; header-only).
++#include "device_pose_alignment_v1.h"
+ #include "pair_policy_v2_c.h"
+ #include "pair_selection_v2.h"
+ #include "visual_loop_index_v1.h"
+@@ -66,6 +69,7 @@
+ #include "colmap/scene/track.h"
+ #include "colmap/estimators/bundle_adjustment.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
++#include "colmap/estimators/pose.h"  // [REG-EVIDENCE-V1] EstimateAbsolutePose / RefineAbsolutePose
+ #include "colmap/sfm/incremental_mapper.h"
+ #include "colmap/sfm/observation_manager.h"
+ 
+@@ -416,7 +420,17 @@ struct FrameRecord {
+   colmap::Rigid3d cam_from_world;
+   // Normalized physical-gravity direction in COLMAP camera coordinates.
+   Eigen::Vector3d gravity_cam = Eigen::Vector3d::Zero();
++  // [DEVICE-POSE-TRUST-V1 2026-09-24] has_pose now means "the device pose may
++  // be USED" (placement, Sim3 pair, spatial candidates, pose-guided matching,
++  // live growth). It equals device_pose_trusted; an untrusted frame keeps its
++  // cam_from_world/gravity_cam values only so the pose store stays complete.
+   bool has_pose = false;
++  bool device_pose_trusted = true;
++  // [DEVICE-POSE-TRUST-V1] the mandatory gravity vector passed ingest
++  // validation. The route's two-view verification (upright relative pose,
++  // EstimateMandatoryFrameTwoViewGeometry) needs only this, not the pose, so
++  // an untrusted frame's pairs are still verified by the same estimator.
++  bool has_gravity = false;
+   // [THERMAL-THROTTLE 2026-07-11] True when this frame was matched against a
+   // REDUCED candidate window (thermal serious → live K 12→6, GPU relief for
+   // the camera pipeline). FinalizeRematchStarvedFrames treats such frames as
+@@ -477,7 +491,11 @@ EstimateMandatoryFrameTwoViewGeometry(
+     const std::vector<Eigen::Vector2d>& points2,
+     const colmap::FeatureMatches& matches,
+     const colmap::TwoViewGeometryOptions& options) {
+-  if (!frame1.has_pose || !frame2.has_pose) {
++  // [DEVICE-POSE-TRUST-V1] gate on the validated gravity vector (all the
++  // estimator consumes), not on pose usability: identical for every trusted
++  // frame (both flags set together at ingest/resume), and it keeps an
++  // untrusted frame's pairs verifiable.
++  if (!frame1.has_gravity || !frame2.has_gravity) {
+     aether::sfm::MandatoryGravityTwoViewResultV1 result;
+     result.status =
+         aether::sfm::MandatoryGravityTwoViewStatusV1::kInvalidInput;
+@@ -1136,6 +1154,23 @@ struct aether_sfm_session {
+   std::thread refine_thread;
+   std::atomic<int> finalize_status{0};  // aether_sfm_finalize_status_t
+   double refine_ms = 0.0;               // worker global-BA wall time
++  // [DEVICE-ALIGN-V1 2026-09-24] result of the end-of-finalize alignment of
++  // the delivered model to the fed device centres; written by the refine
++  // worker under recon_mutex together with `recon` (read after REFINED).
++  aether::sfm::DeviceAlignResultV1 device_align_v1;
++
++  // [REG-EVIDENCE-V1 2026-09-24] Session-persistent registration-trial count
++  // per image: the live path builds a fresh IncrementalMapper per frame (whose
++  // own reg_stats_.num_reg_trials BeginReconstruction clears,
++  // incremental_mapper.cc:99), so upstream's max_reg_trials cap
++  // (incremental_mapper_impl.cc:358-361) is applied with this map instead.
++  std::unordered_map<colmap::image_t, size_t> reg_trials_v1;
++  int64_t stat_untrusted_fed = 0;
++  int64_t stat_untrusted_registered = 0;
++  int64_t stat_regev_checked = 0;
++  int64_t stat_regev_failed = 0;
++  int64_t stat_regev_late_registered = 0;
++  int64_t stat_unregistered_delivered = 0;
+ 
+   // Per-frame telemetry read back by aether_sfm_debug_last (perf diagnostics).
+   // The exact values behind the device log line
+@@ -5631,6 +5666,7 @@ aether::sfm::ArkitPoseRecordV1 ArkitPoseRecordFromFrame(
+   record.frame_id = frame.frame_id;
+   record.image_id = static_cast<uint32_t>(frame.persisted_image_id);
+   record.active = frame.image_id != 0;
++  record.device_pose_untrusted = !frame.device_pose_trusted;  // [DEVICE-POSE-TRUST-V1]
+   record.frame_identity_digest = frame.frame_identity_digest;
+   record.cam_from_world_q_xyzw = {
+       frame.cam_from_world.rotation().x(), frame.cam_from_world.rotation().y(),
+@@ -5690,6 +5726,483 @@ bool PersistCurrentArkitPoseSnapshot(const aether_sfm_session& session) {
+          aether::sfm::ArkitPoseStoreStatusV1::kOk;
+ }
+ 
++// ── [REG-EVIDENCE-V1 / DEVICE-POSE-TRUST-V1 2026-09-24] ──────────────────────
++// Upstream registration evidence for device-posed frames, and image-evidence
++// registration for frames whose device pose the caller marked untrusted.
++//
++// WHY: the streaming route places every fed frame at its device pose
++// (AddImageWithTrivialFrame) and never runs upstream COLMAP's registration
++// checks, so a frame with too little image evidence is still "registered" and
++// the prior-free BA can later push it arbitrarily far (host/phone evidence:
++// 0.6 m in cap_1786013666212373, 6e6 / 2e7 units in cap_1786199789306631).
++//
++// COPIED (vendored COLMAP 3.14.0.dev0, glomap_vendor/colmap-src/colmap, file
++// sha256 1481d48f… == Aether3D-cross copy):
++//  [R1] Acceptance half of IncrementalMapper::RegisterNextImage,
++//       sfm/incremental_mapper.cc:189-417 (EvaluateRegistrationEvidenceV1):
++//         :209-227 generalized-rig branch (this route has trivial rigs only)
++//         :232-237 NumVisiblePoints3D >= abs_pose_min_num_inliers
++//         :243-294 2D-3D correspondence search, verbatim
++//         :297-303 #2D-3D correspondences >= abs_pose_min_num_inliers
++//         :313-383 AbsolutePoseEstimation/RefinementOptions, verbatim
++//         :390-399 EstimateAbsolutePose (P3P LO-RANSAC, max_error
++//                  abs_pose_max_error) must succeed
++//         :401-404 num_inliers >= abs_pose_min_num_inliers
++//         :411-417 RefineAbsolutePose must succeed
++//       Values = IncrementalMapper::Options defaults, unchanged
++//       (sfm/incremental_mapper.h:81-89): max_error 12 px, min inliers 30,
++//       min_inlier_ratio 0.25. NOTE: upstream's abs_pose_min_inlier_ratio is
++//       NOT an acceptance gate — it is RANSACOptions::min_inlier_ratio, "a
++//       priori assumed minimum inlier ratio, which determines the maximum
++//       number of iterations" (optim/ransac.h:55-57, used only at
++//       ransac.h:167-176). It is copied with exactly that meaning; the
++//       inlier ratio is logged, never gated on (a ratio gate would be
++//       self-made).
++//  [R2] Untrusted frames: IncrementalMapper::RegisterNextImage itself, called
++//       unmodified (pose = P3P + refinement; continue tracks :425-443).
++//  [R3] Retry loop = IncrementalPipeline::ReconstructSubModel's registration
++//       loop, controllers/incremental_pipeline.cc:558-634: FindNextImages
++//       ranking (:573), try in rank order until one registers (:575-615),
++//       then TriangulateImage (:623-627) + IterativeLocalRefinement
++//       (:628-633), repeat. Trial cap = FindNextImages' max_reg_trials filter
++//       (sfm/incremental_mapper_impl.cc:358-361, max_reg_trials = 3,
++//       incremental_mapper.h:128-129) applied with a caller-owned counter.
++// DEVIATIONS (deliberate, listed so nothing is silently self-made):
++//  [D1] A TRUSTED frame that passes [R1] is placed at its DEVICE pose (the
++//       product's metric frame = "initial guess"), not at the P3P pose; the
++//       P3P estimate is only the evidence test. RegisterNextImage's continue-
++//       tracks step (:433-443) is replaced by the route's own triangulation
++//       after placement (live growth at ingest; TriangulateImage in [R3]).
++//  [D2] The acceptance half never mutates the model: it works on a copy of
++//       the camera (upstream resets bogus params in place, :345 / :375-383).
++//       On this route the reset is a no-op anyway: the per-image ARKit PINHOLE
++//       cameras are never bogus, and focal/extra estimation is off because
++//       the route's options set ba_refine_focal_length=false →
++//       abs_pose_refine_focal_length=false (incremental_pipeline.cc:135-136).
++//  [D3] The trial increment (:229) is kept by the caller's counter; a trusted
++//       frame registered inside a mapper session uses the public
++//       ObservationManager::RegisterFrame (:430) but not the private
++//       RegisterFrameEvent (:431, stats only) — every session here is ended
++//       right after, and the next BeginReconstruction rebuilds those stats
++//       from RegFrameIds (incremental_mapper.cc:90-92).
++//  [D4] Upstream bootstraps from a two-view initial pair
++//       (InitializeReconstruction). This route bootstraps from device poses:
++//       until the live model has >= 2 registered frames and >=
++//       abs_pose_min_num_inliers 3D points (upstream's own "enough points to
++//       register future images" test, incremental_pipeline.cc:485-489),
++//       trusted frames are placed directly.
++//  [D5] No periodic global BA inside the capture-time loop (upstream
++//       CheckRunGlobalRefinement, :636-641): finalize's stage-2
++//       IterativeGlobalRefinement is the global refinement, and one more
++//       registration round follows it (upstream :665-671, "try a single final
++//       global iterative bundle adjustment and try again").
++//  [D6] Every RANSAC added here runs on a dedicated std::thread so the
++//       production thread's thread_local PRNG stream (TVG RANSAC) is never
++//       advanced (same isolation as the tail-shadow / pair-draft passes): with
++//       every frame passing, the evidence arm is bit-identical to baseline.
++//  [D7] Upstream's max_reg_trials counter lives in one mapper for a whole
++//       sub-model; here the capture keeps one session counter
++//       (reg_trials_v1), and finalize / resume start a fresh one — the same
++//       reset upstream applies when a reconstruction is continued in a new
++//       mapper (BeginReconstruction clears num_reg_trials, :99).
++extern "C" void aether_ba_set_gravity_prior_exempt(const char* name);
++
++bool RegEvidenceGateEnabled() {
++  static const bool cached = [] {
++    const char* e = std::getenv("OFFICIAL_AETHER_REG_EVIDENCE");
++    return e && e[0] == '1' && e[1] == '\0';
++  }();
++  return cached;
++}
++
++bool FinalizeViaResumeEnabled() {
++  static const bool cached = [] {
++    const char* e = std::getenv("OFFICIAL_AETHER_FINALIZE_VIA_RESUME");
++    return e && e[0] == '1' && e[1] == '\0';
++  }();
++  return cached;
++}
++
++struct RegEvidenceV1 {
++  size_t visible = 0;
++  size_t corrs = 0;
++  size_t inliers = 0;
++  bool pass = false;
++  const char* reason = "not_run";
++};
++
++// [R1] — see the block comment above. Must be called inside a mapper session
++// (BeginReconstruction .. EndReconstruction) whose cache is `database_cache`.
++RegEvidenceV1 EvaluateRegistrationEvidenceV1(
++    const colmap::IncrementalMapper& mapper,
++    const colmap::DatabaseCache& database_cache,
++    const colmap::IncrementalMapper::Options& options,
++    const colmap::image_t image_id) {
++  RegEvidenceV1 ev;
++  const colmap::Reconstruction& reconstruction = *mapper.Reconstruction();
++  const colmap::ObservationManager& obs_manager = mapper.ObservationManager();
++  const colmap::Image& image = reconstruction.Image(image_id);
++  colmap::Camera camera = *image.CameraPtr();  // [D2] local copy
++
++  // :209-227 — only trivial (single-sensor) rigs exist on this route.
++  if (image.FramePtr()->RigPtr()->NumSensors() > 1) {
++    ev.reason = "non_trivial_rig";
++    return ev;
++  }
++
++  // :232-237 Check if enough 2D-3D correspondences.
++  ev.visible = obs_manager.NumVisiblePoints3D(image_id);
++  if (ev.visible < static_cast<size_t>(options.abs_pose_min_num_inliers)) {
++    ev.reason = "visible_points";
++    return ev;
++  }
++
++  // :243-294 Search for 2D-3D correspondences (verbatim).
++  std::vector<std::pair<colmap::point2D_t, colmap::point3D_t>> tri_corrs;
++  std::vector<Eigen::Vector2d> tri_points2D;
++  std::vector<Eigen::Vector3d> tri_points3D;
++  const std::shared_ptr<const colmap::CorrespondenceGraph>
++      correspondence_graph = database_cache.CorrespondenceGraph();
++  std::unordered_set<colmap::point3D_t> corr_point3D_ids;
++  for (colmap::point2D_t point2D_idx = 0; point2D_idx < image.NumPoints2D();
++       ++point2D_idx) {
++    const colmap::Point2D& point2D = image.Point2D(point2D_idx);
++    corr_point3D_ids.clear();
++    const auto corr_range =
++        correspondence_graph->FindCorrespondences(image_id, point2D_idx);
++    for (const auto* corr = corr_range.beg; corr < corr_range.end; ++corr) {
++      const colmap::Image& corr_image = reconstruction.Image(corr->image_id);
++      if (!corr_image.HasPose()) continue;
++      const colmap::Point2D& corr_point2D =
++          corr_image.Point2D(corr->point2D_idx);
++      if (!corr_point2D.HasPoint3D()) continue;
++      // Avoid duplicate correspondences.
++      if (corr_point3D_ids.count(corr_point2D.point3D_id) > 0) continue;
++      const colmap::Camera& corr_camera = *corr_image.CameraPtr();
++      // Avoid correspondences to images with bogus camera parameters.
++      if (corr_camera.HasBogusParams(options.min_focal_length_ratio,
++                                     options.max_focal_length_ratio,
++                                     options.max_extra_param)) {
++        continue;
++      }
++      const colmap::Point3D& point3D =
++          reconstruction.Point3D(corr_point2D.point3D_id);
++      tri_corrs.emplace_back(point2D_idx, corr_point2D.point3D_id);
++      corr_point3D_ids.insert(corr_point2D.point3D_id);
++      tri_points2D.push_back(point2D.xy);
++      tri_points3D.push_back(point3D.xyz);
++    }
++  }
++
++  // :297-303
++  ev.corrs = tri_points2D.size();
++  if (ev.corrs < static_cast<size_t>(options.abs_pose_min_num_inliers)) {
++    ev.reason = "correspondences";
++    return ev;
++  }
++
++  // :313-370 2D-3D estimation options (verbatim; see [D2]).
++  colmap::AbsolutePoseEstimationOptions abs_pose_options;
++  abs_pose_options.ransac_options.max_error = options.abs_pose_max_error;
++  abs_pose_options.ransac_options.min_inlier_ratio =
++      options.abs_pose_min_inlier_ratio;
++  abs_pose_options.ransac_options.random_seed = options.random_seed;
++  colmap::AbsolutePoseRefinementOptions abs_pose_refinement_options;
++  if (options.constant_cameras.count(image.CameraId()) > 0) {
++    abs_pose_options.estimate_focal_length = false;
++    abs_pose_refinement_options.refine_focal_length = false;
++    abs_pose_refinement_options.refine_extra_params = false;
++  } else {
++    const auto& per_camera = mapper.NumRegImagesPerCamera();
++    const auto per_camera_it = per_camera.find(image.CameraId());
++    const size_t num_reg_images_for_camera =
++        per_camera_it == per_camera.end() ? 0 : per_camera_it->second;
++    if (num_reg_images_for_camera > 0) {
++      if (camera.HasBogusParams(options.min_focal_length_ratio,
++                                options.max_focal_length_ratio,
++                                options.max_extra_param)) {
++        abs_pose_options.estimate_focal_length = !camera.has_prior_focal_length;
++        abs_pose_refinement_options.refine_focal_length = true;
++        abs_pose_refinement_options.refine_extra_params = true;
++      } else {
++        abs_pose_options.estimate_focal_length = false;
++        abs_pose_refinement_options.refine_focal_length = false;
++        abs_pose_refinement_options.refine_extra_params = false;
++      }
++    } else {
++      camera.params = database_cache.Camera(image.CameraId()).params;
++      abs_pose_options.estimate_focal_length = !camera.has_prior_focal_length;
++      abs_pose_refinement_options.refine_focal_length = true;
++      abs_pose_refinement_options.refine_extra_params = true;
++    }
++    if (!options.abs_pose_refine_focal_length) {
++      abs_pose_options.estimate_focal_length = false;
++      abs_pose_refinement_options.refine_focal_length = false;
++    }
++    if (!options.abs_pose_refine_extra_params) {
++      abs_pose_refinement_options.refine_extra_params = false;
++    }
++    if (!camera.IsPerspective()) {
++      abs_pose_options.estimate_focal_length = false;
++      abs_pose_refinement_options.refine_focal_length = false;
++      abs_pose_refinement_options.refine_extra_params = false;
++    }
++  }
++  // :375-383 bogus-parameter reset — applied to the local copy only [D2].
++  if (camera.HasBogusParams(options.min_focal_length_ratio,
++                            options.max_focal_length_ratio,
++                            options.max_extra_param)) {
++    camera.params = database_cache.Camera(image.CameraId()).params;
++  }
++
++  // :385-417 on a dedicated thread [D6].
++  size_t num_inliers = 0;
++  std::vector<char> inlier_mask;
++  colmap::Rigid3d cam_from_world;
++  bool estimated = false;
++  bool refined = false;
++  std::thread ransac_thread([&] {
++    try {
++      estimated = colmap::EstimateAbsolutePose(
++          abs_pose_options, tri_points2D, tri_points3D, &cam_from_world,
++          &camera, &num_inliers, &inlier_mask);
++      if (estimated &&
++          num_inliers >=
++              static_cast<size_t>(options.abs_pose_min_num_inliers)) {
++        refined = colmap::RefineAbsolutePose(
++            abs_pose_refinement_options, inlier_mask, tri_points2D,
++            tri_points3D, &cam_from_world, &camera);
++      }
++    } catch (...) {
++      estimated = false;
++    }
++  });
++  ransac_thread.join();
++  ev.inliers = num_inliers;
++  if (!estimated) {
++    ev.reason = "pnp_failed";
++    return ev;
++  }
++  if (num_inliers < static_cast<size_t>(options.abs_pose_min_num_inliers)) {
++    ev.reason = "pnp_inliers";
++    return ev;
++  }
++  if (!refined) {
++    ev.reason = "pnp_refine";
++    return ev;
++  }
++  ev.pass = true;
++  ev.reason = "ok";
++  return ev;
++}
++
++void LogRegEvidenceV1(aether_sfm_session* s, const char* stage, int frame_id,
++                      bool trusted, const RegEvidenceV1& ev,
++                      const char* action) {
++  char line[512];
++  std::snprintf(line, sizeof(line),
++                "{\"t\":%lld,\"type\":\"reg_evidence_v1\",\"stage\":\"%s\","
++                "\"fid\":%d,\"trusted\":%d,\"visible\":%zu,\"corrs\":%zu,"
++                "\"inliers\":%zu,\"inlier_ratio\":%.4f,\"pass\":%d,"
++                "\"reason\":\"%s\",\"action\":\"%s\"}",
++                static_cast<long long>(EpochMs()), stage, frame_id,
++                trusted ? 1 : 0, ev.visible, ev.corrs, ev.inliers,
++                ev.corrs > 0 ? static_cast<double>(ev.inliers) /
++                                   static_cast<double>(ev.corrs)
++                             : 0.0,
++                ev.pass ? 1 : 0, ev.reason, action);
++  AppendMatchFailJsonl(s, line);
++}
++
++bool FrameRegisteredInV1(const colmap::Reconstruction& recon,
++                         colmap::image_t image_id) {
++  return image_id != 0 && recon.ExistsImage(image_id) &&
++         recon.Image(image_id).HasPose();
++}
++
++// Active (not withdrawn) frames that `recon` does not hold registered.
++size_t CountPendingFramesV1(const aether_sfm_session& s,
++                            const colmap::Reconstruction& recon) {
++  size_t n = 0;
++  for (const FrameRecord& f : s.frames) {
++    if (f.image_id != 0 && !FrameRegisteredInV1(recon, f.image_id)) ++n;
++  }
++  return n;
++}
++
++struct PendingPassResultV1 {
++  int attempted = 0;
++  int registered = 0;
++  int untrusted_registered = 0;
++  std::vector<colmap::image_t> registered_ids;
++};
++
++// [R3] upstream registration loop over `recon` with `database_cache`. Each
++// iteration opens a mapper session (BeginReconstruction), ranks the
++// unregistered images with the upstream FindNextImages, and tries them in
++// order until one registers:
++//   untrusted → IncrementalMapper::RegisterNextImage [R2], then (same
++//     session) TriangulateImage + IterativeLocalRefinement (:623-633);
++//   trusted   → evidence [R1]; on pass the session is ended, the frame is
++//     placed at its device pose with the same AddImageWithTrivialFrame call
++//     the live route uses [D1], and a fresh session (whose
++//     BeginReconstruction performs the mapper's private RegisterFrameEvent
++//     bookkeeping for it, incremental_mapper.cc:90-92 [D3]) runs
++//     TriangulateImage + IterativeLocalRefinement.
++// Ends when no candidate registers. Runs on the caller's thread; callers use a
++// dedicated thread [D6].
++PendingPassResultV1 RunPendingRegistrationPassV1(
++    aether_sfm_session* s,
++    const std::shared_ptr<colmap::Reconstruction>& recon,
++    const std::shared_ptr<const colmap::DatabaseCache>& cache,
++    const colmap::IncrementalPipelineOptions& popts, const char* stage,
++    std::unordered_map<colmap::image_t, size_t>* trials) {
++  PendingPassResultV1 out;
++  std::unordered_map<colmap::image_t, const FrameRecord*> by_image;
++  for (const FrameRecord& f : s->frames) {
++    if (f.image_id != 0) by_image[f.image_id] = &f;  // withdrawn never retried
++  }
++  const colmap::IncrementalMapper::Options mapper_options = popts.Mapper();
++  const colmap::IncrementalTriangulator::Options tri_options =
++      popts.Triangulation();
++  const size_t max_reg_trials =
++      static_cast<size_t>(mapper_options.max_reg_trials);
++  const auto triangulate_and_refine = [&](colmap::IncrementalMapper& mapper,
++                                          colmap::image_t image_id) {
++    // incremental_pipeline.cc:623-633
++    mapper.TriangulateImage(tri_options, image_id);
++    mapper.IterativeLocalRefinement(
++        popts.ba_local_max_refinements, popts.ba_local_max_refinement_change,
++        mapper_options, popts.LocalBundleAdjustment(), tri_options, image_id);
++  };
++  while (true) {
++    colmap::image_t next_image_id = colmap::kInvalidImageId;
++    bool next_trusted = false;
++    {
++      colmap::IncrementalMapper mapper(cache);
++      mapper.BeginReconstruction(recon);
++      try {
++        const std::vector<colmap::image_t> next_images =
++            mapper.FindNextImages(mapper_options, /*structure_less=*/false);
++        for (const colmap::image_t image_id : next_images) {
++          const auto it = by_image.find(image_id);
++          if (it == by_image.end()) continue;
++          size_t& num_trials = (*trials)[image_id];
++          if (num_trials >= max_reg_trials) continue;  // impl.cc:358-361
++          ++num_trials;
++          ++out.attempted;
++          const FrameRecord& f = *it->second;
++          if (f.device_pose_trusted) {
++            const RegEvidenceV1 ev = EvaluateRegistrationEvidenceV1(
++                mapper, *cache, mapper_options, image_id);
++            ++s->stat_regev_checked;
++            if (!ev.pass) ++s->stat_regev_failed;
++            LogRegEvidenceV1(s, stage, f.frame_id, true, ev,
++                             ev.pass ? "registered_at_device_pose"
++                                     : "pending");
++            if (ev.pass) {
++              next_image_id = image_id;
++              next_trusted = true;
++              break;
++            }
++          } else {
++            RegEvidenceV1 ev;
++            ev.visible =
++                mapper.ObservationManager().NumVisiblePoints3D(image_id);
++            const bool registered =
++                mapper.RegisterNextImage(mapper_options, image_id);  // [R2]
++            ev.pass = registered;
++            ev.reason = registered ? "ok" : "register_next_image_false";
++            if (registered) {
++              ev.inliers = recon->Image(image_id).NumPoints3D();
++            }
++            LogRegEvidenceV1(s, stage, f.frame_id, false, ev,
++                             registered ? "registered_by_image_evidence"
++                                        : "pending");
++            if (registered) {
++              next_image_id = image_id;
++              break;
++            }
++          }
++        }
++        if (next_image_id != colmap::kInvalidImageId && !next_trusted) {
++          triangulate_and_refine(mapper, next_image_id);
++        }
++      } catch (...) {
++        mapper.EndReconstruction(/*discard=*/false);
++        throw;
++      }
++      mapper.EndReconstruction(/*discard=*/false);
++    }
++    if (next_image_id == colmap::kInvalidImageId) break;
++    const FrameRecord& f = *by_image.at(next_image_id);
++    if (next_trusted) {
++      // [D1] same placement call as the live route.
++      if (!recon->ExistsCamera(f.camera_id)) {
++        recon->AddCameraWithTrivialRig(f.camera);
++      }
++      colmap::Image rimg;
++      char name[64];
++      std::snprintf(name, sizeof(name), "frame_%06d.jpg", f.frame_id);
++      rimg.SetImageId(f.image_id);
++      rimg.SetName(name);
++      rimg.SetCameraId(f.camera_id);
++      rimg.SetPoints2D(f.points);
++      recon->AddImageWithTrivialFrame(std::move(rimg), f.cam_from_world);
++      colmap::IncrementalMapper mapper(cache);
++      mapper.BeginReconstruction(recon);
++      try {
++        triangulate_and_refine(mapper, next_image_id);
++      } catch (...) {
++        mapper.EndReconstruction(/*discard=*/false);
++        throw;
++      }
++      mapper.EndReconstruction(/*discard=*/false);
++    }
++    ++out.registered;
++    if (!f.device_pose_trusted) ++out.untrusted_registered;
++    out.registered_ids.push_back(next_image_id);
++  }
++  return out;
++}
++
++// Runs [R3] on a dedicated thread [D6] and logs the pass.
++PendingPassResultV1 RunPendingRegistrationSessionV1(
++    aether_sfm_session* s,
++    const std::shared_ptr<colmap::Reconstruction>& recon,
++    const std::shared_ptr<const colmap::DatabaseCache>& cache,
++    const colmap::IncrementalPipelineOptions& popts, const char* stage,
++    std::unordered_map<colmap::image_t, size_t>* trials) {
++  PendingPassResultV1 out;
++  std::string error;
++  std::thread pass_thread([&] {
++    aether::official::ba::ScopedBaSessionAggregateBindingV1 ba_session_binding(
++        &s->ba_ptol_aggregate, &s->ba_ptol_receipts);
++    try {
++      out = RunPendingRegistrationPassV1(s, recon, cache, popts, stage,
++                                         trials);
++    } catch (const std::exception& e) {
++      error = e.what();
++    } catch (...) {
++      error = "unknown";
++    }
++  });
++  pass_thread.join();
++  s->stat_regev_late_registered +=
++      out.registered - out.untrusted_registered;
++  s->stat_untrusted_registered += out.untrusted_registered;
++  char line[320];
++  std::snprintf(line, sizeof(line),
++                "{\"t\":%lld,\"type\":\"reg_pending_pass_v1\",\"stage\":\"%s\","
++                "\"attempted\":%d,\"registered\":%d,\"untrusted_registered\":"
++                "%d,\"still_pending\":%zu,\"error\":\"%.80s\"}",
++                static_cast<long long>(EpochMs()), stage, out.attempted,
++                out.registered, out.untrusted_registered,
++                CountPendingFramesV1(*s, *recon), error.c_str());
++  AppendMatchFailJsonl(s, line);
++  return out;
++}
++
+ // ── Mandatory ARKit recovery ────────────────────────────────────────────────
+ // A recovery session is allowed to exist only when the atomic sidecar has one
+ // valid ARKit pose and camera-frame gravity vector for every DB image. The old
+@@ -5758,7 +6271,11 @@ bool RebuildFrameRecordsForResume(aether_sfm_session* s) {
+       rec.gravity_cam = Eigen::Vector3d(pose.gravity_cam_xyz[0],
+                                         pose.gravity_cam_xyz[1],
+                                         pose.gravity_cam_xyz[2]);
+-      rec.has_pose = true;
++      // [DEVICE-POSE-TRUST-V1] the persisted trust bit decides whether the
++      // stored device pose may be used at all (see FrameRecord::has_pose).
++      rec.device_pose_trusted = !pose.device_pose_untrusted;
++      rec.has_pose = rec.device_pose_trusted;
++      rec.has_gravity = true;  // IsValidArkitPoseRecordV1 checked |g| == 1
+ 
+       if (!pose.active) {
+         // [WITHDRAWN-PARITY 2026-08-04] Reproduce EVERY mutation that live
+@@ -5783,6 +6300,14 @@ bool RebuildFrameRecordsForResume(aether_sfm_session* s) {
+         frames.push_back(std::move(rec));
+         continue;
+       }
++      if (!rec.device_pose_trusted) {
++        // [DEVICE-POSE-TRUST-V1] never placed at its device pose and no
++        // attitude anchor; registered below from image evidence ([R2]/[R3])
++        // or left unregistered.
++        aether_ba_set_gravity_prior_exempt(image.Name().c_str());
++        frames.push_back(std::move(rec));
++        continue;
++      }
+       if (!restored->ExistsCamera(rec.camera_id)) {
+         restored->AddCameraWithTrivialRig(rec.camera);
+       }
+@@ -5827,6 +6352,31 @@ bool RebuildFrameRecordsForResume(aether_sfm_session* s) {
+     mapper.CompleteAndMergeTracks(options.Triangulation());
+     mapper.EndReconstruction(/*discard=*/false);
+ 
++    // [DEVICE-POSE-TRUST-V1] Untrusted frames: upstream registration loop
++    // ([R3] with RegisterNextImage [R2]) over the model the trusted frames
++    // built. Fresh trial counter [D7]. Options: the live route's fixed-
++    // intrinsics configuration (ba_refine_* = false ⇒ no focal estimation in
++    // P3P, incremental_pipeline.cc:135-136).
++    bool any_untrusted = false;
++    for (const FrameRecord& f : frames) {
++      if (f.image_id != 0 && !f.device_pose_trusted) any_untrusted = true;
++    }
++    if (any_untrusted) {
++      s->frames = std::move(frames);  // the pass reads s->frames
++      colmap::IncrementalPipelineOptions reg_options = options;
++      reg_options.ba_refine_focal_length = false;
++      reg_options.ba_refine_principal_point = false;
++      reg_options.ba_refine_extra_params = false;
++      std::unordered_map<colmap::image_t, size_t> trials;
++      const PendingPassResultV1 pr = RunPendingRegistrationSessionV1(
++          s, restored, cache, reg_options, "resume", &trials);
++      for (const colmap::image_t id : pr.registered_ids) {
++        image_ids.push_back(id);
++      }
++      frames = std::move(s->frames);
++      s->frames.clear();
++    }
++
+     s->camera_id = frames.front().camera_id;
+     s->frames = std::move(frames);
+     s->reg_order = std::move(image_ids);
+@@ -6838,6 +7388,151 @@ void AddOfficialQuadraticPairs(aether_sfm_session* s) {
+   }
+ }
+ 
++// [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1 2026-09-24] Pair generation for
++// frames that are PENDING at finalize (untrusted device pose, or trusted but
++// failed the evidence gate). Every other pair source of this route is chosen
++// by device pose (spatial K / spatial revisit / enrichment hints), which an
++// untrusted frame cannot use, so without this pass such a frame only has its
++// capture-time temporal window and the upstream registration loop sees no
++// 2D-3D evidence for it.
++// Upstream: ExhaustivePairGenerator (colmap/controllers/pairing.h/.cc, the
++// default matcher for sets of this size) restricted to the pairs that involve a
++// pending frame — pairs already in the db are skipped exactly like
++// AddOfficialQuadraticPairs does. Same matcher chain, ratio, COLMAP-default
++// TwoViewGeometryOptions and mandatory-gravity TVG persist gate as every other
++// finalize pass. Deviation: nearest-index-first order and the shared
++// finalize enrichment time budget (EnrichBudgetExhausted), so a pathological
++// capture cannot stall finalize.
++void AddPendingFrameExhaustivePairsV1(aether_sfm_session* s,
++                                      const std::vector<int>& pending) {
++  if (!s || !s->db || pending.empty() || s->frames.size() < 2) return;
++  const bool gpu_avail =
++      s->options.use_gpu_match && (aether_gpu_match_gemm_pairs != nullptr);
++  if (s->options.use_gpu_match && !gpu_avail) return;
++  const double t0 = NowMs();
++  int64_t attempted = 0, written = 0, budget_stopped = 0;
++  size_t n_todo = 0;
++  try {
++    const int num_frames = static_cast<int>(s->frames.size());
++    std::vector<std::pair<int, int>> todo;
++    std::unordered_set<uint64_t> seen;
++    for (const int p : pending) {
++      if (p < 0 || p >= num_frames || s->frames[p].image_id == 0) continue;
++      std::vector<int> others;
++      for (int j = 0; j < num_frames; ++j) {
++        if (j == p || s->frames[j].image_id == 0) continue;
++        others.push_back(j);
++      }
++      std::stable_sort(others.begin(), others.end(), [p](int a, int b) {
++        return std::abs(a - p) < std::abs(b - p);
++      });
++      for (const int j : others) {
++        const int i0 = std::min(p, j), j0 = std::max(p, j);
++        const uint64_t key = (static_cast<uint64_t>(i0) << 32) |
++                             static_cast<uint32_t>(j0);
++        if (!seen.insert(key).second) continue;
++        const colmap::image_t img1 = s->frames[i0].image_id;
++        const colmap::image_t img2 = s->frames[j0].image_id;
++        if (s->db->ExistsMatches(img1, img2) ||
++            s->db->ExistsTwoViewGeometry(img1, img2)) {
++          continue;
++        }
++        todo.emplace_back(i0, j0);
++      }
++    }
++    n_todo = todo.size();
++    const double ratio =
++        s->options.match_max_ratio > 0 ? s->options.match_max_ratio : 0.8;
++    const colmap::TwoViewGeometryOptions tvg_options;  // colmap defaults
++    std::vector<uint32_t> pair_buf;
++    // Feature access: in-memory FrameRecord, else a one-frame db load.
++    struct Feat {
++      std::vector<uint8_t> desc;
++      std::vector<Eigen::Vector2d> pts;
++    };
++    const auto load = [&](int i, Feat* store, const uint8_t** desc,
++                          const std::vector<Eigen::Vector2d>** pts,
++                          int* n) -> bool {
++      const FrameRecord& fr = s->frames[i];
++      if (!fr.descriptors.empty() && !fr.points.empty()) {
++        *desc = fr.descriptors.data();
++        *pts = &fr.points;
++        *n = fr.n_keypoints;
++        return *n > 0;
++      }
++      const colmap::FeatureKeypoints kps = s->db->ReadKeypoints(fr.image_id);
++      const colmap::FeatureDescriptors d = s->db->ReadDescriptors(fr.image_id);
++      const int nn = static_cast<int>(kps.size());
++      if (nn <= 0 || d.data.rows() != nn || d.data.cols() != 128) return false;
++      store->desc.assign(d.data.data(),
++                         d.data.data() + static_cast<size_t>(nn) * 128);
++      store->pts = colmap::FeatureKeypointsToPointsVector(kps);
++      *desc = store->desc.data();
++      *pts = &store->pts;
++      *n = nn;
++      return true;
++    };
++    size_t done = 0;
++    for (const auto& [i, j] : todo) {
++      if (EnrichBudgetExhausted(s)) {
++        budget_stopped = static_cast<int64_t>(todo.size() - done);
++        break;
++      }
++      ++done;
++      Feat sa, sb;
++      const uint8_t* da = nullptr;
++      const uint8_t* db = nullptr;
++      const std::vector<Eigen::Vector2d>* pa = nullptr;
++      const std::vector<Eigen::Vector2d>* pb = nullptr;
++      int na = 0, nb = 0;
++      if (!load(i, &sa, &da, &pa, &na) || !load(j, &sb, &db, &pb, &nb)) {
++        continue;
++      }
++      const int cap = na < nb ? na : nb;
++      if (cap <= 0) continue;
++      pair_buf.resize(static_cast<size_t>(cap) * 2);
++      int num_matches = 0;
++      ++attempted;
++      const int mrc =
++          gpu_avail ? GpuMatchGemmPairsRetry(s, s->frames[i].frame_id, da, na,
++                                             s->frames[j].frame_id, db, nb,
++                                             ratio, pair_buf.data(), cap,
++                                             &num_matches)
++                    : aether_sift_match_pairs(da, na, db, nb, ratio,
++                                              pair_buf.data(), cap,
++                                              &num_matches);
++      if (mrc != 0 || num_matches <= 0) continue;
++      colmap::FeatureMatches matches(num_matches);
++      for (int m = 0; m < num_matches; ++m) {
++        matches[m].point2D_idx1 = pair_buf[2 * m];
++        matches[m].point2D_idx2 = pair_buf[2 * m + 1];
++      }
++      const auto tvg = EstimateMandatoryFrameTwoViewGeometry(
++          s->frames[i], *pa, s->frames[j], *pb, matches, tvg_options);
++      if (!MandatoryGravityTvgPersistable(tvg)) continue;
++      s->db->WriteMatches(s->frames[i].image_id, s->frames[j].image_id,
++                          matches);
++      s->db->WriteTwoViewGeometry(s->frames[i].image_id,
++                                  s->frames[j].image_id, tvg.geometry);
++      ++written;
++    }
++  } catch (const std::exception& e) {
++    LOG(WARNING) << "[aether_sfm] pending-frame exhaustive pairs aborted: "
++                 << e.what();
++  } catch (...) {
++    LOG(WARNING) << "[aether_sfm] pending-frame exhaustive pairs aborted";
++  }
++  char line[256];
++  std::snprintf(line, sizeof(line),
++                "{\"t\":%lld,\"type\":\"pending_exhaustive_pairs_v1\","
++                "\"pending\":%zu,\"candidates\":%zu,\"attempted\":%lld,"
++                "\"written\":%lld,\"budget_stopped\":%lld,\"ms\":%.0f}",
++                static_cast<long long>(EpochMs()), pending.size(), n_todo,
++                (long long)attempted, (long long)written,
++                (long long)budget_stopped, NowMs() - t0);
++  AppendMatchFailJsonl(s, line);
++}
++
+ // Pick the largest reconstruction in the manager and write the JSON summary.
+ std::shared_ptr<const colmap::Reconstruction> PickBestAndReport(
+     const std::shared_ptr<colmap::ReconstructionManager>& manager,
+@@ -7271,6 +7966,114 @@ void MaybeReanchorAfterGravityRa(
+   }
+ }
+ 
++// [DEVICE-ALIGN-V1 2026-09-24] Kill switch, DEFAULT ON (same pattern as
++// TailCacheMode above): OFFICIAL_AETHER_DEVICE_ALIGN_V1=0|off skips the pass
++// and reports status "disabled" (delivered model then = pre-change behaviour).
++bool DeviceAlignV1Enabled() {
++  static const bool cached = [] {
++    const char* value = std::getenv("OFFICIAL_AETHER_DEVICE_ALIGN_V1");
++    if (!value) return true;
++    return !(std::strcmp(value, "0") == 0 || std::strcmp(value, "off") == 0);
++  }();
++  return cached;
++}
++
++// [DEVICE-ALIGN-V1 2026-09-24] End of finalize: robust Sim3 of the delivered
++// model onto the fed device camera centres, applied with
++// Reconstruction::Transform — COLMAP 3.14's pose-prior alignment step
++// (bundle_adjustment_ceres.cc:1402-1437 / alignment.cc:241-280). Every copied
++// piece and every deviation is listed in device_pose_alignment_v1.h. Pairs are
++// built exactly like the live Sim3 diagnostic (official_aether_sfm_c.cc
++// AppendLiveCloudSnapshotDiagnosticsV2): FrameRecord.image_id ↔ fed
++// FrameRecord.cam_from_world. Measurement + transform only: the gate outcome
++// is reported (jsonl + aether_sfm_device_alignment_v1), never acted upon.
++aether::sfm::DeviceAlignResultV1 MaybeAlignToDevicePosesV1(
++    aether_sfm_session* s, colmap::Reconstruction* refined) {
++  aether::sfm::DeviceAlignResultV1 result;
++  if (!s || !refined) return result;
++  const double t0 = NowMs();
++  try {
++    if (!DeviceAlignV1Enabled()) {
++      result.status = aether::sfm::DeviceAlignStatusV1::kDisabled;
++    } else {
++      std::vector<aether::sfm::DeviceCentrePairV1> pairs;
++      pairs.reserve(s->frames.size());
++      for (const FrameRecord& frame : s->frames) {
++        if (!frame.has_pose || frame.image_id == 0 ||
++            !refined->ExistsImage(frame.image_id)) {
++          continue;
++        }
++        const colmap::Image& image = refined->Image(frame.image_id);
++        if (!image.HasPose()) continue;
++        aether::sfm::DeviceCentrePairV1 pair;
++        pair.frame_id = frame.frame_id;
++        pair.recon_cam_from_world = image.CamFromWorld();
++        pair.device_cam_from_world = frame.cam_from_world;
++        // [C2] upstream overwrite_priors_covariance path (exe/sfm.cc:508-515):
++        // every device prior gets diag(σ²), σ = kDevicePriorPositionStdM.
++        pair.position_covariance =
++            aether::sfm::DevicePriorPositionCovariance();
++        pairs.push_back(pair);
++      }
++      result = aether::sfm::EstimateDeviceAlignmentV1(pairs);
++      if (result.Applied()) {
++        refined->Transform(result.device_from_recon);  // [C4]
++      }
++    }
++  } catch (const std::exception& e) {
++    LOG(WARNING) << "[device-align-v1] exception: " << e.what()
++                 << " — model left unaligned";
++    result = aether::sfm::DeviceAlignResultV1();
++    result.status = aether::sfm::DeviceAlignStatusV1::kFailedRansac;
++  } catch (...) {
++    LOG(WARNING) << "[device-align-v1] unknown exception — model left unaligned";
++    result = aether::sfm::DeviceAlignResultV1();
++    result.status = aether::sfm::DeviceAlignStatusV1::kFailedRansac;
++  }
++  const colmap::Sim3d& T = result.device_from_recon;
++  const Eigen::AngleAxisd aa(T.rotation());
++  std::string ids = "[";
++  for (size_t i = 0; i < result.outlier_frame_ids.size(); ++i) {
++    if (i) ids += ",";
++    ids += std::to_string(result.outlier_frame_ids[i]);
++  }
++  ids += "]";
++  const auto& ce = result.errors.proj_center_errors;
++  const auto& re = result.errors.rotation_errors_deg;
++  char line[1536];
++  std::snprintf(
++      line, sizeof(line),
++      "{\"t\":%lld,\"type\":\"device_alignment_v1\",\"status\":\"%s\","
++      "\"applied\":%s,\"n_pairs\":%d,\"n_fit\":%d,\"ransac_inliers\":%d,"
++      "\"inliers_all\":%d,\"ransac_trials\":%zu,\"sigma_m\":%.6g,"
++      "\"max_error_m\":%.9g,\"scale\":%.12g,\"qw\":%.12g,\"qx\":%.12g,"
++      "\"qy\":%.12g,\"qz\":%.12g,\"tx\":%.12g,\"ty\":%.12g,\"tz\":%.12g,"
++      "\"rotation_deg\":%.9g,\"centre_err_m\":{\"min\":%.9g,\"median\":%.9g,"
++      "\"mean\":%.9g,\"p90\":%.9g,\"p99\":%.9g,\"max\":%.9g},"
++      "\"rot_err_deg\":{\"median\":%.9g,\"p90\":%.9g,\"max\":%.9g},"
++      "\"ms\":%.2f,\"outlier_frame_ids\":%s}",
++      static_cast<long long>(EpochMs()),
++      aether::sfm::DeviceAlignStatusNameV1(result.status),
++      result.Applied() ? "true" : "false", result.n_pairs, result.n_fit,
++      result.n_ransac_inliers, result.n_inliers_all, result.ransac_trials,
++      result.sigma_m, result.max_error_m, T.scale(), T.rotation().w(),
++      T.rotation().x(), T.rotation().y(), T.rotation().z(),
++      T.translation().x(), T.translation().y(), T.translation().z(),
++      aa.angle() * 180.0 / M_PI, ce.min, ce.median, ce.mean, ce.p90, ce.p99,
++      ce.max, re.median, re.p90, re.max, NowMs() - t0,
++      ids.size() < 600 ? ids.c_str() : "\"truncated\"");
++  AppendMatchFailJsonl(s, line);
++  LOG(WARNING) << "[device-align-v1] status="
++               << aether::sfm::DeviceAlignStatusNameV1(result.status)
++               << " pairs=" << result.n_pairs
++               << " inliers=" << result.n_inliers_all
++               << " max_error_m=" << result.max_error_m
++               << " scale=" << T.scale() << " centre_err_median_m=" << ce.median
++               << " centre_err_max_m=" << ce.max
++               << " outliers=" << result.outlier_frame_ids.size();
++  return result;
++}
++
+ int LiveLocalBaMtFloorOverride() {  // <0 → don't touch
+   static const int cached = [] {
+     if (const char* e = std::getenv("OFFICIAL_AETHER_LIVE_LBA_MT_FLOOR")) {
+@@ -8371,8 +9174,17 @@ void RefineGlobalBA(aether_sfm_session* s,
+       s->enrich_stage1_done.store(false, std::memory_order_relaxed);
+       s->enrich_start_ms = 0.0;
+       const double t_enrich0 = NowMs();
++      // [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1] frames the live model holds
++      // unregistered — computed HERE because the enrichment thread must never
++      // read the model.
++      std::vector<int> pending_frames;
++      for (const FrameRecord& f : s->frames) {
++        if (f.image_id != 0 && !FrameRegisteredInV1(*refined, f.image_id)) {
++          pending_frames.push_back(f.frame_id);
++        }
++      }
+       std::thread enrich([s, &enrich_ms, &enrich_done, t_enrich0,
+-                          budget_armed] {
++                          budget_armed, pending_frames] {
+ #if defined(__APPLE__)
+         pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+ #endif
+@@ -8424,6 +9236,11 @@ void RefineGlobalBA(aether_sfm_session* s,
+             rematch_ms = NowMs() - t_r;
+             s->gpu_watchdog.InProgress();
+           }
++          if (!pending_frames.empty()) {
++            s->gpu_watchdog.InProgress();
++            AddPendingFrameExhaustivePairsV1(s, pending_frames);
++            s->gpu_watchdog.InProgress();
++          }
+           {
+             char eline[256];
+             std::snprintf(eline, sizeof(eline),
+@@ -8616,6 +9433,29 @@ void RefineGlobalBA(aether_sfm_session* s,
+       // in it by construction. Drop the ledger rather than double-author.
+       s->probe_debt_grow.clear();
+     }
++    // [REG-EVIDENCE-V1 / DEVICE-POSE-TRUST-V1] Finalize registration round
++    // [R3] over the ENRICHED db with a fresh trial counter [D7] — only when
++    // the model holds pending (active, unregistered) frames, so a capture
++    // without untrusted / gate-failed frames runs nothing here.
++    std::shared_ptr<const colmap::DatabaseCache> reg_cache;
++    if (refined && refined->NumRegImages() >= 2 &&
++        CountPendingFramesV1(*s, *refined) > 0) {
++      try {
++        colmap::DatabaseCache::Options reg_copts;
++        reg_copts.min_num_matches =
++            static_cast<size_t>(popts->min_num_matches);
++        reg_copts.load_all_images = true;  // see MakePhase2Options
++        auto reg_db = colmap::Database::Open(s->db_path);
++        reg_cache = colmap::DatabaseCache::Create(*reg_db, reg_copts);
++        s->reg_trials_v1.clear();
++        RunPendingRegistrationSessionV1(s, refined, reg_cache, *popts,
++                                        "finalize", &s->reg_trials_v1);
++      } catch (const std::exception& e) {
++        reg_cache.reset();
++        LOG(WARNING) << "[aether_sfm] finalize registration round failed: "
++                     << e.what();
++      }
++    }
+     // Stage 2 / main refinement over the (enriched) db — unchanged semantics:
+     // IterativeGlobalRefinement + FilterFrames + UpdatePoint3DErrors.
+     const double t_s2 = NowMs();
+@@ -8692,6 +9532,23 @@ void RefineGlobalBA(aether_sfm_session* s,
+                    << " lost_zero_obs=" << lost_zero_obs
+                    << " lost_with_obs=" << lost_with_obs << " |" << lost_detail;
+     }
++    // [REG-EVIDENCE-V1 / DEVICE-POSE-TRUST-V1] [D5] upstream
++    // incremental_pipeline.cc:665-671 — after the global refinement, try the
++    // still-pending frames once more; if any registers, finish with the final
++    // global refinement again (upstream :681-685).
++    if (reg_cache && refined && CountPendingFramesV1(*s, *refined) > 0) {
++      try {
++        s->reg_trials_v1.clear();
++        const PendingPassResultV1 reg_post = RunPendingRegistrationSessionV1(
++            s, refined, reg_cache, *popts, "finalize_post",
++            &s->reg_trials_v1);
++        if (reg_post.registered > 0) pipeline.RefineReconstruction(refined);
++      } catch (const std::exception& e) {
++        LOG(WARNING) << "[aether_sfm] finalize post registration round "
++                        "failed: "
++                     << e.what();
++      }
++    }
+     // [GRAVITY-RA GAUGE-REANCHOR] 自由规范 BA 之后把模型锚回原 gauge(见
+     // 函数注释;基线路径快照为空 = no-op)。
+     MaybeReanchorAfterGravityRa(gravity_ra_snapshot, refined.get());
+@@ -8798,10 +9655,19 @@ void RefineGlobalBA(aether_sfm_session* s,
+                     live_origin_ids.size());
+       AppendMatchFailJsonl(s, pline);
+     }
++    // [DEVICE-POSE-TRUST-V1] frames the delivered model does not register.
++    s->stat_unregistered_delivered =
++        refined ? static_cast<int64_t>(CountPendingFramesV1(*s, *refined)) : 0;
++    // [DEVICE-ALIGN-V1 2026-09-24] Last step before publishing: align the
++    // delivered model to the fed device trajectory (after every pass that can
++    // move/merge points, so getters/debug dump serve the aligned model).
++    aether::sfm::DeviceAlignResultV1 device_align =
++        MaybeAlignToDevicePosesV1(s, refined.get());
+     {
+       std::lock_guard<std::mutex> lk(s->recon_mutex);
+       s->recon = refined;
+       s->refine_ms = NowMs() - t0;
++      s->device_align_v1 = std::move(device_align);
+     }
+     // [BA-PROGRESS 2026-09-16] finished — a poll must not read a stale stage.
+     aether::official::ba::GlobalBaProgressV1().stage.store(
+@@ -9231,11 +10097,162 @@ static void MaybeIncrementalGlobalRefine(aether_sfm_session* s) {
+ // the pre-change unit-affine FeatureKeypoint(x, y) write is reproduced
+ // byte-for-byte. Keypoint AFFINE COLUMNS ONLY: xy, descriptors, matches, TVG,
+ // rec.points and FrameIdentityDigestV1 (xy+desc-derived) are unaffected.
++// [REG-EVIDENCE-V1 2026-09-24] PURE MOVE of the live local-refinement
++// options block from AddFrameFeaturesImpl (unchanged text, de-indented) so
++// the evidence session and the live retry pass use exactly the options the
++// live mapper uses (fixed ARKit intrinsics ⇒ abs_pose_refine_focal_length=
++// false, incremental_pipeline.cc:135-136).
++static colmap::IncrementalPipelineOptions LiveOfficialOptionsV1(
++    aether_sfm_session* s) {
++  colmap::IncrementalPipelineOptions official_options;
++  official_options.min_num_matches = 15;
++  official_options.triangulation.ignore_two_view_tracks =
++      TriIgnoreTwoViewTracks();
++  official_options.load_all_images = true;
++  official_options.ba_refine_focal_length = false;
++  official_options.ba_refine_principal_point = false;
++  official_options.ba_refine_extra_params = false;
++  official_options.mapper.ba_local_num_images =
++      s->ba_window > 0 ? s->ba_window : 6;
++  // [LIVE-LBA-THREADS 2026-07-29 SHIPPED] Host A/B on cap7_day, four arms,
++  // all four BYTE-IDENTICAL in geometry (n_points 141758 / track3plus
++  // 53239 / n_obs 411770 / mean_reproj 1.0553 on every arm — thread count
++  // is provably lossless here, matching the finalize-side precedent):
++  //   all-single (two independent routes)  35.8s  ← noise band 0.4%
++  //   shipped default (floor 50k, -1)      34.9s  -2.5%
++  //   LiveBaThreads()==4 + floor 6000      26.4s  -26.2%   ← ship
++  //   all cores (host 12) + floor 6000     31.0s  -13.4%
++  // ⚠️ MORE THREADS IS WORSE: 12 gives back half the gain to sync
++  // overhead on a 6-image window. Do not "improve" this to -1.
++  // The 4 that won on host is also exactly LiveBaThreads() on an A16
++  // (min(6, hw-2)), i.e. the same value that deliberately reserves two
++  // cores for the camera/GPU-matcher/UI mid-capture — the speed optimum
++  // and the thermal/camera-safety choice coincide. Device must still
++  // confirm the optimum on 6 cores; env overrides both knobs.
++  official_options.num_threads = LiveBaThreads();
++  official_options.ba_min_num_residuals_for_cpu_multi_threading = 6000;
++  if (const int t = LiveLocalBaThreadsOverride(); t > 0) {
++    official_options.num_threads = t;
++  }
++  if (const int f = LiveLocalBaMtFloorOverride(); f >= 0) {
++    official_options.ba_min_num_residuals_for_cpu_multi_threading = f;
++  }
++  ApplyBirthGateAB(&official_options);  // [BIRTH-GATE-AB 2026-08-07]
++  // [LOCAL-FTOL-AB 2026-08-08] COLMAP ships ba_local_function_tolerance =
++  // 0.0 (controllers/incremental_pipeline.h:115) and LocalBundleAdjustment()
++  // hands it straight to Ceres' solver_options.function_tolerance
++  // (incremental_pipeline.cc:171). A ZERO function tolerance means Ceres can
++  // never terminate on "the objective stopped improving" — only on
++  // gradient_tolerance (10.0 here) or max_num_iterations (15 here). cap201:
++  // 198 of 398 live solves (49.7%) end in NO_CONVERGENCE, i.e. they burn the
++  // iteration cap. The identical defect on the GLOBAL side was worth -30%
++  // wall at +-0.003 reproj (2026-06-24: ba_global_function_tolerance 0 ->
++  // 1e-6, shipped). This arms the same knob locally for an A/B; unset or 0
++  // == byte-identical to the shipped path.
++  official_options.ba_local_function_tolerance = LiveLocalBaFtol();
++  // [2026-08-10 三臂 A/B,见各自旋钮注释] 未设 env 时以下三行都不碰
++  // 字段 == 逐字节出货路径。
++  if (const int lt = LiveLocalBaLossType(); lt >= 0) {
++    official_options.ba_local_loss_type = lt;
++    official_options.ba_local_loss_scale = 1.0;
++  }
++  if (const int mi = LiveLocalBaMaxIter(); mi > 0) {
++    official_options.ba_local_max_num_iterations = mi;
++  }
++  if (const double ma = LiveTriMinAngleDegOverride(); ma > 0.0) {
++    official_options.triangulation.min_angle = ma;
++  }
++  return official_options;
++}
++
++// [REG-EVIDENCE-V1 2026-09-24] Same cache acquisition as the live
++// local-refinement block (tail cache when on, fresh DatabaseCache otherwise).
++struct LiveMapperCacheV1 {
++  std::shared_ptr<colmap::DatabaseCache> cache;
++  std::unique_lock<std::mutex> lock;
++};
++static void AcquireLiveMapperCacheV1(aether_sfm_session* s,
++                                     LiveMapperCacheV1* out) {
++  if (TailCacheMode() == TailCacheModeV1::kOn) {
++    out->lock = std::unique_lock<std::mutex>(s->tail_cache_mutex);
++    if (!s->tail_cache_master || !s->tail_cache_epoch.readable()) {
++      if (s->tail_cache_epoch.state() !=
++          aether::sfm::TailCacheEpochStateV1::kDirty) {
++        TailCacheMarkDirtyLockedV1(
++            s, aether::sfm::TailCacheDirtyReasonV1::kCacheInconsistency);
++      }
++      TailCacheRebuildLocked(s);
++    }
++    if (s->tail_cache_master && s->tail_cache_epoch.readable()) {
++      out->cache = s->tail_cache_master;
++      return;
++    }
++  }
++  colmap::DatabaseCache::Options cache_options;
++  cache_options.min_num_matches = 15;
++  cache_options.load_all_images = true;
++  out->cache = colmap::DatabaseCache::Create(*s->db, cache_options);
++}
++
++static bool LiveModelInitializedV1(const aether_sfm_session& s) {
++  // [D4] upstream's "enough points to register future images" test.
++  return s.live_recon_ready && s.live_recon &&
++         s.live_recon->NumRegImages() >= 2 &&
++         s.live_recon->NumPoints3D() >=
++             static_cast<size_t>(
++                 colmap::IncrementalMapper::Options().abs_pose_min_num_inliers);
++}
++
++static bool LiveRegisteredV1(const aether_sfm_session& s,
++                             const FrameRecord& f) {
++  return s.live_recon && FrameRegisteredInV1(*s.live_recon, f.image_id);
++}
++
++// [R1] at ingest: the frame is already placed at its device pose but has no
++// observation yet, so its own evidence (visible points / 2D-3D matches to the
++// OTHER registered images' points) is exactly what RegisterNextImage would see
++// for it as an unregistered image.
++static RegEvidenceV1 IngestEvidenceCheckV1(aether_sfm_session* s,
++                                           colmap::image_t image_id) {
++  RegEvidenceV1 ev;
++  LiveMapperCacheV1 c;
++  AcquireLiveMapperCacheV1(s, &c);
++  const colmap::IncrementalPipelineOptions opts = LiveOfficialOptionsV1(s);
++  colmap::IncrementalMapper mapper(c.cache);
++  mapper.BeginReconstruction(s->live_recon);
++  try {
++    ev = EvaluateRegistrationEvidenceV1(mapper, *c.cache, opts.Mapper(),
++                                        image_id);
++  } catch (const std::exception&) {
++    ev = RegEvidenceV1();
++    ev.reason = "exception";
++  }
++  mapper.EndReconstruction(/*discard=*/false);
++  return ev;
++}
++
++// [R3] during capture, over live_recon, session trial counter.
++static void RunLivePendingPassV1(aether_sfm_session* s) {
++  try {
++    LiveMapperCacheV1 c;
++    AcquireLiveMapperCacheV1(s, &c);
++    const colmap::IncrementalPipelineOptions opts = LiveOfficialOptionsV1(s);
++    const PendingPassResultV1 pr = RunPendingRegistrationSessionV1(
++        s, s->live_recon, c.cache, opts, "live", &s->reg_trials_v1);
++    for (const colmap::image_t id : pr.registered_ids) {
++      s->reg_order.push_back(id);
++    }
++  } catch (const std::exception& e) {
++    LOG(WARNING) << "[aether_sfm] live pending registration pass failed: "
++                 << e.what();
++  }
++}
++
+ static aether_sfm_result_t AddFrameFeaturesImpl(
+     aether_sfm_session_t* s, const float* xy, const uint8_t* desc,
+     const float* scales, int n, int width, int height, float fx, float fy,
+     float cx, float cy, const double pose_qwxyz[4], const double pose_t[3],
+-    double extract_ms, int* out_frame_id) {
++    double extract_ms, int* out_frame_id, bool device_pose_trusted) {
+   aether::official::ba::ScopedBaSessionAggregateBindingV1 ba_session_binding(
+       &s->ba_ptol_aggregate, &s->ba_ptol_receipts);
+   try {
+@@ -9386,7 +10403,12 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     rec.gravity_cam = Eigen::Vector3d(gravity_pose.gravity_cam_xyz[0],
+                                       gravity_pose.gravity_cam_xyz[1],
+                                       gravity_pose.gravity_cam_xyz[2]);
+-    rec.has_pose = true;
++    // [DEVICE-POSE-TRUST-V1] has_pose == "the device pose may be used"; an
++    // untrusted frame keeps the values only for the pose store.
++    rec.device_pose_trusted = device_pose_trusted;
++    rec.has_pose = device_pose_trusted;
++    rec.has_gravity = true;  // validated by BuildMandatoryArkitGravityPoseV1
++    if (!device_pose_trusted) ++s->stat_untrusted_fed;
+ 
+     const double gravity_cam_xyz[3] = {rec.gravity_cam.x(),
+                                        rec.gravity_cam.y(),
+@@ -9402,8 +10424,11 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     // therefore requires an on-device A/B, not a host run.
+     constexpr double kGravityBaSigmaRad =
+         0.5 * 3.14159265358979323846 / 180.0;
+-    if (!aether_ba_set_gravity_prior(name, gravity_cam_xyz,
+-                                     kGravityBaSigmaRad)) {
++    if (!device_pose_trusted) {
++      // [DEVICE-POSE-TRUST-V1] no attitude anchor from an untrusted pose.
++      aether_ba_set_gravity_prior_exempt(name);
++    } else if (!aether_ba_set_gravity_prior(name, gravity_cam_xyz,
++                                            kGravityBaSigmaRad)) {
+       // This path is constructionally unreachable after the mandatory ingest
+       // validator, but it remains fail-closed if the registry contract ever
+       // drifts. No BA is allowed to silently proceed without this frame's
+@@ -9427,7 +10452,18 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     // Register this frame into the live Reconstruction with its ARKit pose.
+     // Trivial rig/frame (frame_id == image_id); the 2-arg overload sets the
+     // pose AND RegisterFrame()s it in one call.
+-    if (s->live_recon_ready) {
++    // [DEVICE-POSE-TRUST-V1] an untrusted frame is NEVER placed at its device
++    // pose; it is registered from image evidence after matching ([R2]/[R3],
++    // RunLivePendingPassV1) or stays unregistered.
++    // [REG-EVIDENCE-V1] (OFFICIAL_AETHER_REG_EVIDENCE=1) a trusted frame is
++    // placed provisionally, its live growth is deferred, and it keeps the
++    // placement only if upstream's registration evidence [R1] passes (checked
++    // after its pairs are verified, before it observes any point). Bootstrap
++    // [D4]: no gate until the live model can register images at all.
++    const bool evidence_gate = device_pose_trusted && RegEvidenceGateEnabled() &&
++                               LiveModelInitializedV1(*s);
++    bool placed_now = false;
++    if (s->live_recon_ready && device_pose_trusted) {
+       colmap::Image rimg;
+       rimg.SetImageId(image_id);
+       rimg.SetName(name);
+@@ -9435,7 +10471,13 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+       rimg.SetPoints2D(rec.points);  // kp order == point2D_idx
+       s->live_recon->AddImageWithTrivialFrame(std::move(rimg), rec.cam_from_world);
+       s->reg_order.push_back(image_id);
++      placed_now = true;
+     }
++    struct DeferredGrowthV1 {
++      int j = -1;
++      colmap::FeatureMatches inliers;
++    };
++    std::vector<DeferredGrowthV1> deferred_growth;
+ 
+     // 4) Match against k_neighbors candidate frames (CPU brute-force,
+     //    MUTUALLY cross-checked inside aether_sift_match_pairs) and PERSIST
+@@ -9516,9 +10558,17 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+       AppendMatchFailJsonl(s, tline);
+     }
+     int cand_spatial = 0, cand_temporal = 0;
++    // [DEVICE-POSE-TRUST-V1] an untrusted frame has no usable device pose, so
++    // it takes the route's documented no-pose degraded fallback — the legacy
++    // pure-temporal K window (SelectStreamCandidates policy 3), the pose-free
++    // analogue of upstream's sequential overlap — instead of spatial K + T2.
+     std::vector<int> candidates =
+-        SelectSpatialK20TemporalT2Candidates(
+-            *s, rec, frame_id, throttled, k, &cand_spatial, &cand_temporal);
++        device_pose_trusted
++            ? SelectSpatialK20TemporalT2Candidates(
++                  *s, rec, frame_id, throttled, k, &cand_spatial,
++                  &cand_temporal)
++            : SelectStreamCandidates(*s, rec, frame_id, k, &cand_spatial,
++                                     &cand_temporal);
+     // [VISUAL-LOOP V1] Every tenth valid frame, retrieve at most four remote
+     // candidates after excluding S20/T2 and any pair already in sqlite. The
+     // index is integer-only and platform neutral; failures are fail-closed to
+@@ -10079,7 +11129,13 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+       // (ApplyProbeDebtGrowth) authors points through the IDENTICAL gates
+       // instead of a second, drifting triangulator. kSelfDevTri (②d) and the
+       // stat_tvg_inlier_pairs accounting stay here, where they always were.
+-      if (rec.has_pose && prev.has_pose && s->live_recon_ready) {
++      if (evidence_gate && rec.has_pose && prev.has_pose &&
++          s->live_recon_ready && LiveRegisteredV1(*s, prev)) {
++        // [REG-EVIDENCE-V1] deferred until the evidence check (replayed
++        // below in the same order with the same arguments).
++        deferred_growth.push_back({j, two_view_geometry.inlier_matches});
++      } else if (rec.has_pose && prev.has_pose && s->live_recon_ready &&
++                 placed_now && LiveRegisteredV1(*s, prev)) {
+         const colmap::FeatureMatches& inliers =
+             two_view_geometry.inlier_matches;
+         s->stat_tvg_inlier_pairs += static_cast<int>(inliers.size());
+@@ -10097,6 +11153,50 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+       }
+     }
+ 
++    // [REG-EVIDENCE-V1] Evidence gate for the provisionally placed frame.
++    if (evidence_gate && placed_now) {
++      const RegEvidenceV1 ev = IngestEvidenceCheckV1(s, image_id);
++      ++s->stat_regev_checked;
++      if (ev.visible >=
++          static_cast<size_t>(
++              colmap::IncrementalMapper::Options().abs_pose_min_num_inliers)) {
++        // upstream counts a trial only for images FindNextImages would hand
++        // to RegisterNextImage (incremental_mapper_impl.cc:350-361, :229).
++        s->reg_trials_v1[image_id] += 1;
++      }
++      if (ev.pass) {
++        for (const DeferredGrowthV1& g : deferred_growth) {
++          const FrameRecord& prev = s->frames[g.j];
++          s->stat_tvg_inlier_pairs += static_cast<int>(g.inliers.size());
++          if (kSelfDevTri) {
++            const LiveGrowView v_prev{prev.image_id, &prev.points,
++                                      &prev.camera, prev.cam_from_world};
++            const LiveGrowView v_cur{image_id, &rec.points, &rec.camera,
++                                     rec.cam_from_world};
++            GrowLiveTracksFromTvgInliers(
++                s, s->live_recon.get(), v_prev, v_cur, g.inliers,
++                kMinTriAngleRad, kMaxCreateReprojPx, kMaxGrowReprojPx,
++                kMaxMergeReprojPx, kMergeRequireDisjointImages,
++                /*allow_merge=*/true, /*allow_grow=*/true, &merge_trials,
++                &touched);
++          }
++        }
++      } else {
++        // Not forced in at its device pose: withdraw the provisional
++        // placement (it observes nothing yet) and leave it pending.
++        ++s->stat_regev_failed;
++        s->live_recon->DeRegisterFrame(s->live_recon->Image(image_id).FrameId());
++        s->live_recon->TearDown();  // what the next mapper session would do
++        s->reg_order.erase(
++            std::remove(s->reg_order.begin(), s->reg_order.end(), image_id),
++            s->reg_order.end());
++        placed_now = false;
++      }
++      LogRegEvidenceV1(s, "ingest", frame_id, true, ev,
++                       ev.pass ? "kept_device_pose" : "pending");
++    }
++    deferred_growth.clear();
++
+     // ── Official COLMAP local refinement ───────────────────────────────────
+     // Run the upstream mapper's two-round local refinement. It selects the six
+     // most-connected images (not the six most recent frames), completes/merges
+@@ -10131,7 +11231,7 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     s->draft_pair_obs.clear();
+     bool live_local_ba_attempted = false;
+     bool live_local_ba_succeeded = false;
+-    if (rec.has_pose && s->live_recon_ready &&
++    if (rec.has_pose && placed_now && s->live_recon_ready &&
+         live_reg_n >= (pair_cloud_enabled ? 2u : 3u) &&
+         StreamingLocalBaEnabled() &&
+         (frame_id % StreamingLocalBaPeriod(s->ba_every_n)) == 0) {
+@@ -10180,64 +11280,8 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+         }
+         if (tail_cache_observed) t2_cache_ms += NowMs() - t2_cache0;
+ 
+-        colmap::IncrementalPipelineOptions official_options;
+-        official_options.min_num_matches = 15;
+-        official_options.triangulation.ignore_two_view_tracks =
+-            TriIgnoreTwoViewTracks();
+-        official_options.load_all_images = true;
+-        official_options.ba_refine_focal_length = false;
+-        official_options.ba_refine_principal_point = false;
+-        official_options.ba_refine_extra_params = false;
+-        official_options.mapper.ba_local_num_images =
+-            s->ba_window > 0 ? s->ba_window : 6;
+-        // [LIVE-LBA-THREADS 2026-07-29 SHIPPED] Host A/B on cap7_day, four arms,
+-        // all four BYTE-IDENTICAL in geometry (n_points 141758 / track3plus
+-        // 53239 / n_obs 411770 / mean_reproj 1.0553 on every arm — thread count
+-        // is provably lossless here, matching the finalize-side precedent):
+-        //   all-single (two independent routes)  35.8s  ← noise band 0.4%
+-        //   shipped default (floor 50k, -1)      34.9s  -2.5%
+-        //   LiveBaThreads()==4 + floor 6000      26.4s  -26.2%   ← ship
+-        //   all cores (host 12) + floor 6000     31.0s  -13.4%
+-        // ⚠️ MORE THREADS IS WORSE: 12 gives back half the gain to sync
+-        // overhead on a 6-image window. Do not "improve" this to -1.
+-        // The 4 that won on host is also exactly LiveBaThreads() on an A16
+-        // (min(6, hw-2)), i.e. the same value that deliberately reserves two
+-        // cores for the camera/GPU-matcher/UI mid-capture — the speed optimum
+-        // and the thermal/camera-safety choice coincide. Device must still
+-        // confirm the optimum on 6 cores; env overrides both knobs.
+-        official_options.num_threads = LiveBaThreads();
+-        official_options.ba_min_num_residuals_for_cpu_multi_threading = 6000;
+-        if (const int t = LiveLocalBaThreadsOverride(); t > 0) {
+-          official_options.num_threads = t;
+-        }
+-        if (const int f = LiveLocalBaMtFloorOverride(); f >= 0) {
+-          official_options.ba_min_num_residuals_for_cpu_multi_threading = f;
+-        }
+-        ApplyBirthGateAB(&official_options);  // [BIRTH-GATE-AB 2026-08-07]
+-        // [LOCAL-FTOL-AB 2026-08-08] COLMAP ships ba_local_function_tolerance =
+-        // 0.0 (controllers/incremental_pipeline.h:115) and LocalBundleAdjustment()
+-        // hands it straight to Ceres' solver_options.function_tolerance
+-        // (incremental_pipeline.cc:171). A ZERO function tolerance means Ceres can
+-        // never terminate on "the objective stopped improving" — only on
+-        // gradient_tolerance (10.0 here) or max_num_iterations (15 here). cap201:
+-        // 198 of 398 live solves (49.7%) end in NO_CONVERGENCE, i.e. they burn the
+-        // iteration cap. The identical defect on the GLOBAL side was worth -30%
+-        // wall at +-0.003 reproj (2026-06-24: ba_global_function_tolerance 0 ->
+-        // 1e-6, shipped). This arms the same knob locally for an A/B; unset or 0
+-        // == byte-identical to the shipped path.
+-        official_options.ba_local_function_tolerance = LiveLocalBaFtol();
+-        // [2026-08-10 三臂 A/B,见各自旋钮注释] 未设 env 时以下三行都不碰
+-        // 字段 == 逐字节出货路径。
+-        if (const int lt = LiveLocalBaLossType(); lt >= 0) {
+-          official_options.ba_local_loss_type = lt;
+-          official_options.ba_local_loss_scale = 1.0;
+-        }
+-        if (const int mi = LiveLocalBaMaxIter(); mi > 0) {
+-          official_options.ba_local_max_num_iterations = mi;
+-        }
+-        if (const double ma = LiveTriMinAngleDegOverride(); ma > 0.0) {
+-          official_options.triangulation.min_angle = ma;
+-        }
++        colmap::IncrementalPipelineOptions official_options =
++            LiveOfficialOptionsV1(s);
+ 
+         colmap::IncrementalMapper mapper(cache);
+         mapper.BeginReconstruction(s->live_recon);
+@@ -10367,6 +11411,7 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     // 失败=无草稿,拍摄不受影响。pair_cloud_enabled(实验臂)开时真模型已在
+     // 第 2 帧建点,草稿多余,跳过。
+     if (PairDraftEnabled() && !pair_cloud_enabled && rec.has_pose &&
++        placed_now &&
+         s->live_recon_ready && s->live_recon && live_reg_n == 2 &&
+         StreamingLocalBaEnabled()) {
+       const double t_draft0 = NowMs();
+@@ -10473,6 +11518,15 @@ static aether_sfm_result_t AddFrameFeaturesImpl(
+     // telemetry allocation or write failure must never add a withdrawn record
+     // or change the accepted-frame result.
+     ordinal_guard.committed = true;
++    // [DEVICE-POSE-TRUST-V1 / REG-EVIDENCE-V1] upstream registration loop
++    // [R3] over pending frames (untrusted ones, and trusted ones that failed
++    // the evidence gate). Like upstream, it re-queries FindNextImages only
++    // when the model changed (a frame was just placed) or a new candidate
++    // appeared (an untrusted frame was just fed).
++    if ((placed_now || !device_pose_trusted) && LiveModelInitializedV1(*s) &&
++        CountPendingFramesV1(*s, *s->live_recon) > 0) {
++      RunLivePendingPassV1(s);
++    }
+     // [LIVE-CLOUD-DIAG V1] Compare the published live model's optimized
+     // camera centers against each frame's immutable ARKit seed. Read-only:
+     // this summary is never fed back to BA, point creation, or display.
+@@ -10964,13 +12018,17 @@ extern "C" int aether_sfm_prefetch_frame(aether_sfm_session_t* s,
+   return 0;
+ }
+ 
+-aether_sfm_result_t aether_sfm_add_frame(aether_sfm_session_t* s,
+-                                         const uint8_t* gray, int width,
+-                                         int height, float fx, float fy,
+-                                         float cx, float cy,
+-                                         const double pose_qwxyz[4],
+-                                         const double pose_t[3],
+-                                         int* out_frame_id) {
++// [DEVICE-POSE-TRUST-V1 2026-09-24] Shared body of aether_sfm_add_frame (v1,
++// always trusted — byte-identical behaviour for existing callers) and
++// aether_sfm_add_frame_v2 (explicit device_pose_trusted, the Dart contract).
++static aether_sfm_result_t AddFrameGrayImplV2(aether_sfm_session_t* s,
++                                              const uint8_t* gray, int width,
++                                              int height, float fx, float fy,
++                                              float cx, float cy,
++                                              const double pose_qwxyz[4],
++                                              const double pose_t[3],
++                                              bool device_pose_trusted,
++                                              int* out_frame_id) {
+   aether_preclamp_instr_v1::DiscardPending(
+       aether_preclamp_instr_v1::PendingDiscardReason::kSessionRejected);
+   if (!s || !s->db || !gray || width <= 0 || height <= 0) {
+@@ -11090,7 +12148,7 @@ aether_sfm_result_t aether_sfm_add_frame(aether_sfm_session_t* s,
+     const aether_sfm_result_t add_result = AddFrameFeaturesImpl(
+         s, xy.data(), desc.data(), have_scales ? scales.data() : nullptr, n,
+         width, height, fx, fy, cx, cy, pose_qwxyz, pose_t, extract_ms,
+-        out_frame_id);
++        out_frame_id, device_pose_trusted);
+     if (add_result != AETHER_SFM_OK) {
+       aether_preclamp_instr_v1::DiscardPending(
+           aether_preclamp_instr_v1::PendingDiscardReason::kSessionRejected);
+@@ -11124,6 +12182,32 @@ aether_sfm_result_t aether_sfm_add_frame(aether_sfm_session_t* s,
+   }
+ }
+ 
++aether_sfm_result_t aether_sfm_add_frame(aether_sfm_session_t* s,
++                                         const uint8_t* gray, int width,
++                                         int height, float fx, float fy,
++                                         float cx, float cy,
++                                         const double pose_qwxyz[4],
++                                         const double pose_t[3],
++                                         int* out_frame_id) {
++  return AddFrameGrayImplV2(s, gray, width, height, fx, fy, cx, cy,
++                            pose_qwxyz, pose_t, /*device_pose_trusted=*/true,
++                            out_frame_id);
++}
++
++// [DEVICE-POSE-TRUST-V1 2026-09-24] see aether_sfm_c.h.
++aether_sfm_result_t aether_sfm_add_frame_v2(aether_sfm_session_t* s,
++                                            const uint8_t* gray, int width,
++                                            int height, float fx, float fy,
++                                            float cx, float cy,
++                                            const double pose_qwxyz[4],
++                                            const double pose_t[3],
++                                            int32_t device_pose_trusted,
++                                            int* out_frame_id) {
++  return AddFrameGrayImplV2(s, gray, width, height, fx, fy, cx, cy,
++                            pose_qwxyz, pose_t, device_pose_trusted != 0,
++                            out_frame_id);
++}
++
+ // Feature-injection sibling of aether_sfm_add_frame: skips extraction and
+ // feeds precomputed keypoints (xy, +0.5 half-pixel convention, same as the
+ // extractor output) + 128-d UBC RootSIFT u8 descriptors straight into the
+@@ -11147,7 +12231,32 @@ aether_sfm_result_t aether_sfm_add_frame_features(
+   // feeds xy+desc only) — scales=nullptr reproduces the unit-affine write.
+   return AddFrameFeaturesImpl(s, xy, desc, /*scales=*/nullptr, n_keypoints,
+                               width, height, fx, fy, cx, cy, pose_qwxyz,
+-                              pose_t, /*extract_ms=*/0.0, out_frame_id);
++                              pose_t, /*extract_ms=*/0.0, out_frame_id,
++                              /*device_pose_trusted=*/true);
++}
++
++// [FIXC HOST-REPLAY 2026-09-24] Host-bench-only sibling of
++// aether_sfm_add_frame_features that also carries the per-keypoint detection
++// scales (exactly what the _v2 extractor hands AddFrameFeaturesImpl, so the
++// SCALE-PERSIST keypoint column is reproduced) and the device-pose trust bit.
++// Lets a pulled device db's OWN features replay the live route on the host.
++// Not part of the product ABI (declared only in the host driver).
++aether_sfm_result_t aether_sfm_add_frame_features_scaled_v1(
++    aether_sfm_session_t* s, const float* xy, const uint8_t* desc,
++    const float* scales, int n_keypoints, int width, int height, float fx,
++    float fy, float cx, float cy, const double pose_qwxyz[4],
++    const double pose_t[3], int32_t device_pose_trusted, int* out_frame_id) {
++  aether_preclamp_instr_v1::DiscardPending(
++      aether_preclamp_instr_v1::PendingDiscardReason::kNonGpuRoute);
++  if (!s || !s->db || !xy || !desc || n_keypoints <= 0 || width <= 0 ||
++      height <= 0) {
++    return AETHER_SFM_ERR_INVALID_ARG;
++  }
++  s->gpu_timestamp_pending_frame_ready = false;
++  return AddFrameFeaturesImpl(s, xy, desc, scales, n_keypoints, width, height,
++                              fx, fy, cx, cy, pose_qwxyz, pose_t,
++                              /*extract_ms=*/0.0, out_frame_id,
++                              device_pose_trusted != 0);
+ }
+ 
+ // [REMOVE-FRAME 2026-07-20] 用户删照片 → 撤回该帧的全部重建贡献。
+@@ -11381,6 +12490,50 @@ aether_sfm_result_t aether_sfm_finalize_async(aether_sfm_session_t* s,
+     TailCacheMarkDirty(
+         s, aether::sfm::TailCacheDirtyReasonV1::kFinalizeMove);
+     const double t_enter = NowMs();
++    // [ARM-B FINALIZE-VIA-RESUME 2026-09-24] OFFICIAL_AETHER_FINALIZE_VIA_RESUME=1
++    // (default off). Discard the capture-time live model and rebuild it through
++    // the core's own resume route (RebuildFrameRecordsForResume: trusted frames
++    // at their persisted device pose, untrusted ones by image evidence only,
++    // official TriangulateImage + CompleteAndMergeTracks over the db's verified
++    // pairs). Everything after — enrichment, stage 1, stage 2, device
++    // alignment — is the unchanged live-reuse worker, so the ONLY difference
++    // from the shipped finalize is the model it starts from: device poses
++    // untouched by capture-time local BA, points from the official
++    // triangulator instead of the live create/grow/merge authoring.
++    if (FinalizeViaResumeEnabled() && !s->frames.empty() &&
++        s->live_recon_ready && s->live_recon) {
++      if (const char* dump_dir = std::getenv("OFFICIAL_AETHER_LIVE_POSE_DUMP");
++          dump_dir && dump_dir[0]) {
++        try {
++          const std::string pre_dir =
++              std::string(dump_dir) + "/live_end_pre_resume";
++          std::filesystem::create_directories(pre_dir);
++          s->live_recon->Write(pre_dir);
++        } catch (const std::exception& e) {
++          LOG(WARNING) << "[aether_sfm] pre-resume live dump failed: "
++                       << e.what();
++        }
++      }
++      const double t_rb = NowMs();
++      s->live_recon.reset();
++      s->live_recon_ready = false;
++      s->frames.clear();
++      s->reg_order.clear();
++      const bool rebuilt = RebuildFrameRecordsForResume(s);
++      char rline[256];
++      std::snprintf(rline, sizeof(rline),
++                    "{\"t\":%lld,\"type\":\"finalize_via_resume_v1\","
++                    "\"ok\":%d,\"ms\":%.0f,\"n_reg\":%zu,\"n_points\":%zu}",
++                    static_cast<long long>(EpochMs()), rebuilt ? 1 : 0,
++                    NowMs() - t_rb,
++                    rebuilt && s->live_recon ? s->live_recon->NumRegImages() : 0,
++                    rebuilt && s->live_recon ? s->live_recon->NumPoints3D() : 0);
++      AppendMatchFailJsonl(s, rline);
++      if (!rebuilt) {
++        s->finalize_status.store(3);
++        return AETHER_SFM_ERR_NOT_REGISTERED;
++      }
++    }
+     if (!RebuildFrameRecordsForResume(s)) {
+       s->finalize_status.store(3);
+       return AETHER_SFM_ERR_NOT_REGISTERED;
+@@ -13479,6 +14632,54 @@ aether_sfm_result_t aether_sfm_arbitrate(aether_sfm_session_t* s,
+   }
+ }
+ 
++void aether_sfm_registration_evidence_stats_v1(
++    aether_sfm_session_t* s, int64_t* untrusted_fed,
++    int64_t* untrusted_registered, int64_t* evidence_checked,
++    int64_t* evidence_failed, int64_t* late_registered,
++    int64_t* unregistered_delivered) {
++  if (untrusted_fed) *untrusted_fed = s ? s->stat_untrusted_fed : 0;
++  if (untrusted_registered) {
++    *untrusted_registered = s ? s->stat_untrusted_registered : 0;
++  }
++  if (evidence_checked) *evidence_checked = s ? s->stat_regev_checked : 0;
++  if (evidence_failed) *evidence_failed = s ? s->stat_regev_failed : 0;
++  if (late_registered) *late_registered = s ? s->stat_regev_late_registered : 0;
++  if (unregistered_delivered) {
++    *unregistered_delivered = s ? s->stat_unregistered_delivered : 0;
++  }
++}
++
++// [DEVICE-ALIGN-V1 2026-09-24] Status + summary of the end-of-finalize
++// alignment (declared in aether_sfm_c.h; record in device_pose_alignment_v1.h).
++int aether_sfm_device_alignment_v1(aether_sfm_session_t* s, double* scale,
++                                   double* max_error_m, int* n_pairs,
++                                   int* n_inliers,
++                                   double* centre_err_median_m,
++                                   double* centre_err_max_m,
++                                   double* rot_err_median_deg,
++                                   double* rot_err_max_deg) {
++  if (scale) *scale = 0.0;
++  if (max_error_m) *max_error_m = 0.0;
++  if (n_pairs) *n_pairs = 0;
++  if (n_inliers) *n_inliers = 0;
++  if (centre_err_median_m) *centre_err_median_m = 0.0;
++  if (centre_err_max_m) *centre_err_max_m = 0.0;
++  if (rot_err_median_deg) *rot_err_median_deg = 0.0;
++  if (rot_err_max_deg) *rot_err_max_deg = 0.0;
++  if (!s) return 0;
++  std::lock_guard<std::mutex> lk(s->recon_mutex);
++  const aether::sfm::DeviceAlignResultV1& r = s->device_align_v1;
++  if (scale) *scale = r.device_from_recon.scale();
++  if (max_error_m) *max_error_m = r.max_error_m;
++  if (n_pairs) *n_pairs = r.n_pairs;
++  if (n_inliers) *n_inliers = r.n_inliers_all;
++  if (centre_err_median_m) *centre_err_median_m = r.errors.proj_center_errors.median;
++  if (centre_err_max_m) *centre_err_max_m = r.errors.proj_center_errors.max;
++  if (rot_err_median_deg) *rot_err_median_deg = r.errors.rotation_errors_deg.median;
++  if (rot_err_max_deg) *rot_err_max_deg = r.errors.rotation_errors_deg.max;
++  return static_cast<int>(r.status);
++}
++
+ // Finalize-output quality snapshot: the aether_sfm_live_diag fields computed
+ // over the CURRENT finalize reconstruction (LOCAL or REFINED — whichever the
+ // getters serve). mean_reproj_px is computed over every observation with the
+diff --git a/aether_cpp/official_pipeline/src/official_bundle_adjustment_ceres.cc b/aether_cpp/official_pipeline/src/official_bundle_adjustment_ceres.cc
+index ead44b88..d0415fbb 100644
+--- a/aether_cpp/official_pipeline/src/official_bundle_adjustment_ceres.cc
++++ b/aether_cpp/official_pipeline/src/official_bundle_adjustment_ceres.cc
+@@ -51,6 +51,7 @@
+ #include <mutex>
+ #include <string>
+ #include <unordered_map>
++#include <unordered_set>  // [DEVICE-POSE-TRUST-V1] gravity exempt set
+ #include <vector>
+ 
+ #include <Eigen/Geometry>  // Eigen::umeyama
+@@ -233,6 +234,11 @@ struct AetherGravityPriorRegistry {
+   std::mutex mutex;
+   // image name -> measured physical-down vector in that camera frame.
+   std::unordered_map<std::string, Eigen::Vector3d> gravity_cam;
++  // [DEVICE-POSE-TRUST-V1 2026-09-24] images whose device pose the caller
++  // marked untrusted: they deliberately carry NO attitude anchor (the contract
++  // forbids using an untrusted device pose as a pose prior), so the injection
++  // loop counts them as exempt instead of reporting a MISSING mandatory prior.
++  std::unordered_set<std::string> exempt;
+   // Strong roll/pitch constraint. Yaw remains completely unconstrained by the
+   // rank-two cross-product residual.
+   double sigma_rad = 0.5 * 3.14159265358979323846 / 180.0;
+@@ -307,6 +313,7 @@ extern "C" int aether_ba_set_gravity_prior(const char* name,
+   }
+   auto& reg = GetAetherGravityPriorRegistry();
+   std::lock_guard<std::mutex> lock(reg.mutex);
++  reg.exempt.erase(name);  // [DEVICE-POSE-TRUST-V1]
+   reg.gravity_cam[name] = gravity.normalized();
+   if (std::isfinite(sigma_rad) && sigma_rad > 0.0) {
+     reg.sigma_rad = sigma_rad;
+@@ -318,6 +325,19 @@ extern "C" void aether_ba_clear_gravity_priors() {
+   auto& reg = GetAetherGravityPriorRegistry();
+   std::lock_guard<std::mutex> lock(reg.mutex);
+   reg.gravity_cam.clear();
++  reg.exempt.clear();  // [DEVICE-POSE-TRUST-V1]
++}
++
++// [DEVICE-POSE-TRUST-V1 2026-09-24] The streaming owner calls this instead of
++// aether_ba_set_gravity_prior for a frame whose device pose is untrusted: any
++// stale entry under that name is removed and the image is recorded as exempt
++// (no attitude anchor, and not reported as a missing mandatory prior).
++extern "C" void aether_ba_set_gravity_prior_exempt(const char* name) {
++  if (name == nullptr || name[0] == '\0') return;
++  auto& reg = GetAetherGravityPriorRegistry();
++  std::lock_guard<std::mutex> lock(reg.mutex);
++  reg.gravity_cam.erase(name);
++  reg.exempt.insert(name);
+ }
+ 
+ std::shared_ptr<CeresBundleAdjustmentSummary>
+@@ -1555,6 +1575,7 @@ class DefaultBundleAdjuster : public CeresBundleAdjuster {
+     int num_eligible = 0;
+     int num_missing = 0;
+     int num_inconsistent = 0;
++    int num_exempt = 0;  // [DEVICE-POSE-TRUST-V1]
+     const double inverse_sigma = 1.0 / reg.sigma_rad;
+     for (const image_t image_id : parameterized_image_ids_) {
+       Image& image = reconstruction.Image(image_id);
+@@ -1563,6 +1584,10 @@ class DefaultBundleAdjuster : public CeresBundleAdjuster {
+       }
+       ++num_eligible;
+       const auto it = reg.gravity_cam.find(image.Name());
++      if (it == reg.gravity_cam.end() && reg.exempt.count(image.Name()) > 0) {
++        ++num_exempt;  // [DEVICE-POSE-TRUST-V1] untrusted device pose: no anchor
++        continue;
++      }
+       if (it == reg.gravity_cam.end() ||
+           !aether::sfm::IsValidGravityBaPriorV1(it->second)) {
+         // Ingest is fail-closed: no frame reaches the db without a registered
+@@ -1622,7 +1647,10 @@ class DefaultBundleAdjuster : public CeresBundleAdjuster {
+       // healthy solve from one where the registry was silently emptied.
+       LOG(INFO) << "[AETHER gravity] injected " << num_added << "/"
+                 << num_eligible << " roll/pitch anchors, sigma_rad="
+-                << reg.sigma_rad;
++                << reg.sigma_rad
++                << (num_exempt > 0 ? " (untrusted-device-pose exempt=" +
++                                         std::to_string(num_exempt) + ")"
++                                   : std::string());
+     }
+     if (num_missing > 0) {
+       LOG(ERROR) << "[AETHER gravity] MISSING " << num_missing << "/"
+diff --git a/aether_cpp/tools/sift_pyramid_dawn.cc b/aether_cpp/tools/sift_pyramid_dawn.cc
+index e9758e00..89c07f94 100644
+--- a/aether_cpp/tools/sift_pyramid_dawn.cc
++++ b/aether_cpp/tools/sift_pyramid_dawn.cc
+@@ -217,10 +217,20 @@ bool SiftPyramidDawn::build(DawnKernelHarness& harness, const uint8_t* gray,
+     wgpu::ComputePipeline pipe_blur = harness.load_compute(s1_src);
+     wgpu::ComputePipeline pipe_resample = harness.load_compute(s1b_src);
+     // [GSS-FUSED 2026-08-10] H+V 融合 blur(FidelityFX Blur 结构,逐位同
+-    // 2-pass)。kill switch:OFFICIAL_AETHER_GSS_FUSED=0;radius>16 自动回落。
++    // 2-pass)。
++    // [FIXD-2PASS-DEFAULT 2026-09-24] 默认改回 2-pass(sift_gss_blur.wgsl),
++    // 即上游 VLFeat 的结构:_vl_scalespace_fill_octave(scalespace.c:669-690)
++    // 每层调 vl_imsmooth_f(imopv.c:645-675)= 两次一维 vl_imconvcol_v,
++    // 短寿命 8x8 workgroup 覆盖二维网格。原因:真机 cap_1788795741337526
++    // 第 5 帧 octave-0 的三个 fused 派发(s=2,3,4;每个 workgroup 自上而下扫
++    // 满 3024 行)只有前 ~144/504 条带写出了结果,其余保持 0,且没有任何一层
++    // 报错(Dawn metal/QueueMTL.mm:236 的完成回调不看 MTLCommandBuffer 状态)。
++    // 同一命令缓冲里的 2-pass 派发完好。宿主上两条路输出集合逐点相同(差 0-1
++    // 个关键点 = fused 自身 run-to-run 的原子序抖动)。
++    // 想再开 fused 做台架对照:OFFICIAL_AETHER_GSS_FUSED=1。
+     static const bool fused_on = [] {
+         const char* v = std::getenv("OFFICIAL_AETHER_GSS_FUSED");
+-        return v == nullptr || !(v[0] == '0' && v[1] == '\0');
++        return v != nullptr && v[0] == '1' && v[1] == '\0';
+     }();
+     wgpu::ComputePipeline pipe_blur_fused =
+         harness.load_compute(load_wgsl("sift_gss_blur_fused.wgsl"));

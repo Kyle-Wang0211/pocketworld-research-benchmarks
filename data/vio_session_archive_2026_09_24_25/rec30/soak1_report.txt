@@ -1,0 +1,14 @@
+order 30:fsync_each,30:barrier,60:fsync_each,60:barrier,30:barrier,30:fsync_each seconds/arm 60.0
+free_bytes 13653001416 thermal@start nominal device iPhone15,2
+arm0 30Hz fsync_each      frames 1795 loss 0 peak 31/64 (at s59) write p50 5.4 p99 70.5 max 1595 ms | MB/s interior min 0 max 86 | first loss sNone | arkit missed 12 | thermal nominal->fair | gated 1794 admitted 1795 depth 597 barrier_fb 0 err None
+      worst seconds: [(61, 1595, 0), (63, 1262, 0), (58, 107, 10)]
+arm1 30Hz barrier         frames 1801 loss 0 peak 3/64 (at s32) write p50 6.9 p99 17.8 max 67 ms | MB/s interior min 80 max 86 | first loss sNone | arkit missed 0 | thermal fair->fair | gated 1800 admitted 1801 depth 599 barrier_fb 0 err None
+      worst seconds: [(37, 67, 3), (32, 67, 3), (26, 63, 2)]
+arm2 60Hz fsync_each      frames 2568 loss 140 peak 64/64 (at s52) write p50 5.2 p99 114.2 max 1547 ms | MB/s interior min 0 max 169 | first loss s52 | arkit missed 893 | thermal fair->serious | gated 0 admitted 2708 depth 899 barrier_fb 0 err None
+      worst seconds: [(53, 1547, 64), (50, 699, 32), (59, 173, 64)]
+arm3 60Hz barrier         frames 1801 loss 0 peak 4/64 (at s26) write p50 8.7 p99 18.8 max 117 ms | MB/s interior min 80 max 86 | first loss sNone | arkit missed 1800 | thermal serious->serious | gated 0 admitted 1801 depth 599 barrier_fb 0 err None
+      worst seconds: [(26, 117, 4), (3, 78, 3), (31, 77, 3)]
+arm4 30Hz barrier         frames 1801 loss 0 peak 3/64 (at s26) write p50 8.2 p99 17.5 max 80 ms | MB/s interior min 77 max 88 | first loss sNone | arkit missed 1800 | thermal serious->serious | gated 0 admitted 1801 depth 600 barrier_fb 0 err None
+      worst seconds: [(26, 80, 3), (31, 76, 3), (36, 71, 3)]
+arm5 30Hz fsync_each      frames 1801 loss 0 peak 2/64 (at s1) write p50 7.2 p99 24.1 max 53 ms | MB/s interior min 80 max 86 | first loss sNone | arkit missed 1800 | thermal serious->serious | gated 0 admitted 1801 depth 600 barrier_fb 0 err None
+      worst seconds: [(1, 53, 2), (3, 42, 2), (2, 42, 2)]

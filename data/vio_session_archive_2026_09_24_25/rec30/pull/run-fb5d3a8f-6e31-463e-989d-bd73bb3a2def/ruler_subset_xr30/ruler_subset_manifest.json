@@ -1,0 +1,46 @@
+{
+  "bench_only_notice" : "🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品管线,也不作为任何产品方案的一部分",
+  "copied" : [
+
+  ],
+  "depth_rows" : 296,
+  "frames" : 3,
+  "frames_bin_bytes" : 8294400,
+  "frames_bin_sha256" : "78f6dad7c299c3962fc9d95c36c37aee8b46673e7c27dd104c83c5ebee29bb89",
+  "linked" : [
+    "recording_manifest.json",
+    "intrinsics.jsonl",
+    "arkit_poses.tum",
+    "imu.csv",
+    "depth.bin",
+    "depth_conf.bin",
+    "depth.pwvi",
+    "depth_meta.json",
+    "recorder_timing.json",
+    "config.json",
+    "input_manifest.json",
+    "calibration.json",
+    "intrinsics_observed.json"
+  ],
+  "min_spacing_s" : 0.25,
+  "not_replayable_reason" : "recording_manifest.json 描述的是整份录制;子集只给离线尺子",
+  "out_name" : "ruler_subset_xr30",
+  "schema" : "pw.bench.lidar-ruler-subset\/1",
+  "source_frame_count" : 1450,
+  "source_recording_id" : "fb5d3a8f-6e31-463e-989d-bd73bb3a2def",
+  "xrslam_admission" : {
+    "admitted" : 529,
+    "camera_hz" : 30,
+    "camera_rows" : 1450,
+    "depth_rows_not_admitted" : 236,
+    "depth_rows_with_luma" : 244,
+    "every_subset_frame_admitted" : true,
+    "fed" : 1056,
+    "first_imu_ns" : 245418105801625,
+    "gate_source" : "PwXrslamOfficialFeed.admits",
+    "gated_out" : 527,
+    "leading_without_imu_dropped" : 4,
+    "limit_frames" : 1060,
+    "rule" : "phone replay: camera_index rows (limit_frames prefix) → drop t < first IMU → PwXrslamOfficialFeed.admits(pts=Double(t_ns)*1e-9): reject if pts - last_admitted < 0.8\/R"
+  }
+}

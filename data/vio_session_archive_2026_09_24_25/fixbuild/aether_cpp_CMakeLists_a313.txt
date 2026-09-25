@@ -1,0 +1,1226 @@
+cmake_minimum_required(VERSION 3.22)
+
+project(aether3d_cpp_core VERSION 0.1.0 LANGUAGES C CXX)
+
+# Phase 4 — OBJCXX is Apple-only. The Android NDK + Emscripten + OHOS
+# toolchains don't supply an Objective-C++ compiler, so unconditionally
+# requiring OBJCXX in the project() call would fail configure on those
+# platforms. Enable it only on Apple platforms; per-source guards below
+# keep .mm files out of non-Apple compile graphs.
+if(APPLE)
+    enable_language(OBJCXX)
+endif()
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(AETHER_BUILD_MINIMAL_WHITEBOX_TESTS "Build only the minimal whitebox native tests" OFF)
+option(AETHER_ENABLE_DAWN "Build Dawn (WebGPU) integration + hello sample" ON)
+option(AETHER_FFI_BUILD_STATIC "Build aether3d_ffi as static archive (set ON for iOS xcframework so codesign isn't required; default OFF builds .dylib for macOS Dart CLI smoke tests)" OFF)
+option(AETHER_ALLOW_TEST_ASSET_DOWNLOADS "Allow configure-time download of optional test assets" ON)
+
+# Strict flags — applied per-target via target_compile_options below.
+# Was previously add_compile_options(...) at directory scope, which would
+# pollute third_party/dawn. Refactored 2026-04-25 for Dawn integration.
+set(AETHER_STRICT_COMPILE_OPTIONS
+    -ffp-contract=off
+    -fno-fast-math
+    -Wall
+    -Wextra
+    -Werror
+    -fno-exceptions
+    -fno-rtti
+)
+
+# ============================================================================
+# Dawn (WebGPU) integration
+# Submodule at third_party/dawn — see aether_cpp/PHASE3_BLOCKER.md for context
+# ============================================================================
+if(AETHER_ENABLE_DAWN AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/dawn/CMakeLists.txt")
+    # Keep the historical default, but allow sealed/offline device builds to
+    # pass -DDAWN_FETCH_DEPENDENCIES=OFF without this project overriding it.
+    set(DAWN_FETCH_DEPENDENCIES ON CACHE BOOL "")
+    set(DAWN_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_NODE_BINDINGS OFF CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_PROTOBUF OFF CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+    set(DAWN_USE_GLFW OFF CACHE BOOL "" FORCE)
+    set(TINT_BUILD_CMD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(TINT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
+endif()
+
+# Detector-free image preprocessing must decode identically on iOS, Android,
+# HarmonyOS, host, and Web. stb_image's JPEG IDCT differs by up to three
+# source-pixel units from the Pillow/libjpeg-turbo research oracle, which is
+# enough to flip NCC birth decisions. Pin and statically link the libjpeg API
+# implementation instead. Only the decoder library is built: no tools, tests,
+# Java wrapper, shared library, or TurboJPEG API. Emscripten has no supported
+# native SIMD backend; libjpeg-turbo's scalar and Neon paths are bit-identical
+# on the frozen detector-free fixtures. Upstream intentionally rejects
+# add_subdirectory(), so use the integration mechanism required by its CMake
+# project rather than carrying a downstream patch.
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libjpeg-turbo/CMakeLists.txt")
+    message(FATAL_ERROR
+        "Pinned libjpeg-turbo submodule is missing. Run git submodule update "
+        "--init aether_cpp/third_party/libjpeg-turbo")
+endif()
+include(ExternalProject)
+set(AETHER_LIBJPEG_BINARY_DIR
+    "${CMAKE_CURRENT_BINARY_DIR}/third_party/libjpeg-turbo-build")
+set(AETHER_LIBJPEG_ARCHIVE "${AETHER_LIBJPEG_BINARY_DIR}/libjpeg.a")
+set(AETHER_LIBJPEG_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+if(NOT AETHER_LIBJPEG_BUILD_TYPE)
+    set(AETHER_LIBJPEG_BUILD_TYPE Release)
+endif()
+set(AETHER_LIBJPEG_CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${AETHER_LIBJPEG_BUILD_TYPE}
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DENABLE_SHARED=OFF
+    -DENABLE_STATIC=ON
+    -DWITH_TOOLS=OFF
+    -DWITH_TESTS=OFF
+    -DWITH_JAVA=OFF
+    -DWITH_TURBOJPEG=OFF)
+if(EMSCRIPTEN)
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS -DWITH_SIMD=OFF)
+else()
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS -DWITH_SIMD=ON)
+endif()
+if(CMAKE_TOOLCHAIN_FILE)
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
+if(CMAKE_SYSTEM_NAME)
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS
+        -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME})
+endif()
+if(CMAKE_SYSTEM_PROCESSOR)
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS
+        -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR})
+elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS" AND CMAKE_OSX_ARCHITECTURES)
+    list(APPEND AETHER_LIBJPEG_CMAKE_ARGS
+        -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_OSX_ARCHITECTURES})
+endif()
+foreach(variable IN ITEMS
+        CMAKE_OSX_ARCHITECTURES CMAKE_OSX_DEPLOYMENT_TARGET CMAKE_OSX_SYSROOT
+        ANDROID_ABI ANDROID_PLATFORM ANDROID_NDK)
+    if(DEFINED ${variable} AND NOT "${${variable}}" STREQUAL "")
+        list(APPEND AETHER_LIBJPEG_CMAKE_ARGS -D${variable}=${${variable}})
+    endif()
+endforeach()
+set(AETHER_LIBJPEG_GENERATOR_ARGS "")
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+    # A single-config nested Make build gives the imported archive one stable
+    # path instead of Xcode's configuration/platform-specific directories.
+    set(AETHER_LIBJPEG_GENERATOR_ARGS CMAKE_GENERATOR "Unix Makefiles")
+endif()
+ExternalProject_Add(aether_libjpeg_external
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libjpeg-turbo"
+    BINARY_DIR "${AETHER_LIBJPEG_BINARY_DIR}"
+    DOWNLOAD_COMMAND ""
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    ${AETHER_LIBJPEG_GENERATOR_ARGS}
+    CMAKE_ARGS ${AETHER_LIBJPEG_CMAKE_ARGS}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --target jpeg-static
+        --parallel 2
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS "${AETHER_LIBJPEG_ARCHIVE}")
+add_library(aether_libjpeg STATIC IMPORTED GLOBAL)
+set_target_properties(aether_libjpeg PROPERTIES
+    IMPORTED_LOCATION "${AETHER_LIBJPEG_ARCHIVE}")
+add_dependencies(aether_libjpeg aether_libjpeg_external)
+set(AETHER_LIBJPEG_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libjpeg-turbo/src
+    ${AETHER_LIBJPEG_BINARY_DIR})
+
+# Phase 4 — Emscripten ships zlib as a port activated via `-sUSE_ZLIB=1`,
+# not as a system library, so find_package(ZLIB REQUIRED) fails to resolve
+# it. Synthesize a ZLIB::ZLIB INTERFACE target that propagates the port
+# flag to consumers (aether3d_core, etc.). Other platforms still go
+# through the standard ZLIB find_package.
+if(EMSCRIPTEN)
+    add_library(ZLIB_emscripten_port INTERFACE)
+    target_compile_options(ZLIB_emscripten_port INTERFACE -sUSE_ZLIB=1)
+    target_link_options(ZLIB_emscripten_port INTERFACE -sUSE_ZLIB=1)
+    add_library(ZLIB::ZLIB ALIAS ZLIB_emscripten_port)
+else()
+    find_package(ZLIB REQUIRED)
+endif()
+
+set(AETHER_CORE_SOURCES
+    src/tsdf_volume.cpp
+    src/core/canonicalize.cpp
+    src/core/numeric_guard.cpp
+    src/core/version.cpp
+    src/crypto/sha256.cpp
+    src/evidence/smart_anti_boost_smoother.cpp
+    src/glb_norm/atlas_merger.cpp
+    src/glb_norm/glb_io.cpp
+    src/glb_norm/mesh_simplify.cpp
+    src/memory/arena.cpp
+    src/render/shader_source.cpp
+    src/sfm/canonical_feature_selector_v1.cc
+    src/trainer/da3_depth_fuser.cpp
+    src/trainer/noise_aware_trainer.cpp
+    src/tsdf/pose_stabilizer.cpp
+    src/tsdf/spatial_hash_table.cpp
+    src/splat/spz_decoder.cpp
+    src/splat/splat_render_engine.cpp
+    src/pipeline/streaming_pipeline.cpp
+    src/pipeline/local_preview_runtime.cpp
+    src/pipeline/local_preview_seeding.cpp
+    src/pipeline/local_subject_first_capture_overlay.cpp
+    src/pipeline/local_subject_first_export_snapshot.cpp
+    src/pipeline/local_subject_first_fallback_seeding.cpp
+    src/pipeline/local_subject_first_ingest.cpp
+    src/pipeline/local_subject_first_refine.cpp
+    src/pipeline/local_subject_first_training.cpp
+    src/pipeline/runtime_tsdf_gaussian_augmentation.cpp
+    src/pipeline/pipeline_coordinator.cpp
+    src/pipeline/coordinator_c_api.cpp
+    src/pipeline/streaming_c_api.cpp
+    src/thermal/thermal_predictor.cpp
+    src/training/gaussian_training_engine.cpp
+)
+
+# Phase 4 — Apple-only sources (CoreML / Metal / IOSurface). These are
+# Objective-C++ (.mm) and reference Apple frameworks; on Android / OHOS /
+# Emscripten the NDK has no ObjC++ runtime, so these get gated out.
+if(APPLE)
+    list(APPEND AETHER_CORE_SOURCES
+        src/pipeline/depth_inference_coreml.mm
+        src/render/metal_gpu_device.mm
+        src/render/metal_c_api.mm)
+endif()
+
+set(AETHER_C_API_SOURCES
+    src/mobile_whitebox_c_api.cpp
+    src/glb_norm/glb_normalize_c_api.cpp
+)
+
+# Phase 4 — splat_c_api.cpp wraps MTLCommandBuffer via
+# aether::render::wrap_metal_command_buffer, declared in metal_gpu_device.h
+# under `#if defined(__APPLE__)`. Compiling on Android NDK / OHOS / Web
+# fails with "no member named 'wrap_metal_command_buffer'", so gate the
+# whole TU to Apple platforms. Cross-platform splat consumption uses the
+# header-only ply_loader.h + the SPZ decoder; the Metal wrapper exists
+# only for Swift→C++ command-buffer interop on iOS.
+if(APPLE)
+    list(APPEND AETHER_C_API_SOURCES
+        src/splat/splat_c_api.cpp)
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════
+# Phase 6.4a — WGSL bake (build-time .wgsl → .cpp constexpr)
+# ═══════════════════════════════════════════════════════════════════════
+# Each .wgsl file in shaders/wgsl/ is baked into a .cpp file with an
+# `extern const char NAME_wgsl[]` definition. The .cpp files are linked
+# into aether3d_core. Production binaries (DawnGPUDevice path) reference
+# these baked sources via include/aether/shaders/wgsl_sources.h, with
+# zero filesystem dependency at runtime.
+#
+# Smoke binaries in tools/ continue to read .wgsl from disk via
+# register_wgsl_from_file() — they're development tools, not production,
+# and disk reads make iteration faster (no rebake / relink).
+#
+# Re-bake trigger: .wgsl source change (CMake DEPENDS). Adding a new
+# .wgsl requires (1) drop the file in shaders/wgsl/, (2) add extern in
+# include/aether/shaders/wgsl_sources.h, (3) add register_wgsl_source
+# call in dawn_gpu_device.cpp's register_baked_wgsl_into_device(),
+# (4) cmake reconfigure. Step 2 missing = link error (loud failure).
+
+set(AETHER_WGSL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders/wgsl)
+set(AETHER_WGSL_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/aether/shaders)
+
+file(MAKE_DIRECTORY ${AETHER_WGSL_GENERATED_DIR})
+
+file(GLOB AETHER_WGSL_FILES "${AETHER_WGSL_SOURCE_DIR}/*.wgsl")
+list(LENGTH AETHER_WGSL_FILES AETHER_WGSL_FILE_COUNT)
+if(AETHER_WGSL_FILE_COUNT EQUAL 0)
+    message(FATAL_ERROR "No .wgsl files found in ${AETHER_WGSL_SOURCE_DIR} — bake needs source files")
+endif()
+message(STATUS "Aether3D: baking ${AETHER_WGSL_FILE_COUNT} .wgsl files → "
+        "${AETHER_WGSL_GENERATED_DIR}")
+
+set(AETHER_WGSL_GENERATED_CPPS "")
+foreach(wgsl ${AETHER_WGSL_FILES})
+    get_filename_component(wgsl_name ${wgsl} NAME_WE)
+    set(generated_cpp ${AETHER_WGSL_GENERATED_DIR}/${wgsl_name}_wgsl.cpp)
+    add_custom_command(
+        OUTPUT ${generated_cpp}
+        COMMAND ${CMAKE_COMMAND}
+            -DINPUT=${wgsl}
+            -DOUTPUT=${generated_cpp}
+            -DNAME=${wgsl_name}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/scripts/bake_one_wgsl.cmake
+        DEPENDS ${wgsl} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/bake_one_wgsl.cmake
+        COMMENT "Baking WGSL: ${wgsl_name}.wgsl → ${wgsl_name}_wgsl.cpp"
+        VERBATIM
+    )
+    list(APPEND AETHER_WGSL_GENERATED_CPPS ${generated_cpp})
+endforeach()
+
+# ALL target so the bake runs even if a clean build hasn't yet touched
+# aether3d_core (e.g. a tools-only build still gets fresh WGSL for any
+# header-only consumers).
+add_custom_target(aether_bake_wgsl ALL DEPENDS ${AETHER_WGSL_GENERATED_CPPS})
+
+add_library(aether3d_core STATIC ${AETHER_CORE_SOURCES} ${AETHER_WGSL_GENERATED_CPPS})
+target_include_directories(aether3d_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(aether3d_core PUBLIC ZLIB::ZLIB)
+target_compile_options(aether3d_core PRIVATE ${AETHER_STRICT_COMPILE_OPTIONS})
+add_dependencies(aether3d_core aether_bake_wgsl)
+
+# ─── Phase 1: GLB normalizer atlas merger (unconditional) ──────────────
+# atlas_merger.cpp defines STB_RECT_PACK_IMPLEMENTATION and
+# STB_IMAGE_RESIZE_IMPLEMENTATION exactly once. glb_io.cpp (Phase 2)
+# defines STB_IMAGE_WRITE_IMPLEMENTATION exactly once, and conditionally
+# also CGLTF_IMPLEMENTATION + STB_IMAGE_IMPLEMENTATION when Dawn is OFF
+# (when Dawn is ON, src/pocketworld/glb_loader.cpp owns those impls
+# instead — see the Phase 6.4b block below). Single-header libs come
+# from third_party/stb + third_party/cgltf. Ships in every per-arch
+# slice (iOS / Android / HarmonyOS / Web wasm) so the GLB normalizer is
+# reachable everywhere.
+target_include_directories(aether3d_core PRIVATE
+    third_party/stb
+    third_party/cgltf)
+set_source_files_properties(src/glb_norm/atlas_merger.cpp PROPERTIES
+    COMPILE_OPTIONS "-Wno-unused-function;-Wno-missing-prototypes;-Wno-double-promotion;-Wno-cast-qual;-Wno-sign-compare;-Wno-unused-but-set-variable")
+
+# Phase 4 — gaussian_training_engine.h has a private member that the
+# Android NDK r29 / Emscripten 4.x clang flag as unused-private-field
+# (Apple's older clang doesn't, so the macOS host build passes). The
+# field is genuinely reserved for future training-window code.
+# Additionally, the .cpp uses an 8 GiB literal (8ULL * 1024^3) as a
+# default device_ram sentinel; on armeabi-v7a (32-bit, size_t = uint32)
+# that constant overflows to 0, tripping -Wconstant-conversion. The
+# code path never executes on 32-bit (3D pipeline gated to 64-bit phones),
+# so the truncation is benign — but -Werror still rejects it. Suppress
+# both narrowly on this one TU to keep -Werror in effect elsewhere.
+# Header is only included by this .cpp (verified via grep).
+set_source_files_properties(src/training/gaussian_training_engine.cpp PROPERTIES
+    COMPILE_OPTIONS "-Wno-unused-private-field;-Wno-constant-conversion")
+# glb_io.cpp pulls in cgltf (parser-only declarations or full impl,
+# depending on AETHER_ENABLE_DAWN) and stb_image_write. Both single-
+# header libs trip the strict -Wall -Wextra flags with unused-function
+# / missing-prototypes / double-promotion / cast-qual / sign-compare.
+# Same suppression set as atlas_merger.cpp.
+set_source_files_properties(src/glb_norm/glb_io.cpp PROPERTIES
+    COMPILE_OPTIONS "-Wno-unused-function;-Wno-missing-prototypes;-Wno-double-promotion;-Wno-cast-qual;-Wno-sign-compare;-Wno-unused-but-set-variable;-Wno-unused-parameter;-Wno-implicit-fallthrough;-Wno-missing-field-initializers")
+
+# ─── Phase 3: meshoptimizer (mesh decimation) ──────────────────────────
+# Vendored copy of zeux/meshoptimizer v0.21 (MIT) at
+# third_party/meshoptimizer/. Multi-file pure-C++ static library — same
+# treatment as Dawn (third-party, doesn't inherit AETHER_STRICT_COMPILE_
+# OPTIONS, so its own warnings don't break -Werror). Linked PRIVATE into
+# aether3d_core; the only consumer is src/glb_norm/mesh_simplify.cpp,
+# which kicks in when the input GLB exceeds options.target_face_count.
+file(GLOB MESHOPTIMIZER_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/meshoptimizer/src/*.cpp)
+add_library(meshoptimizer STATIC ${MESHOPTIMIZER_SOURCES})
+target_include_directories(meshoptimizer PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/meshoptimizer/src)
+target_link_libraries(aether3d_core PRIVATE meshoptimizer)
+
+# ─── Phase 6.2: Dawn backend source conditionally included ─────────────
+# When AETHER_ENABLE_DAWN is ON, link the DawnGPUDevice C++ implementation
+# into aether3d_core. Uses Dawn's raw C webgpu.h (NOT webgpu_cpp.h) so the
+# strict -fno-exceptions / -fno-rtti flags stay in effect on this TU.
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    target_sources(aether3d_core PRIVATE src/render/dawn_gpu_device.cpp)
+    target_compile_definitions(aether3d_core PRIVATE AETHER_ENABLE_DAWN=1)
+    target_link_libraries(aether3d_core PUBLIC dawn::webgpu_dawn)
+endif()
+
+# ─── Phase 6.4b: GLB loader (cgltf + stb_image) ────────────────────────
+# Vendored single-header libs in third_party/cgltf, third_party/stb.
+# glb_loader.cpp does the IMPL define for both — must be exactly one TU
+# in the build, so we make sure no other source file defines the impls.
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    target_sources(aether3d_core PRIVATE src/pocketworld/glb_loader.cpp)
+    target_include_directories(aether3d_core PRIVATE
+        third_party/cgltf
+        third_party/stb)
+    # cgltf is C99; under -Wall -Wextra it produces a few warnings (unused
+    # static functions, missing-prototypes for internal helpers). Suppress
+    # for that ONE source file so the rest of aether3d_core stays strict.
+    set_source_files_properties(src/pocketworld/glb_loader.cpp PROPERTIES
+        COMPILE_OPTIONS "-Wno-unused-function;-Wno-missing-prototypes;-Wno-double-promotion")
+endif()
+
+if(APPLE)
+    target_link_libraries(aether3d_core PUBLIC
+        "-framework Foundation"
+        "-framework Metal"
+        "-framework CoreML"
+        "-framework CoreVideo"
+        "-framework IOSurface"
+    )
+    set_source_files_properties(
+        src/pipeline/depth_inference_coreml.mm
+        src/render/metal_gpu_device.mm
+        src/render/metal_c_api.mm
+        PROPERTIES COMPILE_OPTIONS "-fobjc-arc"
+    )
+endif()
+
+add_library(aether3d_c STATIC ${AETHER_C_API_SOURCES})
+target_include_directories(aether3d_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(aether3d_c PUBLIC aether3d_core ZLIB::ZLIB)
+target_compile_options(aether3d_c PRIVATE ${AETHER_STRICT_COMPILE_OPTIONS})
+
+# ============================================================================
+# Dawn hello samples (Phase 1.4 / 1.5 / 1.7): print GPU info, compute, render
+#
+# Each hello is a single-translation-unit smoke test for one Dawn feature
+# layer. They're intentionally self-contained (no shared headers) so a
+# failing hello points at exactly one layer.
+#
+# Note: these targets do NOT inherit AETHER_STRICT_COMPILE_OPTIONS. Dawn's
+# webgpu_cpp.h uses patterns that conflict with -fno-exceptions / -fno-rtti.
+# ============================================================================
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    function(aether_dawn_hello_sample target src)
+        add_executable(${target} ${src})
+        target_link_libraries(${target} PRIVATE dawn::webgpu_dawn)
+        # cxx_std_20 inherited from top-level CMAKE_CXX_STANDARD; explicit
+        # target_compile_features() breaks under iphonesimulator sysroot
+        # (CMake compiler-feature probe returns empty) — see commit history.
+
+        # Phase 6.0 (2026-04-26): iOS requires every executable to be an
+        # .app bundle with a bundle identifier. Without these properties,
+        # iOS build fails with "Bundle identifier is missing.
+        # <target> doesn't have a bundle identifier." On macOS desktop /
+        # CLI build, MACOSX_BUNDLE=FALSE keeps the executables as plain
+        # binaries (which is what the existing P1.4/1.5/1.7 PPM workflow
+        # expects). On iOS, MACOSX_BUNDLE=TRUE makes them .app bundles
+        # under com.kyle.aether.<target>.
+        if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+            set_target_properties(${target} PROPERTIES
+                MACOSX_BUNDLE TRUE
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.kyle.aether.${target}"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "26AH7V448L"
+            )
+        endif()
+    endfunction()
+
+    aether_dawn_hello_sample(aether_dawn_hello          tools/aether_dawn_hello.cpp)           # P1.4 adapter info
+    aether_dawn_hello_sample(aether_dawn_hello_compute  tools/aether_dawn_hello_compute.cpp)   # P1.5 compute roundtrip
+    # [2026-09-04] XRSLAM detection on GPU — M1 probe (Harris + GFTT candidates), see ~/Developer/xrslam-gpu-detect/docs/PLAN.md
+    add_library(pw_gpu_frontend STATIC tools/pw_gpu_frontend.cpp)
+    target_link_libraries(pw_gpu_frontend PUBLIC aether_dawn_kernel_harness dawn::webgpu_dawn)
+    target_include_directories(pw_gpu_frontend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+    target_compile_options(pw_gpu_frontend PRIVATE -ffp-contract=off)   # CLAHE weight tables must round like OpenCV (no FMA)
+    add_executable(aether_gpufe_dumpcheck tools/aether_gpufe_dumpcheck.cpp)
+    target_link_libraries(aether_gpufe_dumpcheck PRIVATE pw_gpu_frontend
+      $ENV{HOME}/Developer/opencv-401-build-mac/lib/libopencv_video.a $ENV{HOME}/Developer/opencv-401-build-mac/lib/libopencv_imgproc.a $ENV{HOME}/Developer/opencv-401-build-mac/lib/libopencv_core.a z "-framework Accelerate")
+    target_include_directories(aether_gpufe_dumpcheck PRIVATE $ENV{HOME}/Developer/opencv-401-build-mac $ENV{HOME}/Developer/opencv-401-src/include $ENV{HOME}/Developer/opencv-401-src/modules/core/include $ENV{HOME}/Developer/opencv-401-src/modules/imgproc/include $ENV{HOME}/Developer/opencv-401-src/modules/video/include)
+    target_compile_options(aether_gpufe_dumpcheck PRIVATE -ffp-contract=off)
+    add_executable(aether_gpufe_selftest tools/aether_gpufe_selftest.cpp)
+    target_link_libraries(aether_gpufe_selftest PRIVATE pw_gpu_frontend)
+    add_executable(aether_sum9_probe tools/aether_sum9_probe.cpp)
+    target_link_libraries(aether_sum9_probe PRIVATE aether_dawn_kernel_harness dawn::webgpu_dawn)
+    target_include_directories(aether_sum9_probe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+    add_executable(aether_gftt_gpu_probe tools/aether_gftt_gpu_probe.cpp)
+    target_link_libraries(aether_gftt_gpu_probe PRIVATE aether_dawn_kernel_harness dawn::webgpu_dawn)
+    target_include_directories(aether_gftt_gpu_probe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+    aether_dawn_hello_sample(aether_dawn_hello_triangle tools/aether_dawn_hello_triangle.cpp)  # P1.7 graphics roundtrip (PPM out)
+
+    # ─── Phase 6.3 / Plan B refinement — reusable Dawn kernel-smoke harness ─
+    # Per-kernel smoke binaries validate Brush WGSL → naga_oil → Tint → Metal
+    # works in isolation BEFORE DawnGPUDevice (6.2.H/I/J/K) wraps them.
+    # Bug bisection range collapses by removing the wrapper layer from the
+    # validation chain. See aether_cpp/tools/dawn_kernel_harness.h header.
+    if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        # P2 device builds verify this against the exact linked iOS arm64 Dawn
+        # archive before install. Do not report the host archive hash on-device.
+        set(AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256
+            "625cf65dded708ad1abd3dc92f3b47c3c90c384f508676b56303f9341d301b42")
+    else()
+        set(AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256
+            "2a186006dfae77c8adadf8475e6ea6e283786a16a6f0010a9fc4c11316792c6d")
+    endif()
+
+# [PIPE-BD 2026-09-11] dawn_histogram_sink.cpp 里唯一一处继承 dawn::platform::Platform。
+# Dawn 以 -fno-rtti 编译:libdawn_platform.a 只有 vtable(_ZTVN4dawn8platform8PlatformE)
+# 没有 typeinfo(_ZTIN4dawn8platform8PlatformE),带 RTTI 编这处继承必然链接失败
+# (实测 "Undefined symbols: typeinfo for dawn::platform::Platform")。
+# 目录级属性:凡在本目录把该源文件加进来的目标都生效。
+set_source_files_properties(tools/dawn_histogram_sink.cpp
+  PROPERTIES COMPILE_OPTIONS "-fno-rtti")
+
+    add_library(aether_dawn_kernel_harness STATIC tools/dawn_kernel_harness.cpp
+                                                  tools/dawn_histogram_sink.cpp)
+    target_include_directories(aether_dawn_kernel_harness
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_definitions(aether_dawn_kernel_harness PRIVATE
+        AETHER_GPU_TIMESTAMPS_ENV_SELFTEST=1
+        AETHER_GPU_TIMESTAMP_DAWN_REVISION="12ee391c7411285895f4289a3d889a182c093014"
+        AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256="${AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256}")
+    target_link_libraries(aether_dawn_kernel_harness PUBLIC dawn::webgpu_dawn)
+
+    # Compile the same production harness translation unit under the official
+    # namespace. This archive is a compile/static-strings contract artifact;
+    # product/vendor packaging continues to own its explicit archive build.
+    add_library(aether_dawn_kernel_harness_official_contract STATIC
+        tools/dawn_kernel_harness.cpp)
+    target_include_directories(aether_dawn_kernel_harness_official_contract
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_definitions(
+        aether_dawn_kernel_harness_official_contract PRIVATE
+        AETHER_GPU_TIMESTAMPS_ENV_OFFICIAL=1
+        AETHER_GPU_TIMESTAMP_DAWN_REVISION="12ee391c7411285895f4289a3d889a182c093014"
+        AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256="${AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256}")
+    target_link_libraries(aether_dawn_kernel_harness_official_contract
+        PUBLIC dawn::webgpu_dawn)
+
+# P3a1 OFFICIAL GPU CARRIER BEGIN
+    # Production owns one reviewable build-graph target for the official
+    # DSP-SIFT carrier. Keep this source list explicit: the product promotion
+    # gate hashes and audits this exact archive before it can replace the
+    # previously shipped carrier.
+    if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(AETHER_PWOFFICIAL_DAWN_GEN_INCLUDE_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}/build-ios-device-dawn/third_party/dawn/gen/include"
+        CACHE PATH "Pinned generated Dawn headers for the official iOS carrier")
+    if(NOT EXISTS
+       "${AETHER_PWOFFICIAL_DAWN_GEN_INCLUDE_DIR}/dawn/webgpu_cpp.h")
+        message(FATAL_ERROR
+            "Pinned generated Dawn headers are missing: "
+            "${AETHER_PWOFFICIAL_DAWN_GEN_INCLUDE_DIR}/dawn/webgpu_cpp.h")
+    endif()
+    add_library(pwofficial_gpu_extract STATIC
+        third_party/glomap_vendor/bench/dsp_sift_gpu_c.cc
+        src/sfm/canonical_feature_selector_v1.cc
+        tools/sift_extract_dawn.cc
+        tools/sift_pyramid_dawn.cc
+        tools/dawn_kernel_harness.cpp
+        tools/dawn_histogram_sink.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_gray_to_f32_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_gss_blur_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_gss_blur_fused_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_gss_resample_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dog_detect_wgsl.cpp
+        # [COMPACT 2026-09-14] detect 压缩刀的三个新核(烘焙是 *.wgsl 的 GLOB,自动生成;
+        #   但载体的源列表是显式的,必须在这里登记,否则生产(不设 EXTRACT_WGSL_DIR)找不到)。
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dog_detect_compact_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dog_refine_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dog_cand_reset_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_nonextrema_suppress_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_suppress_grid_count_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_suppress_grid_scan_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_suppress_grid_scatter_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_suppress_grid_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_affine_shape_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_orientation_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_orientation_atomic_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dsp_descriptor_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dsp_descriptor_f16_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dsp_descriptor_f16_atomic_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dsp_descriptor_par_wgsl.cpp
+        ${AETHER_WGSL_GENERATED_DIR}/sift_dsp_mean_wgsl.cpp)
+    target_include_directories(pwofficial_gpu_extract
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/glomap_vendor/colmap-src
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/glomap_vendor/stubs
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/glog-install/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-build-ios/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres/config
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-install/include/eigen3
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/dawn/include
+            ${AETHER_PWOFFICIAL_DAWN_GEN_INCLUDE_DIR})
+    target_compile_definitions(pwofficial_gpu_extract PRIVATE
+        AETHER_FEATURE_SELECTION_ENV_OFFICIAL=1
+        AETHER_GPU_TIMESTAMPS_ENV_OFFICIAL=1
+        AETHER_GPU_TIMESTAMP_DAWN_REVISION="12ee391c7411285895f4289a3d889a182c093014"
+        AETHER_GPU_TIMESTAMP_DAWN_ARTIFACT_SHA256="625cf65dded708ad1abd3dc92f3b47c3c90c384f508676b56303f9341d301b42"
+        EIGEN_MPL2_ONLY
+        GLOG_USE_GLOG_EXPORT
+        GLOG_NO_ABBREVIATED_SEVERITIES
+        GLOG_VERSION_MAJOR=0
+        GLOG_VERSION_MINOR=7)
+    target_compile_options(pwofficial_gpu_extract PRIVATE -O2 -w)
+    add_dependencies(pwofficial_gpu_extract aether_bake_wgsl)
+    set_target_properties(pwofficial_gpu_extract PROPERTIES
+        OUTPUT_NAME pwofficial_gpu_extract)
+    endif()
+# P3a1 OFFICIAL GPU CARRIER END
+
+    add_executable(gpu_timestamp_contract_exe
+        tests/sift/test_gpu_timestamp_contract.cpp
+        official_pipeline/src/official_gpu_timestamp_weak_stubs_v1.cc)
+    target_include_directories(gpu_timestamp_contract_exe PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_definitions(gpu_timestamp_contract_exe PRIVATE
+        AETHER_GPU_TIMESTAMPS_ENV_SELFTEST=1)
+    target_link_libraries(gpu_timestamp_contract_exe PRIVATE
+        aether_dawn_kernel_harness)
+
+    add_executable(gpu_timestamp_harness_smoke_exe
+        tests/sift/test_gpu_timestamp_harness_smoke.cpp)
+    target_include_directories(gpu_timestamp_harness_smoke_exe PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools
+        ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_definitions(gpu_timestamp_harness_smoke_exe PRIVATE
+        AETHER_GPU_TIMESTAMPS_ENV_SELFTEST=1)
+    target_link_libraries(gpu_timestamp_harness_smoke_exe PRIVATE
+        aether_dawn_kernel_harness)
+
+    # P2 physical-device mechanics probe. This is deliberately a separate
+    # application/container from PocketWorld and compiles the same harness
+    # translation unit under the official launch-key namespace. It is not the
+    # production carrier and its evidence receives no product-performance
+    # credit.
+    add_executable(gpu_timestamp_official_device_probe
+        tests/sift/test_gpu_timestamp_official_device_probe.cpp)
+    target_include_directories(gpu_timestamp_official_device_probe PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools
+        ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_definitions(gpu_timestamp_official_device_probe PRIVATE
+        AETHER_GPU_TIMESTAMPS_ENV_OFFICIAL=1)
+    target_link_libraries(gpu_timestamp_official_device_probe PRIVATE
+        aether_dawn_kernel_harness_official_contract)
+    if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        target_compile_definitions(gpu_timestamp_official_device_probe PRIVATE
+            AETHER_GPU_TIMESTAMP_DEVICE_PROBE_PERSIST=1)
+        set_target_properties(gpu_timestamp_official_device_probe PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_INFO_PLIST
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/gpu_timestamp_device_probe_Info.plist.in"
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+                "com.kyle.aether.gputimestampdeviceprobe"
+            XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+            XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "26AH7V448L"
+        )
+    endif()
+
+    add_custom_target(gpu_timestamp_namespace_contract
+        COMMAND ${CMAKE_COMMAND}
+            -DCXX=${CMAKE_CXX_COMPILER}
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_namespace_compile.cpp
+            -DINCLUDE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src
+            -DWEAK_ABSENCE_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_weak_absence_link.cpp
+            -DWEAK_STUB_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src/official_gpu_timestamp_weak_stubs_v1.cc
+            -DWEAK_ABSENCE_EXE=${CMAKE_CURRENT_BINARY_DIR}/gpu_timestamp_weak_absence_contract
+            -DOFFICIAL_ARTIFACT=$<TARGET_FILE:aether_dawn_kernel_harness_official_contract>
+            -DSELFTEST_ARTIFACT=$<TARGET_FILE:aether_dawn_kernel_harness>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_namespaces.cmake
+        DEPENDS
+            aether_dawn_kernel_harness
+            aether_dawn_kernel_harness_official_contract
+        VERBATIM)
+
+    add_test(NAME gpu_timestamp_contract COMMAND gpu_timestamp_contract_exe)
+    add_test(NAME gpu_timestamp_harness_off
+        COMMAND ${CMAKE_COMMAND} -E env --unset=AETHER_GPU_TIMESTAMPS
+                $<TARGET_FILE:gpu_timestamp_harness_smoke_exe>)
+    add_test(NAME gpu_timestamp_harness_on
+        COMMAND ${CMAKE_COMMAND} -E env AETHER_GPU_TIMESTAMPS=1
+                $<TARGET_FILE:gpu_timestamp_harness_smoke_exe>)
+    add_test(NAME gpu_timestamp_harness_resource_error
+        COMMAND ${CMAKE_COMMAND} -E env
+                AETHER_GPU_TIMESTAMPS=1
+                AETHER_GPU_TIMESTAMP_SELFTEST_FORCE_RESOURCE_SCOPE_ERROR=1
+                $<TARGET_FILE:gpu_timestamp_harness_smoke_exe>)
+    add_test(NAME gpu_timestamp_harness_resolve_error
+        COMMAND ${CMAKE_COMMAND} -E env
+                AETHER_GPU_TIMESTAMPS=1
+                AETHER_GPU_TIMESTAMP_SELFTEST_FORCE_RESOLVE_SCOPE_ERROR=1
+                $<TARGET_FILE:gpu_timestamp_harness_smoke_exe>)
+    add_test(NAME gpu_timestamp_harness_capacity_overflow
+        COMMAND ${CMAKE_COMMAND} -E env
+                AETHER_GPU_TIMESTAMPS=1
+                AETHER_GPU_TIMESTAMP_SELFTEST_FORCE_CAPACITY_OVERFLOW=1
+                $<TARGET_FILE:gpu_timestamp_harness_smoke_exe>)
+    add_test(NAME gpu_timestamp_official_device_probe_off
+        COMMAND ${CMAKE_COMMAND} -E env
+                --unset=OFFICIAL_AETHER_GPU_TIMESTAMPS
+                $<TARGET_FILE:gpu_timestamp_official_device_probe>)
+    add_test(NAME gpu_timestamp_official_device_probe_on
+        COMMAND ${CMAKE_COMMAND} -E env
+                OFFICIAL_AETHER_GPU_TIMESTAMPS=1
+                $<TARGET_FILE:gpu_timestamp_official_device_probe>)
+    set_tests_properties(
+        gpu_timestamp_official_device_probe_off
+        gpu_timestamp_official_device_probe_on
+        PROPERTIES PASS_REGULAR_EXPRESSION "\"frame_reason_code\":")
+    add_test(NAME gpu_timestamp_namespace_contract
+        COMMAND ${CMAKE_COMMAND}
+            -DCXX=${CMAKE_CXX_COMPILER}
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_namespace_compile.cpp
+            -DINCLUDE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src
+            -DWEAK_ABSENCE_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_weak_absence_link.cpp
+            -DWEAK_STUB_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src/official_gpu_timestamp_weak_stubs_v1.cc
+            -DWEAK_ABSENCE_EXE=${CMAKE_CURRENT_BINARY_DIR}/gpu_timestamp_weak_absence_contract
+            -DOFFICIAL_ARTIFACT=$<TARGET_FILE:aether_dawn_kernel_harness_official_contract>
+            -DSELFTEST_ARTIFACT=$<TARGET_FILE:aether_dawn_kernel_harness>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/sift/test_gpu_timestamp_namespaces.cmake)
+
+    function(aether_dawn_smoke_test target src)
+        add_executable(${target} ${src})
+        target_link_libraries(${target} PRIVATE aether_dawn_kernel_harness dawn::webgpu_dawn)
+        if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+            set_target_properties(${target} PROPERTIES
+                MACOSX_BUNDLE TRUE
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.kyle.aether.${target}"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "26AH7V448L"
+            )
+        endif()
+    endfunction()
+
+    # ─── 6.3a viewer kernels ───
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_project_forward
+                            tools/aether_dawn_splat_smoke_project_forward.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_project_visible
+                            tools/aether_dawn_splat_smoke_project_visible.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_map_gaussian_to_intersects
+                            tools/aether_dawn_splat_smoke_map_gaussian_to_intersects.cpp)
+    # Step 4 v3: Aether3D-original splat_render.wgsl (vertex+fragment +
+    # instanced quads). Final viewer kernel — replaces Brush rasterize.wgsl
+    # for viewer flow. Brush rasterize* retained for training (Step 6).
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_render
+                            tools/aether_dawn_splat_smoke_render.cpp)
+
+    # ─── Step 5a: Brush 4-bit-per-pass radix sort (5 kernels) ───
+    # Each smoke chains the prior kernels in the pipeline so the FINAL
+    # smoke (sort_scatter) exercises the full 5-kernel chain end-to-end
+    # with multiset / monotone / element-conservation verification.
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_sort_count
+                            tools/aether_dawn_splat_smoke_sort_count.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_sort_reduce
+                            tools/aether_dawn_splat_smoke_sort_reduce.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_sort_scan
+                            tools/aether_dawn_splat_smoke_sort_scan.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_sort_scan_add
+                            tools/aether_dawn_splat_smoke_sort_scan_add.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_sort_scatter
+                            tools/aether_dawn_splat_smoke_sort_scatter.cpp)
+
+    # ─── Step 5b: Brush 3-stage prefix-sum kernels ───
+    # Used by training-side accumulation passes (gradient sums, hit counts).
+    # Each smoke verifies one stage's invariant against a hand-crafted input.
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_prefix_sum_scan
+                            tools/aether_dawn_splat_smoke_prefix_sum_scan.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_prefix_sum_scan_sums
+                            tools/aether_dawn_splat_smoke_prefix_sum_scan_sums.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_prefix_sum_add_scanned_sums
+                            tools/aether_dawn_splat_smoke_prefix_sum_add_scanned_sums.cpp)
+
+    # ─── Step 6: Brush rasterize compute kernels (training path) ───
+    # Phase 6 viewer uses splat_render.wgsl (vert+frag); Brush rasterize
+    # is retained for Phase 7+ on-device training. Smokes prove the
+    # compute path still functional on Dawn iOS Metal.
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_rasterize
+                            tools/aether_dawn_splat_smoke_rasterize.cpp)
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_rasterize_backwards
+                            tools/aether_dawn_splat_smoke_rasterize_backwards.cpp)
+
+    # ─── Step 7: Brush project_backwards (last training kernel) ───
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_project_backwards
+                            tools/aether_dawn_splat_smoke_project_backwards.cpp)
+
+    # ─── 6.5 prelude: cross-validate Brush compute vs Aether3D vert+frag ───
+    # Same input through both rasterizers; assert pixel diff ≤ 1 LSB.
+    # Regression catcher for Brush re-pin / naga_oil drift / Tint optimizer.
+    aether_dawn_smoke_test(aether_dawn_splat_smoke_cross_validate
+                            tools/aether_dawn_splat_smoke_cross_validate.cpp)
+
+    # ─── 6.2.G-K production-path smokes ───
+    # These link against aether3d_core (production DawnGPUDevice path),
+    # NOT the harness library. They migrate harness-validated kernels
+    # through the GPUDevice virtual API to prove the wrapper path is
+    # equivalent. Phase 6.4 integration code can model itself on these.
+    function(aether_dawn_device_smoke target src)
+        add_executable(${target} ${src})
+        target_link_libraries(${target} PRIVATE aether3d_core)
+        target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+        if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+            set_target_properties(${target} PROPERTIES
+                MACOSX_BUNDLE TRUE
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.kyle.aether.${target}"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "26AH7V448L"
+            )
+        endif()
+    endfunction()
+
+    aether_dawn_device_smoke(aether_dawn_gpu_device_smoke
+                              tools/aether_dawn_gpu_device_smoke.cpp)
+    aether_dawn_device_smoke(aether_dawn_splat_smoke_project_forward_via_device
+                              tools/aether_dawn_splat_smoke_project_forward_via_device.cpp)
+    aether_dawn_device_smoke(aether_dawn_splat_smoke_render_via_device
+                              tools/aether_dawn_splat_smoke_render_via_device.cpp)
+    aether_dawn_device_smoke(aether_dawn_splat_smoke_cross_validate_via_device
+                              tools/aether_dawn_splat_smoke_cross_validate_via_device.cpp)
+    # Phase 6.4a Q1 verification — baked WGSL path bit-exact vs file path.
+    aether_dawn_device_smoke(aether_dawn_baked_wgsl_smoke
+                              tools/aether_dawn_baked_wgsl_smoke.cpp)
+
+    # Phase 6.4b — DamagedHelmet.glb asset (KhronosGroup glTF-Sample-Models).
+    # Downloaded once at configure time, reused across builds. Decision
+    # pin 20: KhronosGroup standard test models. Source repo is MIT-
+    # adjacent (CC0/CC-BY licensing per model — see Sample-Models LICENSE).
+    set(AETHER_TEST_ASSETS_DIR ${CMAKE_BINARY_DIR}/test_assets)
+    set(AETHER_DAMAGED_HELMET_PATH ${AETHER_TEST_ASSETS_DIR}/DamagedHelmet.glb)
+    if(AETHER_ALLOW_TEST_ASSET_DOWNLOADS AND NOT EXISTS ${AETHER_DAMAGED_HELMET_PATH})
+        file(MAKE_DIRECTORY ${AETHER_TEST_ASSETS_DIR})
+        message(STATUS "Aether3D: downloading DamagedHelmet.glb test asset...")
+        file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"
+            ${AETHER_DAMAGED_HELMET_PATH}
+            SHOW_PROGRESS
+            STATUS dl_status
+            EXPECTED_HASH SHA256=a1e3b04de97b11de564ce6e53b95f02954a297f0008183ac63a4f5974f6b32d8
+        )
+        list(GET dl_status 0 dl_code)
+        # Hash mismatch is acceptable for now (KhronosGroup may re-issue
+        # without notice); just warn rather than fail. Production would
+        # vendor the asset under aether_cpp/test_assets/ with LFS or
+        # explicit checked-in checksum, deferred to Phase 6.5+.
+        if(NOT dl_code EQUAL 0)
+            message(WARNING "DamagedHelmet.glb download failed: ${dl_status} — "
+                "smoke will fail until manually placed at ${AETHER_DAMAGED_HELMET_PATH}")
+        endif()
+    endif()
+
+    # Phase 6.4b smoke — exercise GLB loader against DamagedHelmet.
+    if(EXISTS ${AETHER_DAMAGED_HELMET_PATH})
+        aether_dawn_device_smoke(aether_glb_loader_smoke
+                                 tools/aether_glb_loader_smoke.cpp)
+    endif()
+
+    # Phase 6.4b smoke — Filament-style PBR shader compile via Tint.
+    aether_dawn_device_smoke(aether_mesh_render_compile_smoke
+                             tools/aether_mesh_render_compile_smoke.cpp)
+
+    if(APPLE)
+        aether_dawn_device_smoke(aether_dawn_iosurface_rgba16f_smoke
+                                 tools/aether_dawn_iosurface_rgba16f_smoke.mm)
+
+        # Phase 6.4f smoke — full PLY → AetherSceneRenderer → IOSurface
+        # round-trip. Verifies the new C ABI (load_ply + render_full
+        # splat branch) end-to-end on macOS, surfacing any GPU
+        # validation / kernel-binding regression before they hit iOS.
+        # Needs scene_iosurface_renderer.cpp + dawn_device_singleton.cpp
+        # + glb_loader.cpp + spz_decoder.cpp on top of aether3d_core (the
+        # FFI .dylib link path on macOS would also work, but compiling
+        # the sources directly into the smoke keeps it standalone).
+        add_executable(aether_dawn_scene_splat_smoke
+                       tools/aether_dawn_scene_splat_smoke.mm
+                       src/pocketworld/scene_iosurface_renderer.cpp
+                       src/pocketworld/dawn_device_singleton.cpp
+                       src/pocketworld/glb_loader.cpp)
+        target_link_libraries(aether_dawn_scene_splat_smoke PRIVATE
+                              aether3d_core dawn::webgpu_dawn ZLIB::ZLIB)
+        target_include_directories(aether_dawn_scene_splat_smoke PRIVATE
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/tools
+                                    third_party/cgltf
+                                    third_party/stb)
+        target_compile_definitions(aether_dawn_scene_splat_smoke PRIVATE
+                                    AETHER_ENABLE_DAWN=1)
+        set_source_files_properties(src/pocketworld/glb_loader.cpp
+            PROPERTIES COMPILE_OPTIONS
+            "-Wno-unused-function;-Wno-missing-prototypes;-Wno-double-promotion"
+            DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+            set_target_properties(aether_dawn_scene_splat_smoke PROPERTIES
+                MACOSX_BUNDLE TRUE
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+                    "com.kyle.aether.aether_dawn_scene_splat_smoke"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "26AH7V448L")
+        endif()
+    endif()
+
+    # Phase 6.4a smoke (aether_splat_iosurface_renderer_smoke) was deleted
+    # in the Phase 6.4 cleanup along with the legacy splat-only renderer
+    # (Phase 6.4b stage 2 superseded it with scene_iosurface_renderer).
+    # Per-frame visual coverage is now via the macOS PocketWorld app
+    # itself; if the IOSurface bridge ever needs unit-level coverage
+    # again, write it against scene_iosurface_renderer (with mesh=none)
+    # instead of resurrecting the old smoke.
+endif()
+
+# ============================================================================
+# Phase 3.3 C ABI smoke test (no Dawn dependency, just aether3d_core)
+# ============================================================================
+add_executable(aether_version_test tools/aether_version_test.cpp)
+target_link_libraries(aether_version_test PRIVATE aether3d_core)
+# cxx_std_20 inherited from top-level CMAKE_CXX_STANDARD.
+
+add_executable(aether_render_policy_smoke
+    tools/aether_render_policy_smoke.cpp
+    src/pocketworld/render_policy.cpp)
+target_include_directories(aether_render_policy_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(aether_render_policy_smoke PRIVATE ${AETHER_STRICT_COMPILE_OPTIONS})
+
+# Phase 2 acceptance smoke — round-trip a multi-prim GLB through the
+# normalizer C ABI and verify the result is a single-prim GLB. Runs
+# against ~/Desktop/baseline_apr25.glb by default; CLI args can
+# override input + output paths.
+add_executable(aether_glb_norm_smoke tools/glb_norm_smoke.cpp)
+target_link_libraries(aether_glb_norm_smoke PRIVATE aether3d_c)
+
+# ============================================================================
+# Phase 3.4: aether3d_ffi shared library — dart:ffi-loadable surface
+#
+# This is a thin .dylib (.so on Linux, .dll on Windows) containing only the
+# public C ABI symbols meant for foreign-function interface consumption.
+# Currently just version.cpp; future FFI exports get added here, NOT mixed
+# into aether3d_core (which is an internal-implementation static lib).
+#
+# Linking strategy:
+#   - PRIVATE link against aether3d_core when FFI functions need internals.
+#   - For now, version.cpp has no dependencies, so we don't link core yet
+#     (keeps the .dylib at kilobytes for the macOS Dart CLI smoke test).
+# ============================================================================
+set(AETHER_FFI_SOURCES
+    src/core/version.cpp
+    src/pocketworld/background_download.cpp
+    src/pocketworld/render_policy.cpp
+    src/pocketworld/training_checkpoint.cpp
+    # Phase 4 — Client-side GLB normalizer C ABI. Phase 0 stub today
+    # (returns AETHER_GLB_NORM_ERR_UNSUPPORTED); Phases 1-3 fill in the
+    # cgltf/stb/meshoptimizer pipeline. Source has no aether3d_core
+    # dependencies, so it adds zero link-graph cost on iOS sim Dawn-OFF.
+    src/glb_norm/glb_normalize_c_api.cpp
+    # Plan G W1 D3 + W2 D1 — Tile-based DA3-LARGE-1.1 depth math + EdgeTAM
+    # mask post-process. Pure C++ algorithm (tile layout, conf-weighted
+    # blend with Method A 0.05 floor, sigmoid + IoU pick, bilinear resize).
+    # CoreML/TFLite/NNAPI inference itself stays in per-platform thin shims;
+    # this layer is the cross-platform deterministic math shared between
+    # iOS / Android / 鸿蒙 / Web. Ported from Tile2KWrapper.swift +
+    # EdgeTAMWrapper.swift — bit-equal verified on iPhone bench parity test.
+    src/pipeline/tile_layout.cpp
+    src/pipeline/tile_blend.cpp
+    src/pipeline/mask_post.cpp
+    src/pipeline/scale_align.cpp
+    src/pipeline/aether_depth_tile_c.cpp
+    src/pipeline/aether_structural_plane_fit_c.cpp
+    src/pipeline/aether_structural_candidate_c.cpp
+    src/pipeline/aether_structural_planesweep_c.cpp
+    src/pipeline/aether_structural_planesweep_io_c.cpp
+    src/pipeline/aether_detector_free_depth_c.cpp
+    src/pipeline/aether_birth_ownership_c.cpp
+)
+
+# Phase 6.4b: PocketWorld scene IOSurface renderer (mesh PBR + splat
+# overlay) with refcount-managed shared DawnGPUDevice singleton for
+# memory pressure recovery. Phase 6.4 cleanup dropped the legacy splat-
+# only renderer (scene_renderer covers the no-mesh case via the splat
+# overlay pass alone). Only included when Dawn is available; impls are
+# no-op otherwise so the FFI symbols still exist (link-time stability).
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    list(APPEND AETHER_FFI_SOURCES
+        src/pocketworld/dawn_device_singleton.cpp
+        src/pocketworld/scene_iosurface_renderer.cpp)
+else()
+    # Keep the scene-renderer C ABI link-stable on Dawn-disabled slices
+    # (notably the arm64 iOS simulator while Dawn's Abseil probe is still
+    # blocked there). The source has loud no-op implementations under
+    # !AETHER_ENABLE_DAWN, so callers get an explicit renderer failure
+    # instead of a missing-symbol link/runtime failure.
+    list(APPEND AETHER_FFI_SOURCES
+        src/pocketworld/scene_iosurface_renderer.cpp)
+endif()
+
+set(AETHER_FFI_IOS_VIEWER_ONLY FALSE)
+
+# Structural plane-sweep makes millincc boundary decisions from CPU dot
+# products after GPU readback. Compile this translation unit with the same
+# deterministic floating-point mode in the product FFI and its contract test;
+# otherwise a fused product build can disagree with the non-fused oracle at a
+# half-unit boundary.
+set_property(SOURCE src/pipeline/aether_structural_planesweep_c.cpp
+    APPEND PROPERTY COMPILE_OPTIONS
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-ffp-contract=off>
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-fno-fast-math>)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS"
+        AND AETHER_FFI_BUILD_STATIC
+        AND AETHER_ENABLE_DAWN
+        AND TARGET dawn::webgpu_dawn)
+    set(AETHER_FFI_IOS_VIEWER_ONLY TRUE)
+endif()
+
+if(AETHER_FFI_BUILD_STATIC)
+    add_library(aether3d_ffi STATIC ${AETHER_FFI_SOURCES})
+else()
+    add_library(aether3d_ffi SHARED ${AETHER_FFI_SOURCES})
+endif()
+target_include_directories(aether3d_ffi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(aether3d_ffi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb)
+target_include_directories(aether3d_ffi PRIVATE ${AETHER_LIBJPEG_INCLUDE_DIRS})
+target_link_libraries(aether3d_ffi PRIVATE aether_libjpeg)
+add_dependencies(aether3d_ffi aether_libjpeg_external)
+
+# ─── Phase 4 — GLB normalizer impls in FFI for static-archive ship paths ─
+# glb_normalize_c_api.cpp (already in AETHER_FFI_SOURCES) hard-references
+# aether::glb_norm::parse_glb / merge_atlases / write_glb / simplify_chart.
+# Those impls live in atlas_merger.cpp / glb_io.cpp / mesh_simplify.cpp,
+# which Phases 1-3 added to AETHER_CORE_SOURCES.
+#
+# On the iOS xcframework ship path (AETHER_FFI_BUILD_STATIC=ON), the FFI
+# archive does NOT link aether3d_core:
+#   - iOS device, AETHER_FFI_IOS_VIEWER_ONLY=TRUE → links Dawn directly,
+#     skips core (CoreML availability errors on iOS 14 strict build).
+#   - iOS simulator, Dawn=OFF → the Dawn-conditional link block is skipped
+#     entirely, so core is not linked there either.
+# Pod-consumer link would therefore fail with undefined references. Pull
+# the three impl TUs directly into the FFI archive on STATIC builds so the
+# xcframework + Android/OHOS/Web static archives ship a self-sufficient
+# GLB normalizer.
+#
+# Skipped for AETHER_FFI_BUILD_STATIC=OFF (macOS dylib smoke test) where
+# the existing Dawn=ON branch links aether3d_core; including these sources
+# in both the dylib and core would create duplicate-symbol errors.
+if(AETHER_FFI_BUILD_STATIC)
+    target_sources(aether3d_ffi PRIVATE
+        src/glb_norm/atlas_merger.cpp
+        src/glb_norm/glb_io.cpp
+        src/glb_norm/mesh_simplify.cpp)
+    target_include_directories(aether3d_ffi PRIVATE
+        third_party/stb
+        third_party/cgltf)
+    target_link_libraries(aether3d_ffi PRIVATE meshoptimizer)
+endif()
+# Phase 6.4b: scene_iosurface_renderer needs DawnGPUDevice internals
+# (the import_iosurface free function is in aether3d_core, plus the
+# narrow internal:: accessors declared in src/render/dawn_gpu_device_internal.h).
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    if(AETHER_FFI_IOS_VIEWER_ONLY)
+        # Final iOS port: the iPhone viewer needs the scene renderer, GLB
+        # loader and DawnGPUDevice, but not the older training/depth pipeline
+        # that lives in aether3d_core. Linking the whole core static library
+        # drags CoreML sources into the iOS 14 build and trips availability
+        # warnings-as-errors. Keep this archive viewer-scoped until the
+        # cross-platform core is split into smaller libraries.
+        # Phase 6.4f: spz_decoder.cpp added so SPZ load works in the
+        # iOS .a (it provides the out-of-line gzip wrapper around the
+        # header-only decode_spz_raw). PLY load is fully header-only
+        # via aether/splat/ply_loader.h and needs no extra TU.
+        target_sources(aether3d_ffi PRIVATE
+            src/render/dawn_gpu_device.cpp
+            src/pocketworld/glb_loader.cpp
+            src/splat/spz_decoder.cpp
+            ${AETHER_WGSL_GENERATED_CPPS}
+        )
+        target_include_directories(aether3d_ffi PRIVATE
+            third_party/cgltf
+            third_party/stb)
+        target_link_libraries(aether3d_ffi PRIVATE dawn::webgpu_dawn ZLIB::ZLIB)
+        add_dependencies(aether3d_ffi aether_bake_wgsl)
+    else()
+        target_link_libraries(aether3d_ffi PRIVATE aether3d_core)
+    endif()
+    target_compile_definitions(aether3d_ffi PRIVATE AETHER_ENABLE_DAWN=1)
+endif()
+# cxx_std_20 inherited from top-level CMAKE_CXX_STANDARD.
+
+if(AETHER_BUILD_MINIMAL_WHITEBOX_TESTS)
+    enable_testing()
+
+    macro(aether_test test_name test_src)
+        add_executable(${test_name} ${test_src})
+        target_link_libraries(${test_name} PRIVATE aether3d_core)
+        target_compile_options(${test_name} PRIVATE ${AETHER_STRICT_COMPILE_OPTIONS})
+        add_test(NAME ${test_name} COMMAND ${test_name})
+    endmacro()
+
+    aether_test(status_tests tests/status_tests.cpp)
+    aether_test(canonicalize_test tests/core/canonicalize_test.cpp)
+    aether_test(sha256_test tests/crypto/sha256_test.cpp)
+    aether_test(arena_test tests/memory/arena_test.cpp)
+    aether_test(thermal_predictor_test tests/thermal/thermal_predictor_test.cpp)
+    aether_test(da3_depth_fuser_test tests/trainer/da3_depth_fuser_test.cpp)
+    aether_test(noise_aware_trainer_test tests/trainer/noise_aware_trainer_test.cpp)
+    aether_test(spatial_hash_table_test tests/tsdf/spatial_hash_table_test.cpp)
+endif()
+
+# ─── Phase 1: GLB normalizer atlas merger smoke (always available) ─────
+# Built and registered with CTest unconditionally so Phase 1 acceptance
+# (`cmake --build … --target test_atlas_merger && ctest -R atlas_merger`)
+# works against the same build_phase0 directory used in Phase 0 — that
+# directory was configured before AETHER_BUILD_MINIMAL_WHITEBOX_TESTS
+# was relevant, and re-configuring it just to flip the flag would
+# defeat the "Phase 1 reuses Phase 0 build" verification chain.
+enable_testing()
+add_executable(test_atlas_merger tests/glb_norm/test_atlas_merger.cpp)
+target_link_libraries(test_atlas_merger PRIVATE aether3d_core)
+target_compile_options(test_atlas_merger PRIVATE ${AETHER_STRICT_COMPILE_OPTIONS})
+add_test(NAME test_atlas_merger COMMAND test_atlas_merger)
+
+add_executable(test_structural_planesweep_contract
+    tests/pipeline/test_structural_planesweep_contract.cpp
+    src/pipeline/aether_structural_planesweep_c.cpp)
+target_include_directories(test_structural_planesweep_contract PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(test_structural_planesweep_contract PRIVATE
+    ${AETHER_STRICT_COMPILE_OPTIONS}
+    # Contract tests use assert as the executable oracle. Keep those checks
+    # live even when this one target is built from a Release tree. The source
+    # also catches vector-allocation failure, so this direct-source test target
+    # must match the exception mode of the production FFI target.
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set_target_properties(test_structural_planesweep_contract PROPERTIES
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+            "com.aether.tests.structural-planesweep-contract"
+        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+        XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+endif()
+add_test(NAME test_structural_planesweep_contract
+    COMMAND test_structural_planesweep_contract)
+
+add_executable(test_birth_ownership_contract
+    tests/pipeline/test_birth_ownership_contract.cpp
+    src/pipeline/aether_birth_ownership_c.cpp)
+target_include_directories(test_birth_ownership_contract PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(test_birth_ownership_contract PRIVATE
+    ${AETHER_STRICT_COMPILE_OPTIONS}
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+add_test(NAME test_birth_ownership_contract
+    COMMAND test_birth_ownership_contract)
+
+add_executable(test_structural_plane_fit_contract
+    tests/pipeline/test_structural_plane_fit_contract.cpp
+    src/pipeline/aether_structural_plane_fit_c.cpp)
+target_include_directories(test_structural_plane_fit_contract PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(test_structural_plane_fit_contract PRIVATE
+    ${AETHER_STRICT_COMPILE_OPTIONS}
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set_target_properties(test_structural_plane_fit_contract PROPERTIES
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+            "com.aether.tests.structural-plane-fit-contract"
+        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+        XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+endif()
+add_test(NAME test_structural_plane_fit_contract
+    COMMAND test_structural_plane_fit_contract)
+
+add_executable(test_structural_candidate_contract
+    tests/pipeline/test_structural_candidate_contract.cpp
+    src/pipeline/aether_structural_candidate_c.cpp)
+target_include_directories(test_structural_candidate_contract PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(test_structural_candidate_contract PRIVATE
+    ${AETHER_STRICT_COMPILE_OPTIONS}
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+add_test(NAME test_structural_candidate_contract
+    COMMAND test_structural_candidate_contract)
+
+add_executable(test_detector_free_depth_contract
+    tests/pipeline/test_detector_free_depth_contract.cpp
+    src/pipeline/aether_detector_free_depth_c.cpp)
+target_include_directories(test_detector_free_depth_contract PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${AETHER_LIBJPEG_INCLUDE_DIRS})
+target_link_libraries(test_detector_free_depth_contract PRIVATE aether_libjpeg)
+add_dependencies(test_detector_free_depth_contract aether_libjpeg_external)
+target_compile_options(test_detector_free_depth_contract PRIVATE
+    ${AETHER_STRICT_COMPILE_OPTIONS}
+    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set_target_properties(test_detector_free_depth_contract PROPERTIES
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+            "com.aether.tests.detector-free-depth-contract"
+        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+        XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+endif()
+add_test(NAME test_detector_free_depth_contract
+    COMMAND test_detector_free_depth_contract)
+# 这两个探针原本落在 Dawn 守卫**外面**(其余五个都在 387-837 那个块里),
+# 于是没有 Dawn 的机器上 configure 会直接报 "links to target dawn::webgpu_dawn
+# but the target was not found"。补上守卫。
+if(AETHER_ENABLE_DAWN AND TARGET dawn::webgpu_dawn)
+    add_executable(aether_lk_gpu_probe tools/aether_lk_gpu_probe.cpp)
+    target_link_libraries(aether_lk_gpu_probe PRIVATE aether_dawn_kernel_harness dawn::webgpu_dawn)
+    target_include_directories(aether_lk_gpu_probe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+    target_compile_options(aether_lk_gpu_probe PRIVATE -ffp-contract=off)
+    add_executable(aether_fp_probe tools/aether_fp_probe.cpp)
+    target_link_libraries(aether_fp_probe PRIVATE aether_dawn_kernel_harness dawn::webgpu_dawn)
+    target_include_directories(aether_fp_probe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+    target_compile_options(aether_fp_probe PRIVATE -ffp-contract=off)
+endif()
+
+# ─── official_pipeline 契约测试(2026-09-04 注册)──────────────────────────
+# 这三个是 09-02 / 09-04 两把出货刀的守门人。它们此前**只入库、未注册** ⇒ 从不运行,
+# 等于没有守门人。三个都是自带 main() 的自足测试,不依赖 gtest。
+#   global_ptol_policy_test            作用域化 PTOL 策略 + BA 收据(策略头是 header-only)
+#   pair_selection_v2_colmap_parity_test  空间候选逐字复刻 COLMAP SpatialPairGenerator
+#   global_ptol_integration_contract_test 源码文本契约,需 official_pipeline 目录作参数
+foreach(aether_official_test
+        global_ptol_policy_test
+        pair_selection_v2_colmap_parity_test
+        global_ptol_integration_contract_test)
+    if(aether_official_test STREQUAL "pair_selection_v2_colmap_parity_test")
+        add_executable(${aether_official_test}
+            official_pipeline/tests/${aether_official_test}.cc
+            official_pipeline/src/pair_selection_v2.cc)
+    else()
+        add_executable(${aether_official_test}
+            official_pipeline/tests/${aether_official_test}.cc)
+    endif()
+    target_include_directories(${aether_official_test} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline/src)
+    target_compile_options(${aether_official_test} PRIVATE
+        ${AETHER_STRICT_COMPILE_OPTIONS}
+        $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-UNDEBUG;-fexceptions>)
+    if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        string(REPLACE "_" "-" aether_official_test_bundle "${aether_official_test}")
+        set_target_properties(${aether_official_test} PROPERTIES
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER
+                "com.aether.tests.${aether_official_test_bundle}"
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+            XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+    endif()
+endforeach()
+add_test(NAME global_ptol_policy_test COMMAND global_ptol_policy_test)
+add_test(NAME pair_selection_v2_colmap_parity_test
+    COMMAND pair_selection_v2_colmap_parity_test)
+# 源码文本契约:读的是仓里的源码本身,所以要把 official_pipeline 目录传进去。
+add_test(NAME global_ptol_integration_contract_test
+    COMMAND global_ptol_integration_contract_test
+            ${CMAKE_CURRENT_SOURCE_DIR}/official_pipeline)
+
+# [2026-09-15] Stage 2 of the on-device dense point cloud: the official CasDiffMVS fusion
+# (cvg/diffmvs filter.py + certified fuse_official.py) ported to C++ — src/dense/dense_fuse.{h,cc}.
+# Bilinear resampling is cv::remap itself (filter.py:41 calls cv2.remap); the iPhone product already
+# links OpenCV 4.0.1 (pocketworld ios/Runner.xcodeproj:470 libopencv_generic_4_0_1.a). The host gate
+# links the same 4.0.1 tree (~/Developer/opencv-401-build-mac, -ffp-contract=off, WITH_LAPACK=OFF),
+# matching the device archive flags (build_generic_core.sh:127 -ffp-contract=off -fno-fast-math).
+set(PW_OPENCV401_MAC $ENV{HOME}/Developer/opencv-401-build-mac)
+set(PW_OPENCV401_SRC $ENV{HOME}/Developer/opencv-401-src)
+if(APPLE AND EXISTS ${PW_OPENCV401_MAC}/lib/libopencv_imgproc.a AND EXISTS ${PW_OPENCV401_SRC}/modules/imgproc/include)
+    add_library(aether_dense_fuse STATIC src/dense/dense_fuse.cc)
+    target_include_directories(aether_dense_fuse PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/dense
+        ${PW_OPENCV401_MAC} ${PW_OPENCV401_SRC}/include ${PW_OPENCV401_SRC}/modules/core/include ${PW_OPENCV401_SRC}/modules/imgproc/include)
+    target_link_libraries(aether_dense_fuse PUBLIC ${PW_OPENCV401_MAC}/lib/libopencv_imgproc.a ${PW_OPENCV401_MAC}/lib/libopencv_core.a z "-framework Accelerate")
+    target_compile_options(aether_dense_fuse PRIVATE -ffp-contract=off -fno-fast-math)
+    add_executable(aether_dense_fuse_test src/dense/test_fuse.cc)
+    target_link_libraries(aether_dense_fuse_test PRIVATE aether_dense_fuse)
+    target_compile_options(aether_dense_fuse_test PRIVATE -ffp-contract=off -fno-fast-math)
+    # [2026-09-15] Stage 3 (progressive delivery): the same fixture pack fused three ways — legacy fuse_pack(),
+    # the per-frame split, and the FuseScheduler-driven progressive schedule under three synthetic inference
+    # orders — must produce one identical PLY. --neg-delivery-order is its negative control.
+    add_executable(aether_dense_progressive_test src/dense/test_progressive.cc src/dense/dense_fuse_pack.cc)
+    target_link_libraries(aether_dense_progressive_test PRIVATE aether_dense_fuse)
+    target_compile_options(aether_dense_progressive_test PRIVATE -ffp-contract=off -fno-fast-math)
+endif()

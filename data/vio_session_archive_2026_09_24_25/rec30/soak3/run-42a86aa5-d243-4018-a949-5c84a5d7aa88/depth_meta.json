@@ -1,0 +1,26 @@
+{
+  "bench_only_notice" : "🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线或产品方案",
+  "confidence_levels" : [
+    "0 low",
+    "1 medium",
+    "2 high"
+  ],
+  "depth_missing_on_frame" : 1,
+  "depth_offered" : 901,
+  "depth_origin" : "WWDC20-10611: RGB and LiDAR readings 'are fused together using advanced machine learning algorithms to create a dense depth map'; 'available at 60 Hz, associated with each AR frame'. confidenceMap says how much each pixel is LiDAR-supported.",
+  "depth_semantics" : "Apple ARDepthData: 'Every pixel in the depthMap maps to a region of the visible scene (capturedImage), where the pixel value defines that region's distance from the plane of the camera in meters.' ⇒ planar z-depth, same FOV as capturedImage",
+  "depth_source" : "ARFrame.sceneDepth",
+  "depth_stride_ar_frames" : 3,
+  "pixel_mapping_inference" : "u_d = (u_c + 0.5) * W_d \/ W_c - 0.5 (pixel-area centres); k_depth in depth.pwvi rows uses the same rule. Inferred from the two quotes above + resolution ratio; NOT an Apple-published formula.",
+  "scene_depth_requested" : true,
+  "scene_depth_supported" : true,
+  "selected_video_format" : {
+    "fps" : 60,
+    "height" : 1440,
+    "recommended_for_high_resolution_capture" : true,
+    "recorded_fps_nominal" : 30,
+    "width" : 1920
+  },
+  "smoothed_scene_depth_reason" : "Apple: 'the framework smoothes the depth data over time to lessen its frame-to-frame delta' (developer.apple.com\/documentation\/arkit\/arframe\/smoothedscenedepth) — temporal smoothing mixes earlier frames into this frame's depth, so it no longer corresponds one-to-one with this frame's pose; a ruler must be this frame's own measurement, not another estimator's output",
+  "smoothed_scene_depth_recorded" : false
+}

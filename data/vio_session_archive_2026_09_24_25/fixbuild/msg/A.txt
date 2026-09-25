@@ -1,0 +1,17 @@
+bench(168-fixes): fixA —— 逐帧 devicePoseTrusted + 自动快门追踪闸(原样打补丁)
+
+来源:研究仓 pocketworld-research-benchmarks 分支 data/rootcause-fixes-20260924 @ 8cb0ca9,
+  data/rootcause_fixes_2026_09_24/fixA_device_pose_trust/patch_A_device_pose_trusted.diff
+  (基线 pw-dense-stage 1a43510;本分支基于 8437faf = 168 出货快照 86a45cf + 出货核)。
+git apply 干净,逐字未改。
+
+内容(补丁自述):追踪状态在喂核前丢失 ⇒ 每个喂入帧带 devicePoseTrusted(只有 ARKit normal 可信,
+状态缺失按不可信);自动快门在 limited 时不再被强置 isTracking;新 FFI 绑定 pwofficial_add_jpeg_frame_v2
+(v1 参数 + pose_t 后一个 int32 device_pose_trusted),框架里没有 v2 符号时回退 v1 并记录
+devicePoseTrustHonored=false。本分支同批带上提供 v2 的新核(见后续提交),回退路径不会走到。
+
+仅台架用(arloopbench 完整链段),不上生产。
+
+SSOT-Change: no
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

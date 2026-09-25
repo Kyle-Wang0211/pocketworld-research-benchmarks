@@ -1,0 +1,13 @@
+--- a/aether_cpp/tools/sift_pyramid_dawn.cc	2026-09-24 14:59:32
++++ b/aether_cpp/tools/sift_pyramid_dawn.cc	2026-09-24 14:59:32
+@@ -125,7 +125,9 @@
+     // 2-pass)。kill switch:OFFICIAL_AETHER_GSS_FUSED=0;radius>16 自动回落。
+     static const bool fused_on = [] {
+         const char* v = std::getenv("OFFICIAL_AETHER_GSS_FUSED");
+-        return v == nullptr || !(v[0] == '0' && v[1] == '\0');
++        // [FIXD-2PASS-DEFAULT 2026-09-24] default = 2-pass (VLFeat vl_imsmooth_f structure,
++        // imopv.c:645-675 / scalespace.c:669-690); fused only with OFFICIAL_AETHER_GSS_FUSED=1.
++        return v != nullptr && v[0] == '1' && v[1] == '\0';
+     }();
+     wgpu::ComputePipeline pipe_blur_fused;
+     if (fused_on) {

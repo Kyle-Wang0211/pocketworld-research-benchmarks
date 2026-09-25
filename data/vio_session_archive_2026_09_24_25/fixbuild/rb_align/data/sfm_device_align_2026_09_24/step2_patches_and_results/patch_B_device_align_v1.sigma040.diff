@@ -1,0 +1,484 @@
+diff --git a/aether_cpp/official_pipeline/include/aether_sfm_c.h b/aether_cpp/official_pipeline/include/aether_sfm_c.h
+index 0fa2e51..a15cf7c 100644
+--- a/aether_cpp/official_pipeline/include/aether_sfm_c.h
++++ b/aether_cpp/official_pipeline/include/aether_sfm_c.h
+@@ -484,6 +484,26 @@ void aether_sfm_final_diag(aether_sfm_session_t* s, double* mean_reproj_px,
+                            int64_t* n_points, int64_t* n_track3plus,
+                            int64_t* n_obs);
+ 
++// [DEVICE-ALIGN-V1 2026-09-24] End-of-finalize alignment of the delivered model
++// to the fed device camera centres (COLMAP 3.14 pose-prior alignment step:
++// LO-RANSAC Sim3 + Reconstruction::Transform; see
++// official_pipeline/src/device_pose_alignment_v1.h) and its gate. Valid after
++// finalize REFINED; the getters already serve the aligned model. Returns the
++// status: 0 not_run, 1 aligned, 2 aligned_gate_tripped (aligned, but >=1 fed
++// registered frame lies outside the chi2(3) 95% radius), 3
++// failed_insufficient_pairs, 4 failed_ransac (1/2 = transform applied; 3/4 =
++// model left as finalize produced it), 5 disabled (kill switch). The full
++// record (Sim3, per-frame outliers, error summary) is the "device_alignment_v1"
++// line of the session's diagnostics jsonl. Out-params nullable. The core only
++// measures and flags; what the product does with 2/3/4 is not decided here.
++int aether_sfm_device_alignment_v1(aether_sfm_session_t* s, double* scale,
++                                   double* max_error_m, int* n_pairs,
++                                   int* n_inliers,
++                                   double* centre_err_median_m,
++                                   double* centre_err_max_m,
++                                   double* rot_err_median_deg,
++                                   double* rot_err_max_deg);
++
+ // [L1-ARBITRATE 2026-07-12] Ghost-layer L1 CasDiffMVS 1-bit arbitration over
+ // the session's run_dir files: consumes the AETHER_GHOST_MASK=1 finalize-tail
+ // sidecars (arbitration_plan.bin / arbitration_points.bin / ghost_mask.bin)
+diff --git a/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h b/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h
+new file mode 100644
+index 0000000..75daf99
+--- /dev/null
++++ b/aether_cpp/official_pipeline/src/device_pose_alignment_v1.h
+@@ -0,0 +1,258 @@
++// device_pose_alignment_v1.h — [DEVICE-ALIGN-V1 2026-09-24] end-of-finalize
++// similarity alignment of the delivered reconstruction to the fed device
++// trajectory (camera centres), plus the same fit's inliers/residuals as a
++// garbage-pose gate. Header-only, no platform code, shared verbatim by the core
++// (official_aether_sfm_c.cc RefineGlobalBA tail) and the host offline checker.
++//
++// WHY: finalize leaves the delivered model in whatever scale the live model and
++// the global BA gauge (COLMAP TWO_CAMS_FROM_WORLD, incremental_mapper.cc:1273)
++// ended up with; COLMAP's own comment there says the gauge should be fixed
++// differently "once we support IMUs or other sensors". COLMAP 3.14's upstream
++// answer for sensor position priors is the pose-prior flow, whose first step
++// is a robust Sim3 alignment of the reconstruction to the prior positions.
++// This file copies exactly that first step; it does NOT copy the pose-prior
++// bundle adjustment that follows it upstream (geometry stays untouched).
++//
++// COPIED PIECES (vendored COLMAP 3.14.0.dev0, glomap_vendor/colmap-src/colmap):
++//   [C1] RANSAC max_error from prior covariances —
++//        estimators/bundle_adjustment_ceres.cc:1402-1426
++//        (PosePriorBundleAdjuster::AlignReconstruction).
++//   [C2] prior covariance = diag(σx²,σy²,σz²) when the priors carry none —
++//        exe/sfm.cc:500-511 (RunPosePriorMapper, overwrite_priors_covariance).
++//   [C3] pairing + robust Sim3 — estimators/alignment.cc:246-279
++//        (AlignReconstructionToPosePriors: src = registered image projection
++//        centres, tgt = prior positions, EstimateSim3dRobust when
++//        max_error > 0, "< 3" → fail).
++//   [C4] apply — Reconstruction::Transform(tgt_from_src)
++//        (bundle_adjustment_ceres.cc:1437, exe/model.cc:368; implementation
++//        scene/reconstruction.cc:785-802). On failure nothing is applied
++//        (bundle_adjustment_ceres.cc:1432-1436, exe/model.cc:363-366).
++//   [C5] post-alignment per-image errors — estimators/alignment.cc:363-373
++//        (ComputeImageAlignmentError: rotation_error_deg, proj_center_error)
++//        and exe/model.cc:370-381 (error = |ProjectionCenter − ref location|
++//        AFTER Transform), summarised with AlignmentErrorSummary::Compute
++//        (alignment.cc:593-625).
++//   [C6] inlier criterion — optim/loransac.h:359 / ransac.h:371
++//        (residual² ≤ max_error²), residual = similarity_transform.h:161-164.
++//
++// DEVIATIONS (each with reason):
++//   [D1] σ = 0.040 m (kDevicePositionPriorStddevM) instead of COLMAP's 1.0 m
++//        default (bundle_adjustment.h:255 prior_position_fallback_stddev,
++//        exe/sfm.cc:474-476). COLMAP's 1 m is a GPS-scale default; with it the
++//        95% radius is 2.8 m and every frame of a 0.25 m object orbit is an
++//        inlier, i.e. no robustness and no gate. 0.040 m is the product's own
++//        documented platform-translation σ floor (pocketworld
++//        lib/vio/platform_pose/platform_pose_source.dart:47-57
++//        kPlatformTranslationSigmaFloorM, from the published 4.0 cm local
++//        median pose error). The COLMAP mechanism is unchanged; only the σ
++//        input differs, and it is one named constant.
++//   [D2] Fixed RANSAC seed. Upstream passes the mapper's random_seed
++//        (incremental_mapper.cc:1285), which is -1 (= unseeded) in this core
++//        (official_incremental_pipeline.cc:150 never overridden). A fixed seed
++//        makes the delivered transform reproducible for identical input;
++//        precedent in this core: upright_relative_pose_v1.h:22 (20260804).
++//   [D3] The body of AlignReconstructionToPosePriors (alignment.cc:246-279)
++//        is inlined over explicit (recon centre, device centre) pairs instead
++//        of calling it with std::vector<PosePrior>: the upstream function
++//        returns only bool and drops the RANSAC report, but the gate needs the
++//        inlier mask; the same pairs also drive the host offline checker.
++//        Pairing comes from the core's own FrameRecord (image_id ↔ device
++//        CamFromWorld), exactly as the core's live Sim3 diagnostic does
++//        (official_aether_sfm_c.cc:1928-1945), which is the image-id join
++//        upstream does through PosePrior::corr_data_id.
++//   [D4] No pose-prior bundle adjustment after the alignment (upstream
++//        bundle_adjustment_ceres.cc:1289-1320 continues into a prior-weighted
++//        BA). Approved scope is the alignment only; a similarity transform
++//        leaves reprojection residuals and shape unchanged.
++//   [D5] Gate flag (not upstream): upstream only distinguishes success /
++//        failure. Here, a successful alignment in which at least one fed,
++//        registered frame lies outside the χ²(3) 95% radius [C1] after the
++//        transform is reported as kAlignedGateTripped (transform still applied,
++//        as upstream does on success). What the product does on a trip is a UX
++//        decision and is NOT made here.
++//   [D6] Optional fit_mask (default: all pairs) so the host checker can fit on
++//        a subset and evaluate held-out frames. The core always passes none.
++
++#pragma once
++
++#include "colmap/estimators/alignment.h"
++#include "colmap/estimators/solvers/similarity_transform.h"
++#include "colmap/geometry/pose.h"
++#include "colmap/geometry/rigid3.h"
++#include "colmap/geometry/sim3.h"
++#include "colmap/math/math.h"
++#include "colmap/optim/ransac.h"
++
++#include <Eigen/Core>
++#include <Eigen/Geometry>
++
++#include <cmath>
++#include <string>
++#include <vector>
++
++namespace aether::sfm {
++
++// [D1] σ of a fed device camera centre, metres (see header).
++inline constexpr double kDevicePositionPriorStddevM = 0.040;
++// [D2] fixed RANSAC seed (value = date of this change; any fixed value works).
++inline constexpr int kDeviceAlignRansacSeedV1 = 20260924;
++
++struct DeviceCentrePairV1 {
++  int frame_id = -1;
++  // Delivered model: CamFromWorld of the registered image (COLMAP axes).
++  colmap::Rigid3d recon_cam_from_world;
++  // Fed device pose: CamFromWorld already in COLMAP camera axes
++  // (FrameRecord::cam_from_world, official_aether_sfm_c.cc:414-416).
++  colmap::Rigid3d device_cam_from_world;
++};
++
++enum class DeviceAlignStatusV1 : int {
++  kNotRun = 0,
++  kAligned = 1,                  // RANSAC ok, every pair within the radius
++  kAlignedGateTripped = 2,       // RANSAC ok, ≥1 pair outside the radius [D5]
++  kFailedInsufficientPairs = 3,  // < 3 pairs (alignment.cc:271-274)
++  kFailedRansac = 4,             // report.success == false
++  kDisabled = 5,                 // kill switch OFFICIAL_AETHER_DEVICE_ALIGN_V1=0
++};
++
++inline const char* DeviceAlignStatusNameV1(DeviceAlignStatusV1 s) {
++  switch (s) {
++    case DeviceAlignStatusV1::kNotRun: return "not_run";
++    case DeviceAlignStatusV1::kAligned: return "aligned";
++    case DeviceAlignStatusV1::kAlignedGateTripped: return "aligned_gate_tripped";
++    case DeviceAlignStatusV1::kFailedInsufficientPairs:
++      return "failed_insufficient_pairs";
++    case DeviceAlignStatusV1::kFailedRansac: return "failed_ransac";
++    case DeviceAlignStatusV1::kDisabled: return "disabled";
++  }
++  return "unknown";
++}
++
++struct DeviceAlignResultV1 {
++  DeviceAlignStatusV1 status = DeviceAlignStatusV1::kNotRun;
++  int n_pairs = 0;            // fed + registered frames
++  int n_fit = 0;              // pairs handed to RANSAC (== n_pairs in the core)
++  int n_ransac_inliers = 0;   // report.support.num_inliers (fit set)
++  int n_inliers_all = 0;      // pairs within max_error after Transform [C6]
++  size_t ransac_trials = 0;
++  double max_error_m = 0.0;   // [C1]
++  double sigma_m = 0.0;       // [D1]
++  // device_from_recon (upstream name: tgt_from_src / metric_from_orig).
++  colmap::Sim3d device_from_recon;
++  // [C5] over ALL pairs after the transform (device metres / degrees).
++  colmap::AlignmentErrorSummary errors;
++  std::vector<int> outlier_frame_ids;
++  std::vector<double> centre_error_m;  // per pair, pair order
++  std::vector<char> inlier_all;        // per pair, pair order
++
++  bool Applied() const {
++    return status == DeviceAlignStatusV1::kAligned ||
++           status == DeviceAlignStatusV1::kAlignedGateTripped;
++  }
++};
++
++// [C1]+[C2] bundle_adjustment_ceres.cc:1403-1426 with every prior's
++// covariance = σ²·I (exe/sfm.cc:505-510), so trace/3 = σ² for each prior.
++inline double DeviceAlignMaxErrorV1(size_t num_priors, double sigma_m) {
++  const Eigen::Matrix3d position_covariance =
++      Eigen::Vector3d(sigma_m, sigma_m, sigma_m).cwiseAbs2().asDiagonal();
++  std::vector<double> rms_vars;
++  rms_vars.reserve(num_priors);
++  for (size_t i = 0; i < num_priors; ++i) {
++    const double trace = position_covariance.trace();
++    if (trace <= 0.0) {
++      continue;
++    }
++    rms_vars.push_back(trace / 3.0);
++  }
++  if (rms_vars.empty()) {
++    // upstream: prior_position_fallback_stddev² (bundle_adjustment.h:255 = 1.0)
++    rms_vars.push_back(1.0 * 1.0);
++  }
++  return std::sqrt(colmap::kChiSquare95ThreeDof * colmap::Median(rms_vars));
++}
++
++// [C3]+[C5]+[C6]; does NOT modify any reconstruction — the caller applies
++// result.device_from_recon with Reconstruction::Transform [C4] iff Applied().
++inline DeviceAlignResultV1 EstimateDeviceAlignmentV1(
++    const std::vector<DeviceCentrePairV1>& pairs,
++    double sigma_m = kDevicePositionPriorStddevM,
++    const std::vector<char>* fit_mask = nullptr) {
++  DeviceAlignResultV1 out;
++  out.n_pairs = static_cast<int>(pairs.size());
++  out.sigma_m = sigma_m;
++
++  // alignment.cc:246-269 — src = image.ProjectionCenter(), tgt = prior pos.
++  std::vector<Eigen::Vector3d> src;
++  std::vector<Eigen::Vector3d> tgt;
++  src.reserve(pairs.size());
++  tgt.reserve(pairs.size());
++  for (size_t i = 0; i < pairs.size(); ++i) {
++    if (fit_mask && !(*fit_mask)[i]) continue;  // [D6]
++    src.push_back(pairs[i].recon_cam_from_world.TgtOriginInSrc());
++    tgt.push_back(pairs[i].device_cam_from_world.TgtOriginInSrc());
++  }
++  out.n_fit = static_cast<int>(src.size());
++  // alignment.cc:271-274
++  if (src.size() < 3) {
++    out.status = DeviceAlignStatusV1::kFailedInsufficientPairs;
++    return out;
++  }
++
++  // bundle_adjustment_ceres.cc:1403 (alignment_ransac_options defaults) +
++  // incremental_mapper.cc:1285 (random_seed) [D2]
++  colmap::RANSACOptions ransac_options;
++  ransac_options.random_seed = kDeviceAlignRansacSeedV1;
++  ransac_options.max_error = DeviceAlignMaxErrorV1(src.size(), sigma_m);
++  out.max_error_m = ransac_options.max_error;
++
++  // alignment.cc:276-277 (max_error > 0 ⇒ robust)
++  colmap::Sim3d tgt_from_src;
++  const auto report =
++      colmap::EstimateSim3dRobust(src, tgt, ransac_options, tgt_from_src);
++  out.ransac_trials = report.num_trials;
++  if (!report.success) {
++    out.status = DeviceAlignStatusV1::kFailedRansac;
++    return out;
++  }
++  out.n_ransac_inliers = static_cast<int>(report.support.num_inliers);
++  out.device_from_recon = tgt_from_src;
++
++  // [C5] alignment.cc:363-373 per pair, over ALL pairs (fit + held-out).
++  std::vector<colmap::ImageAlignmentError> errors;
++  errors.reserve(pairs.size());
++  out.centre_error_m.reserve(pairs.size());
++  out.inlier_all.reserve(pairs.size());
++  const double max_sq = out.max_error_m * out.max_error_m;  // [C6]
++  for (const DeviceCentrePairV1& p : pairs) {
++    const colmap::Rigid3d tgt_world_from_src_cam = colmap::Inverse(
++        colmap::TransformCameraWorld(tgt_from_src, p.recon_cam_from_world));
++    const colmap::Rigid3d tgt_world_from_tgt_cam =
++        colmap::Inverse(p.device_cam_from_world);
++    colmap::ImageAlignmentError error;
++    error.image_name = std::to_string(p.frame_id);
++    error.rotation_error_deg =
++        colmap::RadToDeg(tgt_world_from_src_cam.rotation().angularDistance(
++            tgt_world_from_tgt_cam.rotation()));
++    error.proj_center_error = (tgt_world_from_src_cam.translation() -
++                               tgt_world_from_tgt_cam.translation())
++                                  .norm();
++    errors.push_back(error);
++    out.centre_error_m.push_back(error.proj_center_error);
++    const bool inlier =
++        error.proj_center_error * error.proj_center_error <= max_sq;
++    out.inlier_all.push_back(inlier ? 1 : 0);
++    if (inlier) {
++      ++out.n_inliers_all;
++    } else {
++      out.outlier_frame_ids.push_back(p.frame_id);
++    }
++  }
++  out.errors = colmap::AlignmentErrorSummary::Compute(errors);
++  out.status = out.outlier_frame_ids.empty()
++                   ? DeviceAlignStatusV1::kAligned
++                   : DeviceAlignStatusV1::kAlignedGateTripped;  // [D5]
++  return out;
++}
++
++}  // namespace aether::sfm
+diff --git a/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc b/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
+index 8bf8d6c..9b9bdbb 100644
+--- a/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
++++ b/aether_cpp/official_pipeline/src/official_aether_sfm_c.cc
+@@ -27,6 +27,9 @@
+ #include "mandatory_arkit_gravity_v1.h"
+ #include "mandatory_gravity_tvg_v1.h"
+ #include "live_cloud_diagnostics_v1.h"
++// [DEVICE-ALIGN-V1 2026-09-24] end-of-finalize Sim3 to the fed device
++// trajectory + gate (COLMAP 3.14 pose-prior alignment step; header-only).
++#include "device_pose_alignment_v1.h"
+ #include "pair_policy_v2_c.h"
+ #include "pair_selection_v2.h"
+ #include "visual_loop_index_v1.h"
+@@ -1136,6 +1139,10 @@ struct aether_sfm_session {
+   std::thread refine_thread;
+   std::atomic<int> finalize_status{0};  // aether_sfm_finalize_status_t
+   double refine_ms = 0.0;               // worker global-BA wall time
++  // [DEVICE-ALIGN-V1 2026-09-24] result of the end-of-finalize alignment of
++  // the delivered model to the fed device centres; written by the refine
++  // worker under recon_mutex together with `recon` (read after REFINED).
++  aether::sfm::DeviceAlignResultV1 device_align_v1;
+ 
+   // Per-frame telemetry read back by aether_sfm_debug_last (perf diagnostics).
+   // The exact values behind the device log line
+@@ -7271,6 +7278,110 @@ void MaybeReanchorAfterGravityRa(
+   }
+ }
+ 
++// [DEVICE-ALIGN-V1 2026-09-24] Kill switch, DEFAULT ON (same pattern as
++// TailCacheMode above): OFFICIAL_AETHER_DEVICE_ALIGN_V1=0|off skips the pass
++// and reports status "disabled" (delivered model then = pre-change behaviour).
++bool DeviceAlignV1Enabled() {
++  static const bool cached = [] {
++    const char* value = std::getenv("OFFICIAL_AETHER_DEVICE_ALIGN_V1");
++    if (!value) return true;
++    return !(std::strcmp(value, "0") == 0 || std::strcmp(value, "off") == 0);
++  }();
++  return cached;
++}
++
++// [DEVICE-ALIGN-V1 2026-09-24] End of finalize: robust Sim3 of the delivered
++// model onto the fed device camera centres, applied with
++// Reconstruction::Transform — COLMAP 3.14's pose-prior alignment step
++// (bundle_adjustment_ceres.cc:1402-1437 / alignment.cc:241-280). Every copied
++// piece and every deviation is listed in device_pose_alignment_v1.h. Pairs are
++// built exactly like the live Sim3 diagnostic (official_aether_sfm_c.cc
++// AppendLiveCloudSnapshotDiagnosticsV2): FrameRecord.image_id ↔ fed
++// FrameRecord.cam_from_world. Measurement + transform only: the gate outcome
++// is reported (jsonl + aether_sfm_device_alignment_v1), never acted upon.
++aether::sfm::DeviceAlignResultV1 MaybeAlignToDevicePosesV1(
++    aether_sfm_session* s, colmap::Reconstruction* refined) {
++  aether::sfm::DeviceAlignResultV1 result;
++  if (!s || !refined) return result;
++  const double t0 = NowMs();
++  try {
++    if (!DeviceAlignV1Enabled()) {
++      result.status = aether::sfm::DeviceAlignStatusV1::kDisabled;
++    } else {
++      std::vector<aether::sfm::DeviceCentrePairV1> pairs;
++      pairs.reserve(s->frames.size());
++      for (const FrameRecord& frame : s->frames) {
++        if (!frame.has_pose || frame.image_id == 0 ||
++            !refined->ExistsImage(frame.image_id)) {
++          continue;
++        }
++        const colmap::Image& image = refined->Image(frame.image_id);
++        if (!image.HasPose()) continue;
++        aether::sfm::DeviceCentrePairV1 pair;
++        pair.frame_id = frame.frame_id;
++        pair.recon_cam_from_world = image.CamFromWorld();
++        pair.device_cam_from_world = frame.cam_from_world;
++        pairs.push_back(pair);
++      }
++      result = aether::sfm::EstimateDeviceAlignmentV1(pairs);
++      if (result.Applied()) {
++        refined->Transform(result.device_from_recon);  // [C4]
++      }
++    }
++  } catch (const std::exception& e) {
++    LOG(WARNING) << "[device-align-v1] exception: " << e.what()
++                 << " — model left unaligned";
++    result = aether::sfm::DeviceAlignResultV1();
++    result.status = aether::sfm::DeviceAlignStatusV1::kFailedRansac;
++  } catch (...) {
++    LOG(WARNING) << "[device-align-v1] unknown exception — model left unaligned";
++    result = aether::sfm::DeviceAlignResultV1();
++    result.status = aether::sfm::DeviceAlignStatusV1::kFailedRansac;
++  }
++  const colmap::Sim3d& T = result.device_from_recon;
++  const Eigen::AngleAxisd aa(T.rotation());
++  std::string ids = "[";
++  for (size_t i = 0; i < result.outlier_frame_ids.size(); ++i) {
++    if (i) ids += ",";
++    ids += std::to_string(result.outlier_frame_ids[i]);
++  }
++  ids += "]";
++  const auto& ce = result.errors.proj_center_errors;
++  const auto& re = result.errors.rotation_errors_deg;
++  char line[1536];
++  std::snprintf(
++      line, sizeof(line),
++      "{\"t\":%lld,\"type\":\"device_alignment_v1\",\"status\":\"%s\","
++      "\"applied\":%s,\"n_pairs\":%d,\"n_fit\":%d,\"ransac_inliers\":%d,"
++      "\"inliers_all\":%d,\"ransac_trials\":%zu,\"sigma_m\":%.6g,"
++      "\"max_error_m\":%.9g,\"scale\":%.12g,\"qw\":%.12g,\"qx\":%.12g,"
++      "\"qy\":%.12g,\"qz\":%.12g,\"tx\":%.12g,\"ty\":%.12g,\"tz\":%.12g,"
++      "\"rotation_deg\":%.9g,\"centre_err_m\":{\"min\":%.9g,\"median\":%.9g,"
++      "\"mean\":%.9g,\"p90\":%.9g,\"p99\":%.9g,\"max\":%.9g},"
++      "\"rot_err_deg\":{\"median\":%.9g,\"p90\":%.9g,\"max\":%.9g},"
++      "\"ms\":%.2f,\"outlier_frame_ids\":%s}",
++      static_cast<long long>(EpochMs()),
++      aether::sfm::DeviceAlignStatusNameV1(result.status),
++      result.Applied() ? "true" : "false", result.n_pairs, result.n_fit,
++      result.n_ransac_inliers, result.n_inliers_all, result.ransac_trials,
++      result.sigma_m, result.max_error_m, T.scale(), T.rotation().w(),
++      T.rotation().x(), T.rotation().y(), T.rotation().z(),
++      T.translation().x(), T.translation().y(), T.translation().z(),
++      aa.angle() * 180.0 / M_PI, ce.min, ce.median, ce.mean, ce.p90, ce.p99,
++      ce.max, re.median, re.p90, re.max, NowMs() - t0,
++      ids.size() < 600 ? ids.c_str() : "\"truncated\"");
++  AppendMatchFailJsonl(s, line);
++  LOG(WARNING) << "[device-align-v1] status="
++               << aether::sfm::DeviceAlignStatusNameV1(result.status)
++               << " pairs=" << result.n_pairs
++               << " inliers=" << result.n_inliers_all
++               << " max_error_m=" << result.max_error_m
++               << " scale=" << T.scale() << " centre_err_median_m=" << ce.median
++               << " centre_err_max_m=" << ce.max
++               << " outliers=" << result.outlier_frame_ids.size();
++  return result;
++}
++
+ int LiveLocalBaMtFloorOverride() {  // <0 → don't touch
+   static const int cached = [] {
+     if (const char* e = std::getenv("OFFICIAL_AETHER_LIVE_LBA_MT_FLOOR")) {
+@@ -8798,10 +8909,16 @@ void RefineGlobalBA(aether_sfm_session* s,
+                     live_origin_ids.size());
+       AppendMatchFailJsonl(s, pline);
+     }
++    // [DEVICE-ALIGN-V1 2026-09-24] Last step before publishing: align the
++    // delivered model to the fed device trajectory (after every pass that can
++    // move/merge points, so getters/debug dump serve the aligned model).
++    aether::sfm::DeviceAlignResultV1 device_align =
++        MaybeAlignToDevicePosesV1(s, refined.get());
+     {
+       std::lock_guard<std::mutex> lk(s->recon_mutex);
+       s->recon = refined;
+       s->refine_ms = NowMs() - t0;
++      s->device_align_v1 = std::move(device_align);
+     }
+     // [BA-PROGRESS 2026-09-16] finished — a poll must not read a stale stage.
+     aether::official::ba::GlobalBaProgressV1().stage.store(
+@@ -13483,6 +13600,35 @@ aether_sfm_result_t aether_sfm_arbitrate(aether_sfm_session_t* s,
+ // over the CURRENT finalize reconstruction (LOCAL or REFINED — whichever the
+ // getters serve). mean_reproj_px is computed over every observation with the
+ // recon's own (BA-refined) camera. Zeros before finalize.
++int aether_sfm_device_alignment_v1(aether_sfm_session_t* s, double* scale,
++                                   double* max_error_m, int* n_pairs,
++                                   int* n_inliers,
++                                   double* centre_err_median_m,
++                                   double* centre_err_max_m,
++                                   double* rot_err_median_deg,
++                                   double* rot_err_max_deg) {
++  if (scale) *scale = 0.0;
++  if (max_error_m) *max_error_m = 0.0;
++  if (n_pairs) *n_pairs = 0;
++  if (n_inliers) *n_inliers = 0;
++  if (centre_err_median_m) *centre_err_median_m = 0.0;
++  if (centre_err_max_m) *centre_err_max_m = 0.0;
++  if (rot_err_median_deg) *rot_err_median_deg = 0.0;
++  if (rot_err_max_deg) *rot_err_max_deg = 0.0;
++  if (!s) return 0;
++  std::lock_guard<std::mutex> lk(s->recon_mutex);
++  const aether::sfm::DeviceAlignResultV1& r = s->device_align_v1;
++  if (scale) *scale = r.device_from_recon.scale();
++  if (max_error_m) *max_error_m = r.max_error_m;
++  if (n_pairs) *n_pairs = r.n_pairs;
++  if (n_inliers) *n_inliers = r.n_inliers_all;
++  if (centre_err_median_m) *centre_err_median_m = r.errors.proj_center_errors.median;
++  if (centre_err_max_m) *centre_err_max_m = r.errors.proj_center_errors.max;
++  if (rot_err_median_deg) *rot_err_median_deg = r.errors.rotation_errors_deg.median;
++  if (rot_err_max_deg) *rot_err_max_deg = r.errors.rotation_errors_deg.max;
++  return static_cast<int>(r.status);
++}
++
+ void aether_sfm_final_diag(aether_sfm_session_t* s, double* mean_reproj_px,
+                            int64_t* n_points, int64_t* n_track3plus,
+                            int64_t* n_obs) {

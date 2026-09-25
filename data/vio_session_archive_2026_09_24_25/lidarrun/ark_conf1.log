@@ -1,0 +1,17 @@
+🔴 bench-only ruler:LiDAR 深度只用于研发期标定台架,永不进入产品代码、产品管线,也不作为任何产品方案的一部分
+
+内参配对:内参 1791 行 ↔ 相机 90 帧;配上 90,配不上 0
+  轨迹 arkit: 87 帧配上  {"rows": 1791, "zero_translation_dropped": 62, "not_normal_dropped": 0, "tracking_key_present": true, "path": "/Users/kaidongwang/Developer/viobench-recordings/run-fb5d3a8f-6e31-463e-989d-bd73bb3a2def/ruler_subset/arkit_poses.tum"}
+可用帧(内参 + 同 ARFrame 深度 + 所有轨迹都有位姿):87 / 录制帧 90 / 深度 296 张
+帧对 79(间隔 ~0.5s),特征 sift×4000,匹配中…
+
+── arkit ── verdict: valid
+  k(轨迹/米) = 1.0061  ⇒ 轨迹比米制 +0.61%   有效帧对 61/79
+  深度侧 95%(不重叠帧对 38 个,顺序统计量): k ∈ [0.9964, 1.0105]
+  闸 {'G1_pairs': True, 'G2_between_rel_iqr': True, 'G3_within_rel_iqr': True, 'G4_alignment_minimum_at_0': True}  帧对间 IQR/中位 0.0257  帧对内 0.0241
+  分段 k [1.0096970594837331, 0.9994508888590075, 1.008530243259814, 0.994499033437531]
+  PC ×1.05:比值 1.05000 ✅
+  NC 深度洗牌:k=0.9485 过闸=False ✅ 被拒(应当)
+  对齐曲线(深度行偏移 → 帧对间 IQR):{'-2': 0.08785975140469329, '-1': 0.05093794254348765, '1': 0.038648258348025, '2': 0.07643565868953622, '0': 0.025719871476817445}
+
+写出 /private/tmp/claude-501/-Users-kaidongwang-Documents-progecttwo/2359d42b-b338-4098-99ad-6a4c217067ad/scratchpad/lidarrun/ark_conf1/lidar_ruler_report.json
